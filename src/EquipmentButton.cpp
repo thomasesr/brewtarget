@@ -24,35 +24,35 @@
 
 EquipmentButton::EquipmentButton(QWidget* parent)
    : QPushButton(parent),
-     _rec(0),
-     _equip(0)
+     _rec(nullptr),
+     _equip(nullptr)
 {
 }
 
 void EquipmentButton::setRecipe(Recipe* rec)
 {
    if(_rec)
-      disconnect( _rec, 0, this, 0 );
+      disconnect( _rec, nullptr, this, nullptr );
 
    _rec = rec;
    if( _rec )
    {
-      connect( _rec, &BeerXMLElement::changed, this, &EquipmentButton::recChanged );
+      connect( _rec, &Ingredient::changed, this, &EquipmentButton::recChanged );
       setEquipment( _rec->equipment() );
    }
    else
-      setEquipment(0);
+      setEquipment(nullptr);
 }
 
 void EquipmentButton::setEquipment(Equipment* equip)
 {
    if( _equip )
-      disconnect( _equip, 0, this, 0 );
-   
+      disconnect( _equip, nullptr, this, nullptr );
+
    _equip = equip;
    if( _equip )
    {
-      connect( _equip, &BeerXMLElement::changed, this, &EquipmentButton::equipChanged );
+      connect( _equip, &Ingredient::changed, this, &EquipmentButton::equipChanged );
       setText( _equip->name() );
    }
    else
@@ -69,7 +69,7 @@ void EquipmentButton::equipChanged(QMetaProperty prop, QVariant val)
 void EquipmentButton::recChanged(QMetaProperty prop, QVariant val)
 {
    QString propName(prop.name());
-   
+
    if( propName == "equipment" )
-      setEquipment( qobject_cast<Equipment*>(BeerXMLElement::extractPtr(val)) );
+      setEquipment( qobject_cast<Equipment*>(Ingredient::extractPtr(val)) );
 }

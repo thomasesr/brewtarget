@@ -19,7 +19,7 @@
 
 #include "BtLineEdit.h"
 #include "brewtarget.h"
-#include "BeerXMLElement.h"
+#include "ingredient.h"
 #include "UnitSystems.h"
 #include "UnitSystem.h"
 #include "unit.h"
@@ -35,13 +35,6 @@ BtLineEdit::BtLineEdit(QWidget *parent, Unit::UnitType type) :
    _forceScale(Unit::noScale)
 {
    _section = property("configSection").toString();
-   /*
-   btParent = parent;
-   _type = type;
-   _forceUnit = Unit::noUnit;
-   _forceScale = Unit::noScale;
-   */
-    
    connect(this,&QLineEdit::editingFinished,this,&BtLineEdit::onLineChanged);
 }
 
@@ -210,7 +203,7 @@ void BtLineEdit::setText( double amount, int precision)
    QLineEdit::setText( displayAmount(amount,precision) );
 }
 
-void BtLineEdit::setText( BeerXMLElement* element, int precision )
+void BtLineEdit::setText( Ingredient* element, int precision )
 {
    double amount = 0.0;
    QString display;

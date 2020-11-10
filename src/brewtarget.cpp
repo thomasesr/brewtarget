@@ -76,6 +76,7 @@
 #include "mash.h"
 #include "instruction.h"
 #include "water.h"
+#include "salt.h"
 
 // Needed for kill(2)
 #if defined(Q_OS_UNIX)
@@ -83,7 +84,56 @@
 #include <signal.h>
 #endif
 
-MainWindow* Brewtarget::_mainWindow = 0;
+// These HAVE to be in the same order as they are listed in
+// Brewtarget::DBTable
+QStringList Brewtarget::dbTableToName  = QStringList() <<
+   QString("none") <<  // need to handle the NOTABLE index
+   ktableSettings <<
+   ktableEquipment <<
+   ktableFermentable <<
+   ktableHop <<
+   ktableMisc <<
+   ktableStyle <<
+   ktableYeast <<
+   ktableWater <<
+   ktableMash <<
+   ktableMashStep <<
+   ktableRecipe <<
+   ktableBrewnote <<
+   ktableInstruction <<
+   ktableSalt <<
+// Now for BT internal tables
+   ktableBtEquipment <<
+   ktableBtFermentable <<
+   ktableBtHop <<
+   ktableBtMisc <<
+   ktableBtStyle <<
+   ktableBtYeast <<
+   ktableBtWater <<
+// Now the in_recipe tables
+   ktableFermInRec <<
+   ktableHopInRec <<
+   ktableMiscInRec <<
+   ktableWaterInRec <<
+   ktableYeastInRec <<
+   ktableInsInRec <<
+   ktableSaltInRec <<
+// child tables next
+   ktableEquipChildren <<
+   ktableFermChildren <<
+   ktableHopChildren <<
+   ktableMiscChildren <<
+   ktableRecChildren <<
+   ktableStyleChildren <<
+   ktableWaterChildren <<
+   ktableYeastChildren <<
+// inventory tables last
+   ktableFermInventory <<
+   ktableHopInventory <<
+   ktableMiscInventory <<
+   ktableYeastInventory;
+
+MainWindow* Brewtarget::_mainWindow = nullptr;
 QDomDocument* Brewtarget::optionsDoc;
 QTranslator* Brewtarget::defaultTrans = new QTranslator();
 QTranslator* Brewtarget::btTrans = new QTranslator();
@@ -127,14 +177,14 @@ bool Brewtarget::createDir(QDir dir, QString errText)
   {
     QString errTitle(QObject::tr("Directory Problem"));
 
-    if( errText == NULL)
+    if( errText == nullptr)
       errText = QString(QObject::tr("\"%1\" cannot be read."));
 
     logW(errText.arg(dir.path()));
 
     if (Brewtarget::isInteractive()) {
        QMessageBox::information(
-          0,
+          nullptr,
           errTitle,
           errText.arg(dir.path())
        );
@@ -150,7 +200,7 @@ bool Brewtarget::ensureDirectoriesExist()
   // A missing dataDir is a serious issue, without it we're missing the default DB, sound files & translations.
   // An attempt could be made to created it, like the other config directories, but an empty data dir is just as bad as a missing one.
   // Because of that, we'll display a little more dire warning, and not try to create it.
-  QDir dataDir = getDataDir();
+  QDir dataDir = getUserDataDir();
   bool dataDirSuccess = true;
 
   if (! dataDir.exists())
@@ -161,7 +211,7 @@ bool Brewtarget::ensureDirectoriesExist()
 
     if (Brewtarget::isInteractive()) {
        QMessageBox::critical(
-          0,
+          nullptr,
           QObject::tr("Directory Problem"),
           errMsg
        );
@@ -205,7 +255,7 @@ const QString& Brewtarget::getSystemLanguage()
 
 void Brewtarget::loadTranslations()
 {
-   if( qApp == 0 )
+   if( qApp == nullptr )
       return;
 
    // Load translators.
@@ -343,13 +393,13 @@ const QDir Brewtarget::getConfigDir()
    // If that variable doesn't exist, create ~/.config
    char* xdg_config_home = getenv("XDG_CONFIG_HOME");
 
-   if (xdg_config_home)
-   {
-     dir = QString(xdg_config_home).append("/brewtarget");
+   if (xdg_config_home) {
+     logI(QString("XDG_CONFIG_HOME directory is %1").arg(xdg_config_home));
+     dir.setPath(QString(xdg_config_home).append("/brewtarget"));
    }
-   else
-   {
+   else {
      // If XDG_CONFIG_HOME doesn't exist, config goes in ~/.config/brewtarget
+     logI(QString("XDG_CONFIG_HOME not set.  HOME directory is %1").arg(QDir::homePath()));
      QString dirPath = QDir::homePath().append("/.config/brewtarget");
      dir = QDir(dirPath);
    }
@@ -376,10 +426,25 @@ const QDir Brewtarget::getConfigDir()
 QDir Brewtarget::getUserDataDir()
 {
    return userDataDir;
-//   if( userDataDir.endsWith('/') || userDataDir.endsWith('\\') )
-//      return userDataDir;
-//   else
-//      return userDataDir + "/";
+}
+
+QDir Brewtarget::getDefaultUserDataDir()
+{
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC) // Linux OS or Mac OS.#if defined(Q_OS_LINUX) || defined(Q_OS_MAC) // Linux OS or Mac OS.
+   return getConfigDir();
+#elif defined(Q_OS_WIN) // Windows OS.
+   // On Windows the Programs directory is normally not writable so we need to get the appData path from the environment instead.
+   userDataDir.setPath(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+   logD(QString("userDataDir=%1").arg(userDataDir.path()));
+   if (!userDataDir.exists()) {
+      logD(QString("User data dir \"%1\" does not exist, trying to create").arg(userDataDir.path()));
+      createDir(userDataDir);
+      logD("UserDatadit Created");
+   }
+   return userDataDir;
+#else
+# error "Unsupported OS"
+#endif
 }
 
 bool Brewtarget::initialize(const QString &userDirectory)
@@ -389,6 +454,7 @@ bool Brewtarget::initialize(const QString &userDirectory)
    qRegisterMetaType<Equipment*>();
    qRegisterMetaType<Mash*>();
    qRegisterMetaType<Style*>();
+   qRegisterMetaType<Salt*>();
    qRegisterMetaType<Brewtarget::DBTable>();
    qRegisterMetaType< QList<BrewNote*> >();
    qRegisterMetaType< QList<Hop*> >();
@@ -397,20 +463,22 @@ bool Brewtarget::initialize(const QString &userDirectory)
    qRegisterMetaType< QList<Misc*> >();
    qRegisterMetaType< QList<Yeast*> >();
    qRegisterMetaType< QList<Water*> >();
+   qRegisterMetaType< QList<Salt*> >();
 
 
    // Use overwride if present.
    if (!userDirectory.isEmpty() && QDir(userDirectory).exists()) {
-      userDataDir = QDir(userDirectory).canonicalPath();
+      userDataDir.setPath(QDir(userDirectory).canonicalPath());
    }
    // Use directory from app settings.
    else if (hasOption("user_data_dir") && QDir(option("user_data_dir","").toString()).exists()) {
-      userDataDir = QDir(option("user_data_dir","").toString()).canonicalPath();
+      userDataDir.setPath( QDir(option("user_data_dir","").toString()).canonicalPath());
+
    }
    // Guess where to put it.
    else {
       logW(QString("User data directory not specified or doesn't exist - using default."));
-      userDataDir = getConfigDir();
+      userDataDir = getDefaultUserDataDir();
    }
 
    // If the old options file exists, convert it. Otherwise, just get the
@@ -421,7 +489,7 @@ bool Brewtarget::initialize(const QString &userDirectory)
 
    readSystemOptions();
    loadMap();
-   log.changeDirectory(getUserDataDir());
+   log.changeDirectory();
 
    // Make sure all the necessary directories and files we need exist before starting.
    ensureDirectoriesExist();
@@ -441,6 +509,7 @@ bool Brewtarget::initialize(const QString &userDirectory)
 
    // Check if the database was successfully loaded before
    // loading the main window.
+   logD("Loading Database...");
    if (Database::instance().loadSuccessful())
    {
       if ( ! QSettings().contains("converted") )
@@ -453,9 +522,9 @@ bool Brewtarget::initialize(const QString &userDirectory)
 }
 
 Brewtarget::DBTypes Brewtarget::dbType()
-{ 
+{
    if ( _dbType == Brewtarget::NODB )
-      _dbType = (Brewtarget::DBTypes)option("dbType", dbType()).toInt();
+      _dbType = static_cast<Brewtarget::DBTypes>(option("dbType", Brewtarget::SQLITE).toInt());
    return _dbType;
 }
 
@@ -501,6 +570,27 @@ QString Brewtarget::dbFalse(Brewtarget::DBTypes type)
    return retval;
 }
 
+QString Brewtarget::dbBoolean(bool flag, Brewtarget::DBTypes type)
+{
+   Brewtarget::DBTypes whichDb = type;
+   QString retval;
+
+   if ( whichDb == Brewtarget::NODB )
+      whichDb = dbType();
+
+   switch( whichDb ) {
+      case SQLITE:
+         retval = flag ? QString("1") : QString("0");
+         break;
+      case PGSQL:
+         retval = flag ? QString("true") : QString("false");
+         break;
+      default:
+         retval = "notwhiskeytangofoxtrot";
+   }
+   return retval;
+}
+
 void Brewtarget::cleanup()
 {
    log.info("Brewtarget is cleaning up.");
@@ -513,11 +603,13 @@ void Brewtarget::cleanup()
 
 }
 
-bool Brewtarget::isInteractive() {
+bool Brewtarget::isInteractive()
+{
    return _isInteractive;
 }
 
-void Brewtarget::setInteractive(bool val) {
+void Brewtarget::setInteractive(bool val)
+{
    _isInteractive = val;
 }
 
@@ -533,7 +625,7 @@ int Brewtarget::run(const QString &userDirectory)
       cleanup();
       return 1;
    }
-   log.info("Starting Brewtarget.");
+   log.info(QString("Starting Brewtarget v%1 on %2.").arg(VERSIONSTRING).arg(QSysInfo::prettyProductName()));
    _mainWindow = new MainWindow();
    _mainWindow->setVisible(true);
    splashScreen.finish(_mainWindow);
@@ -703,7 +795,7 @@ void Brewtarget::convertPersistentOptions()
       }
       else
       {
-         Brewtarget::logW(QString("Bad use_plato type: %1").arg(text));
+         logW(QString("Bad use_plato type: %1").arg(text));
       }
    }
 
@@ -722,7 +814,7 @@ void Brewtarget::convertPersistentOptions()
          thingToUnitSystem.insert(Unit::Color,UnitSystems::ebcColorUnitSystem());
       }
       else
-         Brewtarget::logW(QString("Bad color_unit type: %1").arg(text));
+         logW(QString("Bad color_unit type: %1").arg(text));
    }
 
    //=======================Diastatic power unit===================
@@ -741,12 +833,12 @@ void Brewtarget::convertPersistentOptions()
       }
       else
       {
-         Brewtarget::logW(QString("Bad diastatic_power_unit type: %1").arg(text));
+         logW(QString("Bad diastatic_power_unit type: %1").arg(text));
       }
    }
 
    delete optionsDoc;
-   optionsDoc = 0;
+   optionsDoc = nullptr;
    xmlFile.close();
 
    // Don't do this on Windows. We have extra work to do and creating the
@@ -773,29 +865,47 @@ QString Brewtarget::getOptionValue(const QDomDocument& optionsDoc, const QString
    QDomNodeList list;
 
    list = optionsDoc.elementsByTagName(option);
-   if(list.length() <= 0)
-   {
-      Brewtarget::logW(QString("Could not find the <%1> tag in the option file.").arg(option));
-      if( hasOption != 0 )
+   if(list.length() <= 0) {
+      logW(QString("Could not find the <%1> tag in the option file.").arg(option));
+      if( hasOption != nullptr )
          *hasOption = false;
       return "";
    }
-   else
-   {
+   else {
       node = list.at(0);
       child = node.firstChild();
       textNode = child.toText();
 
-      if( hasOption != 0 )
+      if( hasOption != nullptr )
          *hasOption = true;
 
       return textNode.nodeValue();
    }
 }
 
+void Brewtarget::updateConfig()
+{
+   int cVersion = option("config_version", QVariant(0)).toInt();
+   while ( cVersion < CONFIG_VERSION ) {
+      switch ( ++cVersion ) {
+         case 1:
+            // Update the dbtype, because I had to increase the NODB value from -1 to 0
+            int newType = static_cast<Brewtarget::DBTypes>(option("dbType",Brewtarget::NODB).toInt() + 1);
+            // Write that back to the config file
+            setOption("dbType", static_cast<int>(newType));
+            // and make sure we don't do it again.
+            setOption("config_version", QVariant(cVersion));
+            break;
+      }
+   }
+}
+
 void Brewtarget::readSystemOptions()
 {
    QString text;
+
+   // update the config file before we do anything
+   updateConfig();
 
    //================Version Checking========================
    checkVersion = option("check_version", QVariant(false)).toBool();
@@ -913,7 +1023,7 @@ void Brewtarget::readSystemOptions()
       thingToUnitSystem.insert(Unit::Color,UnitSystems::ebcColorUnitSystem());
    }
    else
-      Brewtarget::logW(QString("Bad color_unit type: %1").arg(text));
+      logW(QString("Bad color_unit type: %1").arg(text));
 
    //=======================Diastatic power unit===================
    text = option("diastatic_power_unit", "Lintner").toString();
@@ -929,15 +1039,26 @@ void Brewtarget::readSystemOptions()
    }
    else
    {
-      Brewtarget::logW(QString("Bad diastatic_power_unit type: %1").arg(text));
+      logW(QString("Bad diastatic_power_unit type: %1").arg(text));
    }
 
    //=======================Date format===================
-   dateFormat = (Unit::unitDisplay)option("date_format",Unit::displaySI).toInt();
+   dateFormat = static_cast<Unit::unitDisplay>(option("date_format",Unit::displaySI).toInt());
 
    //=======================Database type ================
-   _dbType = (Brewtarget::DBTypes)option("dbType",Brewtarget::SQLITE).toInt();
+   _dbType = static_cast<Brewtarget::DBTypes>(option("dbType",Brewtarget::SQLITE).toInt());
 
+   //======================Logging options =======================
+   log.LoggingEnabled = option("LoggingEnabled", false).toBool();
+   log.LoggingLevel = log.getLogTypeFromString(QString(option("LoggingLevel", "INFO").toString()));
+   log.LogFilePath = QDir(option("LogFilePath", getUserDataDir().canonicalPath()).toString());
+   log.LoggingUseConfigDir = option("LoggingUseConfigDir", true).toBool();
+   if( log.LoggingUseConfigDir )
+#if QT_VERSION < QT_VERSION_CHECK(5,15,0)
+      log.LogFilePath = getUserDataDir().canonicalPath();
+#else
+      log.LogFilePath.setPath(getUserDataDir().canonicalPath());
+#endif
 }
 
 void Brewtarget::saveSystemOptions()
@@ -995,10 +1116,15 @@ void Brewtarget::saveSystemOptions()
       case LINTNER:
          setOption("diastatic_power_unit", "Lintner");
          break;
-      case EBC:
+      case WK:
          setOption("diastatic_power_unit", "WK");
          break;
    }
+
+   setOption("LoggingEnabled", log.LoggingEnabled);
+   setOption("LoggingLevel", log.getOptionStringFromLogType(log.LoggingLevel));
+   setOption("LogFilePath", log.LogFilePath.absolutePath());
+   setOption("LoggingUseConfigDir", log.LoggingUseConfigDir);
 }
 
 // the defaults come from readSystemOptions. This just fleshes out the hash
@@ -1036,12 +1162,26 @@ void Brewtarget::loadMap()
 
 void Brewtarget::logE( QString message )
 {
-   log.error(message);
+   if ( log.LoggingEnabled && log.LoggingLevel <= Log::LogType_ERROR)
+      log.error(message);
 }
 
 void Brewtarget::logW( QString message )
 {
-   log.warn(message);
+   if ( log.LoggingEnabled && log.LoggingLevel <= Log::LogType_WARNING)
+      log.warn(message);
+}
+
+void Brewtarget::logI( QString message )
+{
+   if ( log.LoggingEnabled && log.LoggingLevel <= Log::LogType_INFO)
+      log.info(message);
+}
+
+void Brewtarget::logD( QString message )
+{
+   if ( log.LoggingEnabled && log.LoggingLevel <= Log::LogType_DEBUG)
+      log.debug(message);
 }
 
 /* Qt5 changed how QString::toDouble() works in that it will always convert
@@ -1058,11 +1198,11 @@ double Brewtarget::toDouble(QString text, bool* ok)
    ret = sysDefault.toDouble(text,&success);
 
    // If we failed, try C conversion
-   if ( ! success ) 
+   if ( ! success )
       ret = text.toDouble(&success);
 
    // If we were asked to return the success, return it here.
-   if ( ok != NULL )
+   if ( ok != nullptr )
       *ok = success;
 
    // Whatever we got, we return it
@@ -1070,7 +1210,7 @@ double Brewtarget::toDouble(QString text, bool* ok)
 }
 
 // And a few convenience methods, just for that sweet, sweet syntatic sugar
-double Brewtarget::toDouble(const BeerXMLElement* element, QString attribute, QString caller)
+double Brewtarget::toDouble(const Ingredient* element, QString attribute, QString caller)
 {
    double amount = 0.0;
    QString value;
@@ -1095,7 +1235,7 @@ double Brewtarget::toDouble(QString text, QString caller)
 
    ret = toDouble(text,&success);
 
-   if ( ! success ) 
+   if ( ! success )
       logW( QString("%1 could not convert %2 to double").arg(caller).arg(text));
 
    return ret;
@@ -1115,7 +1255,7 @@ QString Brewtarget::displayAmount( double amount, Unit* units, int precision, Un
       return "-";
 
    // Special case.
-   if( units == 0 )
+   if( units == nullptr )
       return QString("%L1").arg(amount, fieldWidth, format, precision);
 
    QString SIUnitName = units->getSIUnitName();
@@ -1125,7 +1265,7 @@ QString Brewtarget::displayAmount( double amount, Unit* units, int precision, Un
    // convert to the current unit system (s).
    temp = findUnitSystem(units, displayUnits);
    // If we cannot find a unit system
-   if ( temp == 0 )
+   if ( temp == nullptr )
       ret = QString("%L1 %2").arg(SIAmount, fieldWidth, format, precision).arg(SIUnitName);
    else
       ret = temp->displayAmount( amount, units, precision, displayScale );
@@ -1133,7 +1273,7 @@ QString Brewtarget::displayAmount( double amount, Unit* units, int precision, Un
    return ret;
 }
 
-QString Brewtarget::displayAmount(BeerXMLElement* element, QObject* object, QString attribute, Unit* units, int precision )
+QString Brewtarget::displayAmount(Ingredient* element, QObject* object, QString attribute, Unit* units, int precision )
 {
    double amount = 0.0;
    QString value;
@@ -1147,10 +1287,12 @@ QString Brewtarget::displayAmount(BeerXMLElement* element, QObject* object, QStr
       value = element->property(attribute.toLatin1().constData()).toString();
       amount = toDouble( value, &ok );
       if ( ! ok )
-         logW( QString("Brewtarget::displayAmount(BeerXMLElement*,QObject*,QString,Unit*,int) could not convert %1 to double").arg(value));
+         logW( QString("%1 could not convert %2 to double")
+               .arg(Q_FUNC_INFO)
+               .arg(value));
       // Get the display units and scale
-      dispUnit  = (Unit::unitDisplay)option(attribute, Unit::noUnit,  object->objectName(), UNIT).toInt();
-      dispScale = (Unit::unitScale)option(  attribute, Unit::noScale, object->objectName(), SCALE).toInt();
+      dispUnit  = static_cast<Unit::unitDisplay>(option(attribute, Unit::noUnit,  object->objectName(), UNIT).toInt());
+      dispScale = static_cast<Unit::unitScale>(option(  attribute, Unit::noScale, object->objectName(), SCALE).toInt());
 
       return displayAmount(amount, units, precision, dispUnit, dispScale);
    }
@@ -1165,8 +1307,8 @@ QString Brewtarget::displayAmount(double amt, QString section, QString attribute
    Unit::unitDisplay dispUnit;
 
    // Get the display units and scale
-   dispUnit  = (Unit::unitDisplay)Brewtarget::option(attribute, Unit::noUnit,  section, UNIT).toInt();
-   dispScale = (Unit::unitScale)Brewtarget::option(  attribute, Unit::noScale, section, SCALE).toInt();
+   dispUnit  = static_cast<Unit::unitDisplay>(Brewtarget::option(attribute, Unit::noUnit,  section, UNIT).toInt());
+   dispScale = static_cast<Unit::unitScale>(Brewtarget::option(  attribute, Unit::noScale, section, SCALE).toInt());
 
    return displayAmount(amt, units, precision, dispUnit, dispScale);
 
@@ -1181,7 +1323,7 @@ double Brewtarget::amountDisplay( double amount, Unit* units, int precision, Uni
       return -1.0;
 
    // Special case.
-   if( units == 0 )
+   if( units == nullptr )
       return amount;
 
    QString SIUnitName = units->getSIUnitName();
@@ -1191,7 +1333,7 @@ double Brewtarget::amountDisplay( double amount, Unit* units, int precision, Uni
    // convert to the current unit system (s).
    temp = findUnitSystem(units, displayUnits);
    // If we cannot find a unit system
-   if ( temp == 0 )
+   if ( temp == nullptr )
       ret = SIAmount;
    else
       ret = temp->amountDisplay( amount, units, displayScale );
@@ -1199,7 +1341,7 @@ double Brewtarget::amountDisplay( double amount, Unit* units, int precision, Uni
    return ret;
 }
 
-double Brewtarget::amountDisplay(BeerXMLElement* element, QObject* object, QString attribute, Unit* units, int precision )
+double Brewtarget::amountDisplay(Ingredient* element, QObject* object, QString attribute, Unit* units, int precision )
 {
    double amount = 0.0;
    QString value;
@@ -1213,10 +1355,10 @@ double Brewtarget::amountDisplay(BeerXMLElement* element, QObject* object, QStri
       value = element->property(attribute.toLatin1().constData()).toString();
       amount = toDouble( value, &ok );
       if ( ! ok )
-         logW( QString("Brewtarget::amountDisplay(BeerXMLElement*,QObject*,QString,Unit*,int) could not convert %1 to double").arg(value));
+         logW( QString("Brewtarget::amountDisplay(Ingredient*,QObject*,QString,Unit*,int) could not convert %1 to double").arg(value));
       // Get the display units and scale
-      dispUnit  = (Unit::unitDisplay)option(attribute, Unit::noUnit,  object->objectName(), UNIT).toInt();
-      dispScale = (Unit::unitScale)option(  attribute, Unit::noScale, object->objectName(), SCALE).toInt();
+      dispUnit  = static_cast<Unit::unitDisplay>(option(attribute, Unit::noUnit,  object->objectName(), UNIT).toInt());
+      dispScale = static_cast<Unit::unitScale>(option(  attribute, Unit::noScale, object->objectName(), SCALE).toInt());
 
       return amountDisplay(amount, units, precision, dispUnit, dispScale);
    }
@@ -1227,7 +1369,7 @@ double Brewtarget::amountDisplay(BeerXMLElement* element, QObject* object, QStri
 UnitSystem* Brewtarget::findUnitSystem(Unit* unit, Unit::unitDisplay display)
 {
    if ( ! unit )
-      return 0;
+      return nullptr;
 
    int key = unit->getUnitType();
 
@@ -1239,7 +1381,7 @@ UnitSystem* Brewtarget::findUnitSystem(Unit* unit, Unit::unitDisplay display)
    if ( thingToUnitSystem.contains( key ) )
       return thingToUnitSystem.value(key);
 
-   return 0;
+   return nullptr;
 }
 
 void Brewtarget::getThicknessUnits( Unit** volumeUnit, Unit** weightUnit )
@@ -1336,7 +1478,7 @@ bool Brewtarget::hasUnits(QString qstr)
    return amtUnit.cap(2).size() > 0;
 }
 
-QPair<double,double> Brewtarget::displayRange(BeerXMLElement* element, QObject *object, QString attribute, RangeType _type)
+QPair<double,double> Brewtarget::displayRange(Ingredient* element, QObject *object, QString attribute, RangeType _type)
 {
    QPair<double,double> range;
    QString minName = QString("%1%2").arg(attribute).arg("Min");
@@ -1365,7 +1507,7 @@ QPair<double,double> Brewtarget::displayRange(QObject *object, QString attribute
    QPair<double,double> range;
    Unit::unitDisplay displayUnit;
 
-   displayUnit = (Unit::unitDisplay)option(attribute, Unit::noUnit, object->objectName(), UNIT).toInt();
+   displayUnit = static_cast<Unit::unitDisplay>(option(attribute, Unit::noUnit, object->objectName(), UNIT).toInt());
 
    if ( _type == DENSITY )
    {

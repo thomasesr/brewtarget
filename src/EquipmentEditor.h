@@ -37,6 +37,7 @@
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QTextEdit>
+#include <QEvent>
 
 #include "BtLabel.h"
 // Forward declarations
@@ -50,7 +51,7 @@ class BtVolumeLabel;
 class BtVolumeEdit;
 class Equipment;
 class EquipmentListModel;
-class BeerXMLSortProxyModel;
+class IngredientSortProxyModel;
 
 /*!
  * \class EquipmentEditor
@@ -64,7 +65,7 @@ class EquipmentEditor : public QDialog
 
 public:
    //! \param singleEquipEditor true if you do not want the necessary elements for viewing all the database elements.
-   EquipmentEditor( QWidget *parent=0, bool singleEquipEditor=false );
+   EquipmentEditor( QWidget *parent=nullptr, bool singleEquipEditor=false );
    virtual ~EquipmentEditor() {}
 
    //! \name Public UI Variables
@@ -138,7 +139,7 @@ public:
 
    //! Edit the given equipment.
    void setEquipment( Equipment* e );
-   
+
    void newEquipment(QString folder);
 
 public slots:
@@ -180,7 +181,7 @@ protected:
 private:
    Equipment* obsEquip;
    EquipmentListModel* equipmentListModel;
-   BeerXMLSortProxyModel* equipmentSortProxyModel;
+   IngredientSortProxyModel* equipmentSortProxyModel;
 
    void showChanges();
 

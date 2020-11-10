@@ -21,6 +21,7 @@
 
 #include <QDir>
 #include <QTime>
+#include <QString>
 
 const QString Log::filename = "brewtarget_log.txt";
 const QString Log::timeFormat = "hh:mm:ss.zzz";
@@ -30,14 +31,14 @@ Log::Log(bool isLoggingToStderr)
    : errStream(stderr),
      file(),
      isLoggingToStderr(isLoggingToStderr),
-     stream(NULL) {
+     stream(nullptr) {
 }
 
 Log::~Log() {
    delete stream;
-   stream = NULL;
+   stream = nullptr;
    if( file.isOpen() )
-      file.close();   
+      file.close();
 }
 
 void Log::changeDirectory(const QDir defaultDir) {
@@ -48,6 +49,43 @@ void Log::changeDirectory(const QDir defaultDir) {
    // Test default location
    file.setFileName(defaultDir.filePath(filename));
    if( file.open(QIODevice::WriteOnly | QIODevice::Truncate) ) {
+      stream = new QTextStream(&file);
+      return;
+   }
+
+   // Defaults to temporary
+   file.setFileName(QDir::temp().filePath(filename));
+   if( file.open(QFile::WriteOnly | QFile::Truncate) ) {
+      stream = new QTextStream(&file);
+      warn(QString("Log is in a temporary directory: %1").arg(file.fileName()));
+      return;
+   }
+
+   warn(QString("Could not create a log file."));
+}
+
+void Log::changeDirectory() {
+   //If it's the same, just return, no need to do anything.
+   if ( LogFilePath.filePath(filename) == file.fileName() ) {
+      return;
+   }
+
+   //If the file is already initialize, it needs to be closed and redefined.
+   if (stream) {
+      delete stream;
+      stream = nullptr;
+      if( file.isOpen() )
+         file.close();
+      //Preserving the old logfile
+      if ( ! file.copy(LogFilePath.filePath(filename)) ) {
+         error("Error while copying to the new file location\nReverting settings");
+         LogFilePath = QDir(QFileInfo(file).filePath());
+      }
+   }
+
+   // Test default location
+   file.setFileName(LogFilePath.filePath(filename));
+   if( file.open(QIODevice::Append) ) {
       stream = new QTextStream(&file);
       return;
    }
@@ -86,10 +124,17 @@ void Log::doLog(const LogType lt, const QString message) {
          .arg(message);
 
    mutex.lock();
+#if QT_VERSION < QT_VERSION_CHECK(5,15,0)
    if (isLoggingToStderr)
       errStream << logEntry << endl;
    if (stream)
       *stream << logEntry << endl;
+#else
+   if (isLoggingToStderr)
+      errStream << logEntry << Qt::endl;
+   if (stream)
+      *stream << logEntry << Qt::endl;
+#endif
    mutex.unlock();
 
    emit wroteEntry(logEntry);
@@ -97,10 +142,30 @@ void Log::doLog(const LogType lt, const QString message) {
 
 QString Log::getTypeName(const LogType type) const {
    switch(type) {
-      case LogType_DEBUG: return "DEBUG";
-      case LogType_INFO: return "INFO";
-      case LogType_WARNING: return "WARNING";
-      case LogType_ERROR: return "ERROR";
-      default: return "";
+      case LogType_DEBUG: return tr("DEBUG");
+      case LogType_INFO: return tr("INFO");
+      case LogType_WARNING: return tr("WARNING");
+      case LogType_ERROR: return tr("ERROR");
    }
+   return tr("ERROR");
+}
+
+Log::LogType Log::getLogTypeFromString(QString type)
+{
+   if (type == "INFO") return LogType_INFO;
+   else if (type == "WARNING") return LogType_WARNING;
+   else if (type == "ERROR") return LogType_ERROR;
+   else if (type == "DEBUG") return LogType_DEBUG;
+   else return LogType_INFO;
+}
+
+QString Log::getOptionStringFromLogType(const LogType type)
+{
+   switch(type) {
+      case LogType_DEBUG: return QString("DEBUG");
+      case LogType_INFO: return QString("INFO");
+      case LogType_WARNING: return QString("WARNING");
+      case LogType_ERROR: return QString("ERROR");
+   }
+   return QString("INFO");
 }

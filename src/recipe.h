@@ -32,14 +32,13 @@ class Recipe;
 #include <QString>
 #include <QDate>
 #include <QMutex>
-#include "BeerXMLElement.h"
+#include "ingredient.h"
 #include "hop.h" // Dammit! Have to include these for Hop::Use and Misc::Use.
 #include "misc.h"
+#include "salt.h"
 #include "brewnote.h"
 
 // Forward declarations.
-//class Hop;
-//class Misc;
 class Style;
 class Mash;
 class Fermentable;
@@ -62,25 +61,27 @@ bool operator==(Recipe &r1, Recipe &r2 );
  *
  * \brief Model class for recipe records in the database.
  */
-class Recipe : public BeerXMLElement
+class Recipe : public Ingredient
 {
    Q_OBJECT
    Q_CLASSINFO("signal", "recipes")
-   Q_CLASSINFO("prefix", "recipe")
-   
+
    friend class Database;
+   friend class BeerXML;
+   friend class RecipeFormatter;
+   friend class MainWindow;
+   friend class WaterDialog;
 public:
 
    virtual ~Recipe() {}
 
    friend bool operator<(Recipe &r1, Recipe &r2 );
    friend bool operator==(Recipe &r1, Recipe &r2 );
-   friend class RecipeFormatter;
-   
+
    // NOTE: move to database?
    //! \brief Retains only the name, but sets everything else to defaults.
    void clear();
-   
+
    //! \brief The type (lager, ale, etc.).
    Q_PROPERTY( QString type READ type WRITE setType /*NOTIFY changed*/ /*changedType*/ )
    //! \brief The brewer.
@@ -133,13 +134,13 @@ public:
    Q_PROPERTY( double primingSugarEquiv READ primingSugarEquiv WRITE setPrimingSugarEquiv /*NOTIFY changed*/ /*changedPrimingSugarEquiv*/ )
    //! \brief The factor required to convert the amount of sugar required for bottles to keg (usually about 0.5).
    Q_PROPERTY( double kegPrimingFactor READ kegPrimingFactor WRITE setKegPrimingFactor /*NOTIFY changed*/ /*changedKegPrimingFactor*/ )
-  
+
    // Calculated stored properties.
    //! \brief The calculated OG.
    Q_PROPERTY( double og READ og WRITE setOg /*NOTIFY changed*/ /*changedOg*/ )
    //! \brief The calculated FG.
    Q_PROPERTY( double fg READ fg WRITE setFg /*NOTIFY changed*/ /*changedFg*/ )
-   
+
    // Calculated unstored properties. These need to listen for changes to
    // the uncalculated properties they depend on, and re-emit changed()
    // when appropriate.
@@ -171,7 +172,7 @@ public:
    Q_PROPERTY( double grains_kg READ grains_kg /*WRITE*/ /*NOTIFY changed*/ /*changedGrains_kg*/ STORED false)
    //! \brief The beer color as a displayable QColor.
    Q_PROPERTY( QColor SRMColor READ SRMColor /*WRITE*/ /*NOTIFY changed*/ STORED false )
-   
+
    // Relational properties.
    //! \brief The mash.
    Q_PROPERTY( Mash* mash READ mash /*WRITE*/ /*NOTIFY changed*/ STORED false)
@@ -195,11 +196,13 @@ public:
    Q_PROPERTY( QList<Yeast*> yeasts READ yeasts /*WRITE*/ /*NOTIFY changed*/ STORED false )
    //! \brief The waters.
    Q_PROPERTY( QList<Water*> waters READ waters /*WRITE*/ /*NOTIFY changed*/ STORED false )
-   
+   //! \brief The salts.
+   Q_PROPERTY( QList<Salt*> salts READ salts /*WRITE*/ /*NOTIFY changed*/ STORED false )
+
    // Relational setters.
    // NOTE: do these add/remove methods belong here? Should they only exist in Database?
    // One method to bring them all and in darkness bind them
-   void remove( BeerXMLElement *var);
+   void remove( Ingredient *var);
 
    // And you do know what happens next right?
    void addHop( Hop *var );
@@ -207,6 +210,7 @@ public:
    void addMisc( Misc* var );
    void addYeast( Yeast* var );
    void addWater( Water* var );
+   void addSalt( Salt* var );
    void removeBrewNote(BrewNote* var);
    void removeInstruction( Instruction* ins );
    /*!
@@ -256,7 +260,8 @@ public:
    double carbonationTemp_c() const;
    double primingSugarEquiv() const;
    double kegPrimingFactor() const;
-   
+   bool cacheOnly() const;
+
    // Calculated getters.
    double points();
    double ABV_pct();
@@ -275,20 +280,21 @@ public:
    double grainsInMash_kg();
    double grains_kg();
    QList<double> IBUs();
-   
+
    // Relational getters
    QList<Hop*> hops() const;
    QList<Instruction*> instructions() const;
    QList<Fermentable*> fermentables() const;
-   QList<Misc*> miscs() const;
+   QList<Misc*>  miscs() const;
    QList<Yeast*> yeasts() const;
    QList<Water*> waters() const;
+   QList<Salt*>  salts() const;
    QList<BrewNote*> brewNotes() const;
-   
+
    Mash* mash() const;
    Equipment* equipment() const;
-   Style* style() const;
-   
+   Style* style();
+
    // Other junk.
    QVector<PreInstruction> mashInstructions(double timeRemaining, double totalWaterAdded_l, unsigned int size);
    QVector<PreInstruction> mashSteps();
@@ -299,34 +305,23 @@ public:
    bool hasBoilExtract();
    static bool isFermentableSugar(Fermentable*);
    PreInstruction addExtracts(double timeRemaining) const;
-   
+
    // Helpers
    //! \brief Get the ibus from a given \c hop.
    double ibuFromHop(Hop const* hop);
+   //! \brief Formats the fermentables for instructions
    QList<QString> getReagents( QList<Fermentable*> ferms );
+   //! \brief Formats the mashsteps for instructions
    QList<QString> getReagents( QList<MashStep*> msteps );
+   //! \brief Formats the hops for instructions
    QList<QString> getReagents( QList<Hop*> hops, bool firstWort = false );
+   //! \brief Formats the salts for instructions
+   QStringList getReagents( QList<Salt*> salts, Salt::WhenToAdd wanted);
    QHash<QString,double> calcTotalPoints();
-   
+
    static QString classNameStr();
 
-signals:
-   //! \brief Emitted when \c name() changes.
-   void changedName(const QString&);
-   
-public slots:
-   void acceptEquipChange(QMetaProperty prop, QVariant val);
-   void acceptFermChange(QMetaProperty prop, QVariant val);
-   void acceptHopChange(QMetaProperty prop, QVariant val);
-   void acceptYeastChange(QMetaProperty prop, QVariant val);
-   void acceptMashChange(QMetaProperty prop, QVariant val);
-
-   void onFermentableChanged();
-   void acceptHopChange(Hop* hop);
-   void acceptYeastChange(Yeast* yeast);
-   void acceptMashChange(Mash* mash);
-
-   // Setters -- why are these slots?
+   // Setters that are not slots
    void setType( const QString &var );
    void setBrewer( const QString &var );
    void setBatchSize_l( double var );
@@ -355,47 +350,94 @@ public slots:
    void setCarbonationTemp_c( double var );
    void setPrimingSugarEquiv( double var );
    void setKegPrimingFactor( double var );
-   
+   void setCacheOnly( bool cache );
+
+signals:
+
+public slots:
+   void acceptEquipChange(QMetaProperty prop, QVariant val);
+   void acceptFermChange(QMetaProperty prop, QVariant val);
+   void acceptHopChange(QMetaProperty prop, QVariant val);
+   void acceptYeastChange(QMetaProperty prop, QVariant val);
+   void acceptMashChange(QMetaProperty prop, QVariant val);
+
+   void onFermentableChanged();
+   void acceptHopChange(Hop* hop);
+   void acceptYeastChange(Yeast* yeast);
+   void acceptMashChange(Mash* mash);
+
 private:
-   
+
    Recipe(Brewtarget::DBTable table, int key);
+   Recipe(Brewtarget::DBTable table, int key, QSqlRecord rec);
+   Recipe(QString name, bool cache = true);
    Recipe(Recipe const& other);
-   
+
+   // Cached properties that are written directly to db
+   QString m_type;
+   QString m_brewer;
+   QString m_asstBrewer;
+   double m_batchSize_l;
+   double m_boilSize_l;
+   double m_boilTime_min;
+   double m_efficiency_pct;
+   int m_fermentationStages;
+   double m_primaryAge_days;
+   double m_primaryTemp_c;
+   double m_secondaryAge_days;
+   double m_secondaryTemp_c;
+   double m_tertiaryAge_days;
+   double m_tertiaryTemp_c;
+   double m_age;
+   double m_ageTemp_c;
+   QDate m_date;
+   double m_carbonation_vols;
+   bool m_forcedCarbonation;
+   QString m_primingSugarName;
+   double m_carbonationTemp_c;
+   double m_primingSugarEquiv;
+   double m_kegPrimingFactor;
+   QString m_notes;
+   QString m_tasteNotes;
+   double m_tasteRating;
+   int m_style_id;
+
    // Calculated properties.
-   double _ABV_pct;
-   double _color_srm;
-   double _boilGrav;
-   double _IBU;
-   QList<double> _ibus;
-   double _wortFromMash_l;
-   double _boilVolume_l;
-   double _postBoilVolume_l;
-   double _finalVolume_l;
+   double m_ABV_pct;
+   double m_color_srm;
+   double m_boilGrav;
+   double m_IBU;
+   QList<double> m_ibus;
+   double m_wortFromMash_l;
+   double m_boilVolume_l;
+   double m_postBoilVolume_l;
+   double m_finalVolume_l;
    // Final volume before any losses out of the kettle, used in calculations for sg/ibu/etc.
-   double _finalVolumeNoLosses_l;
-   double _calories;
-   double _grainsInMash_kg;
-   double _grains_kg;
-   QColor _SRMColor;
-   
+   double m_finalVolumeNoLosses_l;
+   double m_calories;
+   double m_grainsInMash_kg;
+   double m_grains_kg;
+   QColor m_SRMColor;
+
    // Calculated, but stored...BeerXML is weird sometimes.
-   double _og;
-   double _fg;
-   double _og_fermentable;
-   double _fg_fermentable;
-   
+   double m_og;
+   double m_fg;
+   double m_og_fermentable;
+   double m_fg_fermentable;
+
+   bool m_cacheOnly;
    // True when constructed, indicates whether recalcAll has been called.
-   bool _uninitializedCalcs;
-   QMutex _uninitializedCalcsMutex;
-   QMutex _recalcMutex;
-   
+   bool m_uninitializedCalcs;
+   QMutex m_uninitializedCalcsMutex;
+   QMutex m_recalcMutex;
+
    // Batch size without losses.
    double batchSizeNoLosses_l();
-   
+
    // Some recalculators for calculated properties.
-   
+
    /* Recalculates all the calculated properties.
-    * 
+    *
     * WARNING: this call took 0.15s in rev 916!
     */
    void recalcAll();
@@ -419,19 +461,20 @@ private:
    Q_INVOKABLE void recalcCalories();
    // Emits changed(og), changed(fg). Depends on: _wortFromMash_l, _finalVolume_l
    Q_INVOKABLE void recalcOgFg();
-   
+
    // Adds instructions to the recipe.
    Instruction* postboilFermentablesIns();
    Instruction* postboilIns();
    Instruction* mashFermentableIns();
-   Instruction* mashWaterIns(unsigned int size);
+   Instruction* mashWaterIns();
    Instruction* firstWortHopsIns();
    Instruction* topOffIns();
-   
+   Instruction* saltWater(Salt::WhenToAdd when);
+
    //void setDefaults();
    void addPreinstructions( QVector<PreInstruction> preins );
    bool isValidType( const QString &str );
-   
+
    static QHash<QString,QString> tagToProp;
    static QHash<QString,QString> tagToPropHash();
 };

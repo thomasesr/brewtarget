@@ -55,8 +55,9 @@ ENDMACRO(ADD_PCH_RULE _src_list _header_filename)
 SET( brewtarget_SRCS
     ${SRCDIR}/AboutDialog.cpp
     ${SRCDIR}/Algorithms.cpp
-    ${SRCDIR}/BeerXMLElement.cpp
-    ${SRCDIR}/BeerXMLSortProxyModel.cpp
+    ${SRCDIR}/ingredient.cpp
+    ${SRCDIR}/beerxml.cpp
+    ${SRCDIR}/IngredientSortProxyModel.cpp
     ${SRCDIR}/boiltime.cpp
     ${SRCDIR}/BrewDayWidget.cpp
     ${SRCDIR}/BrewDayScrollWidget.cpp
@@ -135,6 +136,8 @@ SET( brewtarget_SRCS
     ${SRCDIR}/recipe.cpp
     ${SRCDIR}/RecipeFormatter.cpp
     ${SRCDIR}/RefractoDialog.cpp
+    ${SRCDIR}/salt.cpp
+    ${SRCDIR}/SaltTableModel.cpp
     ${SRCDIR}/ScaleRecipeTool.cpp
     ${SRCDIR}/SgDensityUnitSystem.cpp
     ${SRCDIR}/SIVolumeUnitSystem.cpp
@@ -158,8 +161,12 @@ SET( brewtarget_SRCS
     ${SRCDIR}/USWeightUnitSystem.cpp
     ${SRCDIR}/water.cpp
     ${SRCDIR}/WaterTableModel.cpp
+    ${SRCDIR}/WaterListModel.cpp
     ${SRCDIR}/WaterTableWidget.cpp
+    ${SRCDIR}/WaterButton.cpp
     ${SRCDIR}/WaterEditor.cpp
+    ${SRCDIR}/WaterDialog.cpp
+    ${SRCDIR}/WaterSortFilterProxyModel.cpp
     ${SRCDIR}/yeast.cpp
     ${SRCDIR}/YeastDialog.cpp
     ${SRCDIR}/YeastEditor.cpp
@@ -169,6 +176,9 @@ SET( brewtarget_SRCS
     ${SRCDIR}/BtDigitWidget.cpp
     ${SRCDIR}/PitchDialog.cpp
     ${SRCDIR}/RecipeExtrasWidget.cpp
+    ${SRCDIR}/PropertySchema.cpp
+    ${SRCDIR}/TableSchema.cpp
+    ${SRCDIR}/DatabaseSchema.cpp
 )
 
 # List of all the *.ui.
@@ -196,6 +206,7 @@ SET( brewtarget_UIS
     ${UIDIR}/timerMainDialog.ui
     ${UIDIR}/timerWidget.ui
     ${UIDIR}/waterEditor.ui
+    ${UIDIR}/waterDialog.ui
     ${UIDIR}/yeastEditor.ui
     ${UIDIR}/mashDesigner.ui
     ${UIDIR}/pitchDialog.ui
@@ -208,8 +219,9 @@ SET( brewtarget_UIS
 SET( brewtarget_MOC_HEADERS
     ${SRCDIR}/AboutDialog.h
     ${SRCDIR}/BeerColorWidget.h
-    ${SRCDIR}/BeerXMLElement.h
-    ${SRCDIR}/BeerXMLSortProxyModel.h
+    ${SRCDIR}/ingredient.h
+    ${SRCDIR}/beerxml.h
+    ${SRCDIR}/IngredientSortProxyModel.h
     ${SRCDIR}/boiltime.h
     ${SRCDIR}/BrewDayWidget.h
     ${SRCDIR}/BrewDayScrollWidget.h
@@ -268,6 +280,8 @@ SET( brewtarget_MOC_HEADERS
     ${SRCDIR}/RecipeExtrasWidget.h
     ${SRCDIR}/RecipeFormatter.h
     ${SRCDIR}/RefractoDialog.h
+    ${SRCDIR}/salt.h
+    ${SRCDIR}/SaltTableModel.h
     ${SRCDIR}/ScaleRecipeTool.h
     ${SRCDIR}/StrikeWaterDialog.h
     ${SRCDIR}/StyleButton.h
@@ -279,9 +293,13 @@ SET( brewtarget_MOC_HEADERS
     ${SRCDIR}/TimerMainDialog.h
     ${SRCDIR}/TimerWidget.h
     ${SRCDIR}/unit.h
+    ${SRCDIR}/WaterListModel.h
     ${SRCDIR}/WaterTableModel.h
     ${SRCDIR}/WaterTableWidget.h
+    ${SRCDIR}/WaterButton.h
     ${SRCDIR}/WaterEditor.h
+    ${SRCDIR}/WaterDialog.h
+    ${SRCDIR}/WaterSortFilterProxyModel.h
     ${SRCDIR}/YeastDialog.h
     ${SRCDIR}/YeastEditor.h
     ${SRCDIR}/YeastSortFilterProxyModel.h
@@ -297,6 +315,25 @@ SET( brewtarget_MOC_HEADERS
     ${SRCDIR}/style.h
     ${SRCDIR}/water.h
     ${SRCDIR}/yeast.h
+    ${SRCDIR}/BrewnoteSchema.h
+    ${SRCDIR}/BtAllTableSchema.h
+    ${SRCDIR}/DatabaseSchema.h
+    ${SRCDIR}/EquipmentSchema.h
+    ${SRCDIR}/FermentableSchema.h
+    ${SRCDIR}/HopSchema.h
+    ${SRCDIR}/InstructionSchema.h
+    ${SRCDIR}/MashSchema.h
+    ${SRCDIR}/MashStepSchema.h
+    ${SRCDIR}/MiscSchema.h
+    ${SRCDIR}/PropertySchema.h
+    ${SRCDIR}/RecipeSchema.h
+    ${SRCDIR}/SaltSchema.h
+    ${SRCDIR}/SettingsSchema.h
+    ${SRCDIR}/StyleSchema.h
+    ${SRCDIR}/TableSchema.h
+    ${SRCDIR}/WaterSchema.h
+    ${SRCDIR}/YeastSchema.h
+
 )
 
 SET( FILES_TO_TRANSLATE
@@ -423,19 +460,19 @@ ENDIF()
 
 SET( QT5_USE_MODULES_LIST
    ${brewtarget_EXECUTABLE}
-   Widgets
-   Network
-   PrintSupport
-   Sql
-   Svg
-   Xml
+   Qt5::Widgets
+   Qt5::Network
+   Qt5::PrintSupport
+   Qt5::Sql
+   Qt5::Svg
+   Qt5::Xml
    )
 
 IF( NOT ${NO_QTMULTIMEDIA})
-SET( QT5_USE_MODULES_LIST ${QT5_USE_MODULES_LIST} Multimedia)
+   SET( QT5_USE_MODULES_LIST ${QT5_USE_MODULES_LIST} Qt5::Multimedia)
 ENDIF()
 
-QT5_USE_MODULES( ${QT5_USE_MODULES_LIST})
+target_link_libraries( ${QT5_USE_MODULES_LIST})
 
 #=================================Tests========================================
 
@@ -449,20 +486,20 @@ ADD_EXECUTABLE(
 
 SET( QT5_USE_MODULES_LIST
    brewtarget_tests
-   Widgets
-   Network
-   PrintSupport
-   Sql
-   Svg
-   Xml
-   Test
+   Qt5::Widgets
+   Qt5::Network
+   Qt5::PrintSupport
+   Qt5::Sql
+   Qt5::Svg
+   Qt5::Xml
+   Qt5::Test
    )
 
 IF( NOT ${NO_QTMULTIMEDIA})
-SET( QT5_USE_MODULES_LIST ${QT5_USE_MODULES_LIST} Multimedia)
+SET( QT5_USE_MODULES_LIST ${QT5_USE_MODULES_LIST} Qt5::Multimedia)
 ENDIF()
 
-QT5_USE_MODULES(${QT5_USE_MODULES_LIST})
+target_link_libraries(${QT5_USE_MODULES_LIST})
 
 ADD_TEST(
    NAME pstdintTest
