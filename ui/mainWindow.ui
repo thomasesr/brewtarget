@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1050</width>
-    <height>829</height>
+    <width>1200</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,10 +26,13 @@
    <bool>false</bool>
   </property>
   <property name="windowTitle">
-   <string notr="true">Brewtarget - $VERSIONSTRING</string>
+   <!-- It would be brilliant if we could do this sort of variable substitution here, but, AFAIK, we can't.  What
+        actually happens is that the entire text of this field is overwritten in a call to setWindowTitle() in
+        MainWindow::MainWindow(). -->
+   <string notr="true">$CONFIG_APPLICATION_NAME_UC - $CONFIG_VERSION_STRING</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../brewtarget.qrc">
+   <iconset resource="../resources.qrc">
     <normaloff>:/images/brewtarget.svg</normaloff>:/images/brewtarget.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -40,7 +43,7 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QWidget" name="widget_tree" native="true">
-       <layout class="QVBoxLayout" name="verticalLayout_12">
+       <layout class="QVBoxLayout" name="verticalLayout_central">
         <item>
          <widget class="QLabel" name="label_Brewtarget">
           <property name="sizePolicy">
@@ -53,7 +56,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="../brewtarget.qrc">:/images/title.png</pixmap>
+           <pixmap resource="../resources.qrc">:/images/title.png</pixmap>
           </property>
          </widget>
         </item>
@@ -80,15 +83,13 @@
             <height>16</height>
            </size>
           </property>
+
           <widget class="QWidget" name="tabTree_recipe">
            <property name="acceptDrops">
             <bool>true</bool>
            </property>
-           <property name="toolTip">
-            <string>Recipes</string>
-           </property>
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/brewtarget.svg</normaloff>:/images/brewtarget.svg</iconset>
            </attribute>
            <attribute name="title">
@@ -107,19 +108,20 @@
             </item>
            </layout>
           </widget>
+
           <widget class="QWidget" name="tabTree_style">
            <property name="acceptDrops">
             <bool>true</bool>
            </property>
-           <property name="toolTip">
-            <string>Styles</string>
-           </property>
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/smallStyle.svg</normaloff>:/images/smallStyle.svg</iconset>
            </attribute>
            <attribute name="title">
             <string/>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Styles</string>
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
@@ -131,23 +133,82 @@
             </item>
            </layout>
           </widget>
+
           <widget class="QWidget" name="tabTree_equip">
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/smallKettle.svg</normaloff>:/images/smallKettle.svg</iconset>
            </attribute>
            <attribute name="title">
             <string/>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <attribute name="toolTip">
+            <string>Equipment</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_equipmentTree">
             <item>
-             <widget class="EquipmentTreeView" name="treeView_equip"/>
+             <widget class="EquipmentTreeView" name="treeView_equipment"/>
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tabTree_ferm">
+
+          <widget class="QWidget" name="tabTree_mash">
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/iconMash.svg</normaloff>:/images/iconMash.svg</iconset>
+           </attribute>
+           <attribute name="title">
+            <string/>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Mash Profiles</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_mashTree">
+            <item>
+             <widget class="MashTreeView" name="treeView_mash"/>
+            </item>
+           </layout>
+          </widget>
+
+          <widget class="QWidget" name="tabTree_boil">
+           <attribute name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/iconBoil.svg</normaloff>:/images/iconBoil.svg</iconset>
+           </attribute>
+           <attribute name="title">
+            <string/>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Boil Profiles</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_boilTree">
+            <item>
+             <widget class="BoilTreeView" name="treeView_boil"/>
+            </item>
+           </layout>
+          </widget>
+
+          <widget class="QWidget" name="tabTree_fermentation">
+           <attribute name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/iconFermentation.svg</normaloff>:/images/iconFermentation.svg</iconset>
+           </attribute>
+           <attribute name="title">
+            <string/>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Fermentation Profiles</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_fermentationTree">
+            <item>
+             <widget class="FermentationTreeView" name="treeView_fermentation"/>
+            </item>
+           </layout>
+          </widget>
+
+          <widget class="QWidget" name="tabTree_fermentables">
+           <attribute name="icon">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/smallBarley.svg</normaloff>:/images/smallBarley.svg</iconset>
            </attribute>
            <attribute name="title">
@@ -156,15 +217,16 @@
            <attribute name="toolTip">
             <string>Fermentables</string>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <layout class="QHBoxLayout" name="horizontalLayout_fermentableTree">
             <item>
-             <widget class="FermentableTreeView" name="treeView_ferm"/>
+             <widget class="FermentableTreeView" name="treeView_fermentable"/>
             </item>
            </layout>
           </widget>
+
           <widget class="QWidget" name="tabTree_hops">
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/smallHop.svg</normaloff>:/images/smallHop.svg</iconset>
            </attribute>
            <attribute name="title">
@@ -173,15 +235,16 @@
            <attribute name="toolTip">
             <string>Hops</string>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
+           <layout class="QHBoxLayout" name="horizontalLayout_hopTree">
             <item>
-             <widget class="HopTreeView" name="treeView_hops"/>
+             <widget class="HopTreeView" name="treeView_hop"/>
             </item>
            </layout>
           </widget>
+
           <widget class="QWidget" name="tabTree_misc">
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/smallQuestion.svg</normaloff>:/images/smallQuestion.svg</iconset>
            </attribute>
            <attribute name="title">
@@ -196,9 +259,10 @@
             </item>
            </layout>
           </widget>
+
           <widget class="QWidget" name="tabTree_yeast">
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/smallYeast.svg</normaloff>:/images/smallYeast.svg</iconset>
            </attribute>
            <attribute name="title">
@@ -207,26 +271,31 @@
            <attribute name="toolTip">
             <string>Yeasts</string>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <layout class="QHBoxLayout" name="horizontalLayout_yeast">
             <item>
              <widget class="YeastTreeView" name="treeView_yeast"/>
             </item>
            </layout>
           </widget>
+
           <widget class="QWidget" name="tabTree_water">
            <attribute name="icon">
-            <iconset resource="../brewtarget.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/images/smallWater.svg</normaloff>:/images/smallWater.svg</iconset>
            </attribute>
            <attribute name="title">
             <string/>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout">
+           <attribute name="toolTip">
+            <string>Water</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_water">
             <item>
              <widget class="WaterTreeView" name="treeView_water"/>
             </item>
            </layout>
           </widget>
+
          </widget>
         </item>
        </layout>
@@ -253,8 +322,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>695</width>
-           <height>398</height>
+           <width>849</width>
+           <height>462</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -266,15 +335,9 @@
             <property name="currentIndex">
              <number>0</number>
             </property>
-            <property name="mimeAccepted" stdset="0">
-             <string notr="true">application/x-brewtarget-recipe</string>
-            </property>
             <widget class="QWidget" name="tab_recipe">
              <property name="acceptDrops">
               <bool>true</bool>
-             </property>
-             <property name="configSection" stdset="0">
-              <string>tab_recipe</string>
              </property>
              <attribute name="title">
               <string>Recipe</string>
@@ -285,7 +348,7 @@
                 <item row="0" column="0">
                  <layout class="QHBoxLayout" name="horizontalLayout_name">
                   <item>
-                   <widget class="QLabel" name="label">
+                   <widget class="QLabel" name="label_name">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -301,7 +364,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLineEdit" name="lineEdit_name">
+                   <widget class="SmartLineEdit" name="lineEdit_name">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -314,12 +377,6 @@
                       <height>0</height>
                      </size>
                     </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>360</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
                     <property name="toolTip">
                      <string>Name of recipe</string>
                     </property>
@@ -329,7 +386,7 @@
                    </widget>
                   </item>
                   <item>
-                   <spacer name="horizontalSpacer">
+                   <spacer name="horizontalSpacer_1">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -341,168 +398,279 @@
                     </property>
                    </spacer>
                   </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_locked">
+                    <property name="layoutDirection">
+                     <enum>Qt::RightToLeft</enum>
+                    </property>
+                    <property name="text">
+                     <string>Recipe Locked</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_mainpanel">
-                <item>
+               <!-- Main bit of Recipe tab (below the recipe name line).
+                    Note that, because this is one of several tabs (Recipe / Extras / Water / Brewday / etc), the
+                    height will be that of the tab with the "tallest" contents.  Normally most of the other tabs are
+                    taller than this one, so there is a blank area under the fields.  But users can cover this up with
+                    the splitter if they want more space for the ingredients etc. -->
+               <widget class="QSplitter" name="splitter_vertical_recipe">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <widget class="QWidget" name="recipe_main_fields" native="true">
                  <layout class="QVBoxLayout" name="verticalLayout_left">
                   <item>
                    <layout class="QGridLayout" name="gridLayout_fields">
-                    <item row="5" column="0">
-                     <widget class="BtVolumeLabel" name="label_targetBoilSize">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="contextMenuPolicy">
-                       <enum>Qt::CustomContextMenu</enum>
-                      </property>
-                      <property name="text">
-                       <string>Tar&amp;get Boil Size</string>
-                      </property>
-                      <property name="buddy">
-                       <cstring>lineEdit_boilSize</cstring>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="7" column="0">
-                     <widget class="BtTimeLabel" name="label_boiltime">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="contextMenuPolicy">
-                       <enum>Qt::CustomContextMenu</enum>
-                      </property>
-                      <property name="text">
-                       <string>&amp;Boil Time</string>
-                      </property>
-                      <property name="buddy">
-                       <cstring>lineEdit_boilTime</cstring>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="1">
-                     <widget class="BtVolumeEdit" name="lineEdit_batchSize">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>100</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>100</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string>Target batch size</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                      </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">batchSize_l</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="1">
-                     <widget class="BtGenericEdit" name="lineEdit_efficiency">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>100</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>100</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="contextMenuPolicy">
-                       <enum>Qt::DefaultContextMenu</enum>
-                      </property>
-                      <property name="toolTip">
-                       <string>The extraction efficiency you expect</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                      </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">efficiency_pct</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="7" column="1">
-                     <widget class="BtTimeEdit" name="lineEdit_boilTime">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>100</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>100</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="contextMenuPolicy">
-                       <enum>Qt::DefaultContextMenu</enum>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                      </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">boilTime_min</string>
-                      </property>
-                     </widget>
-                    </item>
+
                     <item row="2" column="0">
                      <widget class="QLabel" name="styleLabel">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
                       <property name="text">
                        <string>&amp;Style</string>
                       </property>
                       <property name="buddy">
-                       <cstring>styleButton</cstring>
+                       <cstring>qWidget_styleBox</cstring>
                       </property>
                      </widget>
                     </item>
-                    <item row="8" column="0">
-                     <widget class="BtDensityLabel" name="label_boilSg">
+                    <item row="2" column="1" colspan="5">
+                     <widget class="QWidget" name="qWidget_styleBox" native="true">
+                      <layout class="QHBoxLayout" name="styleSubLayout">
+                       <item>
+                        <widget class="BtComboBoxStyle" name="styleComboBox">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>128</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QPushButton" name="pushButton_editStyle">
+                         <property name="toolTip">
+                          <string>Edit this style</string>
+                         </property>
+                         <property name="icon">
+                          <iconset resource="../resources.qrc">
+                           <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+
+                    <item row="3" column="0">
+                     <widget class="QLabel" name="equipmentLabel">
+                      <property name="text">
+                       <string>E&amp;quipment</string>
+                      </property>
+                      <property name="buddy">
+                       <cstring>qWidget_equipmentBox</cstring>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="1" colspan="5">
+                     <widget class="QWidget" name="qWidget_equipmentBox" native="true">
+                      <layout class="QHBoxLayout" name="equipmentSubLayout">
+                       <item>
+                        <widget class="BtComboBoxEquipment" name="equipmentComboBox">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>128</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QPushButton" name="pushButton_editEquipment">
+                         <property name="toolTip">
+                          <string>Edit this equipment</string>
+                         </property>
+                         <property name="text">
+                          <string/>
+                         </property>
+                         <property name="icon">
+                          <iconset resource="../resources.qrc">
+                           <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+
+                    <item row="4" column="0" colspan="5">
+                     <widget class="QGroupBox" name="groupBox_batchSize">
+                      <property name="title">
+                       <string>Batch Size</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignLeft</set>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_batchSize">
+                       <item>
+                        <widget class="SmartLabel" name="label_targetBatchSize">
+                         <property name="contextMenuPolicy">
+                          <enum>Qt::CustomContextMenu</enum>
+                         </property>
+                         <property name="text">
+                          <string>Target</string>
+                         </property>
+                         <property name="buddy">
+                          <cstring>lineEdit_batchSize</cstring>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="SmartLineEdit" name="lineEdit_batchSize">
+                         <property name="toolTip">
+                          <string>Target batch size</string>
+                         </property>
+                         <property name="alignment">
+                          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <!-- Calculated batch size is also known as final volume -->
+                        <widget class="SmartLabel" name="label_finalVolume">
+                         <property name="contextMenuPolicy">
+                          <enum>Qt::CustomContextMenu</enum>
+                         </property>
+                         <property name="text">
+                          <string>Calculated</string>
+                         </property>
+                         <property name="buddy">
+                          <cstring>value_finalVolume</cstring>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="SmartValueDisplay" name="value_finalVolume">
+                         <property name="toolTip">
+                          <string>Calculated final volume into the primary</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <spacer name="spacer_batchSize">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                         </property>
+                         <property name="sizeType">
+                          <enum>QSizePolicy::Expanding</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>60</width>
+                           <height>20</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+
+                    <item row="5" column="0" colspan="2">
+                     <widget class="SmartLabel" name="label_efficiency">
+                      <property name="contextMenuPolicy">
+                       <enum>Qt::CustomContextMenu</enum>
+                      </property>
+                      <property name="text">
+                       <string>Efficienc&amp;y</string>
+                      </property>
+                      <property name="buddy">
+                       <cstring>lineEdit_efficiency</cstring>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="5" column="2">
+                     <widget class="SmartLineEdit" name="lineEdit_efficiency">
+                      <property name="toolTip">
+                       <string>The extraction efficiency you expect</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="5" column="3">
+                     <spacer name="spacer_efficiency">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Expanding</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>60</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+
+                    <item row="6" column="0" colspan="2">
+                     <widget class="SmartLabel" name="label_targetBoilSize">
+                      <property name="contextMenuPolicy">
+                       <enum>Qt::CustomContextMenu</enum>
+                      </property>
+                      <property name="text">
+                       <string>Pre-Boil Volume</string>
+                      </property>
+                      <property name="buddy">
+                       <cstring>value_preBoilSize</cstring>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="6" column="2">
+                     <widget class="SmartValueDisplay" name="value_preBoilSize">
+                      <property name="toolTip">
+                       <string>Calculated preboil volume - See Boil tab below</string>
+                      </property>
+                     </widget>
+                    </item>
+
+                    <item row="7" column="0" colspan="2">
+                     <widget class="SmartLabel" name="label_boilTime">
+                      <property name="contextMenuPolicy">
+                       <enum>Qt::CustomContextMenu</enum>
+                      </property>
+                      <property name="text">
+                       <string>Boil Time</string>
+                      </property>
+                      <property name="buddy">
+                       <cstring>value_boilTime</cstring>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="7" column="2">
+                     <widget class="SmartValueDisplay" name="value_boilTime">
+                      <property name="toolTip">
+                       <string>See Boil tab below</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="7" column="3">
+                     <widget class="SmartLabel" name="label_boilSg">
                       <property name="contextMenuPolicy">
                        <enum>Qt::CustomContextMenu</enum>
                       </property>
@@ -510,258 +678,38 @@
                        <string>Boil SG</string>
                       </property>
                       <property name="buddy">
-                       <cstring>lineEdit_boilSg</cstring>
+                       <cstring>value_boilSg</cstring>
                       </property>
                      </widget>
                     </item>
-                    <item row="6" column="0">
-                     <widget class="QLabel" name="efficiencyLabel">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="text">
-                       <string>&amp;Efficiency (%)</string>
-                      </property>
-                      <property name="buddy">
-                       <cstring>lineEdit_efficiency</cstring>
-                      </property>
+                    <item row="7" column="4">
+                     <widget class="SmartValueDisplay" name="value_boilSg">
                      </widget>
                     </item>
-                    <item row="5" column="1">
-                     <widget class="BtVolumeEdit" name="lineEdit_boilSize">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
+                    <item row="7" column="5">
+                     <spacer name="spacer_boil">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
                       </property>
-                      <property name="minimumSize">
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Expanding</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
                        <size>
-                        <width>100</width>
-                        <height>0</height>
+                        <width>60</width>
+                        <height>20</height>
                        </size>
                       </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>100</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string>Target boil size</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignJustify|Qt::AlignVCenter</set>
-                      </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">boilSize_l</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="8" column="1">
-                     <widget class="BtDensityEdit" name="lineEdit_boilSg">
-                      <property name="enabled">
-                       <bool>false</bool>
-                      </property>
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>100</width>
-                        <height>16777214</height>
-                       </size>
-                      </property>
-                      <property name="mouseTracking">
-                       <bool>false</bool>
-                      </property>
-                      <property name="acceptDrops">
-                       <bool>false</bool>
-                      </property>
-                      <property name="frame">
-                       <bool>false</bool>
-                      </property>
-                      <property name="readOnly">
-                       <bool>true</bool>
-                      </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">boilGrav</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="1">
-                     <layout class="QHBoxLayout" name="horizontalLayout_2">
-                      <property name="topMargin">
-                       <number>0</number>
-                      </property>
-                      <item>
-                       <widget class="EquipmentButton" name="equipmentButton">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>0</height>
-                         </size>
-                        </property>
-                        <property name="maximumSize">
-                         <size>
-                          <width>16777215</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="CustomComboBox" name="equipmentComboBox">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="maximumSize">
-                         <size>
-                          <width>30</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item row="9" column="0">
-                     <widget class="QLabel" name="label_caloriesper">
-                      <property name="text">
-                       <string>Calories/12oz</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="0">
-                     <widget class="BtVolumeLabel" name="label_targetBatchSize">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="contextMenuPolicy">
-                       <enum>Qt::CustomContextMenu</enum>
-                      </property>
-                      <property name="text">
-                       <string>Target Batch Si&amp;ze</string>
-                      </property>
-                      <property name="buddy">
-                       <cstring>lineEdit_batchSize</cstring>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="0">
-                     <widget class="QLabel" name="equipmentLabel">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="text">
-                       <string>E&amp;quipment</string>
-                      </property>
-                      <property name="buddy">
-                       <cstring>equipmentButton</cstring>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="9" column="1">
-                     <widget class="QLabel" name="label_calories">
-                      <property name="font">
-                       <font>
-                        <family>Sans Serif</family>
-                        <pointsize>9</pointsize>
-                        <weight>50</weight>
-                        <bold>false</bold>
-                        <kerning>true</kerning>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>1.0</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="1">
-                     <layout class="QHBoxLayout" name="horizontalLayout_11">
-                      <item>
-                       <widget class="StyleButton" name="styleButton">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>0</height>
-                         </size>
-                        </property>
-                        <property name="maximumSize">
-                         <size>
-                          <width>360</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="CustomComboBox" name="styleComboBox">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="maximumSize">
-                         <size>
-                          <width>30</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
+                     </spacer>
                     </item>
                    </layout>
                   </item>
-                  <item>
-                   <spacer name="verticalSpacer_7">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="Line" name="line">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                  <property name="alignment">
+                   <set>Qt::AlignTop</set>
                   </property>
-                 </widget>
-                </item>
-                <item>
+                 </layout>
+                </widget><!-- recipe_main_fields -->
+                <widget class="QWidget" name="recipe_range_bars" native="true">
                  <layout class="QVBoxLayout" name="verticalLayout_lcd">
                   <item>
                    <layout class="QGridLayout" name="gridLayout_sliders">
@@ -788,12 +736,6 @@
                         <height>0</height>
                        </size>
                       </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
                      </widget>
                     </item>
                     <item row="2" column="0">
@@ -804,15 +746,12 @@
                      </widget>
                     </item>
                     <item row="4" column="0">
-                     <widget class="BtColorLabel" name="colorSRMLabel">
+                     <widget class="SmartLabel" name="label_color">
                       <property name="contextMenuPolicy">
                        <enum>Qt::CustomContextMenu</enum>
                       </property>
                       <property name="text">
                        <string>Color</string>
-                      </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">color_srm</string>
                       </property>
                      </widget>
                     </item>
@@ -837,37 +776,25 @@
                         <height>0</height>
                        </size>
                       </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
                      </widget>
                     </item>
                     <item row="0" column="0">
-                     <widget class="BtDensityLabel" name="oGLabel">
+                     <widget class="SmartLabel" name="label_og">
                       <property name="contextMenuPolicy">
                        <enum>Qt::CustomContextMenu</enum>
                       </property>
                       <property name="text">
                        <string>OG</string>
                       </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">og</string>
-                      </property>
                      </widget>
                     </item>
                     <item row="1" column="0">
-                     <widget class="BtDensityLabel" name="fGLabel">
+                     <widget class="SmartLabel" name="label_fg">
                       <property name="contextMenuPolicy">
                        <enum>Qt::CustomContextMenu</enum>
                       </property>
                       <property name="text">
                        <string>FG</string>
-                      </property>
-                      <property name="editField" stdset="0">
-                       <string notr="true">fg</string>
                       </property>
                      </widget>
                     </item>
@@ -875,70 +802,6 @@
                      <widget class="QLabel" name="label_ibugu">
                       <property name="text">
                        <string>IBU/GU</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="0">
-                     <widget class="BtVolumeLabel" name="label_batchsize">
-                      <property name="text">
-                       <string>Batch Size</string>
-                      </property>
-                      <property name="buddy">
-                       <cstring>rangeWidget_batchsize</cstring>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="1">
-                     <widget class="StyleRangeWidget" name="rangeWidget_batchsize" native="true">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>128</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="7" column="0">
-                     <widget class="BtVolumeLabel" name="label_boilsize">
-                      <property name="text">
-                       <string>Boil Size</string>
-                      </property>
-                      <property name="buddy">
-                       <cstring>rangeWidget_boilsize</cstring>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="7" column="1">
-                     <widget class="StyleRangeWidget" name="rangeWidget_boilsize" native="true">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>128</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
-                       </size>
                       </property>
                      </widget>
                     </item>
@@ -954,12 +817,6 @@
                        <size>
                         <width>128</width>
                         <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
                        </size>
                       </property>
                      </widget>
@@ -978,12 +835,6 @@
                         <height>0</height>
                        </size>
                       </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
                      </widget>
                     </item>
                     <item row="3" column="1">
@@ -998,12 +849,6 @@
                        <size>
                         <width>128</width>
                         <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
                        </size>
                       </property>
                      </widget>
@@ -1022,35 +867,16 @@
                         <height>0</height>
                        </size>
                       </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>512</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
                      </widget>
                     </item>
                    </layout>
                   </item>
-                  <item>
-                   <spacer name="verticalSpacer_2">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeType">
-                     <enum>QSizePolicy::Expanding</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
+                  <property name="alignment">
+                   <set>Qt::AlignTop</set>
+                  </property>
                  </layout>
-                </item>
-               </layout>
+                </widget> <!-- recipe_range_bars -->
+               </widget> <!-- splitter_vertical_recipe -->
               </item>
              </layout>
             </widget>
@@ -1058,9 +884,19 @@
              <attribute name="title">
               <string>Extras</string>
              </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_10">
+             <layout class="QVBoxLayout" name="verticalLayout_extras">
               <item>
                <widget class="RecipeExtrasWidget" name="recipeExtrasWidget" native="true"/>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="tab_water">
+             <attribute name="title">
+              <string>Water</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_water">
+              <item>
+               <widget class="RecipeWaterWidget" name="recipeWaterWidget" native="true"/>
               </item>
              </layout>
             </widget>
@@ -1068,6 +904,9 @@
              <attribute name="title">
               <string>Brewday</string>
              </attribute>
+             <property name="toolTip">
+              <string>Step-by-step instructions for brew day</string>
+             </property>
              <layout class="QHBoxLayout" name="horizontalLayout_17">
               <item>
                <widget class="BrewDayScrollWidget" name="brewDayScrollWidget" native="true"/>
@@ -1088,8 +927,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>695</width>
-           <height>318</height>
+           <width>849</width>
+           <height>324</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -1116,18 +955,19 @@
             <property name="currentIndex">
              <number>0</number>
             </property>
-            <property name="mimeAccepted" stdset="0">
-             <string notr="true">application/x-brewtarget-ingredient</string>
-            </property>
-            <widget class="QWidget" name="fermentableTab">
+
+            <widget class="QWidget" name="recipeFermentableTab">
              <attribute name="title">
               <string>Fermentables</string>
              </attribute>
              <layout class="QHBoxLayout" name="horizontalLayout_19">
               <item>
-               <widget class="QTableView" name="fermentableTable">
+               <widget class="QTableView" name="fermentableAdditionTable">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
+                </property>
+                <property name="acceptDrops">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -1145,7 +985,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
                   </property>
                  </widget>
@@ -1159,7 +999,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
                   </property>
                  </widget>
@@ -1173,7 +1013,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
                   </property>
                  </widget>
@@ -1195,13 +1035,14 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="hopsTab">
+
+            <widget class="QWidget" name="recipeHopTab">
              <attribute name="title">
               <string>Hops</string>
              </attribute>
              <layout class="QHBoxLayout" name="horizontalLayout_20">
               <item>
-               <widget class="QTableView" name="hopTable"/>
+               <widget class="QTableView" name="hopAdditionTable"/>
               </item>
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_hops">
@@ -1217,7 +1058,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
                   </property>
                  </widget>
@@ -1231,7 +1072,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
                   </property>
                  </widget>
@@ -1245,7 +1086,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
                   </property>
                  </widget>
@@ -1267,13 +1108,14 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="miscTab">
+
+            <widget class="QWidget" name="recipeMiscTab">
              <attribute name="title">
               <string>Miscellaneous</string>
              </attribute>
-             <layout class="QHBoxLayout" name="horizontalLayout_21">
+             <layout class="QHBoxLayout" name="horizontalLayout_misc">
               <item>
-               <widget class="QTableView" name="miscTable">
+               <widget class="QTableView" name="miscAdditionTable">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
                 </property>
@@ -1293,7 +1135,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
                   </property>
                  </widget>
@@ -1307,7 +1149,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
                   </property>
                  </widget>
@@ -1321,13 +1163,13 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <spacer name="verticalSpacer_5">
+                 <spacer name="verticalSpacer_misc">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>
                   </property>
@@ -1343,13 +1185,14 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="yeastTab">
+
+            <widget class="QWidget" name="recipeYeastTab">
              <attribute name="title">
               <string>Yeast</string>
              </attribute>
              <layout class="QHBoxLayout" name="horizontalLayout_13">
               <item>
-               <widget class="QTableView" name="yeastTable">
+               <widget class="QTableView" name="yeastAdditionTable">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
                 </property>
@@ -1369,7 +1212,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
                   </property>
                  </widget>
@@ -1383,7 +1226,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
                   </property>
                  </widget>
@@ -1397,7 +1240,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
                   </property>
                  </widget>
@@ -1419,110 +1262,15 @@
               </item>
              </layout>
             </widget>
+
             <widget class="QWidget" name="mashStepsTab">
              <attribute name="title">
               <string>Mash</string>
              </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_7">
+             <layout class="QVBoxLayout" name="verticalLayout_mashSteps">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_mashes">
-                <item>
-                 <widget class="QTableView" name="mashStepTableWidget">
-                  <property name="contextMenuPolicy">
-                   <enum>Qt::CustomContextMenu</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_mashbuttons">
-                  <property name="spacing">
-                   <number>1</number>
-                  </property>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_addMashStep">
-                    <property name="toolTip">
-                     <string>Add mash step</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../brewtarget.qrc">
-                      <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_removeMashStep">
-                    <property name="toolTip">
-                     <string>Remove selected mash step</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../brewtarget.qrc">
-                      <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_editMashStep">
-                    <property name="toolTip">
-                     <string>Edit selected mash step</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../brewtarget.qrc">
-                      <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_editMash">
-                    <property name="toolTip">
-                     <string>Edit mash properties</string>
-                    </property>
-                    <property name="text">
-                     <string>Edit mash</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_mashDes">
-                    <property name="text">
-                     <string>Mash Des</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_mashWizard">
-                    <property name="toolTip">
-                     <string>Invoke the mash wizard</string>
-                    </property>
-                    <property name="text">
-                     <string>Mash wiz</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="verticalSpacer">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
+                <widget class="MashStepsWidget" name="mashStepsWidget">
+                </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_mash">
@@ -1530,7 +1278,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QLabel" name="label_2">
+                 <widget class="QLabel" name="label_mash">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1538,35 +1286,50 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Mashs</string>
+                   <string>Mash</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="MashButton" name="mashButton">
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="CustomComboBox" name="mashComboBox">
+                 <widget class="BtComboBoxMash" name="mashComboBox">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                  <property name="maximumSize">
+                  <property name="minimumSize">
                    <size>
-                    <width>30</width>
-                    <height>16777215</height>
+                    <width>128</width>
+                    <height>0</height>
                    </size>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <spacer name="horizontalSpacer_4">
+                 <widget class="QPushButton" name="pushButton_editMash">
+                  <property name="toolTip">
+                   <string>Edit this mash</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="../resources.qrc">
+                    <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_mashStatus">
+                  <property name="toolTip">
+                   <string>Info about, and any problems with, this mash</string>
+                  </property>
+                  <!-- Temporarily add colour for debugging
+                  <property name="styleSheet">
+                   <string notr="true">color: white; background-color: #148263;</string>
+                  </property -->
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_mashCombo">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
@@ -1579,47 +1342,172 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButton_mashRemove">
+                 <widget class="QCheckBox" name="checkBox_fgCalcUsesMash">
                   <property name="text">
-                   <string/>
+                   <string>Use mash profile in FG calculation</string>
                   </property>
-                  <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
-                    <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
+                  <property name="toolTip">
+                   <string>Allow for how the mash temperatures and times make the wort more or less fermentable when estimating final gravity.  Leave this off if you have set yeast attenuation to reflect your own mash.</string>
                   </property>
                  </widget>
                 </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+
+            <widget class="QWidget" name="boilStepsTab">
+             <attribute name="title">
+              <string>Boil</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_boilSteps">
+              <item>
+                <widget class="BoilStepsWidget" name="boilStepsWidget">
+                </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_boil">
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
                 <item>
-                 <widget class="QPushButton" name="pushButton_mashUp">
-                  <property name="toolTip">
-                   <string>Mash step up</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
-                    <normaloff>:/images/smallUpArrow.svg</normaloff>:/images/smallUpArrow.svg</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="pushButton_mashDown">
-                  <property name="toolTip">
-                   <string>Mash step down</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
-                    <normaloff>:/images/smallDownArrow.svg</normaloff>:/images/smallDownArrow.svg</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="pushButton_saveMash">
-                  <property name="toolTip">
-                   <string>Save this mash profile</string>
+                 <widget class="QLabel" name="label_boil">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Save Mash</string>
+                   <string>Boil</string>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <widget class="BtComboBoxBoil" name="boilComboBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>128</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButton_editBoil">
+                  <property name="toolTip">
+                   <string>Edit this boil</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="../resources.qrc">
+                    <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_boilStatus">
+                  <property name="toolTip">
+                   <string>Info about, and any problems with, this boil</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_boilCombo">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+
+            <widget class="QWidget" name="fermentationStepsTab">
+             <attribute name="title">
+              <string>Fermentation</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_fermentationSteps">
+              <item>
+                <widget class="FermentationStepsWidget" name="fermentationStepsWidget">
+                </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_fermentation">
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="label_fermentation">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Fermentation</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="BtComboBoxFermentation" name="fermentationComboBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>128</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButton_editFermentation">
+                  <property name="toolTip">
+                   <string>Edit this fermentation</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="../resources.qrc">
+                    <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_fermentationStatus">
+                  <property name="toolTip">
+                   <string>Info about, and any problems with, this fermentation</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_fermentationCombo">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
                 </item>
                </layout>
               </item>
@@ -1640,114 +1528,115 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1050</width>
+     <width>1200</width>
      <height>24</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuAbout">
-    <property name="title">
-     <string>&amp;About</string>
-    </property>
-    <addaction name="actionManual"/>
-    <addaction name="separator"/>
-    <addaction name="actionAbout_BrewTarget"/>
-   </widget>
+   <!-- We don't _have_ to define these menus in the same order they are displayed, but it seems sensible to do so. -->
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <widget class="QMenu" name="menuBrewday">
-     <property name="title">
-      <string>&amp;Brewday</string>
-     </property>
-     <addaction name="actionBrewdayPreview"/>
-     <addaction name="actionBrewdayPrint"/>
-     <addaction name="actionBrewdayHTML"/>
-    </widget>
-    <widget class="QMenu" name="menuRecipe">
-     <property name="title">
-      <string>&amp;Recipe</string>
-     </property>
-     <addaction name="actionRecipePreview"/>
-     <addaction name="actionRecipePrint"/>
-     <addaction name="actionRecipeHTML"/>
-     <addaction name="actionRecipeBBCode"/>
-    </widget>
     <widget class="QMenu" name="menuDatabase">
      <property name="title">
       <string>&amp;Database</string>
      </property>
      <property name="icon">
-      <iconset resource="../brewtarget.qrc">
+      <iconset resource="../resources.qrc">
        <normaloff>:/images/server-database.png</normaloff>:/images/server-database.png</iconset>
      </property>
      <addaction name="actionBackup_Database"/>
      <addaction name="actionRestore_Database"/>
-     <addaction name="actionMergeDatabases"/>
-    </widget>
-    <widget class="QMenu" name="menuInventory">
-     <property name="title">
-      <string>In&amp;ventory</string>
-     </property>
-     <addaction name="actionInventoryPreview"/>
-     <addaction name="actionInventoryPrint"/>
-     <addaction name="actionInventoryHTML"/>
     </widget>
     <addaction name="actionNewRecipe"/>
-    <addaction name="actionCopy_Recipe"/>
     <addaction name="separator"/>
-    <addaction name="actionImport_Recipes"/>
-    <addaction name="actionExportRecipe"/>
+    <addaction name="actionImportFromXml"/>
+    <addaction name="actionExportToXml"/>
     <addaction name="menuDatabase"/>
     <addaction name="separator"/>
-    <addaction name="menuBrewday"/>
-    <addaction name="menuRecipe"/>
+    <addaction name="actionPrint"/>
     <addaction name="separator"/>
-    <addaction name="menuInventory"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionCopySelected"/>
+    <addaction name="action_recipeToTextClipboard"/>
+    <addaction name="separator"/>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="actionOptions"/>
+   </widget>
+
    <widget class="QMenu" name="menuView">
     <property name="title">
      <string>&amp;View</string>
     </property>
     <addaction name="actionEquipments"/>
     <addaction name="actionStyles"/>
-    <addaction name="actionMashs"/>
+    <addaction name="actionMashes"/>
+    <addaction name="actionBoils"/>
+    <addaction name="actionFermentations"/>
     <addaction name="separator"/>
     <addaction name="actionFermentables"/>
     <addaction name="actionHops"/>
     <addaction name="actionMiscs"/>
     <addaction name="actionYeasts"/>
+    <addaction name="separator"/>
+    <addaction name="actionWaters"/>
+    <addaction name="separator"/>
+    <addaction name="actionInventory"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>&amp;Tools</string>
     </property>
-    <addaction name="actionConvert_Units"/>
-    <addaction name="actionOG_Correction_Help"/>
+    <addaction name="actionUnitConversionTool"/>
+    <addaction name="actionOriginalGravityCorrectionTool"/>
     <addaction name="actionPitch_Rate_Calculator"/>
     <addaction name="actionPriming_Calculator"/>
-    <addaction name="action_recipeToTextClipboard"/>
     <addaction name="actionRefractometer_Tools"/>
     <addaction name="actionScale_Recipe"/>
     <addaction name="actionHydrometer_Temp_Adjustment"/>
+    <addaction name="actionAlcohol_Percentage_Tool"/>
     <addaction name="actionStrikeWater_Calculator"/>
-    <addaction name="actionWater_Chemistry"/>
+    <addaction name="actionAncestors"/>
     <addaction name="actionTimers"/>
-    <addaction name="separator"/>
-    <addaction name="actionOptions"/>
    </widget>
+   <widget class="QMenu" name="menuRecipe">
+    <property name="title">
+     <string>&amp;Recipe</string>
+    </property>
+    <addaction name="action_brewit"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>&amp;About</string>
+    </property>
+    <addaction name="actionManual"/>
+    <addaction name="separator"/>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <!-- This is the bit that determines the order of the top level menus in the main menu bar. -->
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
    <addaction name="menuAbout"/>
   </widget>
+
   <widget class="QStatusBar" name="statusbar"/>
+
   <widget class="QToolBar" name="toolBar">
    <property name="font">
     <font>
-     <weight>75</weight>
+     <weight>100</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -1763,8 +1652,13 @@
    <addaction name="actionNewRecipe"/>
    <addaction name="actionDeleteSelected"/>
    <addaction name="separator"/>
+   <addaction name="action_recipeToTextClipboard"/>
+   <addaction name="separator"/>
+   <!-- Same actions as on View menu -->
    <addaction name="actionEquipments"/>
-   <addaction name="actionMashs"/>
+   <addaction name="actionMashes"/>
+   <addaction name="actionBoils"/>
+   <addaction name="actionFermentations"/>
    <addaction name="actionStyles"/>
    <addaction name="separator"/>
    <addaction name="actionFermentables"/>
@@ -1772,36 +1666,67 @@
    <addaction name="actionMiscs"/>
    <addaction name="actionYeasts"/>
    <addaction name="separator"/>
-   <addaction name="actionTimers"/>
-   <addaction name="action_recipeToTextClipboard"/>
-   <addaction name="actionPitch_Rate_Calculator"/>
-   <addaction name="actionRefractometer_Tools"/>
+   <addaction name="actionWaters"/>
    <addaction name="separator"/>
+   <addaction name="actionInventory"/>
+   <addaction name="separator"/>
+   <!-- Same actions as on Tools menu -->
+   <addaction name="actionUnitConversionTool"/>
+   <addaction name="actionOriginalGravityCorrectionTool"/>
+   <addaction name="actionPitch_Rate_Calculator"/>
+   <addaction name="actionPriming_Calculator"/>
+   <addaction name="actionRefractometer_Tools"/>
+   <addaction name="actionScale_Recipe"/>
+   <addaction name="actionHydrometer_Temp_Adjustment"/>
+   <addaction name="actionAlcohol_Percentage_Tool"/>
+   <addaction name="actionStrikeWater_Calculator"/>
+   <addaction name="actionAncestors"/>
+   <addaction name="actionTimers"/>
+   <addaction name="separator"/>
+   <!-- Same actions as on Recipe menu -->
+   <addaction name="action_brewit"/>
   </widget>
-  <action name="actionAbout_BrewTarget">
+
+  <action name="actionHelp">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/smallQuestion.svg</normaloff>:/images/smallQuestion.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Help</string>
+   </property>
+   <property name="toolTip">
+    <string>Help</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallInfo.svg</normaloff>:/images/smallInfo.svg</iconset>
    </property>
    <property name="text">
-    <string>About &amp;BrewTarget</string>
+   <!-- As above, the entire text of this field is overwritten in a call to actionAbout->setText() in
+        MainWindow::MainWindow() -->
+    <string notr="true">About $CONFIG_APPLICATION_NAME_UC</string>
    </property>
    <property name="toolTip">
-    <string>About Brewtarget</string>
+   <!-- As above, the entire text of this field is overwritten in a call to actionAbout->setToolTip() in
+        MainWindow::MainWindow() -->
+    <string notr="true">About $CONFIG_APPLICATION_NAME_UC</string>
    </property>
   </action>
-  <action name="actionExportRecipe">
+  <action name="actionExportToXml">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallOutArrow.svg</normaloff>:/images/smallOutArrow.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Export Recipe</string>
+    <string>&amp;Export to File</string>
    </property>
   </action>
   <action name="actionFermentables">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallBarley.svg</normaloff>:/images/smallBarley.svg</iconset>
    </property>
    <property name="text">
@@ -1813,7 +1738,7 @@
   </action>
   <action name="actionHops">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallHop.svg</normaloff>:/images/smallHop.svg</iconset>
    </property>
    <property name="text">
@@ -1825,7 +1750,7 @@
   </action>
   <action name="actionMiscs">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallQuestion.svg</normaloff>:/images/smallQuestion.svg</iconset>
    </property>
    <property name="text">
@@ -1837,7 +1762,7 @@
   </action>
   <action name="actionYeasts">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallYeast.svg</normaloff>:/images/smallYeast.svg</iconset>
    </property>
    <property name="text">
@@ -1849,7 +1774,7 @@
   </action>
   <action name="actionEquipments">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallKettle.svg</normaloff>:/images/smallKettle.svg</iconset>
    </property>
    <property name="text">
@@ -1861,7 +1786,7 @@
   </action>
   <action name="actionStyles">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallStyle.svg</normaloff>:/images/smallStyle.svg</iconset>
    </property>
    <property name="text">
@@ -1871,9 +1796,32 @@
     <string>Ctrl+T</string>
    </property>
   </action>
+
+  <action name="actionWaters">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/smallWater.svg</normaloff>:/images/smallWater.svg</iconset>
+   </property>
+   <property name="text">
+    <string>W&amp;aters</string>
+   </property>
+  </action>
+
+  <action name="actionPrint">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/printer.png</normaloff>:/images/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Print and preview</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
   <action name="actionExit">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/exit.svg</normaloff>:/images/exit.svg</iconset>
    </property>
    <property name="text">
@@ -1883,18 +1831,18 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="actionImport_Recipes">
+  <action name="actionImportFromXml">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallArrow.svg</normaloff>:/images/smallArrow.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Import Recipes</string>
+    <string>&amp;Import from File</string>
    </property>
   </action>
   <action name="actionOptions">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/preferences-other.png</normaloff>:/images/preferences-other.png</iconset>
    </property>
    <property name="text">
@@ -1903,7 +1851,7 @@
   </action>
   <action name="actionManual">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/help-contents.png</normaloff>:/images/help-contents.png</iconset>
    </property>
    <property name="text">
@@ -1912,7 +1860,7 @@
   </action>
   <action name="actionScale_Recipe">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/kbruch.png</normaloff>:/images/kbruch.png</iconset>
    </property>
    <property name="text">
@@ -1921,29 +1869,29 @@
   </action>
   <action name="action_recipeToTextClipboard">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/clipboard.svg</normaloff>:/images/clipboard.svg</iconset>
    </property>
    <property name="text">
     <string>Recipe to Clipboard as &amp;Text</string>
    </property>
   </action>
-  <action name="actionOG_Correction_Help">
+  <action name="actionOriginalGravityCorrectionTool">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/hydrometer.svg</normaloff>:/images/hydrometer.svg</iconset>
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/iconGravityCorrection.svg</normaloff>:/images/iconGravityCorrection.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;OG Correction Help</string>
+    <string>&amp;Gravity Correction Tool</string>
    </property>
   </action>
-  <action name="actionConvert_Units">
+  <action name="actionUnitConversionTool">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/convert.svg</normaloff>:/images/convert.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Convert Units</string>
+    <string>&amp;Unit Conversion Tool</string>
    </property>
   </action>
   <action name="actionBackup_Database_old">
@@ -1956,18 +1904,18 @@
     <string>Restore Database</string>
    </property>
   </action>
-  <action name="actionCopy_Recipe">
+  <action name="actionCopySelected">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/edit-copy.png</normaloff>:/images/edit-copy.png</iconset>
    </property>
    <property name="text">
-    <string>&amp;Copy Recipe</string>
+    <string>&amp;Copy Selected Item(s)</string>
    </property>
   </action>
   <action name="actionPriming_Calculator">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/bubbles.svg</normaloff>:/images/bubbles.svg</iconset>
    </property>
    <property name="text">
@@ -1976,7 +1924,7 @@
   </action>
   <action name="actionRefractometer_Tools">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/refractometer.svg</normaloff>:/images/refractometer.svg</iconset>
    </property>
    <property name="text">
@@ -1985,108 +1933,16 @@
   </action>
   <action name="actionPitch_Rate_Calculator">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/yeastVial.svg</normaloff>:/images/yeastVial.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Pitch Rate Calculator</string>
    </property>
   </action>
-  <action name="actionBrewdayPrint_old">
-   <property name="text">
-    <string>Brewday</string>
-   </property>
-  </action>
-  <action name="actionRecipePreview_old">
-   <property name="text">
-    <string>Recipe</string>
-   </property>
-  </action>
-  <action name="actionBrewdayPreview_old">
-   <property name="text">
-    <string>Brewday</string>
-   </property>
-  </action>
-  <action name="actionRecipePrint_old">
-   <property name="text">
-    <string>Recipe</string>
-   </property>
-  </action>
-  <action name="actionBrewdayHTML_old">
-   <property name="text">
-    <string>Brewday</string>
-   </property>
-  </action>
-  <action name="actionRecipeHTML_old">
-   <property name="text">
-    <string>Recipe</string>
-   </property>
-  </action>
-  <action name="action">
-   <property name="text">
-    <string>Merge Databases</string>
-   </property>
-   <property name="toolTip">
-    <string>Select another database to merge into the current one.</string>
-   </property>
-  </action>
-  <action name="actionBrewdayPrint">
-   <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/printer.png</normaloff>:/images/printer.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Print</string>
-   </property>
-  </action>
-  <action name="actionBrewdayPreview">
-   <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/document-print-preview.png</normaloff>:/images/document-print-preview.png</iconset>
-   </property>
-   <property name="text">
-    <string>Print Pre&amp;view</string>
-   </property>
-  </action>
-  <action name="actionBrewdayHTML">
-   <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/document-export.png</normaloff>:/images/document-export.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Export To HTML</string>
-   </property>
-  </action>
-  <action name="actionRecipePreview">
-   <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/document-print-preview.png</normaloff>:/images/document-print-preview.png</iconset>
-   </property>
-   <property name="text">
-    <string>Print Pre&amp;view</string>
-   </property>
-  </action>
-  <action name="actionRecipePrint">
-   <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/printer.png</normaloff>:/images/printer.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Print</string>
-   </property>
-  </action>
-  <action name="actionRecipeHTML">
-   <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/document-export.png</normaloff>:/images/document-export.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Export to HTML</string>
-   </property>
-  </action>
   <action name="actionBackup_Database">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/backup.png</normaloff>:/images/backup.png</iconset>
    </property>
    <property name="text">
@@ -2098,7 +1954,7 @@
   </action>
   <action name="actionRestore_Database">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/restore.svg</normaloff>:/images/restore.svg</iconset>
    </property>
    <property name="text">
@@ -2108,21 +1964,9 @@
     <string>Restore recipes, ingredients, etc. from a previous backup</string>
    </property>
   </action>
-  <action name="actionMergeDatabases">
-   <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/merge.png</normaloff>:/images/merge.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Merge</string>
-   </property>
-   <property name="toolTip">
-    <string>Merge another set of recipes, ingredients, etc. into the current set</string>
-   </property>
-  </action>
   <action name="actionNewRecipe">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
    </property>
    <property name="text">
@@ -2131,7 +1975,7 @@
   </action>
   <action name="actionTimers">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/clock.svg</normaloff>:/images/clock.svg</iconset>
    </property>
    <property name="text">
@@ -2143,7 +1987,7 @@
   </action>
   <action name="actionSave">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/filesave.svg</normaloff>:/images/filesave.svg</iconset>
    </property>
    <property name="text">
@@ -2155,7 +1999,7 @@
   </action>
   <action name="actionDeleteSelected">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
    </property>
    <property name="text">
@@ -2165,27 +2009,59 @@
     <string>Delete recipe</string>
    </property>
   </action>
-  <action name="actionMashs">
+
+  <action name="actionMashes">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/mashpaddle.svg</normaloff>
-     <normalon>:/images/bubbles.svg</normalon>:/images/mashpaddle.svg</iconset>
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/iconMash.svg</normaloff>
+     <normalon>:/images/bubbles.svg</normalon>:/images/iconMash.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Mashs</string>
+    <string>&amp;Mash Profiles</string>
    </property>
    <property name="toolTip">
     <string>Mashes</string>
    </property>
   </action>
+  <action name="actionBoils">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/iconBoil.svg</normaloff>
+     <normalon>:/images/bubbles.svg</normalon>:/images/iconBoil.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Boil Profiles</string>
+   </property>
+   <property name="toolTip">
+    <string>Boils</string>
+   </property>
+  </action>
+  <action name="actionFermentations">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/iconFermentation.svg</normaloff>
+     <normalon>:/images/bubbles.svg</normalon>:/images/iconFermentation.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Fermentation Profiles</string>
+   </property>
+   <property name="toolTip">
+    <string>Fermentations</string>
+   </property>
+  </action>
+
   <action name="actionStrikeWater_Calculator">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/smallWater.svg</normaloff>:/images/smallWater.svg</iconset>
+   </property>
    <property name="text">
     <string>Strike &amp;Water Calculator</string>
    </property>
   </action>
   <action name="actionRecipeBBCode">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
+    <iconset resource="../resources.qrc">
      <normaloff>:/images/clipboard.svg</normaloff>:/images/clipboard.svg</iconset>
    </property>
    <property name="text">
@@ -2193,48 +2069,90 @@
    </property>
   </action>
   <action name="actionHydrometer_Temp_Adjustment">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/hydrometer.svg</normaloff>:/images/hydrometer.svg</iconset>
+   </property>
    <property name="text">
     <string>&amp;Hydrometer Temp Adjustment</string>
    </property>
   </action>
-  <action name="actionInventoryPreview">
+  <action name="actionAlcohol_Percentage_Tool">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/document-print-preview.png</normaloff>:/images/document-print-preview.png</iconset>
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/iconAlcoholPct.svg</normaloff>:/images/iconAlcoholPct.svg</iconset>
    </property>
    <property name="text">
-    <string>Print Pre&amp;view</string>
+    <string>Alcohol Percentage Tool</string>
    </property>
   </action>
-  <action name="actionInventoryPrint">
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+  </action>
+  <action name="actionAncestors">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/printer.png</normaloff>:/images/printer.png</iconset>
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/merge.png</normaloff>:/images/merge.png</iconset>
    </property>
    <property name="text">
-    <string>&amp;Print</string>
+    <string>Ancestors</string>
    </property>
   </action>
-  <action name="actionInventoryHTML">
+  <action name="action_brewit">
    <property name="icon">
-    <iconset resource="../brewtarget.qrc">
-     <normaloff>:/images/document-export.png</normaloff>:/images/document-export.png</iconset>
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/grain2glass.svg</normaloff>:/images/grain2glass.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Export to HTML</string>
+    <string>Brew It!</string>
+   </property>
+   <property name="toolTip">
+    <string>Brew It!</string>
    </property>
   </action>
-  <action name="actionWater_Chemistry">
+
+  <action name="actionInventory">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/iconInventory.svg</normaloff>:/images/iconInventory.svg</iconset>
+   </property>
    <property name="text">
-    <string>Water &amp;Chemistry</string>
+    <string>Inventory</string>
+   </property>
+   <property name="toolTip">
+    <string>Inventory</string>
    </property>
   </action>
+
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CustomComboBox</class>
-   <extends>QComboBox</extends>
-   <header>CustomComboBox.h</header>
+   <class>SmartLabel</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartLabel.h</header>
+   <slots>
+    <signal>changedSystemOfMeasurementOrScale(PreviousScaleInfo)</signal>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>SmartLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>widgets/SmartLineEdit.h</header>
+   <slots>
+    <slot>lineChanged(PreviousScaleInfo)</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>SmartValueDisplay</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartValueDisplay.h</header>
   </customwidget>
   <customwidget>
    <class>StyleRangeWidget</class>
@@ -2242,70 +2160,24 @@
    <header>StyleRangeWidget.h</header>
   </customwidget>
   <customwidget>
-   <class>BtVolumeEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
+   <class>MashTreeView</class>
+   <extends>QTreeView</extends>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
-   <class>BtVolumeLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
+   <class>BoilTreeView</class>
+   <extends>QTreeView</extends>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
-   <class>BtGenericEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
+   <class>FermentationTreeView</class>
+   <extends>QTreeView</extends>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>MiscTreeView</class>
    <extends>QTreeView</extends>
-   <header>BtTreeView.h</header>
-  </customwidget>
-  <customwidget>
-   <class>BtDensityLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtDensityEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtColorLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtTimeEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtTimeLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>IbuGuSlider</class>
@@ -2320,52 +2192,67 @@
   <customwidget>
    <class>RecipeExtrasWidget</class>
    <extends>QWidget</extends>
-   <header>RecipeExtrasWidget.h</header>
+   <header>widgets/RecipeExtrasWidget.h</header>
   </customwidget>
   <customwidget>
-   <class>EquipmentButton</class>
-   <extends>QPushButton</extends>
-   <header>EquipmentButton.h</header>
+   <class>RecipeWaterWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/RecipeWaterWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BtComboBoxEquipment</class>
+   <extends>QtComboBox</extends>
+   <header>widgets/BtComboBoxNamedEntity.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BtComboBoxStyle</class>
+   <extends>QtComboBox</extends>
+   <header>widgets/BtComboBoxNamedEntity.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BtComboBoxMash</class>
+   <extends>QtComboBox</extends>
+   <header>widgets/BtComboBoxNamedEntity.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BtComboBoxBoil</class>
+   <extends>QtComboBox</extends>
+   <header>widgets/BtComboBoxNamedEntity.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BtComboBoxFermentation</class>
+   <extends>QtComboBox</extends>
+   <header>widgets/BtComboBoxNamedEntity.h</header>
   </customwidget>
   <customwidget>
    <class>RecipeTreeView</class>
    <extends>QTreeView</extends>
-   <header>BtTreeView.h</header>
+   <header>trees/RecipeTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>EquipmentTreeView</class>
    <extends>QTreeView</extends>
-   <header>BtTreeView.h</header>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>FermentableTreeView</class>
    <extends>QTreeView</extends>
-   <header>BtTreeView.h</header>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>HopTreeView</class>
    <extends>QTreeView</extends>
-   <header>BtTreeView.h</header>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>YeastTreeView</class>
    <extends>QTreeView</extends>
-   <header>BtTreeView.h</header>
-  </customwidget>
-  <customwidget>
-   <class>StyleButton</class>
-   <extends>QPushButton</extends>
-   <header>StyleButton.h</header>
-  </customwidget>
-  <customwidget>
-   <class>MashButton</class>
-   <extends>QPushButton</extends>
-   <header>MashButton.h</header>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>StyleTreeView</class>
    <extends>QTreeView</extends>
-   <header location="global">BtTreeView.h</header>
+   <header>trees/NamedEntityTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>BtTabWidget</class>
@@ -2376,128 +2263,71 @@
   <customwidget>
    <class>WaterTreeView</class>
    <extends>QTreeView</extends>
-   <header>BtTreeView.h</header>
+   <header>trees/NamedEntityTreeView.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MashStepsWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/EnumeratedItemsWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BoilStepsWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/EnumeratedItemsWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>FermentationStepsWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/EnumeratedItemsWidget.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>tabWidget_Trees</tabstop>
   <tabstop>treeView_recipe</tabstop>
   <tabstop>treeView_style</tabstop>
-  <tabstop>treeView_equip</tabstop>
-  <tabstop>treeView_ferm</tabstop>
-  <tabstop>treeView_hops</tabstop>
+  <tabstop>treeView_equipment</tabstop>
+  <tabstop>treeView_fermentable</tabstop>
+  <tabstop>treeView_hop</tabstop>
   <tabstop>treeView_misc</tabstop>
   <tabstop>treeView_yeast</tabstop>
   <tabstop>scrollArea_tabs</tabstop>
   <tabstop>tabWidget_recipeView</tabstop>
   <tabstop>lineEdit_name</tabstop>
-  <tabstop>styleButton</tabstop>
   <tabstop>styleComboBox</tabstop>
-  <tabstop>equipmentButton</tabstop>
+  <tabstop>pushButton_editStyle</tabstop>
   <tabstop>equipmentComboBox</tabstop>
+  <tabstop>pushButton_editEquipment</tabstop>
   <tabstop>lineEdit_batchSize</tabstop>
-  <tabstop>lineEdit_boilSize</tabstop>
+  <tabstop>value_preBoilSize</tabstop>
   <tabstop>lineEdit_efficiency</tabstop>
-  <tabstop>lineEdit_boilTime</tabstop>
+  <tabstop>value_boilTime</tabstop>
   <tabstop>scrollArea_tables</tabstop>
   <tabstop>tabWidget_ingredients</tabstop>
-  <tabstop>fermentableTable</tabstop>
+  <tabstop>fermentableAdditionTable</tabstop>
   <tabstop>pushButton_addFerm</tabstop>
   <tabstop>pushButton_removeFerm</tabstop>
   <tabstop>pushButton_editFerm</tabstop>
-  <tabstop>hopTable</tabstop>
+  <tabstop>hopAdditionTable</tabstop>
   <tabstop>pushButton_addHop</tabstop>
   <tabstop>pushButton_removeHop</tabstop>
   <tabstop>pushButton_editHop</tabstop>
-  <tabstop>miscTable</tabstop>
+  <tabstop>miscAdditionTable</tabstop>
   <tabstop>pushButton_addMisc</tabstop>
   <tabstop>pushButton_removeMisc</tabstop>
   <tabstop>pushButton_editMisc</tabstop>
-  <tabstop>yeastTable</tabstop>
+  <tabstop>yeastAdditionTable</tabstop>
   <tabstop>pushButton_addYeast</tabstop>
   <tabstop>pushButton_removeYeast</tabstop>
   <tabstop>pushButton_editYeast</tabstop>
-  <tabstop>mashStepTableWidget</tabstop>
-  <tabstop>pushButton_addMashStep</tabstop>
-  <tabstop>pushButton_removeMashStep</tabstop>
-  <tabstop>pushButton_editMashStep</tabstop>
-  <tabstop>pushButton_editMash</tabstop>
-  <tabstop>pushButton_mashDes</tabstop>
-  <tabstop>pushButton_mashWizard</tabstop>
-  <tabstop>mashButton</tabstop>
+  <tabstop>mashStepsWidget</tabstop>
   <tabstop>mashComboBox</tabstop>
-  <tabstop>pushButton_mashRemove</tabstop>
-  <tabstop>pushButton_mashUp</tabstop>
-  <tabstop>pushButton_mashDown</tabstop>
-  <tabstop>pushButton_saveMash</tabstop>
+  <tabstop>pushButton_editMash</tabstop>
+  <tabstop>boilComboBox</tabstop>
+  <tabstop>pushButton_editBoil</tabstop>
+  <tabstop>fermentationComboBox</tabstop>
+  <tabstop>pushButton_editFermentation</tabstop>
  </tabstops>
  <resources>
-  <include location="../brewtarget.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>label_targetBoilSize</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_boilSize</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>536</x>
-     <y>245</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>640</x>
-     <y>245</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_boilSg</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_boilSg</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>536</x>
-     <y>337</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>640</x>
-     <y>337</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_boiltime</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_boilTime</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>455</x>
-     <y>302</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>588</x>
-     <y>306</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_targetBatchSize</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_batchSize</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>536</x>
-     <y>199</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>640</x>
-     <y>199</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>

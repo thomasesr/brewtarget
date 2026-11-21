@@ -19,9 +19,6 @@
      <property name="title">
       <string>Input</string>
      </property>
-     <property name="configSection" stdset="0">
-      <string notr="true">pitchRateCalc</string>
-     </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <layout class="QFormLayout" name="formLayout">
@@ -32,7 +29,7 @@
          <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
         </property>
         <item row="0" column="0">
-         <widget class="BtVolumeLabel" name="label_vol">
+         <widget class="SmartLabel" name="label_vol">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -45,7 +42,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="BtVolumeEdit" name="lineEdit_vol">
+         <widget class="SmartLineEdit" name="lineEdit_vol">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -61,13 +58,10 @@
           <property name="toolTip">
            <string>Volume of wort</string>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">wortVol</string>
-          </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="BtDensityLabel" name="label_og">
+         <widget class="SmartLabel" name="label_og">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -80,7 +74,7 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="BtDensityEdit" name="lineEdit_OG">
+         <widget class="SmartLineEdit" name="lineEdit_OG">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -95,9 +89,6 @@
           </property>
           <property name="toolTip">
            <string>Starting gravity of the wort</string>
-          </property>
-          <property name="editField" stdset="0">
-           <string notr="true">og</string>
           </property>
          </widget>
         </item>
@@ -136,7 +127,7 @@
          </widget>
         </item>
         <item row="3" column="0">
-         <widget class="BtDateLabel" name="label_productionDate">
+         <widget class="SmartLabel" name="label_productionDate">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -192,16 +183,13 @@
            <enum>QDateTimeEdit::MonthSection</enum>
           </property>
           <property name="displayFormat">
-           <string>MM/dd/yyyy</string>
+           <string notr="true">MM/dd/yyyy</string>
           </property>
           <property name="calendarPopup">
            <bool>true</bool>
           </property>
           <property name="currentSectionIndex">
            <number>0</number>
-          </property>
-          <property name="editField" stdset="0">
-           <string notr="true">productionDate</string>
           </property>
          </widget>
         </item>
@@ -265,7 +253,7 @@
           <item>
            <widget class="QLabel" name="label_pitchRate">
             <property name="text">
-             <string>TextLabel</string>
+             <string notr="true">TextLabel</string>
             </property>
            </widget>
           </item>
@@ -311,9 +299,6 @@
      <property name="title">
       <string>Output</string>
      </property>
-     <property name="configSection" stdset="0">
-      <string notr="true">pitchRateCalc</string>
-     </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <layout class="QFormLayout" name="formLayout_2">
@@ -334,7 +319,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="BtGenericEdit" name="lineEdit_cells">
+         <widget class="SmartLineEdit" name="lineEdit_cells">
           <property name="minimumSize">
            <size>
             <width>100</width>
@@ -360,7 +345,7 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="BtGenericEdit" name="lineEdit_vials">
+         <widget class="SmartLineEdit" name="lineEdit_vials">
           <property name="minimumSize">
            <size>
             <width>100</width>
@@ -376,7 +361,7 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="BtMassLabel" name="label_yeast">
+         <widget class="SmartLabel" name="label_yeast">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -389,7 +374,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="BtMassEdit" name="lineEdit_yeast">
+         <widget class="SmartLineEdit" name="lineEdit_yeast">
           <property name="minimumSize">
            <size>
             <width>100</width>
@@ -402,13 +387,10 @@
           <property name="readOnly">
            <bool>true</bool>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">yeast</string>
-          </property>
          </widget>
         </item>
         <item row="3" column="0">
-         <widget class="BtVolumeLabel" name="label_starterVol">
+         <widget class="SmartLabel" name="label_starterVol">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -421,7 +403,7 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="BtVolumeEdit" name="lineEdit_starterVol">
+         <widget class="SmartLineEdit" name="lineEdit_starterVol">
           <property name="minimumSize">
            <size>
             <width>100</width>
@@ -434,9 +416,6 @@
           <property name="readOnly">
            <bool>true</bool>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">starterVol</string>
-          </property>
          </widget>
         </item>
        </layout>
@@ -448,65 +427,23 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BtVolumeLabel</class>
+   <class>SmartLabel</class>
    <extends>QLabel</extends>
-   <header>BtLabel.h</header>
+   <header>widgets/SmartLabel.h</header>
    <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtDensityLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtVolumeEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtDensityEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtDateLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-  </customwidget>
-  <customwidget>
-   <class>BtMassLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
+    <signal>changedSystemOfMeasurementOrScale(PreviousScaleInfo)</signal>
     <slot>popContextMenu(QPoint)</slot>
    </slots>
   </customwidget>
   <customwidget>
-   <class>BtMassEdit</class>
+   <class>SmartLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
+   <header>widgets/SmartLineEdit.h</header>
    <slots>
     <signal>textModified()</signal>
     <slot>lineChanged()</slot>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
+    <slot>lineChanged(PreviousScaleInfo)</slot>
    </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtGenericEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -524,70 +461,4 @@
   <tabstop>lineEdit_starterVol</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>label_vol</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_vol</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>178</x>
-     <y>44</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>271</x>
-     <y>44</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_og</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_OG</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>203</x>
-     <y>70</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>271</x>
-     <y>70</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_starterVol</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_starterVol</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>464</x>
-     <y>122</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>581</x>
-     <y>122</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_yeast</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_yeast</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>478</x>
-     <y>96</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>581</x>
-     <y>96</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>

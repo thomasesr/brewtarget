@@ -1,0 +1,380 @@
+#-----------------------------------------------------------------------------------------------------------------------
+# .github/workflows/windows.yml is part of Brewtarget, and is copyright the following authors 2021-2026:
+#   • Artem Martynov <martynov-a@polyplastic.by>
+#   • Chris Speck <cgspeck@gmail.com>
+#   • Mattias Måhl <mattias@kejsarsten.com>
+#   • Matt Young <mfsy@yahoo.com>
+#
+# Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with this program.  If not, see
+# <http://www.gnu.org/licenses/>.
+#-----------------------------------------------------------------------------------------------------------------------
+name: Windows
+
+on:
+  push:
+    branches:
+      - main
+      - "stable/**"
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "0 2 * * *"
+
+  workflow_dispatch:
+    #
+    # Normally, on the scheduled builds, we only do the "test" signing with SignPath because doing the "release" signing
+    # requires a manual approval step in our SignPath account.  When we want to do a proper "release" signing, then we
+    # trigger a manual build and set this variable to true (via the GitHub UI prompt at the time the build is
+    # initiated).
+    #
+    inputs:
+      signingType:
+        #
+        # Note that, per GitHub doco, "If you attempt to dereference a nonexistent property, it will evaluate to an
+        # empty string."  Hence it's easier later on in the code if we use a choice here than a boolean.
+        #
+        description: 'Do a "release" signing (rather than just a "test" one)'
+        required: true
+        type: choice
+        options:
+         - test
+         - release
+        default: 'test'
+
+permissions: read-all
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build-win:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          # In the past, we built only 32-bit packages (i686 architecture) on Windows because of problems getting 64-bit
+          # versions of NSIS plugins to work.  However, we now invoke NSIS without plugins, so the 64-bit build seems to
+          # be working.
+          #
+          # As of January 2024, some of the 32-bit MSYS2 packages/groups we were previously relying on previously are no
+          # longer available.  So now, we only build 64-bit packages (x86_64 architecture) on Windows.
+          #
+          # As of late 2026, MINGW64 (which targets the older Windows runtime) is deprecated.  UCRT64 (which uses the
+          # same toolchain but targets newer Windows runtime) replaces it.
+          { msystem: UCRT64, arch: x86_64 },
+        ]
+    steps:
+
+      - uses: actions/checkout@v6
+        with:
+          path: temp
+          fetch-depth: 0
+          submodules: recursive
+
+      #
+      # Install MSYS2, then Python, then Pip
+      #
+      # We need Python 3.10 or later to run the bt script
+      #
+      # I tried using the separate actions/setup-python@v4 action, but it doesn't seem to result in the Python
+      # executable being visible in the MSYS2 environment.  So, instead, we install from inside MSYS2.  (According to
+      # https://packages.msys2.org/package/mingw-w64-x86_64-python, this is Python 3.10.9 as of 2022-12-10.)
+      #
+      # (In theory, an alternative approach would be to install Python, then run 'python -m ensurepip --upgrade' which,
+      # per https://docs.python.org/3/library/ensurepip.html, is the official Python way to bootstrap Pip.  However,
+      # this did not seem to work properly in MSYS2 when I tried it.)
+      #
+      # Note that you _don't_ want to install the 'python' package here as it has some subtle differences from
+      # installing 'mingw-w64-i686-python'.  (Same applies for 'python-pip' vs 'mingw-w64-i686-python-pip'.)  Some of
+      # these differences are about where things are installed, but some are about how Python behaves, eg what
+      # platform.system() returns.  See comments at https://github.com/conan-io/conan/issues/2638 for more.)
+      #
+      # We install the tree command here as, although it's not needed to do the build itself, it's useful for diagnosing
+      # certain build problems (eg to see what changes certain parts of the build have made to the build directory
+      # tree) when the build is running as a GitHub action.  (If need be, you can also download the entire build
+      # directory within a day of a failed build running, but you need a decent internet connection for this as it's
+      # quite large.)
+      #
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          install: >-
+            mingw-w64-ucrt-${{ matrix.arch }}-python
+            mingw-w64-ucrt-${{ matrix.arch }}-python-pip
+            tree
+          update: true
+          release: true
+          path-type: strict
+
+      - name: Move Checkout
+        run: |
+          Copy-Item -Path "./temp" -Destination "C:/_" -Recurse
+
+      #
+      # On Windows, there are a couple of extra things we need to do before running the bt script:
+      #
+      #  - For historical reasons, Linux and other platforms need to run both Python v2 (still used by some bits of
+      #    system) and Python v3 (eg that you installed yourself) so there are usually two corresponding Python
+      #    executables, python2 and python3.  On Windows there is only whatever Python you installed, and it's called
+      #    python.exe.  To keep the shebang in the bt script working, we just make a softlink to python called python3.
+      #
+      #  - Getting Unicode input/output to work is fun.  We should already have a Unicode locale, but it seems we also
+      #    need to set PYTHONIOENCODING (see https://docs.python.org/3/using/cmdline.html#envvar-PYTHONIOENCODING, even
+      #    though it seems to imply you don't need to set it on recent versions of Python).
+      #
+      #  - The version of Pip we install above does not put it in the "right" place.  Specifically it will not be in the
+      #    PATH when we run bt.  The following seems to be the least hacky way around this:
+      #       curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+      #       python get-pip.py
+      #       python -m pip install -U --force-reinstall pip
+      #    See https://stackoverflow.com/questions/48087004/installing-pip-on-msys for more discussion on this.
+      #    HOWEVER, as of 2024-11-08, this gives an error that "This environment is externally managed" and we're
+      #    directed to use pacman.
+      #
+      - name: Install Frameworks and Libraries, and set up Meson build environment
+        shell: msys2 {0}
+        run: |
+          cd /C/_/
+          echo "Working directory is:"
+          pwd
+          echo "Installed Python is:"
+          which python
+          python --version
+          echo "Installed pip is:"
+          which pip
+          pip --version
+          #curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+          #python get-pip.py
+          #python -m pip install -U --force-reinstall pip
+          #pip --version
+          echo $PATH
+          echo "Locale:"
+          locale
+          export PYTHONIOENCODING=utf8
+          echo "Ensuring that python3 symlink / executable exists"
+          if [[ ! -f $(dirname $(which python))/python3 ]]; then ln -s $(which python) $(dirname $(which python))/python3; fi
+          echo "Running ./bt -v setup all"
+          ./bt -v setup all
+
+      # In theory, we don't need the next bit, as the bt script does it.  In practice, for reasons I haven't yet bottomed
+      # out, the CMake/CPack invocation of NSIS complains it can't find Locate.nsh - but only on the Brewtarget build,
+      # not the Brewken one, even though all the build scripts etc are almost identical.
+      #
+      # Note that this is PowerShell, so absolute paths on the C drive begin C:/ rather than /C/ in MSYS2
+      - name: Download NSIS plugins
+        run: |
+          New-Item -ItemType Directory -Force -Path C:/_/build/nsis
+          Invoke-WebRequest -Uri https://nsis.sourceforge.io/mediawiki/images/a/af/Locate.zip -OutFile C:/_/build/nsis/Locate.zip
+          Expand-Archive -Path C:/_/build/nsis/Locate.zip -DestinationPath C:/_/build/nsis/Locate
+          Invoke-WebRequest -Uri https://nsis.sourceforge.io/mediawiki/images/7/76/Nsislog.zip -OutFile C:/_/build/nsis/Nsislog.zip
+          Expand-Archive -Path C:/_/build/nsis/Nsislog.zip -DestinationPath C:/_/build/nsis/Nsislog
+          Tree /f C:/_/build
+
+      - name: Build (with Meson)
+        shell: msys2 {0}
+        run: |
+          cd /C/_/mbuild
+          pwd
+          meson compile
+
+      # The pwd and find ../third-party commands below are just diagnostics, but it's generally useful to have too
+      # much rather than not enough diagnostic info on these GitHub action builds
+      #
+      # This is the same reason we specify the --verbose option on CMake
+      - name: Build (with CMake)
+        shell: msys2 {0}
+        run: |
+          cd /C/_/build
+          pwd
+          tree -sh
+          cmake --build . --parallel --verbose
+          ls
+
+      # The 'export QT_DEBUG_PLUGINS=1' give us diagnostics in the event that there are problems initialising QT
+      # The 'export QT_QPA_PLATFORM=offscreen' stops Qt's xcb submodule trying to connect to a non-existent display
+      # (which would cause the test runner to abort before running any tests).
+      - name: Test (via Meson)
+        shell: msys2 {0}
+        run: |
+          cd /C/_/mbuild
+          export QT_DEBUG_PLUGINS=1
+          export QT_QPA_PLATFORM=offscreen
+          meson test
+
+      - name: Test (via CMake)
+        shell: msys2 {0}
+        run: |
+          cd /C/_/build
+          cmake --build . --target test
+
+      #
+      # See above for explanation of the extra things we need to do on Windows before running the bt script.  Most of
+      # that does not need doing again here, but PYTHONIOENCODING does need setting again.
+      #
+      # Note that, although we continue to support CMake for local builds and installs, we no longer support packaging
+      # with CPack/CMake.  The bt build script packaging gives us better control over the packaging process.
+      #
+      - name: Package
+        shell: msys2 {0}
+        run: |
+          cd /C/_/
+          echo "Working directory is:"
+          pwd
+          echo "Installed Python is:"
+          which python
+          python --version
+          echo "Installed pip is:"
+          which pip
+          pip --version
+          export PYTHONIOENCODING=utf8
+          echo "Running ./bt -v package"
+          ./bt -v package
+          cd mbuild/packages
+          mkdir windows/signed
+          pwd
+          tree -sh
+
+      #
+      # For now, we'll still upload the unsigned binaries before we try to sign them, so that we at least have a
+      # fallback if there is some problem with the signing process
+      #
+      # Note that the ID of this step is referenced in the signing step (so it can grab the unsigned binaries to sign
+      # them).
+      #
+      - name: Upload unsigned Windows binaries (installers)
+        id: upload-unsigned-artifact
+        if: ${{ success()}}
+        uses: actions/upload-artifact@v7
+        with:
+          name: brewtarget-dev-windows-${{ matrix.msystem }}
+          path: |
+            C:/_/mbuild/packages/windows/Brewtarget*Installer.exe
+            C:/_/mbuild/packages/windows/Brewtarget*Installer.exe.sha256sum
+          retention-days: 7
+
+
+      #
+      # Sign the Windows binaries using our Signpath certificate.  Note that this involves sending the binary to the
+      # remote SignPath service where the signing actually happens.  We need to have an account and credentials with
+      # that service to use it, so this step can't be done in forked repositories.
+      #
+      # Various settings here have to align with the "brewtarget" project in the "Brewtarget [OSS]" organisation
+      # registered at https://app.signpath.io/.  In some places you have to be quite pedantic about the settings (both
+      # here and in the SignPath account).  Eg at one point we were getting the following error:
+      #
+      #    "The supplied repository URL 'https://github.com/Brewtarget/brewtarget' does not match
+      #     the expected repository URLs 'https://github.com/Brewtarget/brewtarget/'."
+      #
+      # See https://github.com/SignPath/github-action-submit-signing-request for documentation of this action (including
+      # parameters such as github-artifact-id).  Also see https://github.com/SignPath/github-actions-extended-demo/ for
+      # example usage.
+      #
+      # Note that we need the special file `.signpath/artifact-configurations/default.xml` in our repository as well as
+      # the relevant GitHub secrets (see
+      # https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions).
+      # In particular, the repository needs to have the following secrets:
+      #
+      #    SIGNPATH_API_TOKEN - As generated in app.signpath.io from the user profile page
+      #    EXTENDED_VERIFICATION_TOKEN - This a GitHub access token to allow Signpath to access our repository
+      #
+      # See https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+      # for how to create and manage GitHub access tokens
+      #
+      # We also add the following GitHub Actions variable (see
+      # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables):
+      #
+      #    SIGNPATH_ORGANIZATION_ID - Set to the organisation ID (a UUID) for "Brewtarget [OSS]" in app.signpath.io
+      #
+      # One reason not to hard code SIGNPATH_ORGANIZATION_ID is that we use its existence to signal that the above
+      # secrets are available -- ie that we can do the build signing.  (For individual developers who have forked the
+      # repository, I don't think the secrets will be available so the build signing step wouldn't be possible.)
+      #
+      - name: Sign Windows binaries
+        if: ${{ success() && vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        env:
+          #
+          # The https://app.signpath.io/ "brewtarget" project has two signing policies: "test-signing" and
+          # "release-signing".  The former uses a self-signed certificate that can be used for testing etc.  The latter
+          # uses a real certificate supplied by Signpath and suitable for signing released versions of the application.
+          #
+          # Ideally we would select "release-signing" policy for things we're going to release and "test-signing"
+          # otherwise, according to the following logic:
+          #
+          #   - Currently our main branch for releasing is called "develop", but we'll probably change it to "main" in
+          #     the not too distant future.
+          #
+          #   - We don't do release branches per se, but, before we do a lot of commits for a major release, we'll
+          #     usually cut a "stable/" branch for the prior one.
+          #
+          # NOTE however that we also want to restrict "release" signings to manually initiated builds.  This is
+          # because, on the free tier of SignPath, all release signings need to be manually approved, and we don't want
+          # to be generating manual approval requests every night.  (The GitHub action will time out after 10 minutes
+          # waiting for the approval, though we can still get the signed binary from the SignPath site if the approval
+          # is done later.)
+          #
+          # The syntax here is just using short-circuit evaluation to do the assignment as a one-liner.
+          #
+          SIGNPATH_SIGNING_POLICY_SLUG: |
+            ${{ (inputs.signingType == 'release' &&
+                 (github.ref == 'refs/heads/develop' ||
+                  github.ref == 'refs/heads/main' ||
+                  startsWith(github.ref, 'refs/heads/stable/'))) && 'release-signing' || 'test-signing' }}
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: '${{ vars.SIGNPATH_ORGANIZATION_ID }}'
+          project-slug: 'brewtarget' # Has to match slug in https://app.signpath.io/ "brewtarget" project
+          signing-policy-slug: '${{ env.SIGNPATH_SIGNING_POLICY_SLUG }}'
+          github-artifact-id: '${{steps.upload-unsigned-artifact.outputs.artifact-id}}'
+          wait-for-completion: true
+          #
+          # This is "Path to where the signed artifact will be extracted. If not specified, the task will not download
+          # the signed artifact from SignPath."
+          #
+          # From trial and error, it seems output-artifact-directory must be a relative directory.  Eg, if we set:
+          #    output-artifact-directory: 'C:/_/mbuild/packages/windows/signed'
+          # We get error:
+          #    ENOENT: no such file or directory, mkdir 'D:\a\brewtarget\brewtarget\C:\_\mbuild\packages\windows\signed'
+          #
+          output-artifact-directory: 'windows/signed'
+          github-extended-verification-token: '${{ secrets.EXTENDED_VERIFICATION_TOKEN }}'
+
+      #
+      # For now, we'll upload both the signed and unsigned
+      #
+      - name: Upload signed Windows binaries (installers)
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: brewtarget-dev-windows-${{ matrix.msystem }}-signed
+          # Hopefully the same relative path we use in the signing step works here
+          path: |
+            windows/signed/*.*
+          retention-days: 7
+
+      - name: Upload CMake error info from failed build
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.msystem }}-build-windows
+          path: C:/_/build/
+          retention-days: 1
+
+      - name: Upload Meson error info from failed build
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.msystem }}-mbuild-windows
+          path: C:/_/mbuild/
+          retention-days: 1

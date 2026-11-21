@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0">
+<ui version="6.0">
  <class>optionsDialog</class>
  <widget class="QDialog" name="optionsDialog">
   <property name="enabled">
    <bool>true</bool>
-  </property>
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>481</width>
-    <height>314</height>
-   </rect>
   </property>
   <property name="windowTitle">
    <string>Options</string>
@@ -28,59 +20,40 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
+     <!-- ========================================= Units & Precision tab ========================================== -->
      <widget class="QWidget" name="tab_units">
       <attribute name="title">
-       <string>Units</string>
+       <string>Units &amp;&amp; Precision</string>
       </attribute>
-      <layout class="QFormLayout" name="formLayout_5">
-       <item row="0" column="0">
-        <widget class="QLabel" name="weightLabel">
+      <layout class="QGridLayout" name="gridLayout_units">
+       <!--
+          Row 0 is the column headings.  The rows for each Measurement::PhysicalQuantity are generated in code (see
+          OptionDialog::impl::configure_unitCombos()), which also moves the Date row below them.  Date lives on this
+          tab because it doesn't have a better home, but it is not a PhysicalQuantity, so is hard-coded, and has
+          nothing in the decimal places column.
+       -->
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_unitSystemHeading">
          <property name="text">
-          <string>Weight</string>
+          <string>Units</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="weightComboBox"/>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_decimalPlacesHeading">
+         <property name="text">
+          <string>Decimal places</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="temperatureLabel">
-         <property name="text">
-          <string>Temperature</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="temperatureComboBox"/>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="volumeLabel">
-         <property name="text">
-          <string>Volume</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QComboBox" name="volumeComboBox"/>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="gravityLabel">
-         <property name="text">
-          <string>Gravity</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QComboBox" name="gravityComboBox"/>
-       </item>
-       <item row="4" column="0">
         <widget class="QLabel" name="dateLabel">
          <property name="text">
           <string>Date</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="1" column="1">
         <widget class="QComboBox" name="dateComboBox">
          <property name="minimumSize">
           <size>
@@ -90,43 +63,12 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
-        <widget class="QComboBox" name="colorComboBox"/>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="colorLabel">
-         <property name="text">
-          <string>Color</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QComboBox" name="diastaticPowerComboBox"/>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="diastaticPowerLabel">
-         <property name="text">
-          <string>Diastatic power</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
+     <!-- ============================================== Formulas tab ============================================== -->
      <widget class="QWidget" name="tab_formula">
       <property name="enabled">
        <bool>true</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>0</height>
-       </size>
       </property>
       <attribute name="title">
        <string>Formulas</string>
@@ -134,42 +76,50 @@
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QGroupBox" name="groupBox_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
          <property name="title">
-          <string>Forumulas</string>
+          <string>Formulas</string>
          </property>
-         <layout class="QFormLayout" name="formLayout">
+         <layout class="QGridLayout" name="gridLayout_formulas" columnstretch="0,0,1">
           <item row="0" column="0">
+           <widget class="InfoButton" name="infoButton_ibuFormula"></widget>
+          </item>
+          <item row="0" column="1">
            <widget class="QLabel" name="ibuFormulaLabel">
             <property name="text">
              <string>IBU</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="ibuFormulaComboBox">
-            <property name="minimumSize">
-             <size>
-              <width>230</width>
-              <height>0</height>
-             </size>
+          <item row="0" column="2">
+           <widget class="BtComboBoxEnum" name="ibuFormulaComboBox"/>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="InfoText" name="infoText_ibuFormula">
+            <property name="buddy">
+             <cstring>infoButton_ibuFormula</cstring>
+            </property>
+            <property name="text">
+             <string>How bitterness (IBUs) is estimated from the recipe's hop additions.
+ • Tinseth: the most widely used formula.  Allows for boil time and wort gravity.
+ • Rager: older; generally gives higher IBUs than Tinseth.
+ • Noonan: from Greg Noonan's "New Brewing Lager Beer".
+ • Garetz: from Mark Garetz's "Using Hops".  Generally lower IBUs, none for 10 minutes' boil or less, and allows for high hopping rates.
+ • Daniels: from Ray Daniels' "Designing Great Beers".  Separate figures for pellets and whole hops.
+ • mIBU: John-Paul Hosom's extension of Tinseth, adding bitterness from hops in hot wort after flameout.
+ • SMPH: Hosom's detailed model, which also allows for oxidized alpha acids, polyphenols, hopping rate, wort pH and yeast flocculation.
+Only mIBU and SMPH give IBUs for hops added after flameout (eg whirlpool), using the post-boil steps of the boil profile.  For formulas other than Garetz, Daniels and SMPH, pellets are assumed to give 10% more IBUs than whole hops (plugs 2%).</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="1">
            <widget class="QLabel" name="colorFormulaLabel">
             <property name="text">
              <string>Color</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="colorFormulaComboBox"/>
+          <item row="2" column="2">
+           <widget class="BtComboBoxEnum" name="colorFormulaComboBox"/>
           </item>
          </layout>
         </widget>
@@ -179,15 +129,18 @@
          <property name="title">
           <string>IBU Adjustments</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_3">
+         <layout class="QGridLayout" name="gridLayout_ibuAdjustments" columnstretch="0,0,1">
           <item row="0" column="0">
+           <widget class="InfoButton" name="infoButton_mashHop"></widget>
+          </item>
+          <item row="0" column="1">
            <widget class="QLabel" name="mashHopLabel_2">
             <property name="text">
              <string>Mash Hop (%)</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="0" column="2">
            <widget class="QDoubleSpinBox" name="ibuAdjustmentMashHopDoubleSpinBox">
             <property name="decimals">
              <number>1</number>
@@ -203,14 +156,27 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="1" column="1" colspan="2">
+           <widget class="InfoText" name="infoText_mashHop">
+            <property name="buddy">
+             <cstring>infoButton_mashHop</cstring>
+            </property>
+            <property name="text">
+             <string>IBUs from hops added to the mash, as a percentage of what the same hops would give if they were added at the start of the boil and boiled for its full length.  Mash hops contribute little or no bitterness, because alpha acids isomerize very slowly at mash temperatures and much of the hop material stays behind with the grain.  The default is 0%, ie mash hops are assumed to give no IBUs.  This applies whichever IBU formula is selected.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="InfoButton" name="infoButton_firstWort"></widget>
+          </item>
+          <item row="2" column="1">
            <widget class="QLabel" name="firstWortLabel">
             <property name="text">
              <string>First Wort (%)</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="2" column="2">
            <widget class="QDoubleSpinBox" name="ibuAdjustmentFirstWortDoubleSpinBox">
             <property name="decimals">
              <number>1</number>
@@ -226,11 +192,22 @@
             </property>
            </widget>
           </item>
+          <item row="3" column="1" colspan="2">
+           <widget class="InfoText" name="infoText_firstWort">
+            <property name="buddy">
+             <cstring>infoButton_firstWort</cstring>
+            </property>
+            <property name="text">
+             <string>IBUs from first wort hops (hops put in the kettle as the wort is run off, before the boil starts), as a percentage of what the same hops would give if they were added at the start of the boil.  The default of 110% reflects the commonly reported finding that first wort hopping gives about 10% more bitterness than a full-length boil addition.  This applies whichever IBU formula is selected.</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
       </layout>
      </widget>
+     <!-- ============================================== Language tab ============================================== -->
      <widget class="QWidget" name="tab_language">
       <attribute name="title">
        <string>Language</string>
@@ -258,8 +235,8 @@
    &lt;b&gt;Know another language?&lt;/b&gt;
    &lt;br&gt;&lt;br&gt;
    Or, would you like to improve a translation? Help us out and
-  &lt;a href=&quot;https://sourceforge.net/sendmessage.php?touser=938941&quot;&gt;
-  provide a translation&lt;/a&gt; so that your friends can use brewtarget!
+  &lt;a href=&quot;https://github.com/Brewtarget/brewtarget/wiki/Translations&quot;&gt;
+  provide a translation&lt;/a&gt; so that your friends can use Brewtarget!
 &lt;/qt&gt;</string>
            </property>
            <property name="wordWrap">
@@ -284,6 +261,7 @@
        </item>
       </layout>
      </widget>
+     <!-- ============================================== Database tab ============================================== -->
      <widget class="QWidget" name="tab_database">
       <attribute name="title">
        <string>Databases</string>
@@ -320,17 +298,8 @@
          <property name="enabled">
           <bool>true</bool>
          </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
          <property name="title">
           <string>Configuration</string>
-         </property>
-         <property name="configSection" stdset="0">
-          <string notr="true">optionsDialog</string>
          </property>
          <layout class="QGridLayout" name="gridLayout"/>
         </widget>
@@ -361,6 +330,7 @@
        </item>
       </layout>
      </widget>
+     <!-- ============================================== Logging tab =============================================== -->
      <widget class="QWidget" name="tab_logging">
       <property name="autoFillBackground">
        <bool>false</bool>
@@ -371,12 +341,6 @@
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="1" column="0">
         <widget class="QGroupBox" name="groupBox_loggingLevels">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
          <property name="title">
           <string>Logging Level</string>
          </property>
@@ -395,12 +359,6 @@
          <property name="enabled">
           <bool>true</bool>
          </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
          <property name="title">
           <string>Log file location</string>
          </property>
@@ -410,12 +368,6 @@
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
            <widget class="QCheckBox" name="checkBox_LogFileLocationUseDefault">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="text">
              <string>Use Default location</string>
             </property>
@@ -448,13 +400,6 @@
          </layout>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="checkBox_enableLogging">
-         <property name="text">
-          <string>Enable logging</string>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="0">
         <spacer name="verticalSpacer">
          <property name="orientation">
@@ -467,6 +412,157 @@
           </size>
          </property>
         </spacer>
+       </item>
+      </layout>
+     </widget>
+     <!-- ============================================= Snapshots tab ============================================= -->
+     <widget class="QWidget" name="tab_version">
+      <attribute name="title">
+       <string>Recipe Snapshots</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QCheckBox" name="checkBox_versioning">
+         <property name="text">
+          <string>Enable Automatic Snapshots</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_deleteBehavior">
+         <property name="title">
+          <string>Deleting a recipe</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QRadioButton" name="radioButton_deleteAncestor">
+            <property name="text">
+             <string>Deletes all the snapshots too</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButton_deleteDescendant">
+            <property name="text">
+             <string>Deletes only the recipe</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_alwaysShowSnaps">
+         <property name="text">
+          <string>Show snapshots by default</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <!-- =========================================== Default Values tab =========================================== -->
+     <widget class="QWidget" name="tab_defaults">
+      <attribute name="title">
+       <string>Default Values</string>
+      </attribute>
+      <layout class="QFormLayout" name="formLayout_defaults">
+       <item row="1" column="0">
+        <widget class="SmartLabel" name="label_defaultBatchSize_l">
+         <property name="text">
+          <string>Batch Size</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_defaultBatchSize_l</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="SmartLineEdit" name="lineEdit_defaultBatchSize_l">
+         <property name="toolTip">
+          <string>Default batch size to set on new recipes</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="3" column="0">
+        <widget class="SmartLabel" name="label_defaultPreBoilSize_l">
+         <property name="text">
+          <string>Pre-Boil Size</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_defaultPreBoilSize_l</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="SmartLineEdit" name="lineEdit_defaultPreBoilSize_l">
+         <property name="toolTip">
+          <string>Default pre-boil size to set on new recipes</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="5" column="0">
+        <widget class="SmartLabel" name="label_defaultBoilTime">
+         <property name="buddy">
+          <cstring>lineEdit_defaultBoilTime</cstring>
+         </property>
+         <property name="text">
+          <string>Boil Time</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="SmartLineEdit" name="lineEdit_defaultBoilTime">
+         <property name="toolTip">
+          <string>Default boil time to set on new recipes</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="7" column="0">
+        <widget class="SmartLabel" name="label_defaultEfficiency">
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_defaultEfficiency</cstring>
+         </property>
+         <property name="text">
+          <string>Efficiency</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="SmartLineEdit" name="lineEdit_defaultEfficiency">
+         <property name="toolTip">
+          <string>Default efficiency to set on new recipes</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="9" column="0" colspan="2">
+        <widget class="QCheckBox" name="checkBox_defaultFgCalcUsesMash">
+         <property name="text">
+          <string>By default, use mash profile in FG calculation for new and imported recipes</string>
+         </property>
+         <property name="toolTip">
+          <string>Whether new and imported recipes take account of the mash temperatures and times when estimating final gravity.  (This can be changed for each recipe on its Mash tab.)</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -484,12 +580,39 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>InfoButton</class>
+   <extends>QPushButton</extends>
+   <header>widgets/InfoButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>InfoText</class>
+   <extends>QLabel</extends>
+   <header>widgets/InfoText.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BtComboBoxEnum</class>
+   <extends>QComboBox</extends>
+   <header>widgets/BtComboBoxEnum.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmartLabel</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartLabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmartLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>widgets/SmartLineEdit.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources>
-  <include location="../brewtarget.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
  <connections>
   <connection>

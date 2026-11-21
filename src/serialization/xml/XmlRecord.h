@@ -1,0 +1,145 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * serialization/xml/XmlRecord.h is part of Brewtarget, and is copyright the following authors 2020-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#ifndef SERIALIZATION_XML_XMLRECORD_H
+#define SERIALIZATION_XML_XMLRECORD_H
+#pragma once
+
+#include <vector>
+
+#include <libxml2/libxml/tree.h>
+
+#include "serialization/xml/XmlDocument.h"
+#include "serialization/xml/XmlRecordDefinition.h"
+#include "serialization/SerializationRecord.h"
+#include "utils/ImportRecordCount.h"
+#include "utils/TypeLookup.h"
+
+#include <QTextStream>
+#include <QVector>
+
+class XmlCoding;
+
+
+/**
+ * \brief This class and its derived classes represent a record in an XML document.  See comment in xml/XmlCoding.h for
+ *        more detail.
+ *
+ *        Note that one structural difference between \c XmlRecord and \c JsonRecord is that, in the former we only pass
+ *        underlying (ie libxml2) record data in when we are reading from XML, not when we are writing, so the parameter
+ *        is on the \c load function, not the constructor.  The main reason for this is that, with XML, we do the output
+ *        manually, without using the library.  In contrast, for JSON, we use the library to both read and write
+ *        records.
+ */
+class XmlRecord : public SerializationRecord<XmlRecord, XmlCoding, XmlRecordDefinition> {
+public:
+
+   /**
+    * \brief Constructor
+    * \param recordName The name of the outer tag around this type of record, eg "RECIPE" for a "<RECIPE>...</RECIPE>"
+    *                   record in BeerXML.
+    * \param xmlCoding An \b XmlCoding object representing the XML Coding we are using (eg BeerXML 1.0).  This is what
+    *                  we'll need to look up how to handle nested records inside this one.
+    * \param fieldDefinitions A list of fields we expect to find in this record (other fields will be ignored) and how
+    *                         to parse them.
+    * \param typeLookup The \c TypeLookup object that, amongst other things allows us to tell whether Qt properties on
+    *                   this object type are "optional" (ie wrapped in \c std::optional)
+    * \param namedEntityClassName The class name of the \c NamedEntity to which this record relates, or empty string if
+    *                             there is none
+    */
+   XmlRecord(XmlCoding           const & xmlCoding,
+             XmlRecordDefinition const & recordDefinition);
+
+   // Need a virtual destructor as we have virtual member functions
+   ~XmlRecord() override;
+
+   virtual SerializationRecordDefinition const & recordDefinition() const override;
+
+   /**
+    * \brief From the supplied record (ie node) in an XML document, load into memory the data it contains, including
+    *        any other records nested inside it.
+    *
+    * \param document
+    * \param rootNodeOfRecord
+    * \param userMessage Where to append any error messages that we want the user to see on the screen
+    *
+    * \return \b true if load succeeded, \b false if there was an error
+    */
+   bool load(XmlDocument & document,
+             xmlNode     & rootNodeOfRecord,
+             QTextStream & userMessage);
+
+   /**
+    * \brief Export to XML
+    * \param baseFolderPath Folder paths are written relative to this (see \c XmlRecordDefinition::FieldType::FolderPath)
+    * \param namedEntityToExport The object that we want to export to XML
+    * \param out Where to write the XML
+    * \param includeRecordNameTags Normally this should be \c true but, when we're writing a sub-record as though it
+    *                              were part of the main records (eg RecipeAdditionHop::hop) then we don't want its
+    *                              fields to be enclosed in another tag pair
+    * \param indentLevel Current number of indents to put before each opening tag (default 1)
+    * \param indentString String to use for each indent (default two spaces)
+    */
+   void toXml(QString const & baseFolderPath,
+              NamedEntity const & namedEntityToExport,
+              QTextStream & out,
+              bool const includeRecordNameTags,
+              int indentLevel = 1,
+              char const * const indentString = "  ") const;
+
+private:
+   /**
+    * \brief Load in child records.  It is for derived classes to determine whether and when they have child records to
+    *        process (eg Hop records inside a Recipe).  But the algorithm for processing is generic, so we implement it
+    *        in this base class.
+    */
+   bool loadChildRecords(XmlDocument & document,
+                         XmlRecordDefinition::FieldDefinition const & parentFieldDefinition,
+                         XmlRecordDefinition const & childRecordDefinition,
+                         std::vector<xmlNode *> & nodesForCurrentXPath,
+                         QTextStream & userMessage);
+
+protected:
+   /**
+    * \brief Called by \c toXml to write out any fields that are themselves records.
+    *        Subclasses should provide the obvious recursive implementation.
+    * \param baseFolderPath See \c toXml
+    * \param fieldDefinition Which of the fields we're trying to export.  It will be of type \c XmlRecord::Record
+    * \param subRecord A suitably constructed subclass of \c XmlRecord that can do the export.  (Note that because
+    *                  exporting to XML is const on \c XmlRecord, we only need one of these even if there are multiple
+    *                  records to export.)
+    * \param namedEntityToExport The object containing (or referencing) the data we want to export to XML
+    * \param out Where to write the XML
+    */
+   virtual void subRecordToXml(QString const & baseFolderPath,
+                               XmlRecordDefinition::FieldDefinition const & fieldDefinition,
+                               XmlRecord const & subRecord,
+                               NamedEntity const & namedEntityToExport,
+                               QTextStream & out,
+                               int indentLevel,
+                               char const * const indentString) const;
+
+   /**
+    * \brief Writes a comment to the XML output when there is no contained record to output (to make it explicit that
+    *        the omission was not by accident.
+    */
+   void writeNone(XmlRecord const & subRecord,
+                  NamedEntity const & namedEntityToExport,
+                  QTextStream & out,
+                  int indentLevel,
+                  char const * const indentString) const;
+};
+
+#endif

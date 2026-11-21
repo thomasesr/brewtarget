@@ -21,9 +21,6 @@
        <property name="title">
         <string>Inputs</string>
        </property>
-       <property name="configSection" stdset="0">
-        <string notr="true">refractoDialog</string>
-       </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QFormLayout" name="formLayout">
@@ -38,7 +35,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="BtDensityEdit" name="lineEdit_op">
+           <widget class="SmartLineEdit" name="lineEdit_op">
             <property name="maximumSize">
              <size>
               <width>128</width>
@@ -50,12 +47,6 @@
             </property>
             <property name="toolTip">
              <string>Measured original plato</string>
-            </property>
-            <property name="editField" stdset="0">
-             <string notr="true">origPlato</string>
-            </property>
-            <property name="forcedUnit" stdset="0">
-             <string notr="true">displayPlato</string>
             </property>
            </widget>
           </item>
@@ -70,7 +61,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="BtDensityEdit" name="lineEdit_inputOG">
+           <widget class="SmartLineEdit" name="lineEdit_inputOG">
             <property name="maximumSize">
              <size>
               <width>128</width>
@@ -79,12 +70,6 @@
             </property>
             <property name="toolTip">
              <string>Measured original gravity</string>
-            </property>
-            <property name="editField" stdset="0">
-             <string notr="true">inputOG</string>
-            </property>
-            <property name="forcedUnit" stdset="0">
-             <string notr="true">displaySg</string>
             </property>
            </widget>
           </item>
@@ -110,7 +95,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="BtDensityEdit" name="lineEdit_cp">
+           <widget class="SmartLineEdit" name="lineEdit_cp">
             <property name="maximumSize">
              <size>
               <width>128</width>
@@ -119,12 +104,6 @@
             </property>
             <property name="toolTip">
              <string>Current measured plato</string>
-            </property>
-            <property name="editField" stdset="0">
-             <string notr="true">curP</string>
-            </property>
-            <property name="forcedUnit" stdset="0">
-             <string notr="true">displayPlato</string>
             </property>
            </widget>
           </item>
@@ -176,12 +155,9 @@
      <property name="title">
       <string>Outputs</string>
      </property>
-     <property name="configSection" stdset="0">
-      <string notr="true">refractoDialog</string>
-     </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="1" column="1">
-       <widget class="BtGenericEdit" name="lineEdit_ri">
+       <widget class="SmartLineEdit" name="lineEdit_ri">
         <property name="maximumSize">
          <size>
           <width>128</width>
@@ -204,7 +180,7 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="BtDensityEdit" name="lineEdit_sg">
+       <widget class="SmartLineEdit" name="lineEdit_sg">
         <property name="maximumSize">
          <size>
           <width>128</width>
@@ -214,13 +190,13 @@
         <property name="readOnly">
          <bool>true</bool>
         </property>
-        <property name="forcedUnit" stdset="0">
-         <string notr="true">displaySg</string>
-        </property>
        </widget>
       </item>
       <item row="5" column="0">
-       <widget class="QLabel" name="label_abv">
+       <widget class="SmartLabel" name="label_abv">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
         <property name="text">
          <string>ABV</string>
         </property>
@@ -230,7 +206,7 @@
        </widget>
       </item>
       <item row="5" column="1">
-       <widget class="BtGenericEdit" name="lineEdit_abv">
+       <widget class="SmartLineEdit" name="lineEdit_abv">
         <property name="maximumSize">
          <size>
           <width>128</width>
@@ -243,7 +219,10 @@
        </widget>
       </item>
       <item row="6" column="0">
-       <widget class="QLabel" name="label_abw">
+       <widget class="SmartLabel" name="label_abw">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
         <property name="text">
          <string>ABW</string>
         </property>
@@ -253,7 +232,7 @@
        </widget>
       </item>
       <item row="6" column="1">
-       <widget class="BtGenericEdit" name="lineEdit_abw">
+       <widget class="SmartLineEdit" name="lineEdit_abw">
         <property name="maximumSize">
          <size>
           <width>128</width>
@@ -286,7 +265,7 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="BtDensityEdit" name="lineEdit_re">
+       <widget class="SmartLineEdit" name="lineEdit_re">
         <property name="maximumSize">
          <size>
           <width>128</width>
@@ -295,9 +274,6 @@
         </property>
         <property name="readOnly">
          <bool>true</bool>
-        </property>
-        <property name="forcedUnit" stdset="0">
-         <string notr="true">displayPlato</string>
         </property>
        </widget>
       </item>
@@ -312,7 +288,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="BtDensityEdit" name="lineEdit_og">
+       <widget class="SmartLineEdit" name="lineEdit_og">
         <property name="maximumSize">
          <size>
           <width>128</width>
@@ -321,9 +297,6 @@
         </property>
         <property name="readOnly">
          <bool>true</bool>
-        </property>
-        <property name="forcedUnit" stdset="0">
-         <string notr="true">displaySg</string>
         </property>
        </widget>
       </item>
@@ -334,17 +307,17 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BtDensityEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
+   <class>SmartLabel</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartLabel.h</header>
   </customwidget>
   <customwidget>
-   <class>BtGenericEdit</class>
+   <class>SmartLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
+   <header>widgets/SmartLineEdit.h</header>
+   <slots>
+    <slot>lineChanged(PreviousScaleInfo)</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <tabstops>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0">
+<ui version="6.0">
  <class>mashEditor</class>
  <widget class="QDialog" name="mashEditor">
   <property name="geometry">
@@ -13,67 +13,46 @@
   <property name="windowTitle">
    <string>Mash Editor</string>
   </property>
-  <property name="configSection" stdset="0">
-   <string notr="true">mashEditor</string>
-  </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_9">
+
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
-     <property name="spacing">
-      <number>2</number>
+    <widget class="QTabWidget" name="tabWidget_editor">
+     <property name="tabPosition">
+      <enum>QTabWidget::West</enum>
      </property>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="usesScrollButtons">
+      <bool>false</bool>
+     </property>
+     <widget class="QWidget" name="tab_main">
+      <attribute name="title">
+       <string>Main</string>
+      </attribute>
+
+      <layout class="QGridLayout" name="gridLayoutMain">
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_name">
          <property name="text">
           <string>Name</string>
          </property>
-         <property name="buddy">
-          <cstring>lineEdit_name</cstring>
-         </property>
         </widget>
        </item>
-       <item>
+       <item row="0" column="2" colspan="4">
         <widget class="QLineEdit" name="lineEdit_name">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>100</width>
-           <height>16777215</height>
-          </size>
-         </property>
          <property name="toolTip">
           <string>Name</string>
          </property>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="BtTemperatureLabel" name="label_grainTemp">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="contextMenuPolicy">
-          <enum>Qt::CustomContextMenu</enum>
-         </property>
+
+       <item row="1" column="2" colspan="4">
+        <widget class="LockAndShareBar" name="lockAndShareBar"/>
+       </item>
+
+       <item row="2" column="1">
+        <widget class="SmartLabel" name="label_grainTemp">
          <property name="text">
           <string>Initial grain temp</string>
          </property>
@@ -82,40 +61,241 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="BtTemperatureEdit" name="lineEdit_grainTemp">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>100</width>
-           <height>16777215</height>
-          </size>
-         </property>
+       <item row="2" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_grainTemp">
          <property name="toolTip">
           <string>Initial grain temp</string>
          </property>
-         <property name="editField" stdset="0">
-          <string notr="true">grainTemp_c</string>
+        </widget>
+       </item>
+
+       <item row="8" column="1" colspan="5">
+         <widget class="MashStepsWidget" name="enumeratedItemsWidget">
+         </widget>
+       </item>
+
+       <item row="9" column="1" colspan="5">
+        <widget class="QLabel" name="label_mashProblems">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
          </property>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
-        <widget class="BtTemperatureLabel" name="label_spargeTemp">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+
+       <item row="10" column="1">
+        <widget class="SmartLabel" name="label_totalMashWater">
+         <property name="text">
+          <string>Total Mash Water</string>
          </property>
+        </widget>
+       </item>
+       <item row="10" column="2">
+        <widget class="SmartValueDisplay" name="value_totalMashWater">
+        </widget>
+       </item>
+       <item row="10" column="4">
+        <widget class="SmartLabel" name="label_totalTime">
+         <property name="text">
+          <string>Total Time</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="5">
+        <widget class="SmartValueDisplay" name="value_totalTime">
+        </widget>
+       </item>
+
+       <item row="11" column="1" colspan="5">
+        <widget class="QLabel" name="label_volumesSummary">
+         <property name="toolTip">
+          <string>How full the mash tun gets, and how much wort you can expect to collect from the mash, for the recipe using this mash.  Shown when the mash is used by exactly one recipe.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+
+       <item row="12" column="1" colspan="5">
+        <widget class="QGroupBox" name="groupBox_calculate">
+         <property name="title">
+          <string>Adjust water amounts and temperatures</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_calculate">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_spargeMethod">
+            <property name="text">
+             <string>Sparge</string>
+            </property>
+            <property name="buddy">
+             <cstring>comboBox_spargeMethod</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comboBox_spargeMethod">
+            <property name="toolTip">
+             <string>How the grain will be rinsed after the mash.  Changing this and clicking Auto-Adjust replaces any existing sparge steps.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_numBatches">
+            <property name="text">
+             <string>Batches</string>
+            </property>
+            <property name="buddy">
+             <cstring>spinBox_numBatches</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QSpinBox" name="spinBox_numBatches">
+            <property name="toolTip">
+             <string>Number of batch sparges</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="SmartLabel" name="label_thickness">
+            <property name="text">
+             <string>Target mash thickness</string>
+            </property>
+            <property name="buddy">
+             <cstring>lineEdit_thickness</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="SmartLineEdit" name="lineEdit_thickness">
+            <property name="toolTip">
+             <string>Volume of strike water per mass of grain (not counting any water that sits below the grain bed) to aim for when adjusting the mash.  Most often around 2.5 to 3.2 L/kg (1.2 to 1.5 qt/lb).  Not used if there is no sparge, as then all the water goes in the mash, nor if the amount of strike water is pinned.  The Water:Grain column in the table of steps shows what the steps actually give.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QPushButton" name="pushButton_autoAdjust">
+            <property name="toolTip">
+             <string>Change the amounts and temperatures of the strike water and other infusions, the amounts of any decoctions, and the amounts and temperatures of sparge water, to suit this recipe's grain bill and equipment.  Values you have pinned in a step are not changed.</string>
+            </property>
+            <property name="text">
+             <string>Auto-Adjust</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="4">
+           <widget class="QCheckBox" name="checkBox_keptInSync">
+            <property name="toolTip">
+             <string>Available when mash is used by exactly one recipe.  Keep mash in sync with recipe by doing an auto-adjust whenever changes happen, eg to the recipe's grain bill or equipment.  (Changing the steps themselves does not trigger an adjustment, so pin any values you want to keep.)</string>
+            </property>
+            <property name="text">
+             <string>Keep mash in sync with recipe changes</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="4">
+           <widget class="QLabel" name="label_calculateInfo">
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::RichText</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+
+       <item row="13" column="0">
+        <widget class="InfoButton" name="infoButton_id"></widget>
+       </item>
+       <item row="13" column="1">
+        <widget class="QLabel" name="label_id">
+         <property name="text">
+          <string>ID in database</string>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="2">
+        <widget class="QLabel" name="label_id_value">
+        </widget>
+       </item>
+
+       <item row="13" column="4" colspan="2">
+        <widget class="QLabel" name="label_numRecipesUsing">
+        </widget>
+       </item>
+
+       <item row="14" column="1" colspan="5">
+        <widget class="InfoText" name="infoText_id">
+         <property name="buddy">
+          <cstring>infoButton_id</cstring>
+         </property>
+         <property name="text">
+          <string>You can normally ignore this, but it's sometimes useful for debugging.</string>
+         </property>
+        </widget>
+       </item>
+
+      </layout>
+     </widget>
+
+     <widget class="QWidget" name="tab_legacy">
+      <attribute name="title">
+       <string>Legacy</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayoutLegacy">
+       <item row="0" column="1" colspan="5">
+        <widget class="QLabel" name="label_legacyTabInfo">
+         <property name="text">
+          <string>These are old settings that still work but might be retired in a future version of the software as there are now other ways to achieve the same same result.</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="2" column="0">
+        <widget class="InfoButton" name="infoButton_tunTemp"></widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="SmartLabel" name="label_tunTemp">
+         <property name="text">
+          <string>Initial tun temp</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_tunTemp</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_tunTemp">
+        </widget>
+       </item>
+       <item row="3" column="1" colspan="5">
+        <widget class="InfoText" name="infoText_tunTemp">
+         <property name="buddy">
+          <cstring>infoButton_tunTemp</cstring>
+         </property>
+         <property name="text">
+          <string>Initial temperature of the mash tun.  Used when calculating the strike water temperature, to allow for the strike water heating up the mash tun.  If left blank, the tun is assumed to be at the same temperature as the grain.</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="4" column="0">
+        <widget class="InfoButton" name="infoButton_spargeTemp"></widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="SmartLabel" name="label_spargeTemp">
          <property name="contextMenuPolicy">
           <enum>Qt::CustomContextMenu</enum>
          </property>
@@ -127,40 +307,29 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="BtTemperatureEdit" name="lineEdit_spargeTemp">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>100</width>
-           <height>16777215</height>
-          </size>
-         </property>
+       <item row="4" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_spargeTemp">
          <property name="toolTip">
           <string>Sparge temp target</string>
          </property>
-         <property name="editField" stdset="0">
-          <string notr="true">spargeTemp_c</string>
+        </widget>
+       </item>
+       <item row="5" column="1" colspan="5">
+        <widget class="InfoText" name="infoText_spargeTemp">
+         <property name="buddy">
+          <cstring>infoButton_spargeTemp</cstring>
+         </property>
+         <property name="text">
+          <string>Used as the target grain bed temperature for new sparge steps when adjusting the mash.  It is better to set this on the sparge step itself.</string>
          </property>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <item>
-        <widget class="QLabel" name="label_spargePh">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+
+       <item row="6" column="0">
+        <widget class="InfoButton" name="infoButton_spargePh"></widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="SmartLabel" name="label_spargePh">
          <property name="text">
           <string>Sparge pH</string>
          </property>
@@ -169,406 +338,215 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_spargePh">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>100</width>
-           <height>16777215</height>
-          </size>
-         </property>
+       <item row="6" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_spargePh">
          <property name="toolTip">
           <string>Sparge pH</string>
          </property>
-         <property name="editField" stdset="0">
-          <string notr="true">ph</string>
+        </widget>
+       </item>
+       <item row="7" column="1" colspan="5">
+        <widget class="InfoText" name="infoText_spargePh">
+         <property name="buddy">
+          <cstring>infoButton_spargePh</cstring>
+         </property>
+         <property name="text">
+          <string>It is better to set this on the sparge step itself.</string>
          </property>
         </widget>
        </item>
+
+       <item row="8" column="0">
+        <widget class="InfoButton" name="infoButton_tunMass"></widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="SmartLabel" name="label_tunMass">
+         <property name="text">
+          <string>Tun mass</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_tunMass</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_tunMass">
+         <property name="toolTip">
+          <string>Tun mass</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1" colspan="5">
+        <widget class="InfoText" name="infoText_tunMass">
+         <property name="buddy">
+          <cstring>infoButton_tunMass</cstring>
+         </property>
+         <property name="text">
+          <string>It is better to set this on the Equipment (Mash Tun tab).  This value is only used if the recipe's equipment has a mash tun with no weight and specific heat set.  It is ignored if the equipment has no separate mash tun (ie the mash happens in the kettle), because the strike water is then heated in the same vessel as the mash.</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="10" column="0">
+        <widget class="InfoButton" name="infoButton_tunSpHeat"></widget>
+       </item>
+       <item row="10" column="1">
+        <widget class="SmartLabel" name="label_tunSpHeat">
+         <property name="text">
+          <string>Tun specific heat</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_tunSpHeat</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_tunSpHeat">
+         <property name="toolTip">
+          <string>Tun specific heat (cal/(g*K))</string>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="1" colspan="5">
+        <widget class="InfoText" name="infoText_tunSpHeat">
+         <property name="buddy">
+          <cstring>infoButton_tunSpHeat</cstring>
+         </property>
+         <property name="text">
+          <string>It is better to set this on the Equipment (Mash Tun tab).  This value is only used if the recipe's equipment has a mash tun with no weight and specific heat set.  It is ignored if the equipment has no separate mash tun (ie the mash happens in the kettle), because the strike water is then heated in the same vessel as the mash.</string>
+         </property>
+        </widget>
+       </item>
+
       </layout>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>100</height>
-        </size>
-       </property>
-       <property name="title">
-        <string>Notes</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QTextEdit" name="textEdit_notes"/>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
+
+     </widget>
+
+     <widget class="QWidget" name="tab_notes">
+      <attribute name="title">
+       <string>Notes</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QTextEdit" name="textEdit_notes"/>
+       </item>
+      </layout>
+     </widget>
+
+    </widget>
    </item>
+
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <layout class="QHBoxLayout" name="horizontalLayout_Buttons">
      <property name="spacing">
       <number>2</number>
      </property>
      <item>
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="title">
-        <string>Tun</string>
-       </property>
-       <property name="configSection" stdset="0">
-        <string notr="true">mashEditor</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="spacing">
-         <number>2</number>
-        </property>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="BtTemperatureLabel" name="label_tunTemp">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="contextMenuPolicy">
-             <enum>Qt::CustomContextMenu</enum>
-            </property>
-            <property name="text">
-             <string>Initial tun temp</string>
-            </property>
-            <property name="buddy">
-             <cstring>lineEdit_tunTemp</cstring>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="BtTemperatureEdit" name="lineEdit_tunTemp">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>100</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Initial tun temp</string>
-            </property>
-            <property name="editField" stdset="0">
-             <string notr="true">tunTemp_c</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_fromEquipment">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="toolTip">
-           <string>Get following parameters from the recipe's equipment.</string>
-          </property>
-          <property name="text">
-           <string>From Equipment</string>
-          </property>
-          <property name="autoDefault">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_6">
-          <item>
-           <widget class="BtMassLabel" name="label_tunMass">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="contextMenuPolicy">
-             <enum>Qt::CustomContextMenu</enum>
-            </property>
-            <property name="text">
-             <string>Tun mass</string>
-            </property>
-            <property name="buddy">
-             <cstring>lineEdit_tunMass</cstring>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="BtMassEdit" name="lineEdit_tunMass">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>100</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Tun mass</string>
-            </property>
-            <property name="editField" stdset="0">
-             <string notr="true">tunWeight_kg</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <item>
-           <widget class="QLabel" name="label_tunSpHeat">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Tun sp. heat</string>
-            </property>
-            <property name="buddy">
-             <cstring>lineEdit_tunSpHeat</cstring>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="BtGenericEdit" name="lineEdit_tunSpHeat">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>100</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Tun specific heat (cal/(g*K))</string>
-            </property>
-            <property name="editField" stdset="0">
-             <string notr="true">tunSpecificHeat_calGC</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
+      <spacer name="horizontalSpacer_Buttons">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_new">
+       <property name="toolTip">
+        <string>New</string>
+       </property>
+       <property name="text">
+        <string>New</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources.qrc">
+         <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_save">
+       <property name="toolTip">
+        <string>Save and close</string>
+       </property>
+       <property name="text">
+        <string>Save</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources.qrc">
+         <normaloff>:/images/filesave.svg</normaloff>:/images/filesave.svg</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_cancel">
+       <property name="toolTip">
+        <string>Discard and close</string>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources.qrc">
+         <normaloff>:/images/exit.svg</normaloff>:/images/exit.svg</iconset>
        </property>
       </widget>
      </item>
     </layout>
    </item>
+
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BtGenericEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
+   <class>InfoButton</class>
+   <extends>QPushButton</extends>
+   <header>widgets/InfoButton.h</header>
   </customwidget>
   <customwidget>
-   <class>BtMassEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <signal>textModified()</signal>
-    <slot>lineChanged()</slot>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtMassLabel</class>
+   <class>InfoText</class>
    <extends>QLabel</extends>
-   <header>BtLabel.h</header>
+   <header>widgets/InfoText.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmartLabel</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartLabel.h</header>
    <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
+    <signal>changedSystemOfMeasurementOrScale(PreviousScaleInfo)</signal>
     <slot>popContextMenu(QPoint)</slot>
    </slots>
   </customwidget>
   <customwidget>
-   <class>BtTemperatureLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
+   <class>SmartLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>widgets/SmartLineEdit.h</header>
    <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
+    <signal>textModified()</signal>
+    <slot>lineChanged()</slot>
+    <slot>lineChanged(PreviousScaleInfo)</slot>
    </slots>
   </customwidget>
   <customwidget>
-   <class>BtTemperatureEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
+   <class>SmartValueDisplay</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartValueDisplay.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MashStepsWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/EnumeratedItemsWidget.h</header>
+  </customwidget>
+
+  <customwidget>
+   <class>LockAndShareBar</class>
+   <extends>QFrame</extends>
+   <header>widgets/LockAndShareBar.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>mashEditor</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>476</x>
-     <y>234</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>mashEditor</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>476</x>
-     <y>234</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_grainTemp</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_grainTemp</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>87</x>
-     <y>42</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>223</x>
-     <y>42</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_spargeTemp</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_spargeTemp</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>87</x>
-     <y>68</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>223</x>
-     <y>68</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_tunTemp</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_tunTemp</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>326</x>
-     <y>45</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>418</x>
-     <y>45</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>label_tunMass</sender>
-   <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   <receiver>lineEdit_tunMass</receiver>
-   <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>326</x>
-     <y>96</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>418</x>
-     <y>96</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>

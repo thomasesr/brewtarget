@@ -1,6 +1,32 @@
 #!/bin/bash
+#----------------------------------------------------------------------------------------------------------------------
+# configure is part of Brewtarget, and is copyright the following authors 2009-2024:
+#   • Matt Young <mfsy@yahoo.com>
+#   • Philip Greggory Lee <rocketman768@gmail.com>
+#
+# Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with this program.  If not, see
+# <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------------------------------------------------------
 
-# stop when sth failed
+#
+# This script can be used to help set up the build directory for doing CMake builds.
+#
+# ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+# NB: Meson and the `bt` build tool Python script are now the primary way of building and packaging the software.  You
+#     can also still CMake to compile the product and install it locally, but we no longer support using CMake to do
+#     packaging.
+# ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+#
+
+# Stop when something failed
 set -e
 
 PREFIX=""
@@ -13,8 +39,8 @@ function printUsageAndExit {
            "      -p T   Set prefix to T.\n" \
            "      -t     Update translation files (*.ts).\n" \
            "      -v     Verbose compilation.\n" \
-           "      -h     Print this help message.\n";
-   exit 0;
+           "      -h     Print this help message.\n"
+   exit 0
 }
 
 # Ensures cmake exists.
@@ -22,13 +48,13 @@ function findCMake {
 
    if [ -z $(which cmake) ]
    then
-      echo "ERROR: cmake not installed";
-      exit 1;
+      echo "ERROR: cmake not installed"
+      exit 1
    fi
 
 }
 
-findCMake;
+findCMake
 
 # Get options.
 while getopts "m:p:t:h:v" option
@@ -46,33 +72,38 @@ done
 # This is not good for debian, so try to detect debian/ubuntu.
 if [ `uname` == 'Linux' ]
 then
-   grep -i ubuntu /etc/issue > /dev/null 2> /dev/null || grep -i debian /etc/issue > /dev/null 2> /dev/null
-   if [ $? == 0 ]
+   if grep -q -s -i -E -e 'ubuntu|debian' /etc/issue
    then
-     PREFIX=/usr;
+     PREFIX=/usr
    fi
 fi
 
-echo "Prefix: $PREFIX";
+echo "Prefix: $PREFIX"
 
 # If we have a prefix...
 if [ -n "$PREFIX" ]
 then
    #...define the prefix.
-   CMAKEOPTIONS="$CMAKEOPTIONS -DCMAKE_INSTALL_PREFIX=$PREFIX";
+   CMAKEOPTIONS="$CMAKEOPTIONS -DCMAKE_INSTALL_PREFIX=$PREFIX"
 fi
 
-echo "CMAKEOPTIONS: $CMAKEOPTIONS";
+echo "CMAKEOPTIONS: $CMAKEOPTIONS"
+
+# When a git repository is cloned, the submodules don't get cloned until you specifically ask for it
+if [ ! -d third-party ]
+then
+   echo "Pulling in submodules"
+   mkdir -p third-party
+   git submodule init
+   git submodule update
+fi
 
 # Create dir only if needed
-mkdir build || true
+mkdir -p build
 
 # Do all the building in build/
 cd build/
 cmake $CMAKEOPTIONS ../
 
 # Tell the user what to do (if everything went well...)
-echo ""
-echo ""
-echo -e "\tNow, cd to build/ and run \"make\""
-echo ""
+echo -e "\n\n\tNow, cd to build/ and run \"make\" (or \"cmake --build .\" on Windows)\n"

@@ -1,0 +1,545 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * serialization/ImportExport.cpp is part of Brewtarget, and is copyright the following authors 2013-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "serialization/ImportExport.h"
+
+#include <QFile>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QObject>
+
+#include "MainWindow.h"
+#include "model/Equipment.h"
+#include "model/Fermentable.h"
+#include "model/Hop.h"
+#include "model/Misc.h"
+#include "model/Recipe.h"
+#include "model/RecipeAdditionFermentable.h"
+#include "model/RecipeAdditionHop.h"
+#include "model/RecipeAdditionMisc.h"
+#include "model/RecipeAdditionYeast.h"
+#include "model/Style.h"
+#include "model/Water.h"
+#include "model/Yeast.h"
+#include "serialization/json/beerJson/BeerJson.h"
+#include "serialization/json/dotBeer/DotBeer.h"
+#include "serialization/xml/BeerXml.h"
+
+namespace {
+   enum class ImportOrExport {
+      EXPORT,
+      IMPORT
+   };
+
+   //
+   // Note that we cannot guarantee the file extension is at the end of the input string -- eg we might be matching
+   // against "BeerJSON format (*.json)".
+   //
+   // In the regex below, we assume:
+   //   - File extension starts with dot -- "[.]" (Saves trying to work out how many backslashes to use to escape dot!)
+   //   - File extensions are only latin letters but may be upper or lower case or both -- "[a-zA-Z]"
+   //   - File extensions are any non-zero length -- "+"
+   //   - File extension is either at end of string or followed by something that is not a letter or a
+   //     digit -- "[^a-zA-Z0-9]|$"
+   //
+   // This is a bit overkill for what we need for now, but not hugely, and is potentially useful for future expansion
+   // (eg if we want to generalise file extension handling).
+   //
+   static QRegularExpression const fileExtensionRegexp {"[.]([a-zA-Z]+)[^a-zA-Z0-9]|$"};
+
+   /**
+    * \brief Display a file dialog for selecting file(s) for reading / writing
+    */
+   std::optional<QStringList> selectFiles(ImportOrExport const importOrExport) {
+      //
+      // Set up the file chooser dialog.  In previous versions of the code, this was created once and reused every time
+      // we want to open a file.  The advantage of that is that, on subsequent uses, the file dialog is going to open
+      // wherever you navigated to when you last opened a file.  However, as at 2020-12-30, there is a known bug in Qt
+      // (https://bugreports.qt.io/browse/QTBUG-88971) which means you cannot make a QFileDialog "forget" previous
+      // files you have selected with it.  So, each time you show it, the subsequent list returned from selectedFiles()
+      // is actually all files _ever_ selected with this dialog object.  (The bug report is a bit bare bones, but
+      // https://forum.qt.io/topic/121235/qfiledialog-has-memory has more detail.)
+      //
+      // Our workaround is to use a new QFileDialog each time, and manually keep track of the current directory.  This
+      // also has the advantage that we remember the same directory for both reading and writing.
+      //
+      static QString fileChooserDirectory{QDir::homePath()};
+      bool const importing{importOrExport == ImportOrExport::IMPORT};
+      // Note that we can't have the "both" formats filter for exporting, because QFileDialog will just slap a .json
+      // extension on, even if you specified myfile.xml.  .:TBD:. There is probably a better way of handling this that
+      // we should look into at some point.
+      QFileDialog fileChooser{
+         &MainWindow::instance(),
+         importing ? QObject::tr("Open") : QObject::tr("Save"),
+         fileChooserDirectory,
+         importing ?
+            QObject::tr("DotBeer, BeerJSON and BeerXML files (*.beer *.json *.xml);;DotBeer files (*.beer);;BeerJSON files (*.json);;BeerXML files (*.xml)") :
+            QObject::tr("DotBeer format (*.beer);;BeerJSON format (*.json);;BeerXML format (*.xml)")
+      };
+      fileChooser.setViewMode(QFileDialog::List);
+      fileChooser.setOption(QFileDialog::DontUseNativeDialog, false);
+      if (importing) {
+         fileChooser.setAcceptMode(QFileDialog::AcceptOpen);
+         fileChooser.setFileMode(QFileDialog::ExistingFiles);
+      } else {
+         Q_ASSERT(importOrExport == ImportOrExport::EXPORT);
+         fileChooser.setAcceptMode(QFileDialog::AcceptSave);
+         fileChooser.setFileMode(QFileDialog::AnyFile);
+         //
+         // If the user doesn't specify a suffix, we choose one for them.  By default, it's "beer" to match the first
+         // filter in the list.  If the user changes the filter, then we get a signal and change the default suffix
+         // accordingly.
+         //
+         // I think in practice QFileDialog::filterSelected will always get sent when exec() is run below, so we don't
+         // need the call to setDefaultSuffix here as the one in the lambda below will suffice.  But it doesn't hurt to
+         // have this initial one, so we'll leave it for now.
+         //
+         fileChooser.setDefaultSuffix(QString("beer"));
+         fileChooser.connect(
+            &fileChooser,
+            &QFileDialog::filterSelected,
+            [&fileChooser](QString const & filter) {
+               //
+               // The Qt docs are a bit silent about what the parameter is for the QFileDialog::filterSelected signal.
+               // By adding a logging statement here, we discovered in Qt5 that we got either "*.json" or "*.xml".
+               // However, in Qt6, we got "BeerJSON format (*.json)" or "BeerXML format (*.xml)".
+               //
+               QRegularExpressionMatch match = fileExtensionRegexp.match(filter);
+               if (!match.hasMatch()) {
+                  //
+                  // This shouldn't happen because we should be parsing one of the options we gave in the fileChooser
+                  // constructor above.
+                  //
+                  qCritical() << Q_FUNC_INFO << "Unable to parse" << filter;
+                  return;
+               }
+
+               QString const suffix = match.captured(1).toLower();
+               qDebug() << Q_FUNC_INFO << "Export filter is:" << filter << ".  From this, suffix is:" << suffix;
+               fileChooser.setDefaultSuffix(suffix);
+               return;
+            }
+         );
+      }
+
+      if (!fileChooser.exec() ) {
+         // User clicked cancel, so nothing more to do
+         return std::nullopt;
+      }
+
+      //
+      // QFileDialog::defaultSuffix() excludes the leading dot on the suffix, but things are easier for us below if we
+      // include it.
+      //
+      QString const defaultSuffix = QString{".%1"}.arg(fileChooser.defaultSuffix());
+      QList<QString> selectedFiles = fileChooser.selectedFiles();
+
+      qDebug() <<
+         Q_FUNC_INFO << "Selected" << selectedFiles.length() << "file(s) (from directory" << fileChooser.directory() <<
+         "):" << fileChooser.selectedFiles() << ". Default suffix:" << defaultSuffix;
+
+      // Remember the directory for next time
+      fileChooserDirectory = fileChooser.directory().canonicalPath();
+
+      //
+      // If we are writing, then, for any files that do not have a suffix, add the default one
+      //
+      if (!importing) {
+         for (QString & file : selectedFiles) {
+            if (!file.endsWith(".beer", Qt::CaseInsensitive) &&
+                !file.endsWith(".json", Qt::CaseInsensitive) &&
+                !file.endsWith(".xml" , Qt::CaseInsensitive)) {
+               file.append(defaultSuffix);
+            }
+         }
+      }
+
+      return selectedFiles;
+   }
+
+   /**
+    * \brief Show a success/failure message to the user after we attempted to import one or more BeerXML files
+    */
+   void importExportMsg(ImportOrExport const importOrExport,
+                        QString const & fileName,
+                        bool const succeeded,
+                        QString const & userMessage) {
+      // This will allow us to drop the directory path to the file, as it is often long and makes the message box a
+      // "wall of text" that will put a lot of users off.
+      QFileInfo const fileInfo(fileName);
+
+      QString const messageBoxTitle{succeeded ? QObject::tr("Success!") : QObject::tr("ERROR")};
+      QString messageBoxText;
+      if (succeeded) {
+         // The userMessage parameter will tell how many files were imported/exported and/or skipped (as duplicates)
+         // Do separate messages for import and export as it makes translations easier
+         if (ImportOrExport::IMPORT == importOrExport) {
+            messageBoxText = QString(
+               QObject::tr("Successfully read \"%1\"\n\n%2").arg(fileInfo.fileName()).arg(userMessage)
+            );
+         } else {
+            messageBoxText = QString(
+               QObject::tr("Successfully wrote \"%1\"\n\n%2").arg(fileInfo.fileName()).arg(userMessage)
+            );
+         }
+      } else {
+         if (ImportOrExport::IMPORT == importOrExport) {
+            messageBoxText = QString(
+               QObject::tr("Unable to import data from \"%1\"\n\n"
+                           "%2\n\n"
+                           "Log file may contain more details.").arg(fileInfo.fileName()).arg(userMessage)
+            );
+         } else {
+            // Some write errors (eg nothing to export) are before the filename was chosen (in which case the name will
+            // be blank).
+            if (fileName == "") {
+               messageBoxText = QString("%2").arg(userMessage);
+            } else {
+               messageBoxText = QString(
+                  QObject::tr("Unable to write data to \"%1\"\n\n"
+                              "%2\n\n"
+                              "Log file may contain more details.").arg(fileInfo.fileName()).arg(userMessage)
+               );
+            }
+         }
+      }
+      qDebug() << Q_FUNC_INFO << "Message box text : " << messageBoxText;
+      QMessageBox msgBox{succeeded ? QMessageBox::Information : QMessageBox::Critical,
+                         messageBoxTitle,
+                         messageBoxText};
+      msgBox.exec();
+      return;
+   }
+
+   /**
+    * \brief Turn a possibly null list into a set
+    */
+   template<class NE> QSet<NE const *> makeSet(QList<NE const *> const * nes) {
+      QSet<NE const *> neSet;
+      if (nes) {
+         neSet = QSet<NE const *>{nes->begin(), nes->end()};
+      }
+      return neSet;
+   }
+
+   /**
+    * \brief Make a set of Hop/Fermentable/etc from a list of same and a list of Recipes
+    *        Used in ImportExport::exportToFile when exporting to BeerJSON.  See comment in that function for why.
+    */
+   template<class NE> QSet<NE const *>
+   makeSet(QList<NE     const *> const * ingredients,
+           QList<Recipe const *> const * recipes    ) requires(std::is_base_of_v<Ingredient, NE>) {
+      QSet<NE const *> ingredientSet{makeSet(ingredients)};
+      if (recipes) {
+         for (Recipe const * recipe : *recipes) {
+            for (auto ingredientAdditions = recipe->allOwned<typename NE::RecipeAdditionClass>();
+                 auto ingredientAddition : ingredientAdditions) {
+               if (auto ingredient = ingredientAddition->ingredient()) {
+                  ingredientSet.insert(ingredient.get());
+               }
+            }
+         }
+      }
+      return ingredientSet;
+   }
+
+   /**
+    * \brief Specialisation for things that Recipe uses (but does not own) that are not ingredients
+    *
+    * @tparam NE
+    * @param nonIngredients Maybe one day we'll think of a better collective noun for
+    *                       Mash/Boil/Fermentation/Style/Equipment!
+    * @param recipes
+    * @return
+    */
+   template<class NE> QSet<NE const *>
+   makeSet(QList<NE     const *> const * nonIngredients,
+           QList<Recipe const *> const * recipes       ) requires(!std::is_base_of_v<Ingredient, NE>) {
+      QSet<NE const *> nonIngredientSet{makeSet(nonIngredients)};
+      if (recipes) {
+         for (Recipe const * recipe : *recipes) {
+            if (auto const nonIngredient = recipe->get<NE>()) {
+               nonIngredientSet.insert(nonIngredient.get());
+            }
+         }
+      }
+      return nonIngredientSet;
+   }
+
+   /**
+    * \brief Specialisation (well, in fact an overload) needed for Water as it's a bit different from other ingredients
+    */
+   QSet<Water const *> makeSet(QList<Water const *> const * ingredients,
+                               QList<Recipe const *> const * recipes) {
+      QSet<Water const *> ingredientSet{makeSet(ingredients)};
+      if (recipes) {
+         for (Recipe const * recipe : *recipes) {
+            auto const waterBase = recipe->waterBase();
+            if (waterBase) {
+               ingredientSet.insert(waterBase.get());
+            }
+            auto const waterTarget = recipe->waterTarget();
+            if (waterTarget) {
+               ingredientSet.insert(waterTarget.get());
+            }
+         }
+      }
+      return ingredientSet;
+   }
+}
+
+bool ImportExport::importFromFiles(QString const & targetFolderPath, std::optional<QStringList> inputFiles) {
+   if (!inputFiles) {
+      inputFiles = selectFiles(ImportOrExport::IMPORT);
+   }
+   if (!inputFiles) {
+      return false;
+   }
+
+   bool allSucceeded = true;
+   for (QString const & filename : *inputFiles) {
+      //
+      // I guess if the user were importing a lot of files in one go, it might be annoying to have a separate result
+      // message for each one, but TBD whether that's much of a use case.  For now, we keep things simple.
+      //
+      qDebug() << Q_FUNC_INFO << "Importing " << filename;
+      QString userMessage;
+      QTextStream userMessageAsStream{&userMessage};
+      bool succeeded = false;
+      if (filename.endsWith("beer", Qt::CaseInsensitive)) {
+         succeeded = DotBeer::import(targetFolderPath, filename, userMessageAsStream);
+      } else if (filename.endsWith("json", Qt::CaseInsensitive)) {
+         succeeded = BeerJson::import(targetFolderPath, filename, userMessageAsStream);
+      } else if (filename.endsWith("xml", Qt::CaseInsensitive)) {
+         succeeded = BeerXML::getInstance().importFromXML(targetFolderPath, filename, userMessageAsStream);
+      } else {
+         qInfo() << Q_FUNC_INFO << "Don't understand file extension on" << filename << "so ignoring!";
+         userMessageAsStream <<
+            QObject::tr("Did not recognise file extension on \"%1\" so nothing read.").arg(filename);
+      }
+      qDebug() << Q_FUNC_INFO << "Import " << (succeeded ? "succeeded" : "failed");
+      importExportMsg(ImportOrExport::IMPORT, filename, succeeded, userMessage);
+
+      allSucceeded &= succeeded;
+   }
+
+   MainWindow::instance().showChanges();
+
+   return allSucceeded;
+}
+
+bool ImportExport::exportToFile(QString const & baseFolderPath, ImportExport::Lists const & exportLists) {
+   // It's the caller's responsibility to ensure that at least one list is supplied and that at least one of the
+   // supplied lists is non-empty
+   Q_ASSERT((exportLists.recipes       && exportLists.recipes      ->size() > 0) ||
+            (exportLists.equipments    && exportLists.equipments   ->size() > 0) ||
+            (exportLists.fermentables  && exportLists.fermentables ->size() > 0) ||
+            (exportLists.hops          && exportLists.hops         ->size() > 0) ||
+            (exportLists.miscs         && exportLists.miscs        ->size() > 0) ||
+            (exportLists.styles        && exportLists.styles       ->size() > 0) ||
+            (exportLists.waters        && exportLists.waters       ->size() > 0) ||
+            (exportLists.yeasts        && exportLists.yeasts       ->size() > 0) ||
+            (exportLists.mashes        && exportLists.mashes       ->size() > 0) ||
+            (exportLists.boils         && exportLists.boils        ->size() > 0) ||
+            (exportLists.fermentations && exportLists.fermentations->size() > 0));
+
+   auto selectedFiles = selectFiles(ImportOrExport::EXPORT);
+   if (!selectedFiles) {
+      return false;
+   }
+   QString const filename = (*selectedFiles)[0];
+
+   QString userMessage;
+   QTextStream userMessageAsStream{&userMessage};
+
+   // Destructor will close the file if nec when we exit the function
+   QFile outFile;
+   outFile.setFileName(filename);
+
+   bool succeeded = false;
+
+   if (!outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      qWarning() << Q_FUNC_INFO << "Could not open" << filename << "for writing.";
+      userMessageAsStream << QObject::tr("Could not open \"%1\" for writing").arg(filename);
+
+   } else if (filename.endsWith(".beer", Qt::CaseInsensitive)) {
+      //
+      // In dotBeer, things are cross-referenced by "local IDs" so we need to make sure that everything referenced eg by
+      // any recipe we are exporting is itself explicitly exported.
+      //
+      // TODO: This needs some more work.  For one thing, I would like to have a canonical order for exporting things,
+      //       as it makes it easier to compare two sets of output (eg by different versions of the code).
+      //
+      QSet<Fermentable  const *> const setOfFermentable   = makeSet(exportLists.fermentables , exportLists.recipes);
+      QSet<Hop          const *> const setOfHop           = makeSet(exportLists.hops         , exportLists.recipes);
+      QSet<Misc         const *> const setOfMisc          = makeSet(exportLists.miscs        , exportLists.recipes);
+      QSet<Yeast        const *> const setOfYeast         = makeSet(exportLists.yeasts       , exportLists.recipes);
+      QSet<Water        const *> const setOfWater         = makeSet(exportLists.waters       , exportLists.recipes);
+      QSet<Style        const *> const setOfStyle         = makeSet(exportLists.styles       , exportLists.recipes);
+      QSet<Equipment    const *> const setOfEquipment     = makeSet(exportLists.equipments   , exportLists.recipes);
+      QSet<Mash         const *> const setOfMashes        = makeSet(exportLists.mashes       , exportLists.recipes);
+      QSet<Boil         const *> const setOfBoils         = makeSet(exportLists.boils        , exportLists.recipes);
+      QSet<Fermentation const *> const setOfFermentations = makeSet(exportLists.fermentations, exportLists.recipes);
+
+      DotBeer::Exporter exporter(outFile, userMessageAsStream);
+      if (!setOfFermentable  .isEmpty()) { exporter.add(baseFolderPath, setOfFermentable  .values()); }
+      if (!setOfHop          .isEmpty()) { exporter.add(baseFolderPath, setOfHop          .values()); }
+      if (!setOfMisc         .isEmpty()) { exporter.add(baseFolderPath, setOfMisc         .values()); }
+      if (!setOfYeast        .isEmpty()) { exporter.add(baseFolderPath, setOfYeast        .values()); }
+      if (!setOfStyle        .isEmpty()) { exporter.add(baseFolderPath, setOfStyle        .values()); }
+      if (!setOfEquipment    .isEmpty()) { exporter.add(baseFolderPath, setOfEquipment    .values()); }
+      if (!setOfWater        .isEmpty()) { exporter.add(baseFolderPath, setOfWater        .values()); }
+      if (!setOfMashes       .isEmpty()) { exporter.add(baseFolderPath, setOfMashes       .values()); }
+      if (!setOfBoils        .isEmpty()) { exporter.add(baseFolderPath, setOfBoils        .values()); }
+      if (!setOfFermentations.isEmpty()) { exporter.add(baseFolderPath, setOfFermentations.values()); }
+      if (exportLists.recipes && exportLists.recipes->size() > 0) { exporter.add(baseFolderPath, *exportLists.recipes); }
+
+      exporter.close();
+      succeeded = true;
+
+   } else if (filename.endsWith(".json", Qt::CaseInsensitive)) {
+      //
+      // It's not strictly required by the BeerJSON standard, but we'll get a better export of Recipe if we also
+      // explicitly export all the ingredients.  This is because, in BeerJSON (unlike BeerXML), the Recipe specification
+      // includes only partial information about each Hop/Fermentable/etc addition.  This is fine if you already have
+      // those ingredients in your database when you're reading a Recipe in, but doesn't work so well when you don't.
+      //
+      QSet<Fermentable const *> const setOfFermentable = makeSet(exportLists.fermentables, exportLists.recipes);
+      QSet<Hop         const *> const setOfHop         = makeSet(exportLists.hops        , exportLists.recipes);
+      QSet<Misc        const *> const setOfMisc        = makeSet(exportLists.miscs       , exportLists.recipes);
+      QSet<Yeast       const *> const setOfYeast       = makeSet(exportLists.yeasts      , exportLists.recipes);
+      QSet<Water       const *> const setOfWater       = makeSet(exportLists.waters      , exportLists.recipes);
+      //
+      // Same thing applies for Styles, and we have similar thinking for Equipments.  (Though note that, unlike in
+      // BeerXML, Equipment is not part of the Recipe in BeerJSON.)
+      //
+      // In contrast, Mashes, Boils and Fermentations are fully defined when they form part of a Recipe, so we don't
+      // have to separately export them.
+      //
+      QSet<Style       const *> setOfStyle       = makeSet(exportLists.styles);
+      QSet<Equipment   const *> setOfEquipment   = makeSet(exportLists.equipments);
+      if (exportLists.recipes) {
+         for (Recipe const * recipe : *exportLists.recipes) {
+            auto style     = recipe->style    (); if (style    ) { setOfStyle    .insert(style    .get()); }
+            auto equipment = recipe->equipment(); if (equipment) { setOfEquipment.insert(equipment.get()); }
+         }
+      }
+
+      BeerJson::Exporter exporter(outFile, userMessageAsStream);
+      if (!setOfFermentable.isEmpty()   ) { exporter.add(setOfFermentable.values()); }
+      if (!setOfHop        .isEmpty()   ) { exporter.add(setOfHop        .values()); }
+      if (!setOfMisc       .isEmpty()   ) { exporter.add(setOfMisc       .values()); }
+      if (!setOfYeast      .isEmpty()   ) { exporter.add(setOfYeast      .values()); }
+      if (!setOfStyle      .isEmpty()   ) { exporter.add(setOfStyle      .values()); }
+      if (!setOfEquipment  .isEmpty()   ) { exporter.add(setOfEquipment  .values()); }
+      if (!setOfWater      .isEmpty()   ) { exporter.add(setOfWater      .values()); }
+      if (exportLists.mashes        && exportLists.mashes       ->size() > 0) { exporter.add(*exportLists.mashes       ); }
+      if (exportLists.boils         && exportLists.boils        ->size() > 0) { exporter.add(*exportLists.boils        ); }
+      if (exportLists.fermentations && exportLists.fermentations->size() > 0) { exporter.add(*exportLists.fermentations); }
+      if (exportLists.recipes       && exportLists.recipes      ->size() > 0) { exporter.add(*exportLists.recipes      ); }
+
+      exporter.close();
+      succeeded = true;
+   } else if (filename.endsWith(".xml", Qt::CaseInsensitive)) {
+      BeerXML const & bxml = BeerXML::getInstance();
+      // The slightly non-standard-XML format of BeerXML means the common bit (which gets written by createXmlFile) is
+      // just at the start and there is no "closing" bit to write after we write all the data.
+      bxml.createXmlFile(outFile);
+
+      //
+      // Not that it matters, but the order things are listed in the BeerXML 1.0 spec is:
+      //    HOPS
+      //    FERMENTABLES
+      //    YEASTS
+      //    MISCS
+      //    WATERS
+      //    STYLES
+      //    MASHS [sic] (inside of which are MASH_STEPS)
+      //    RECIPES
+      //    EQUIPMENTS
+      //
+      if (exportLists.hops          && exportLists.hops         ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.hops        , outFile); }
+      if (exportLists.fermentables  && exportLists.fermentables ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.fermentables, outFile); }
+      if (exportLists.yeasts        && exportLists.yeasts       ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.yeasts      , outFile); }
+      if (exportLists.miscs         && exportLists.miscs        ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.miscs       , outFile); }
+      if (exportLists.waters        && exportLists.waters       ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.waters      , outFile); }
+      if (exportLists.styles        && exportLists.styles       ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.styles      , outFile); }
+      if (exportLists.mashes        && exportLists.mashes       ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.mashes      , outFile); }
+      //
+      // BeerXML has no standalone boil or fermentation records -- they are only written as part of a recipe.  (These
+      // lines used to export the mashes instead, which would crash if there were boils/fermentations but no mashes.)
+      //
+      if (exportLists.boils         && exportLists.boils        ->size() > 0) {
+         qInfo() << Q_FUNC_INFO << "Not exporting" << exportLists.boils->size() << "boil(s) as BeerXML does not support them";
+      }
+      if (exportLists.fermentations && exportLists.fermentations->size() > 0) {
+         qInfo() <<
+            Q_FUNC_INFO << "Not exporting" << exportLists.fermentations->size() << "fermentation(s) as BeerXML does "
+            "not support them";
+      }
+      if (exportLists.recipes       && exportLists.recipes      ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.recipes     , outFile); }
+      if (exportLists.equipments    && exportLists.equipments   ->size() > 0) { bxml.toXml(baseFolderPath, *exportLists.equipments  , outFile); }
+
+      succeeded = true;
+   } else {
+      qInfo() << Q_FUNC_INFO << "Don't understand file extension on" << filename << "so ignoring!";
+      userMessageAsStream <<
+         QObject::tr("Did not recognise file extension on \"%1\" so nothing read.").arg(filename);
+   }
+
+
+   qDebug() << Q_FUNC_INFO << "Export" << (succeeded ? "succeeded" : "failed");
+   importExportMsg(ImportOrExport::EXPORT, filename, succeeded, userMessage);
+
+   return succeeded;
+}
+
+//
+// This is a bit clunky, but it works!
+//
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Recipe       const *> const & items) {
+   Lists const exportLists{.recipes       = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Equipment    const *> const & items) {
+   Lists const exportLists{.equipments    = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Fermentable  const *> const & items) {
+   Lists const exportLists{.fermentables  = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Hop          const *> const & items) {
+   Lists const exportLists{.hops          = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Misc         const *> const & items) {
+   Lists const exportLists{.miscs         = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Style        const *> const & items) {
+   Lists const exportLists{.styles        = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Water        const *> const & items) {
+   Lists const exportLists{.waters        = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Yeast        const *> const & items) {
+   Lists const exportLists{.yeasts        = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Mash         const *> const & items) {
+   Lists const exportLists{.mashes        = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Boil         const *> const & items) {
+   Lists const exportLists{.boils         = &items}; return exportToFile(baseFolderPath, exportLists);
+}
+template<> bool ImportExport::exportToFile(QString const & baseFolderPath, QList<Fermentation const *> const & items) {
+   Lists const exportLists{.fermentations = &items}; return exportToFile(baseFolderPath, exportLists);
+}

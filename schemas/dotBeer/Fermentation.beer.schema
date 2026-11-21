@@ -1,0 +1,134 @@
+//======================================================================================================================
+// schema/Fermentation.beer.schema is part of dotBeer and is copyright the following authors 2017-2026:
+//   • Cameron Eldridge <cameron@mad.man>
+//   • John Jenkman <45741477+johnjenkman@users.noreply.github.com>
+//   • Mark Price <shadowchao99@gmail.com>
+//   • Matt Young <mfsy@yahoo.com>
+//   • Yuriy Krutilin <y.krutilin@gmail.com>
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License (MPL), version 2.0.  If a copy of the MPL
+// was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// DotBeer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the Mozilla Public License for more details.
+//======================================================================================================================
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dotbeer.org/schema/1.1.0/Fermentation.beer.schema",
+  "type": "object",
+  "description": "A fermentation procedure, which can be used by multiple recipes.",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "local_id" : {
+      "description": "The \"local ID\" that allows other objects in this file (eg recipes) to refer to this fermentation.",
+      "$ref": "DotBeer.beer.schema#/$defs/LocalId"
+    },
+    "folder_path": {
+      "description": "The suggested slash-delimited subfolder path in which to store this Fermentation object.",
+      "$ref": "DotBeer.beer.schema#/$defs/FolderPath"
+    },
+    "locked": {
+      "description": "If `true`, this fermentation has been marked as one that should not be changed -- eg a standard fermentation profile used by many recipes.  Software that supports locking should not allow a locked fermentation to be changed or deleted unless the user first explicitly unlocks it.  It should, however, allow a locked fermentation to be used in recipes and to be copied (with the copy not being locked).  Software that does not support locking can ignore this field.  If the field is absent, the fermentation is not locked.",
+      "x-since": "1.1.0",
+      "type": "boolean"
+    },
+    "fermentation_description": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    //
+    // `krausen_handling` is an input to John-Paul Hosom's SMPH model of IBUs -- see `WortClarity` in
+    // Recipe.beer.schema for references.  Our values correspond one-to-one with the calculator's categories (in
+    // `getKrausenValue` in https://github.com/jphosom/alchemyoverlord/blob/master/js/ibu.js), which give the following
+    // loss factors for isomerized alpha acids (for the other bittering compounds, the loss is roughly tripled):
+    //
+    //    mixed in                          1.1268
+    //    minor deposits                    1.05
+    //    medium deposits                   1.00
+    //    heavy deposits                    0.95
+    //    very heavy deposits               0.90
+    //    blown off, slow fermentation      0.938
+    //    blown off, normal fermentation    0.833
+    //    blown off, vigorous fermentation  0.729
+    //
+    // A similar approach is under discussion for BeerJSON at https://github.com/beerjson/beerjson/issues/279.
+    //
+    "krausen_handling": {
+      "description": "What happens to the krausen (the foam on top of the fermenting beer), which carries away some bitterness compounds:<ul><li>`mixed in`: the krausen is mixed back into the beer (or is suppressed, eg with anti-foam), so nothing is lost</li><li>`minor deposits`, `medium deposits`, `heavy deposits`, `very heavy deposits`: some of the krausen is left stuck to the walls of the fermenter above the beer</li><li>`blown off, slow fermentation`, `blown off, normal fermentation`, `blown off, vigorous fermentation`: the krausen is lost through a blow-off tube, with more being lost the more vigorous the fermentation</li></ul>(This is used, eg, by the SMPH model of IBUs.)  If absent, `medium deposits` is assumed.  Skimming the krausen can be recorded as one of the `blown off` values, according to how much is removed.",
+      "x-since": "1.1.0",
+      "type": "string",
+      "enum": [
+        "mixed in",
+        "minor deposits",
+        "medium deposits",
+        "heavy deposits",
+        "very heavy deposits",
+        "blown off, slow fermentation",
+        "blown off, normal fermentation",
+        "blown off, vigorous fermentation"
+      ]
+    },
+    "fermentation_steps": {
+      "description": "The steps that make up the fermentation, in the order they are performed.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/FermentationStep"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "fermentation_steps"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "FermentationStep": {
+      "type": "object",
+      "description": "Individual step of a fermentation.",
+      "allOf": [
+        {
+          "$ref": "StepCommon.beer.schema#/$defs/StepBase"
+        },
+        {
+          "$ref": "StepCommon.beer.schema#/$defs/StepWithGravity"
+        },
+        {
+          "properties": {
+            "free_rise": {
+              "description": "Free rise is used to indicate a fermentation step where the exothermic fermentation is allowed to raise the temperature without restriction.",
+              "type": "boolean"
+            },
+            "vessel": {
+              "description": "Name of the vessel the step takes place in, which is how a transfer between vessels is recorded.",
+              "type": "string"
+            },
+            //
+            // BeerJSON (from 3.0) has `vessel_pressure`, described as "the pressure applied within the fermentation
+            // vessel", but without saying whether this is a gauge or an absolute pressure (see Pressure in
+            // Measurement.beer.schema), whether it is a target or a measured value, or what it means if it is absent.
+            // We use the same name and units, but spell these things out.
+            //
+            // We deliberately have a single value rather than start_pressure and end_pressure (cf temperature, gravity
+            // and pH), because what the brewer controls is the pressure the vessel is held at, eg by a spunding valve or
+            // a regulator.  During a step, the actual pressure in the vessel builds up to this as fermentation produces
+            // CO₂, and how quickly it does so is not something we can usefully specify.
+            //
+            "vessel_pressure": {
+              "description": "The (gauge) pressure at which the fermentation vessel is held during this step, eg by a spunding valve or a regulator -- ie the pressure that the CO₂ produced by fermentation is allowed to build up to, but not beyond.  Typical values for fermenting under pressure are around 0.5–1 bar (7–15 psi).  If this field is absent, the step is not under pressure (ie the vessel is vented to the atmosphere, eg via an airlock), or the pressure is not known.\n\nA change of pressure part way through fermentation (eg closing a spunding valve towards the end of fermentation to naturally carbonate the beer) is recorded by starting a new step.",
+              "$ref": "Measurement.beer.schema#/$defs/Pressure"
+            }
+          }
+        }
+      ],
+      "required": [
+        "name"
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

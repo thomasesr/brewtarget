@@ -1,0 +1,66 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * qtModels/tableModels/EquipmentTableModel.cpp is part of Brewtarget, and is copyright the following authors 2023-2025:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "qtModels/tableModels/EquipmentTableModel.h"
+
+#include <QHeaderView>
+#include <QModelIndex>
+#include <QVariant>
+#include <QWidget>
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_EquipmentTableModel.cpp"
+#endif
+
+COLUMN_INFOS(
+   EquipmentTableModel,
+   TABLE_MODEL_HEADER(Equipment, Name            , PropertyNames::NamedEntity::name            ), // "Name"
+   TABLE_MODEL_HEADER(Equipment, MashTunVolume   , PropertyNames::Equipment::mashTunVolume_l   ), // "Mash Tun Volume"
+   TABLE_MODEL_HEADER(Equipment, KettleVolume    , PropertyNames::Equipment::kettleVolume_l    ), // "Kettle Volume"
+   TABLE_MODEL_HEADER(Equipment, FermentorVolume , PropertyNames::Equipment::fvVolume_l        ), // "Fermentor Volume"
+   TABLE_MODEL_HEADER(Equipment, NumRecipesUsedIn, PropertyNames::NamedEntity::numRecipesUsedIn), // "N° Recipes"
+)
+
+EquipmentTableModel::EquipmentTableModel(QTableView* parent, bool editable) :
+   BtTableModel{parent, editable},
+   TableModelBase<EquipmentTableModel, Equipment>{} {
+   this->m_rows.clear();
+
+   QHeaderView* headerView = m_parentTableWidget->horizontalHeader();
+   connect(headerView, &QWidget::customContextMenuRequested, this, &EquipmentTableModel::contextMenu);
+   return;
+}
+
+EquipmentTableModel::~EquipmentTableModel() = default;
+
+void EquipmentTableModel::added  ([[maybe_unused]] std::shared_ptr<Equipment> item) { return; }
+void EquipmentTableModel::removed([[maybe_unused]] std::shared_ptr<Equipment> item) { return; }
+void EquipmentTableModel::updateTotals()                                            { return; }
+
+QVariant EquipmentTableModel::data(QModelIndex const & index, int role) const {
+   return this->doDataDefault(index, role);
+}
+
+bool EquipmentTableModel::setData(QModelIndex const & index, QVariant const & value, int role) {
+   return this->doSetDataDefault(index, value, role);
+}
+
+// Insert the boiler-plate stuff that we cannot do in TableModelBase
+TABLE_MODEL_COMMON_CODE(Equipment, equipment, PropertyNames::Recipe::equipmentId)
+//=============================================== CLASS EquipmentItemDelegate ===============================================
+
+// Insert the boiler-plate stuff that we cannot do in ItemDelegate
+ITEM_DELEGATE_COMMON_CODE(Equipment)

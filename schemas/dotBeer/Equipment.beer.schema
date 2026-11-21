@@ -1,0 +1,240 @@
+//======================================================================================================================
+// schema/Equipment.beer.schema is part of dotBeer and is copyright the following authors 2018-2026:
+//   • Mark Price <shadowchao99@gmail.com>
+//   • Matt Young <mfsy@yahoo.com>
+//   • Yuriy Krutilin <y.krutilin@gmail.com>
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License (MPL), version 2.0.  If a copy of the MPL
+// was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// DotBeer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the Mozilla Public License for more details.
+//======================================================================================================================
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dotbeer.org/schema/1.1.0/Equipment.beer.schema",
+  "type": "object",
+  "description": "Groups together all the vessels in a set of brewing equipment.  There is an entry for each \"role\" a vessel can play (hot liquor tank, mash tun, lauter tun, boil kettle, fermentation vessel, aging vessel, packaging vessel).  Only the boil kettle is required.  If a role is absent, it is not played by a separate vessel: there is no transfer to or from such a vessel, and so no loss, and the role (if it happens at all) is played by a neighbouring vessel, as set out in the description of each role.  In particular, if there is no mash tun, the mash happens in the boil kettle, as in single-vessel set-ups such as all-in-one systems (eg Grainfather, BrewZilla) and brew-in-a-bag.\n\nThe properties of the mash that relate to the equipment as a whole, rather than to a particular vessel (`grain_absorption_rate` and `foundation_volume`), are at the top level, so that they are in the same place whether the mash happens in a separate mash tun or in the kettle.",
+  "properties": {
+    //
+    // NB: BeerJSON has a list of `equipment_items`, each with a `form` saying what it is (eg "Mash Tun"), whereas we have
+    // a field for each vessel.  BeerJSON's `maximum_volume` and `specific_heat` are our `max_volume` and
+    // `specific_heat_capacity`, and the free text `type` of a BeerJSON equipment item is our `vessel_type`.
+    //
+    // We put the `"unevaluatedProperties": false` property on the individual fields rather than their types because,
+    // per the $defs section below, we need to be able to combine the types.  Eg, `HotSideVessel` is `Vessel` with some
+    // extra fields (which precludes `"unevaluatedProperties": false` on Vessel), but we have fields of type `Vessel`,
+    // where we don't want unexpected additional properties.
+    //
+    "name": {
+      "type": "string"
+    },
+    "local_id" : {
+      "description": "The \"local ID\" that allows other objects in this file (eg recipes) to refer to this set of equipment.",
+      "$ref": "DotBeer.beer.schema#/$defs/LocalId"
+    },
+    "folder_path": {
+      "description": "The suggested slash-delimited subfolder path in which to store this Equipment object.",
+      "$ref": "DotBeer.beer.schema#/$defs/FolderPath"
+    },
+    //
+    // BeerXML has BATCH_SIZE (and BOIL_SIZE) on EQUIPMENT, as do BeerSmith, Brewfather and Brewer's Friend equipment
+    // profiles.  BeerJSON has no equivalent: its batch size is only on the recipe, and its vessels only have
+    // `maximum_volume` (ie capacity).  We think a default batch size is useful (eg when creating a new recipe), but it
+    // is important not to confuse it with the capacity of any vessel.
+    //
+    // We deliberately do not have a default pre-boil volume here (cf BeerXML's BOIL_SIZE), because that depends on the
+    // recipe's boil time, and can be calculated from the batch size, the kettle and fermentation vessel losses, and the
+    // kettle's boil-off rate.
+    //
+    "default_batch_size": {
+      "description": "The batch size this equipment is normally used for, ie the volume into the fermentation vessel (as for `batch_size` on [Recipe](./Recipe.md#recipe)).  A program may use this as the batch size for a new recipe that uses this equipment.  NB: This is a default, not a limit, and is not the same as the capacity (`max_volume`) of any of the vessels.",
+      "$ref": "Measurement.beer.schema#/$defs/Volume"
+    },
+    //
+    // BeerJSON has `grain_absorption_rate` on its equipment items (where, in practice, it is only meaningful for the
+    // "Mash Tun" item).  We have it, and `foundation_volume`, at the top level instead, because the mash does not
+    // always happen in a separate mash tun -- see the description of Equipment above.  (A program writing BeerJSON
+    // will thus need to write a "Mash Tun" item -- using the kettle's figures if there is no mash tun -- to hold
+    // `grain_absorption_rate`.)
+    //
+    "grain_absorption_rate": {
+      "description": "The apparent volume absorbed by grain in the mash (whether in the mash tun or, if there is none, the kettle).  Typical values are 0.125 gal/lb (1.04 l/kg) for a conventional mash tun, about 0.8 l/kg (0.1 gal/lb) for an all-in-one system with a malt pipe, and 0.08 gal/lb (0.66 l/kg) for brew-in-a-bag with the bag squeezed.",
+      "$ref": "Measurement.beer.schema#/$defs/VolumePerMass"
+    },
+    //
+    // BeerJSON (and BeerXML) have no equivalent of this field: the only volume they record for a mash tun is
+    // `loss`, which is not recovered.  Brewing software that does model it calls it different things -- eg
+    // "Mash-Tun Deadspace" in Brewfather, "Mash Tun Addition" in BeerSmith and Brewer's Friend, and the "recoverable
+    // space below basket" in Grainfather's own calculations.  We avoid "dead space" in the name because, to many
+    // brewers (and in BeerXML's LAUTER_DEADSPACE and Brewtarget's lauter deadspace loss), dead space means volume that
+    // is lost, which is precisely what this is not.  "Foundation water" is the established brewing term for water put
+    // under the false bottom before doughing in.
+    //
+    // Summary of how the volumes of the vessel in which the mash happens relate to each other:
+    //
+    //    ┌──────────────────────────────┐ ─┬─
+    //    │                              │  │
+    //    │   mash: grain + strike water │  │
+    //    │   that is in contact with it │  │ max_volume = total usable capacity, including foundation_volume
+    //    │                              │  │              and loss
+    //    ├┄┄┄┄┄┄ false bottom ┄┄┄┄┄┄┄┄┄┄┤  │
+    //    │   foundation_volume          │  │ ← drains out with the wort (recovered)
+    //    ├────── outlet ────────────────┤  │
+    //    │   loss                       │  │ ← stays behind (not recovered)
+    //    └──────────────────────────────┘ ─┴─
+    //
+    // In an all-in-one system with a malt pipe (where the mash happens in the kettle), everything below the malt pipe's
+    // bottom plate is foundation_volume.  Here, the kettle's `loss` is about what is left behind after the boil, so is
+    // not part of the picture above.
+    //
+    "foundation_volume": {
+      "description": "Volume of liquid in the vessel where the mash happens (the mash tun or, if there is none, the kettle) that is outside the grain bed -- typically below a false bottom, screen or malt pipe -- and so is needed in addition to the water that wets the grain, but which drains out with the wort and is recovered (eg into the boil).  Typical of all-in-one systems: eg 3.5 l for a Grainfather G30.\n\nRelationship to other fields:<br>• The mash tun's **`loss`** is the volume that never leaves the mash tun (eg below the outlet); `foundation_volume` is the volume that does leave it.  No volume is counted in both, so, eg, for a cooler with a false bottom and an outlet above the floor, the volume below the outlet is `loss` and the volume between the outlet and the false bottom is `foundation_volume`.  (Where the mash happens in the kettle, the kettle's `loss` is about what is left after the boil, so is not relevant here.)<br>• The **`max_volume`** of the vessel where the mash happens is its total usable capacity, so it includes `foundation_volume` (and, for a mash tun, `loss`).  Thus these must add up to less than `max_volume`, and the room left for the mash itself is what remains.<br>• **`grain_absorption_rate`** is separate: it covers liquid retained by the grain, not by the vessel.\n\nUsing it: strike water = (grain mass × mash thickness) + `foundation_volume` (+ the mash tun's `loss`, if there is a mash tun), where mash thickness is the ratio of water to grain *in the grain bed*.  `foundation_volume` is not subtracted from the wort collected, whereas `loss` is.  If absent, treat it as 0, which is also the right value where there is no separate space below the grain (eg brew-in-a-bag with no false bottom).",
+      "$ref": "Measurement.beer.schema#/$defs/Volume"
+    },
+    "hlt": {
+      "description": "Hot Liquor Tank.  If absent, water is heated in one of the other vessels (eg the kettle), and no loss is assumed.",
+      "$ref": "#/$defs/HotSideVessel",
+      "unevaluatedProperties": false
+    },
+    "mash_tun": {
+      "description": "Mash Tun.  If absent, the mash (if any) happens in the boil kettle, as in single-vessel set-ups such as all-in-one systems and brew-in-a-bag.  (For extract brewing, any steeping of grains also happens in the kettle.)  In this case, the kettle's `max_volume`, `weight` and `specific_heat_capacity` apply to the mash, and, because the strike water is heated in the same vessel, there is normally no need to allow for the vessel absorbing heat from the strike water.",
+      "$ref": "#/$defs/HotSideVessel",
+      "unevaluatedProperties": false
+    },
+    "lauter_tun": {
+      "description": "Lauter Tun.  If absent, lautering happens in the vessel where the mash happens -- the mash tun or, if there is none, the kettle -- and, in the former case, any lautering losses are included in the mash tun's `loss`.",
+      "$ref": "#/$defs/HotSideVessel",
+      "unevaluatedProperties": false
+    },
+    "kettle": {
+      "description": "Boil Kettle.  Always required.  If there is no mash tun, the mash also happens here.",
+      "$ref": "#/$defs/BoilKettle",
+      "unevaluatedProperties": false
+    },
+    //
+    // BeerJSON uses "fermenter" here.
+    //
+    // Some authors (notably Chris White & Jamil Zainasheff in "Yeast - The Practical Guide to Beer Fermentation")
+    // distinguish between "fermentor" and "fermenter", with the former meaning "the vessel where fermentation happens"
+    // and the latter referring to "the organism (such as yeast) that performs the fermentation".  (The logic is that
+    // the suffix -or often denotes an instrument or apparatus, while -er can denote an agent that performs an action.)
+    //
+    // However, in reality, "fermenter" is a widely used term for the fermenting vessel (and it is relatively rare to
+    // see it used to refer to yeast or other cultures).  For example, in The Oxford Companion to Beer, "fermentation
+    // vessels also known as fermenters or FVs (and occasionally spelled fermentors), are the tanks, barrels, or other
+    // vessels where wort is held as it ferments into beer" (see https://www.beerandbrewing.com/dictionary/YCCmYUmOuv).
+    //
+    // On the whole, we prefer to sidestep the spelling debate by using "fermentation vessel" and "FV".
+    //
+    "fermentation_vessel": {
+      "description": "Fermentation Vessel.  If absent, nothing is known about it, and no loss is assumed.",
+      "$ref": "#/$defs/Vessel",
+      "unevaluatedProperties": false
+    },
+    "aging_vessel": {
+      "description": "Aging Vessel.  If absent, there is no transfer to a separate vessel for aging (eg because the beer is aged, if at all, in the fermentation vessel, as with a unitank), and so no loss.",
+      "$ref": "#/$defs/Vessel",
+      "unevaluatedProperties": false
+    },
+    "packaging_vessel": {
+      "description": "Packaging Vessel.  If absent, no loss is assumed in packaging (eg because the beer is served from the vessel it was fermented or aged in, or because nothing is known about how it is packaged).",
+      "$ref": "#/$defs/Vessel",
+      "unevaluatedProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "kettle"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    //
+    // See comment above for why we don't put the `"unevaluatedProperties": false` property on these local types
+    //
+    "Vessel": {
+      "type": "object",
+      "description": "An individual vessel (eg mash tun, boil kettle) that forms part of brewing equipment.",
+      "properties": {
+        "vessel_type": {
+          "description": "Free text type of the vessel, such as its material or model.",
+          "type": "string"
+        },
+        "max_volume": {
+          "description": "Maximum usable capacity of the vessel.\n\nNB: This is the capacity of the vessel, not the volume that is normally used in it (eg it is not a pre-boil or batch volume).  See also `default_batch_size` on [Equipment](#equipment).",
+          "$ref": "Measurement.beer.schema#/$defs/Volume"
+        },
+        "loss": {
+          "description": "Volume that does not make it out of this vessel to the next stage -- eg dead space below the outlet, trub, or what is left in a chiller or in pipework.  Where this vessel plays more than one role (eg the kettle in an all-in-one system, which is also where the mash happens), this is the loss when the contents finally leave it.  (For an all-in-one system, anything that does not drain from the malt pipe, other than what the grain absorbs, should be treated as grain absorption.)",
+          "$ref": "Measurement.beer.schema#/$defs/Volume"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "max_volume",
+        "loss"
+      ]
+    },
+    "HotSideVessel": {
+      "type": "object",
+      "description": "A vessel used for the hot-side of brewing.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Vessel"
+        },
+        {
+          "properties": {
+            "weight": {
+              "description": "The weight of the piece of equipment, especially important for when the mash tun is not preheated.",
+              "$ref": "Measurement.beer.schema#/$defs/Mass"
+            },
+            "specific_heat_capacity": {
+              "description": "The specific heat capacity of the piece of equipment, especially important for when the mash tun is not preheated.",
+              "$ref": "Measurement.beer.schema#/$defs/SpecificHeatCapacity"
+            }
+          }
+        }
+      ]
+    },
+    "BoilKettle": {
+      "type": "object",
+      "description": "A hot-side vessel used for the boil.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/HotSideVessel"
+        },
+        {
+          "properties": {
+            //
+            // If we were being strictly consistent with our other measurements, we would have a type called, say,
+            // VolumeRate representing volume-per-time, and use it to have "boil_rate" and "drain_rate" instead of
+            // "boil_rate_per_hour" and "drain_rate_per_minute".  However, whilst different brewers might want to
+            // measure the volume side differently (eg liters or pints), it seems unlikely, in practice, that people
+            // would want to measure boil rate per minute or drain rate per day.  So, in line with BeerJSON, we judge
+            // the additional cost of a new type not merited in this particular case, especially as there are no other
+            // places where we would use volume-per-time.
+            //
+            "boil_rate_per_hour": {
+              "description": "The volume boiled off during 1 hour, measured before and after at room temperature.",
+              "$ref": "Measurement.beer.schema#/$defs/Volume"
+            },
+            "drain_rate_per_minute": {
+              "description": "The volume that leaves the kettle, especially important for non-immersion chillers that cool the wort as it leaves the kettle.",
+              "$ref": "Measurement.beer.schema#/$defs/Volume"
+            },
+            "internal_diameter": {
+              "description": "With opening_diameter, allows calculation of IBU by John-Paul Hosom's mIBU formula",
+              "$ref": "Measurement.beer.schema#/$defs/Length"
+            },
+            "opening_diameter": {
+              "description": "With internal_diameter, allows calculation of IBU by John-Paul Hosom's mIBU formula",
+              "$ref": "Measurement.beer.schema#/$defs/Length"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

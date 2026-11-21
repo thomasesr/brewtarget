@@ -1,0 +1,438 @@
+/*======================================================================================================================
+ * utils/TypeInfo.h is part of Brewtarget, and is copyright the following authors 2023-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
+#ifndef UTILS_TYPEINFO_H
+#define UTILS_TYPEINFO_H
+#pragma once
+
+#include <optional>
+#include <typeindex>
+#include <variant>
+
+#include "measurement/QuantityFieldType.h"
+#include "measurement/PhysicalQuantity.h"
+#include "measurement/Unit.h"
+#include "model/NamedEntityCasters.h"
+#include "utils/OptionalHelpers.h"
+#include "utils/TranslatableText.h"
+#include "utils/TypeTraits.h"
+
+class BtStringConst;
+class EnumDisplayNameMapping;
+
+namespace PropertyNames::None {
+   extern BtStringConst const none;
+}
+
+namespace DisplayInfo {
+   /**
+    * \brief Extra info stored in \c TypeInfo (see below) for enum types
+    */
+   struct Enum {
+      /**
+       * \brief Values to store in combo box
+       */
+      EnumStringMapping const & stringMapping;
+
+      /**
+       * \brief Localised display names to show on combo box
+       */
+      EnumDisplayNameMapping const & displayNames;
+   };
+
+   /**
+    * \brief Extra info stored in \c TypeInfo (see below) for boolean types
+    *
+    *        For most boolean types, we show a combo box (eg "Not mashed" / "Mashed"; "Weight" / "Volume")
+    *
+    *        These are \c TranslatableText rather than \c QString because \c TypeInfo objects are created during static
+    *        initialisation, before any translator is installed, so we need to defer translation until time of use.
+    *        (See comments in \c utils/TranslatableText.h.)
+    */
+   struct Bool {
+      TranslatableText const unsetDisplay;
+      TranslatableText const setDisplay;
+   };
+
+   /**
+    * \brief The display text that the vast majority of boolean fields use
+    */
+   inline constexpr TranslatableText no {"QObject", QT_TRANSLATE_NOOP("QObject", "No" )};
+   inline constexpr TranslatableText yes{"QObject", QT_TRANSLATE_NOOP("QObject", "Yes")};
+
+   /**
+    * \brief I know we don't need a struct for this, but it's more consistent to use one
+    */
+   struct Precision {
+      unsigned int const precision;
+   };
+
+}
+
+class TypeLookup;
+
+/**
+ * \brief This empty struct is used when we'd like a conditional member variable -- eg in TreeNodeBase, where we want
+ *        m_children to only exist for node types that can have children.  We can't really do conditional variables
+ *        (yet), but using [[no_unique_address]] allows the compiler to optimise away the variable storage when it's an
+ *        empty class type.
+ */
+struct Empty{};
+
+/**
+ * \brief Extends \c std::type_index with some other info we need about a type for serialisation, specifically whether
+ *        it is an enum and/or whether it is \c std::optional.
+ */
+struct TypeInfo {
+   /**
+    * \brief This enumerates all the built-in or object types that we need to know about for displayable object fields.
+    *
+    *        Previously we used std::type_index for this, but that can require enabling RTTI which (a) is unnecessary
+    *        overhead and (b) prevents us linking with certain libraries such as Blaze that explicitly disable RTTI.
+    */
+   enum class Index {
+      // Built-ins (in alphabetical order)
+      Bool                                ,
+      Double                              ,
+      Int                                 ,
+      UnsignedInt                         ,
+      // Classes and enum classes (in alphabetical order)
+      BoilStepChillingType                ,  // BoilStep::ChillingType
+      ColorFormula                        ,  // ColorMethods::ColorFormula
+      CurrencyAmount                      ,  // CurrencyAmount
+      Empty                               ,  // Empty
+      FermentableGrainGroup               ,  // Fermentable::GrainGroup
+      FermentablePtr                      ,  // Fermentable *
+      FermentableType                     ,  // Fermentable::Type
+      FermentationKrausenHandling         ,  // Fermentation::KrausenHandling
+      HopForm                             ,  // Hop::Form
+      HopPtr                              ,  // Hop *
+      HopType                             ,  // Hop::Type
+      IbuMethodsIbuFormula                ,  // Ibu::Formula
+      MashStepType                        ,  // MashStep::Type
+      MeasurementAmount                   ,  // Measurement::Amount
+      MeasurementPhysicalQuantity         ,  // Measurement::PhysicalQuantity
+      MeasurementUnit                     ,  // Measurement::Unit const *
+      MiscPtr                             ,  // Misc *
+      MiscType                            ,  // Misc::Type
+      MiscWaterAgentType                  ,  // Misc::WaterAgentType
+      QDate                               ,  // QDate
+      QListOfSptrBoilStep                 ,  // QList<std::shared_ptr<BoilStep>                 >
+      QListOfSptrBrewLog                  ,  // QList<std::shared_ptr<BrewLog>                  >
+      QListOfSptrFermentationStep         ,  // QList<std::shared_ptr<FermentationStep>         >
+      QListOfSptrMashStep                 ,  // QList<std::shared_ptr<MashStep>                 >
+      QListOfSptrRecipeAdditionFermentable,  // QList<std::shared_ptr<RecipeAdditionFermentable>>
+      QListOfSptrRecipeAdditionHop        ,  // QList<std::shared_ptr<RecipeAdditionHop>        >
+      QListOfSptrRecipeAdditionMisc       ,  // QList<std::shared_ptr<RecipeAdditionMisc>       >
+      QListOfSptrRecipeAdditionYeast      ,  // QList<std::shared_ptr<RecipeAdditionYeast>      >
+      QString                             ,  // QString
+      QualitativeWortClarity              ,  // Measurement::Qualitative::WortClarity
+      RecipeAdditionHopUse                ,  // RecipeAdditionHop::Use
+      RecipeAdditionMiscUse               ,  // RecipeAdditionMisc::Use
+      RecipeAdditionStage                 ,  // RecipeAddition::Stage
+      RecipeType                          ,  // Recipe::Type
+      SptrBoil                            ,  // std::shared_ptr<Boil            >
+      SptrBrewLog                         ,  // std::shared_ptr<BrewLog         >
+      SptrEquipment                       ,  // std::shared_ptr<Equipment       >
+      SptrFermentation                    ,  // std::shared_ptr<Fermentation    >
+      SptrFermentationStep                ,  // std::shared_ptr<FermentationStep>
+      SptrMash                            ,  // std::shared_ptr<Mash            >
+      SptrRecipe                          ,  // std::shared_ptr<Recipe          >
+      SptrStyle                           ,  // std::shared_ptr<Style           >
+      SptrWater                           ,  // std::shared_ptr<Water           >
+      StockUseReason                      ,  // StockUse::Reason
+      StyleType                           ,  // Style::Type
+      YeastFlocculation                   ,  // Yeast::Flocculation
+      YeastForm                           ,  // Yeast::Form
+      YeastPtr                            ,  // Yeast *
+      YeastType                           ,  // Yeast::Type
+   };
+
+   // See below for specialisations.  Second version is to automatically strip out `std::optional` wrapper
+   template<typename   T> static Index indexOf();
+   template<IsOptional T> static Index indexOf();
+
+   static QString indexName(Index const index);
+
+   /**
+    * \brief This is the Index of the \b underlying type, eg should be the same for \c int and \c std::optional<int>.
+    */
+   Index typeIndex;
+
+///   /**
+///    * \brief Templated factory function strips out the `std::optional` wrapper
+///    */
+///   template<typename   T> static std::type_index makeTypeIndex() {return typeid(T                     ); }
+///   template<IsOptional T> static std::type_index makeTypeIndex() {return typeid(typename T::value_type); }
+
+   /**
+    * \brief This classification covers the main special cases we need to deal with, viz whether a property is optional
+    *        (so we have to deal with std::optional wrapper around the underlying type) and whether it is an enum (where
+    *        we treat it as an int for generic handling because it makes the serialisation code a lot simpler).
+    */
+   enum class Classification {
+      RequiredEnum ,
+      RequiredOther,
+      OptionalEnum ,
+      OptionalOther,
+   };
+   Classification classification;
+   template<typename        T> static Classification makeClassification(); // Only specialisations
+   template<IsRequiredEnum  T> static Classification makeClassification() {return Classification::RequiredEnum ;}
+   template<IsRequiredOther T> static Classification makeClassification() {return Classification::RequiredOther;}
+   template<IsOptionalEnum  T> static Classification makeClassification() {return Classification::OptionalEnum ;}
+   template<IsOptionalOther T> static Classification makeClassification() {return Classification::OptionalOther;}
+
+   /**
+    * \brief For fields that are pointers, we need to be able to distinguish the type of pointer.
+    */
+   enum class PointerType {
+      NotPointer   ,
+      RawPointer   ,
+      SharedPointer,
+   };
+   template<typename        T> static PointerType makePointerType() {return PointerType::NotPointer   ;}
+   template<IsRawPointer    T> static PointerType makePointerType() {return PointerType::RawPointer   ;}
+   template<IsSharedPointer T> static PointerType makePointerType() {return PointerType::SharedPointer;}
+   PointerType pointerType;
+
+   /**
+    * \brief If and only if \c pointerType is PointerType::SharedPointer, this holds the function pointers necessary to
+    *        cast to and from equivalent pointers to \c NamedEntity.
+    *
+    *        In the templated factory function \c makeCasters, we have T is std::shared_ptr<NE> for some class NE, a
+    *        subclass of \c NamedEntity, so we need T::element_type to obtain NE to pass to
+    *        \c NamedEntityCasters::construct.
+    *
+    *        NOTE: We are taking a bit of a shortcut here in terms of assuming that any shared pointer is a shared
+    *              pointer to a subclass of \c NamedEntity.  I'm pretty sure this is valid at the moment, but if need
+    *              something more nuanced in future then we'd need to extend things slightly here.
+    */
+   std::optional<NamedEntityCasters> namedEntityCasters;
+   template<typename        T> static std::optional<NamedEntityCasters> makeCasters() {return std::nullopt;}
+   template<IsSharedPointer T> static std::optional<NamedEntityCasters> makeCasters() {return NamedEntityCasters::construct<typename T::element_type>();}
+
+   /**
+    * \brief Pointer to a static member function that returns the localised name of this property, suitable for display
+    *        to the user.  For PropertyNames::SomeClass::someProperty, this is usually SomeClass::localisedName_someProperty
+    */
+   QString (&localisedName) ();
+
+   /**
+    * \brief If the type is a subclass of \c NamedEntity (or a raw or smart pointer to one) then this will point to the
+    *        \c TypeLookup for that class.  This is used in \c PropertyPath.  Otherwise this will hold \c nullptr.
+    */
+   TypeLookup const * typeLookup;
+
+   /**
+    * \brief Where appropriate, this tells us what is actually being stored.  Eg, \c typeIndex might tells us that a
+    *        field is a \c double and \c classification indicates whether it is wrapped in \c std::optional, but this
+    *        is what we need to determine whether it is storing \c PhysicalQuantity::Mass (in kilograms) or
+    *        \c PhysicalQuantity::Temperature (in Celsius) or \c NonPhysicalQuantity::Percentage, etc.
+    *
+    *        This is only set for fields where it could have a meaning, eg we wouldn't set it for a foreign key field.
+    *
+    *        Although we _could_ do some clever stuff to automatically deduce the value of this field in certain cases
+    *        (eg for a \c bool type, this is probably \c NonPhysicalQuantity::Bool, for a \c QString type, this is
+    *        probably \c NonPhysicalQuantity::String, etc), I have deliberately not done so for these reasons:
+    *           - Having a value set here shows this is a property that we want to expose to the user.  Where a property
+    *             is for internal use only (but nonetheless stored in the DB etc), then this field should be
+    *             \c std::nullopt
+    *           - Things that we think can be deduced now might not always remain so.  Eg, at a future date, it is at
+    *             least conceivable that there might be some new \c NonPhysicalQuantity that we also want to store in a
+    *             \c QString
+    *           - Adding all the deduction logic here makes this code more complicated (and thus more liable to bugs)
+    *             but only saves us a small amount in each 'static TypeLookup const typeLookup' definition.
+    */
+   std::optional<QuantityFieldType> fieldType;
+
+   /**
+    * \brief Sometimes it's useful to be able to get the property name from the \c TypeInfo object.  NOTE that there are
+    *        valid circumstances where this will be \c PropertyNames::None::none
+    */
+   BtStringConst const & propertyName;
+
+   /**
+    * \brief In principle, we can determine whether a field is read-only via the Qt Property System, but it's a bit more
+    *        direct to just store a flag here.
+    */
+   enum class Access {
+      ReadWrite,
+      ReadOnly ,
+      WriteOnly, // Not sure we need this, but doesn't hurt to have it
+   };
+   Access access;
+   //! \brief Not strictly necessary but makes calling code a bit more readable
+   bool isReadOnly() const;
+
+   /**
+    * \return \c true if \c classification is \c RequiredEnum or \c OptionalEnum, \c false otherwise (ie if
+    *         \c classification is \c RequiredOther or \c OptionalOther
+    */
+   bool isEnum() const;
+
+   /**
+    * \return \c true if \c classification is \c OptionalEnum or \c OptionalOther, \c false otherwise (ie if
+    *         \c classification is \c RequiredEnum or \c RequiredOther
+    */
+   bool isOptional() const;
+
+   /**
+    * \brief Extra info for how to display this property
+    */
+   using DisplayAs = std::optional<std::variant<DisplayInfo::Enum,
+                                                DisplayInfo::Bool,
+                                                DisplayInfo::Precision>>;
+   TypeInfo::DisplayAs displayAs;
+
+   /**
+    * \brief For a small minority of properties that hold a \c PhysicalQuantity in non-canonical units (eg
+    *        \c StepBase::stepTime_days), this field holds what those units are.
+    *
+    *        NB for \c NonPhysicalQuantity and for \c PhysicalQuantity in canonical units, this field will be null.
+    *
+    *        (TBD We could consider storing unit here also for canonical units, via calling
+    *         Measurement::Unit::getCanonicalUnit.)
+    */
+   Measurement::Unit const * unit;
+
+   /**
+    * \brief Factory functions to construct a \c TypeInfo for a given type.
+    *
+    *        Note that if \c T is \c std::optional<U> then U can be extracted by \c typename \c T::value_type.
+    */
+   template<typename T> const static TypeInfo construct(BtStringConst const & propertyName,
+                                                        QString (&localisedNameFunction) (),
+                                                        TypeLookup const * typeLookup,
+                                                        Access const access = Access::ReadWrite,
+                                                        std::optional<QuantityFieldType> const fieldType = std::nullopt,
+                                                        DisplayAs const displayAs = std::nullopt,
+                                                        Measurement::Unit const * unit = nullptr) {
+      return TypeInfo{indexOf<T>(),
+                      makeClassification<T>(),
+                      makePointerType<T>(),
+                      makeCasters<T>(),
+                      localisedNameFunction,
+                      typeLookup,
+                      fieldType,
+                      propertyName,
+                      access,
+                      displayAs,
+                      unit};
+   }
+
+   template<typename T> const static TypeInfo construct(BtStringConst const & propertyName,
+                                                        QString (&localisedNameFunction) (),
+                                                        TypeLookup const * typeLookup,
+                                                        std::optional<QuantityFieldType> const fieldType,
+                                                        DisplayAs const displayAs = std::nullopt,
+                                                        Measurement::Unit const * unit = nullptr) {
+      return TypeInfo{indexOf<T>(),
+                      makeClassification<T>(),
+                      makePointerType<T>(),
+                      makeCasters<T>(),
+                      localisedNameFunction,
+                      typeLookup,
+                      fieldType,
+                      propertyName,
+                      Access::ReadWrite,
+                      displayAs,
+                      unit};
+   }
+};
+
+
+// The constrained overload, generic — strips optional and recurses:
+template<IsOptional T> TypeInfo::Index TypeInfo::indexOf() { return indexOf<typename T::value_type>(); }
+
+/**
+ * \brief Convenience function for logging
+ */
+template<class S>
+S & operator<<(S & stream, TypeInfo::Index const index) {
+   stream << TypeInfo::indexName(index);
+   return stream;
+}
+
+/**
+ * \brief Convenience functions for logging
+ */
+//! @{
+template<class S>
+S & operator<<(S & stream, TypeInfo::Access const & access) {
+   switch (access) {
+      case TypeInfo::Access::ReadWrite: stream << "Read/Write"; break;
+      case TypeInfo::Access::ReadOnly : stream << "Read-Only" ; break;
+      case TypeInfo::Access::WriteOnly: stream << "Write-Only"; break;
+      // NB: No default case as we want the compiler to warn us if we missed a possibility above
+   }
+   return stream;
+}
+
+template<class S>
+S & operator<<(S & stream, TypeInfo const & typeInfo) {
+   stream <<
+      "««« TypeInfo " << (typeInfo.isOptional() ? "optional" : "non-optional") << " \"" << typeInfo.typeIndex <<
+      "\"; fieldType:" << typeInfo.fieldType << " (" << typeInfo.access << "); property name:" <<
+      *typeInfo.propertyName << "; typeLookup:" << typeInfo.typeLookup << "»»»";
+   return stream;
+}
+
+template<class S>
+S & operator<<(S & stream, TypeInfo const * typeInfo) {
+   if (!typeInfo) {
+      stream << "nullptr";
+   } else {
+      stream << *typeInfo;
+   }
+   return stream;
+}
+//! @}
+
+/**
+ * \brief This macro makes it easier to initialise \c fieldType and \c displayAs in \c TypeInfo constructor for enum
+ *        fields in classes where we follow our standard naming convention for enum string mappings and display names.
+ *        Eg, instead of writing:
+ *
+ *           ... NonPhysicalQuantity::Enum, DisplayInfo::Enum{BoilStep::chillingTypeStringMapping,
+ *                                                                                         BoilStep::chillingTypeDisplayNames} ...
+ *
+ *        we can write:
+ *
+ *           ... ENUM_INFO(BoilStep::chillingType) ...
+ */
+#define ENUM_INFO(enumType) NonPhysicalQuantity::Enum,   \
+                            DisplayInfo::Enum{enumType##StringMapping, enumType##DisplayNames}
+
+/**
+ * \brief This macro makes it easier to initialise \c fieldType and \c displayAs in \c TypeInfo constructor for boolean
+ *        fields.  Eg, instead of writing:
+ *
+ *           ... NonPhysicalQuantity::Bool, DisplayInfo::Bool{DisplayInfo::no, DisplayInfo::yes} ...
+ *
+ *        we can write:
+ *
+ *           ... BOOL_INFO(DisplayInfo::no, DisplayInfo::yes) ...
+ *
+ *        Each parameter must be a \c TranslatableText (see comments in \c DisplayInfo::Bool for why), and, for the
+ *        common case of "No" / "Yes", we can just write:
+ *
+ *           ... BOOL_INFO_NO_YES ...
+ */
+#define BOOL_INFO(offText, onText) NonPhysicalQuantity::Bool,   \
+                                   DisplayInfo::Bool{offText, onText}
+#define BOOL_INFO_NO_YES BOOL_INFO(DisplayInfo::no, DisplayInfo::yes)
+
+#endif

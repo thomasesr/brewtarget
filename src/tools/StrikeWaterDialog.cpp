@@ -1,0 +1,125 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * tools/StrikeWaterDialog.cpp is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Brian Rower <brian.rower@gmail.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Maxime Lavigne <duguigne@gmail.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
+#include "tools/StrikeWaterDialog.h"
+
+#include <QEvent>
+
+#include <limits>
+
+#include "calculations/Algorithms.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_StrikeWaterDialog.cpp"
+#endif
+
+namespace {
+   // From Northern Brewer ~0.38 but Jon Palmer suggest 0.41
+   // to compensate for the lost to the tun even if the tun is pre-heated
+   double constexpr specificHeatBarley = 0.41;
+
+   /**
+    * \brief
+    */
+   double initialInfusionSi(double const grainTemp, double const targetTemp, double const waterToGrain) {
+      if (waterToGrain == 0.0) {
+         return 0.0;
+      }
+      return (specificHeatBarley / waterToGrain) * (targetTemp - grainTemp) + targetTemp;
+   }
+
+   /**
+    * \brief
+    */
+   double mashInfusionSi(double const initialTemp,
+                         double const targetTemp,
+                         double const grainWeight,
+                         double const infusionWater,
+                         double const mashVolume) {
+      if (infusionWater - targetTemp == 0.0) {
+         return 0.0;
+      }
+
+      return ((targetTemp - initialTemp) * (specificHeatBarley * grainWeight + mashVolume)) / (infusionWater - targetTemp);
+   }
+
+}
+
+StrikeWaterDialog::StrikeWaterDialog(QWidget* parent) : QDialog(parent) {
+   setupUi(this);
+
+   // .:TBD:. These label and lineEdit fields could be slightly better named...
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, grainTempLbl      , grainTempVal      , double, Measurement::PhysicalQuantity::Temperature); // Initial Infusion: Original Grain Temperature
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, targetMashLbl     , targetMashVal     , double, Measurement::PhysicalQuantity::Temperature); // Initial Infusion: Target Mash Temperature
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, grainWeightInitLbl, grainWeightInitVal, double, Measurement::PhysicalQuantity::Mass       ); // Initial Infusion: Weight of Grain
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, waterVolumeLbl    , waterVolumeVal    , double, Measurement::PhysicalQuantity::Volume     ); // Initial Infusion: Volume of Water
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, mashVolLbl        , mashVolVal        , double, Measurement::PhysicalQuantity::Volume     ); // Mash Infusion: Total Volume of Water
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, grainWeightLbl    , grainWeightVal    , double, Measurement::PhysicalQuantity::Mass       ); // Mash Infusion: Grain Weight
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, actualMashLbl     , actualMashVal     , double, Measurement::PhysicalQuantity::Temperature); // Mash Infusion: Actual Mash Temperature
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, targetMashInfLbl  , targetMashInfVal  , double, Measurement::PhysicalQuantity::Temperature); // Mash Infusion: Target Mash Temperature
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, infusionWaterLbl  , infusionWaterVal  , double, Measurement::PhysicalQuantity::Temperature); // Mash Infusion: Infusion Water Temperature
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, initialResultLbl  , initialResultTxt  , double, Measurement::PhysicalQuantity::Temperature); // Result: Strike Water Temperature
+   SMART_FIELD_INIT_FS(StrikeWaterDialog, mashResultLbl     , mashResultTxt     , double, Measurement::PhysicalQuantity::Volume     ); // Result: Volume to add
+
+   connect(pushButton_calculate, &QAbstractButton::clicked, this, &StrikeWaterDialog::calculate);
+   return;
+}
+
+StrikeWaterDialog::~StrikeWaterDialog() = default;
+
+void StrikeWaterDialog::calculate() {
+  double const strikeWaterTemp = computeInitialInfusion();
+  double const volumeToAdd     = computeMashInfusion();
+
+  this->initialResultTxt->setQuantity(strikeWaterTemp);
+  this->mashResultTxt   ->setQuantity(volumeToAdd);
+  return;
+}
+
+double StrikeWaterDialog::computeInitialInfusion() {
+   double const grainTemp   = this->grainTempVal      ->getNonOptCanonicalQty();
+   double const targetMash  = this->targetMashVal     ->getNonOptCanonicalQty();
+   double const waterVolume = this->waterVolumeVal    ->getNonOptCanonicalQty();
+   double const grainWeight = this->grainWeightInitVal->getNonOptCanonicalQty();
+
+   if (grainWeight == 0.0) {
+      return 0.0;
+   }
+
+   return initialInfusionSi(grainTemp, targetMash, waterVolume / grainWeight);
+}
+
+double StrikeWaterDialog::computeMashInfusion() const {
+   double const mashVol       = this->mashVolVal      ->getNonOptCanonicalQty();
+   double const grainWeight   = this->grainWeightVal  ->getNonOptCanonicalQty();
+   double const actualMash    = this->actualMashVal   ->getNonOptCanonicalQty();
+   double const targetMashInf = this->targetMashInfVal->getNonOptCanonicalQty();
+   double const infusionWater = this->infusionWaterVal->getNonOptCanonicalQty();
+
+   return mashInfusionSi(actualMash, targetMashInf, grainWeight, infusionWater, mashVol);
+}
+
+void StrikeWaterDialog::changeEvent(QEvent * event) {
+   if (event->type() == QEvent::LanguageChange) {
+      this->retranslateUi(this);
+   }
+   this->QDialog::changeEvent(event);
+   return;
+}

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0">
+<ui version="6.0">
  <class>brewDayScrollWidget</class>
  <widget class="QWidget" name="brewDayScrollWidget">
   <property name="geometry">
@@ -86,21 +86,15 @@
                 <item>
                  <widget class="QLineEdit" name="lineEdit_name">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>32</width>
+                    <width>128</width>
                     <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>100</width>
-                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="toolTip">
@@ -139,12 +133,6 @@
                     <height>0</height>
                    </size>
                   </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>24</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
                   <property name="toolTip">
                    <string>The number where the new step should be placed</string>
                   </property>
@@ -172,7 +160,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../brewtarget.qrc">
+                   <iconset resource="../resources.qrc">
                     <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
                   </property>
                  </widget>
@@ -223,7 +211,7 @@
                  <string/>
                 </property>
                 <property name="icon">
-                 <iconset resource="../brewtarget.qrc">
+                 <iconset resource="../resources.qrc">
                   <normaloff>:/images/smallUpArrow.svg</normaloff>:/images/smallUpArrow.svg</iconset>
                 </property>
                </widget>
@@ -243,7 +231,7 @@
                  <string/>
                 </property>
                 <property name="icon">
-                 <iconset resource="../brewtarget.qrc">
+                 <iconset resource="../resources.qrc">
                   <normaloff>:/images/smallDownArrow.svg</normaloff>:/images/smallDownArrow.svg</iconset>
                 </property>
                </widget>
@@ -270,7 +258,7 @@
                  <string/>
                 </property>
                 <property name="icon">
-                 <iconset resource="../brewtarget.qrc">
+                 <iconset resource="../resources.qrc">
                   <normaloff>:/images/smallMinus.svg</normaloff>:/images/smallMinus.svg</iconset>
                 </property>
                </widget>
@@ -298,7 +286,7 @@
        <item>
         <widget class="QListWidget" name="listWidget">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -307,12 +295,6 @@
           <size>
            <width>150</width>
            <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>200</width>
-           <height>16777215</height>
           </size>
          </property>
         </widget>
@@ -341,7 +323,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../brewtarget.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
  <connections/>
 </ui>

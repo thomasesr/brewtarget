@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>brewLogWidget</class>
+ <widget class="QWidget" name="brewLogWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>636</width>
+    <height>448</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Brew Log</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resources.qrc">
+    <normaloff>:/images/edit.svg</normaloff>:/images/edit.svg</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="frameShape">
+      <enum>QFrame::Panel</enum>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>626</width>
+        <height>438</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QToolBox" name="toolBox_brewLog">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>252</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>252</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="mouseTracking">
+            <bool>false</bool>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="page_preboil">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>242</width>
+              <height>349</height>
+             </rect>
+            </property>
+            <attribute name="label">
+             <string>Preboil</string>
+            </attribute>
+            <layout class="QFormLayout" name="formLayout_2">
+             <item row="0" column="0">
+              <widget class="SmartLabel" name="label_measuredPreBoilGravity">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string>SG</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredPreBoilGravity</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredPreBoilGravity">
+               <property name="toolTip">
+                <string>Preboil gravity</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="SmartLabel" name="label_measuredPreBoilVolume">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string>Volume</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredPreBoilVolume</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredPreBoilVolume">
+               <property name="toolTip">
+                <string>Volume of wort collected</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="SmartLabel" name="label_measuredStrikeTemp">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string>Strike Temp</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredStrikeTemp</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredStrikeTemp">
+               <property name="toolTip">
+                <string>Temperature of strike water before dough in</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="SmartLabel" name="label_measuredMashFinalTemp">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string>Final Temp</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredMashFinalTemp</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredMashFinalTemp">
+               <property name="toolTip">
+                <string>Temperature of mash before mash out</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="page_postboil">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>242</width>
+              <height>349</height>
+             </rect>
+            </property>
+            <attribute name="label">
+             <string>Postboil</string>
+            </attribute>
+            <layout class="QFormLayout" name="formLayout">
+             <item row="0" column="0">
+              <widget class="SmartLabel" name="label_measuredOriginalGravity">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string>OG</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredOriginalGravity</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredOriginalGravity">
+               <property name="toolTip">
+                <string>Post boil gravity</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="SmartLabel" name="label_measuredPostBoilVolume">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string>Postboil Volume</string>
+               </property>
+               <property name="scaledContents">
+                <bool>false</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredPostBoilVolume</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredPostBoilVolume">
+               <property name="toolTip">
+                <string>Volume of wort in BK after boil</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="SmartLabel" name="label_measuredVolumeIntoFermentor">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="toolTip">
+                <string>Volume of wort transferred to fermenter</string>
+               </property>
+               <property name="text">
+                <string>Volume into fermenter</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredVolumeIntoFermentor</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredVolumeIntoFermentor">
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="SmartLabel" name="label_measuredPitchTemp">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string> Pitch Temp</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredPitchTemp</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredPitchTemp">
+               <property name="toolTip">
+                <string>Temperature of wort when yeast is pitched</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_measuredWortClarity">
+               <property name="toolTip">
+                <string>How clear the wort was when it went into the fermenter</string>
+               </property>
+               <property name="text">
+                <string>Wort clarity</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="buddy">
+                <cstring>comboBox_measuredWortClarity</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="BtComboBoxEnum" name="comboBox_measuredWortClarity">
+               <property name="toolTip">
+                <string>How clear the wort was, judged by eye, when it went into the fermenter</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="page_postferment">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>242</width>
+              <height>349</height>
+             </rect>
+            </property>
+            <attribute name="label">
+             <string>Postferment</string>
+            </attribute>
+            <layout class="QFormLayout" name="formLayout_5">
+             <item row="0" column="0">
+              <widget class="SmartLabel" name="label_measuredFinalGravity">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string notr="true">FG</string>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredFinalGravity</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredFinalGravity">
+               <property name="toolTip">
+                <string>Final gravity</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="SmartLabel" name="label_measuredFinalVolume">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string notr="true">Volume</string>
+               </property>
+               <property name="buddy">
+                <cstring>lineEdit_measuredFinalVolume</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="SmartLineEdit" name="lineEdit_measuredFinalVolume">
+               <property name="toolTip">
+                <string>Volume of beer into serving keg/bottles</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_fermentDate">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="text">
+                <string notr="true">Date</string>
+               </property>
+               <property name="buddy">
+                <cstring>dateEdit_fermentDate</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDateTimeEdit" name="dateEdit_fermentDate">
+               <property name="displayFormat">
+                <string notr="true">yyyy-dd-MM</string>
+               </property>
+               <property name="calendarPopup">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QFormLayout" name="formLayout_3">
+             <property name="fieldGrowthPolicy">
+              <enum>QFormLayout::ExpandingFieldsGrow</enum>
+             </property>
+             <item row="0" column="0">
+              <widget class="SmartLabel" name="label_computedPreBoilEfficiency">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>Percent efficiency into boil kettle</string>
+               </property>
+               <property name="text">
+                <string>Efficiency into boil kettle</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_computedPreBoilEfficiency">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="SmartLabel" name="label_expectedOriginalGravity">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>Expected OG, based on recipe</string>
+               </property>
+               <property name="text">
+                <string>Recipe OG</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_expectedOriginalGravity">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="SmartLabel" name="label_forecastOriginalGravity">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>Projected OG, based on measured pre-boil gravity</string>
+               </property>
+               <property name="text">
+                <string>Projected OG</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_forecastOriginalGravity">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="SmartLabel" name="label_computedEfficiency">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>Brewhouse efficiency</string>
+               </property>
+               <property name="text">
+                <string>Brewhouse efficiency</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_computedEfficiency">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
+              <widget class="SmartLabel" name="label_expectedAlcoholByVolume">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>Expected ABV based on recipe OG</string>
+               </property>
+               <property name="text">
+                <string>Projected ABV</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_expectedAlcoholByVolume">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="0">
+              <widget class="SmartLabel" name="label_computedAlcoholByVolume">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>ABV based on user-reported FG</string>
+               </property>
+               <property name="text">
+                <string>ABV</string>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_computedAlcoholByVolume">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="0">
+              <widget class="SmartLabel" name="label_expectedAttenuation">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>Yeast attenuation based on yeast specified in recipe</string>
+               </property>
+               <property name="text">
+                <string>Projected yeast attenuation</string>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_expectedAttenuation">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="14" column="0">
+              <widget class="SmartLabel" name="label_computedAttenuation">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="statusTip">
+                <string>Yeast attenuation based on user-reported OG and FG</string>
+               </property>
+               <property name="text">
+                <string>Measured yeast attenuation</string>
+               </property>
+              </widget>
+             </item>
+             <item row="14" column="1">
+              <widget class="SmartDigitWidget" name="lcdnumber_computedAttenuation">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_right">
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_brewDate">
+           <property name="text">
+            <string>Brew Date</string>
+           </property>
+           <property name="buddy">
+            <cstring>dateEdit_brewDate</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QDateTimeEdit" name="dateEdit_brewDate">
+           <property name="displayFormat">
+            <string notr="true">yyyy-dd-MM</string>
+           </property>
+           <property name="calendarPopup">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_batchNumber">
+           <property name="text">
+            <string>Batch Number</string>
+           </property>
+           <property name="buddy">
+            <cstring>lineEdit_batchNumber</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="SmartLineEdit" name="lineEdit_batchNumber">
+           <property name="toolTip">
+            <string>Batch Number</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1" colspan="3">
+          <widget class="QGroupBox" name="groupBox_4">
+           <property name="title">
+            <string>Notes</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="BtTextEdit" name="btTextEdit_brewLogs">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="mouseTracking">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="4" margin="4"/>
+ <customwidgets>
+  <customwidget>
+   <class>SmartLabel</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartLabel.h</header>
+   <slots>
+    <signal>changedSystemOfMeasurementOrScale(PreviousScaleInfo)</signal>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>BtTextEdit</class>
+   <extends>QPlainTextEdit</extends>
+   <header location="global">BtTextEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmartLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>widgets/SmartLineEdit.h</header>
+   <slots>
+    <slot>lineChanged(PreviousScaleInfo)</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>BtComboBoxEnum</class>
+   <extends>QComboBox</extends>
+   <header>widgets/BtComboBoxEnum.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmartDigitWidget</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartDigitWidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
+ <designerdata>
+  <property name="gridDeltaX">
+   <number>10</number>
+  </property>
+  <property name="gridDeltaY">
+   <number>10</number>
+  </property>
+  <property name="gridSnapX">
+   <bool>true</bool>
+  </property>
+  <property name="gridSnapY">
+   <bool>true</bool>
+  </property>
+  <property name="gridVisible">
+   <bool>true</bool>
+  </property>
+ </designerdata>
+</ui>

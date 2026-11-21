@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+#╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+# bt is part of Brewtarget, and is copyright the following authors 2024-2025:
+#   • Matt Young <mfsy@yahoo.com>
+#
+# Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with this program.  If not, see
+# <http://www.gnu.org/licenses/>.
+#╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+
+#-----------------------------------------------------------------------------------------------------------------------
+# This build tool (bt) script helps with Git setup, meson build configuration and packaging.  You need to have Python
+# 3.10 or newer installed first.  On Windows you also need to have Pip installed and to do some extra manual stuff noted
+# below.
+#
+# Usage is:
+#
+#    ./bt setup                  Sets up Git options and configures the 'mbuild' meson build directory
+#
+#    ./bt setup all              As above but also tries to install all tools and dependencies we need (except the tool
+#                                needed to generate an AppImage -- see below)
+#
+#    ./bt package                Does the packaging.  First runs 'meson install' (with extra options to "install"
+#                                binaries, data etc to a subdirectory of the build directory rather than to where they
+#                                need to be for a local install).  Then creates a distributable package, making use
+#                                of various build variables passed back from Meson.
+#
+#    ./bt appimage               Creates a Linux AppImage.  NOTE that this involves downloading and running an
+#                                executable tool from https://github.com/AppImage/appimagetool/releases/tag/continuous.
+#                                This is potentially less secure than installing from your distro's standard
+#                                repositories.
+#
+#                                (The `appimagetool` tool for building AppImages is, AFAICT, not available in standard
+#                                Ubuntu/Debian/CentOS repositories.  It is, of course, primarily distributed as an
+#                                AppImage -- which is actually a wrapper that downloads the latest version of the tool.
+#                                Since it's only needed to build AppImages, and since most folks doing builds don't need
+#                                to do that, we don't included it in the `setup all` functionality above.)
+#
+# NOTE: This tool, used in conjunction with Meson, is now the official way to build and package the software.  We will
+#       continue to support CMake indefinitely for local compiles and installs, since it is such a widespread and
+#       familiar build system for C++ projects.  However, we no longer attempt to support packaging via CPack.
+#
+# .:TODO:. At some point we should be able to retire:
+#    configure
+#    setupgit.sh
+#
+# **********************************************************************************************************************
+# *
+# * WINDOWS USERS PLEASE NOTE that, on Windows, we assume you are running in the MSYS2 MINGW64 environment.  This is one
+# * of, typically, four different environments available to you after installing MSYS2.  You must run this script from
+# * the "MSYS2 MinGW 64-bit" shell, and not one of the other ones.  (As of 2024-01, we no longer support 32-bit builds
+# * because some libraries we rely on are no longer available as 32-bit MSYS2 packages.)
+# *
+# * Additionally on Windows, there are also a couple of extra things you need to do before running this bt script:
+# *
+# *    - For historical reasons, Linux and other platforms need to run both Python v2 (still used by some bits of
+# *      system) and Python v3 (eg that you installed yourself) so there are usually two corresponding Python
+# *      executables, python2 and python3.  On Windows there is only whatever Python you installed and it's called
+# *      python.exe.  To make things consistent on Windows, we just make a softlink to python called python3:
+# *
+# *         if [[ ! -f $(dirname $(which python))/python3 ]]; then ln -s $(which python) $(dirname $(which python))/python3; fi
+# *
+# *    - Getting Unicode input/output to work is fun.  We should already have a Unicode locale, but it seems we also
+# *      need to set PYTHONIOENCODING (see https://docs.python.org/3/using/cmdline.html#envvar-PYTHONIOENCODING, even
+# *      though it seems to imply you don't need to set it on recent versions of Python).
+# *
+# *         export PYTHONIOENCODING=utf8
+# *
+# *    - The version of Pip we install above does not put it in the "right" place.  Specifically it will not be in the
+# *      PATH when we run bt.  The following seems to be the least hacky way around this:
+# *
+# *         curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+# *         python get-pip.py
+# *         python -m pip install -U --force-reinstall pip
+# *         rm get-pip.py
+# *
+# *      See https://stackoverflow.com/questions/48087004/installing-pip-on-msys for more discussion on this.
+# *
+# **********************************************************************************************************************
+#-----------------------------------------------------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Most of the build tool script is python code in scripts/buildTool.py.  However, that code needs various Python modules
+# to be installed.
+#
+# You might think that it's a simple thing to install a few extra Python modules.  After all, Python has the pip tool
+# which, according to https://pypi.org/project/pip/, is "the [Python Packaging Authority] recommended tool for
+# installing Python packages".  And, per https://docs.python.org/3/library/ensurepip.html, there is even an "official"
+# generic way to ensure the latest version of pip is installed, via 'python -m ensurepip --upgrade' (which should of
+# course be 'python3 -m ensurepip --upgrade' on systems that have both Python 2 and Python 3).
+#
+# Unfortunately, however, things are a bit more complicated.  Eg on Debian/Ubuntu, trying to run the above will give an
+# error "No module named ensurepip".  This is because ensurepip is deliberately disabled to push you towards using
+# 'sudo apt update' + 'sudo apt install python3-pip'.  But even doing this would not solve all problems.
+#
+# On systems where some Python packages are managed outside of Python, there can be problems if you try to install those
+# packages from inside Python.  Moreover, because not all Python packages play nicely with each other, the default
+# behaviour of pip is now to prevent you from installing _any_ additional Python packages if some Python packages (eg
+# including pip itself) are externally managed (eg via apt on Debian-derived Linuxes, or via Homebrew or MacPorts on
+# MacOS).  You will get "error: externally-managed-environment ... This environment is externally managed".
+#
+# On systems with an external package manager (EPM), there are broadly three options:
+#
+#   - If you are lucky, you can use the EPM to install all the Python packages you need.  This relies on you only
+#     needing the subset of Python packages that the EPM supports.
+#
+#   - Alternatively, you can force pip to ignore the EPM and install a library either system-wide or just for the
+#     current user.  However, this might break things on your system if there is a clash between the library you install
+#     and some already-installed library that, eg, the EPM itself relies on.
+#
+#   - The recommended approach is to create a Python virtual environment (venv) and install the packages you need there.
+#     This is a little complicated because Python is not designed to allow you to switch environments on-the-fly.  You
+#     are supposed to switch environments in the shell (by running a shell script supplied by the venv) before you
+#     launch Python.  Switching environments is largely a matter of changing a few environment variables, including
+#     PATH, so that, amongst other things that you pick up a different Python executable from the venv rather than the
+#     system-wide one.  It's therefore easier to do the preliminary work and the venv switching in this bash script
+#     before invoking the Python script that does the substantive work for whatever command line option was requested.
+#
+# The other complexity is that some requirements / ways to do things changed in (as of 2024) recent versions of Python.
+# Eg, as of Python 3.12, setuptools is no longer a core venv dependency, but we are still on Python 3.10 on
+# Debian/Ubuntu.
+#-----------------------------------------------------------------------------------------------------------------------
+
+#
+# This handles the case where the script is executed from a different directory (eg calling ../bt from the mbuild
+# directory)
+#
+topDir=$(dirname $0)
+
+#
+# It's worth knowing exactly which instance of Python we're running as, eg, on MSYS2 on Windows there can be multiple
+# versions installed
+#
+export exe_python=$(which python3)
+echo "${exe_python} --version"
+${exe_python} --version
+
+# This first Python script, run using the system-wide Python interpreter, will install a few bare necessities and
+# (re)create the Python venv
+echo "${exe_python} ${topDir}/scripts/btInit.py"
+${exe_python} ${topDir}/scripts/btInit.py
+if [ $? -ne 0 ]; then
+   exit $?
+fi
+
+#
+# Now we can switch to the venv
+#
+pwd
+echo "source ${topDir}/.venv/bin/activate"
+source ${topDir}/.venv/bin/activate
+
+#
+# And let's reassure ourselves that, with the changed paths of the venve, we're still running the same version of Python
+#
+export exe_python=$(which python3)
+echo "${exe_python} --version"
+${exe_python} --version
+
+#
+# Uncomment the following to show exported environment variables for debugging.
+#
+# Note that `env` only shows exported environment variables - ie the ones that will be available to any subprocess
+# invoked from bash.  This is what we care about for running Python.  Using `set` on its own would give all environment
+# variables (including ones used only in the shell) AND function definitions (which typically gives quite a lot of
+# output).  To omit function definitions we would either do 'set -o posix; set; set +o posix' or, more elegantly, use a
+# subshell: '(set -o posix; set)'
+#
+#env
+
+# Run the main script, passing in all the command line arguments we received
+echo "${exe_python} ${topDir}/scripts/buildTool.py $@"
+${exe_python} ${topDir}/scripts/buildTool.py $@

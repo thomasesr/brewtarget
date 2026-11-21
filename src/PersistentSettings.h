@@ -1,0 +1,354 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * PersistentSettings.h is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Dan Cavanagh <dan@dancavanagh.com>
+ *   • Daniel Pettersson <pettson81@gmail.com>
+ *   • Greg Meess <Daedalus12@gmail.com>
+ *   • Mark de Wever <koraq@xs4all.nl>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mattias Måhl <mattias@kejsarsten.com>
+ *   • Maxime Lavigne <duguigne@gmail.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *   • Rob Taylor <robtaylor@floopily.org>
+ *   • Samuel Östling <MrOstling@gmail.com>
+ *   • Scott Peshak <scott@peshak.net>
+ *   • Théophane Martin <theophane.m@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#ifndef PERSISTENTSETTINGS_H
+#define PERSISTENTSETTINGS_H
+#pragma once
+
+#include <QDir>
+#include <QString>
+#include <QVariant>
+
+#include "utils/BtStringConst.h"
+#include "utils/EnumStringMapping.h"
+
+// TBD: It would be neat to put default values for settings here rather than have them scattered about the code,
+//      especially for things such as defaultBatchSize_l where we currently need the same default value in two different
+//      bits of code.
+//======================================================================================================================
+//========================================== Start of setting NAME constants ===========================================
+//===== (Note that we only need to add here names that have no section or are used in multiple places in the code) =====
+//===== (Note too that property names are often used as setting names and, in such cases, are not redefined here) ======
+#define AddSettingName(name) namespace PersistentSettings::Names { BtStringConst const name{#name}; }
+AddSettingName(check_version)
+AddSettingName(color_formula)
+AddSettingName(config_version)
+AddSettingName(converted)
+AddSettingName(count)                            // backups section
+AddSettingName(date_format)
+AddSettingName(dbHostname)
+AddSettingName(dbName)
+AddSettingName(dbPassword)
+AddSettingName(dbPortnum)
+AddSettingName(dbSchema)
+AddSettingName(dbType)
+AddSettingName(dbUsername)
+AddSettingName(defaultBatchSize_l)
+AddSettingName(defaultPreBoilSize_l)
+AddSettingName(defaultBoilTime_mins)
+AddSettingName(defaultEfficiency_pct)
+AddSettingName(defaultEquipmentKey)
+AddSettingName(defaultFgCalcUsesMash)          // See Recipe::defaultFgCalcUsesMash
+AddSettingName(deletewhat)
+AddSettingName(directory)                        // backups section
+AddSettingName(files)                            // backups section
+AddSettingName(firstWortHopAdjustment)
+AddSettingName(forcedLocale)
+AddSettingName(frequency)                        // backups section
+AddSettingName(geometry)
+AddSettingName(geometry_boilCatalog        )  // MainWindow section
+AddSettingName(geometry_equipmentCatalog   )  // MainWindow section
+AddSettingName(geometry_fermentableCatalog )  // MainWindow section
+AddSettingName(geometry_fermentationCatalog)  // MainWindow section
+AddSettingName(geometry_hopCatalog         )  // MainWindow section
+AddSettingName(geometry_mashCatalog        )  // MainWindow section
+AddSettingName(geometry_miscCatalog        )  // MainWindow section
+AddSettingName(geometry_styleCatalog       )  // MainWindow section
+AddSettingName(geometry_waterCatalog       )  // MainWindow section
+AddSettingName(geometry_yeastCatalog       )  // MainWindow section
+AddSettingName(geometry_stockWindow  ) // MainWindow section
+AddSettingName(geometry_optionsDialog) // MainWindow section
+AddSettingName(ibu_formula)
+AddSettingName(language)
+AddSettingName(last_db_merge_req)
+AddSettingName(LogDirectory)
+AddSettingName(LoggingLevel)
+AddSettingName(mashHopAdjustment)
+AddSettingName(        mashStepTableWidget_headerState)  // MainWindow section
+AddSettingName(        boilStepTableWidget_headerState)  // MainWindow section
+AddSettingName(fermentationStepTableWidget_headerState)  // MainWindow section
+AddSettingName(maximum)                          // backups section
+AddSettingName(productionDate)
+AddSettingName(recipeKey)
+AddSettingName(showsnapshots)
+AddSettingName(splitter_horizontal_State)        // MainWindow section
+AddSettingName(splitter_vertical_State  )        // MainWindow section
+AddSettingName(treeView_equipment_headerState  ) // MainWindow section
+AddSettingName(treeView_fermentable_headerState) // MainWindow section
+AddSettingName(treeView_hop_headerState        ) // MainWindow section
+AddSettingName(treeView_misc_headerState       ) // MainWindow section
+AddSettingName(treeView_recipe_headerState     ) // MainWindow section
+AddSettingName(treeView_style_headerState      ) // MainWindow section
+AddSettingName(treeView_yeast_headerState      ) // MainWindow section
+AddSettingName(uiState_boilCatalog        )  // MainWindow section
+AddSettingName(uiState_equipmentCatalog   )  // MainWindow section
+AddSettingName(uiState_fermentableCatalog )  // MainWindow section
+AddSettingName(uiState_fermentationCatalog)  // MainWindow section
+AddSettingName(uiState_hopCatalog         )  // MainWindow section
+AddSettingName(uiState_mashCatalog        )  // MainWindow section
+AddSettingName(uiState_miscCatalog        )  // MainWindow section
+AddSettingName(uiState_styleCatalog       )  // MainWindow section
+AddSettingName(uiState_waterCatalog       )  // MainWindow section
+AddSettingName(uiState_yeastCatalog       )  // MainWindow section
+AddSettingName(uiState_stockManagerFermentable    ) // StockWindow section
+AddSettingName(uiState_stockManagerHop            ) // StockWindow section
+AddSettingName(uiState_stockManagerMisc           ) // StockWindow section
+AddSettingName(uiState_stockManagerYeast          ) // StockWindow section
+AddSettingName(UserDataDirectory)
+AddSettingName(versioning)
+AddSettingName(windowState)
+#undef AddSettingName
+//=========================================== End of setting NAME constants ============================================
+//======================================================================================================================
+//======================================================================================================================
+//======================================== Start of setting SECTION constants ==========================================
+// .:TODO:. I think most of these are no longer used and can be deleted
+#define AddSettingSection(section) namespace PersistentSettings::Sections { BtStringConst const section{#section}; }
+AddSettingSection(alcoholTool)
+AddSettingSection(backups)
+AddSettingSection(MainWindow)
+AddSettingSection(mashStepTableModel)
+AddSettingSection(miscTable)
+AddSettingSection(miscTableModel)
+AddSettingSection(yeastTable)
+AddSettingSection(yeastTableModel)
+AddSettingSection(StockWindow)
+#undef AddSettingName
+//========================================= End of setting SECTION constants ===========================================
+//======================================================================================================================
+
+/**
+ * \brief Functions that manage remembering settings across sessions.
+ *        Most of the heavy lifting is done by Qt's QSettings class.  We just add some minor extensions and make the
+ *        interface more consistent with QHash, QMap, etc.
+ *
+ *        Users should bear in mind the following guidelines, based on QSettings documentation:
+ *          - Always refer to the same key using the same case. For example, if you refer to a key as "text fonts" in
+ *            one place in your code, don't refer to it as "Text Fonts" somewhere else.
+ *          - Avoid key names that are identical except for the case. For example, if you have a key called
+ *            "MainWindow", don't try to save another key as "mainwindow".
+ *          - Do not use slashes or backslashes in section or key names
+ *          - Avoid key names that are the same as section names
+ *        For the same reason we use PropertyNames::NamedEntity::name and similar constants, we have
+ *        PersistentSettings::Names::foobar etc above
+ */
+namespace PersistentSettings {
+
+   int constexpr latestConfigVersion = 1;
+
+   /**
+    * \brief Sets up where persistent settings are stored.  This needs to be called \b after calls to
+    *        \c QApplication::setOrganizationName() etc
+    *
+    * \param customUserDataDir Used only for development/testing (via a command-line option) to override where user
+    *                          data is stored
+    */
+   void initialise(QString const & customUserDataDir = "");
+
+   [[nodiscard]] bool isInitialised();
+
+   /**
+    * \return the config directory
+    */
+   QDir getConfigDir();
+
+   /**
+    * \return the directory where all user data (apart from logs & settings) should be stored
+    */
+   QDir getUserDataDir();
+
+   /**
+    * \brief Set a custom location for the directory where all user data (apart from logs & settings) should be stored.
+    *
+    *        NB: It is the caller's responsibility to move any files from the old directory and either reset the DB
+    *            connections to SQLite or restart the application.
+    */
+   void setUserDataDir(QDir newDirectory);
+
+   /**
+    * \brief What extension (if any) to add to the key when accessing a stored setting.  This is useful for associating
+    *        a stored value with its display scale and/or unit
+    */
+   enum class Extension {
+      NONE,
+      /**
+       * \brief Used to store the forced (ie overriding general default) \c Measurement::UnitSystem::RelativeScale for
+       *        displaying a particular field.
+       */
+      SCALE,
+      /**
+       * \brief Used to store the forced \c Measurement::SystemOfMeasurement for displaying a particular field.  (Other
+       *        than for fields that can be either weight or volume, this corresponds directly to a
+       *        \c Measurement::UnitSystem.)
+       */
+      UNIT,
+      /**
+       * \brief Used to store forced number of decimal places for displaying a particular field.
+       */
+      PRECISION
+   };
+
+   //
+   // See comment in utils/BtStringConst.h for why we can't overload between QString and BtStringConst (because, by
+   // design, both can be constructed from a string literal, so an overload would be ambiguous).  This is why we
+   // have contains_ck, insert_ck, etc (where ck stands for "const key").
+   //
+
+   /**
+    * \brief Returns true if the persistent settings storage contains an item with "fully-qualified" key (generated
+    *        from key, section and Extension); otherwise returns false.
+    */
+   bool contains   (      QString const & key,       QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   bool contains_ck(BtStringConst const & key,       QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   bool contains_ck(BtStringConst const & key, BtStringConst const & section            , Extension extension = PersistentSettings::Extension::NONE);
+
+   /**
+    * \brief Inserts a new item with the "fully-qualified" key (generated from key, section and Extension) and a value
+    *        of value.
+    *
+    *        If there is already an item with a corresponding key, that item's value is replaced with value.
+    *
+    *        For the `std::optional` overloads, `std::nullopt` means "not set", so we remove the item rather than
+    *        storing anything.  This is consistent with how we already handle forced units and scales for individual
+    *        fields, and avoids any risk of a "null" value being read back as 0.  (When reading, we also accept the
+    *        string "default" as meaning `std::nullopt`, in case someone sets that by manually editing the .conf
+    *        file.)
+    *
+    *        Template implementation is in the .cpp file.
+    */
+   void insert   (      QString const & key, QVariant const & value,       QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   void insert_ck(BtStringConst const & key, QVariant const & value,       QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   void insert_ck(BtStringConst const & key, QVariant const & value, BtStringConst const & section            , Extension extension = PersistentSettings::Extension::NONE);
+   template<typename T>
+   void insert   (      QString const & key, std::optional<T> const & value, QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   template<typename T>
+   void insert_ck(BtStringConst const & key, std::optional<T> const & value, QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+
+   /**
+    * \brief Returns the value associated with the "fully-qualified" key (generated from key, section and Extension).
+    *        If the persistent settings storage contains no item with a corresponding key, the function returns
+    *        defaultValue.
+    *        If no defaultValue is specified, the function returns a default-constructed value.
+    */
+   QVariant value   (      QString const & key, QVariant const & defaultValue = QVariant(),       QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   QVariant value_ck(BtStringConst const & key, QVariant const & defaultValue = QVariant(),       QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   QVariant value_ck(BtStringConst const & key, QVariant const & defaultValue             , BtStringConst const & section            , Extension extension = PersistentSettings::Extension::NONE);
+   /**
+    * \brief The `std::optional` overloads return `std::nullopt` if the setting is "default" (see comment on
+    *        \c insert above), and \c defaultValue if the setting is absent or cannot be parsed as \c T.
+    *
+    *        Template implementation is in the .cpp file.
+    */
+   template<typename T>
+   std::optional<T> value   (      QString const & key, std::optional<T> const & defaultValue, QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+   template<typename T>
+   std::optional<T> value_ck(BtStringConst const & key, std::optional<T> const & defaultValue, QString const & section = QString(), Extension extension = PersistentSettings::Extension::NONE);
+
+   /**
+    * \brief Removes the item matching key (unless key is the name of a section, in which case it removes all keys in
+    *        that section -- hence one reason you don't want keys and sections to share names).
+    */
+   void remove   (QString const & key,             QString const section = QString(),  Extension extension = PersistentSettings::Extension::NONE);
+   void remove_ck(BtStringConst const & constName, QString const section = QString(),  Extension extension = PersistentSettings::Extension::NONE);
+   void remove_ck(BtStringConst const & constName, BtStringConst const & constSection, Extension extension = PersistentSettings::Extension::NONE);
+
+   /**
+    * \brief Read in an enum from persistent settings
+    */
+   template<typename E>
+   void readEnum(BtStringConst const & settingName,
+                 EnumStringMapping const & enumStringMapping,
+                 E & readInValue,
+                 E const defaultValue) {
+      auto savedSetting = PersistentSettings::value_ck(settingName, enumStringMapping[defaultValue]).toString();
+      try {
+         readInValue = enumStringMapping.stringToEnum<E>(savedSetting);
+      } catch (std::out_of_range const & exception) {
+         qWarning() <<
+            Q_FUNC_INFO << "Could not understand" << settingName << "=" << savedSetting << ". Defaulting to" <<
+            enumStringMapping[defaultValue];
+         readInValue = defaultValue;
+      }
+      return;
+   }
+
+   /**
+    * \brief Save UI state for a given window / UI element
+    */
+   template<class UiElement>
+   void saveUiState(BtStringConst const & property,
+                    UiElement const & uiElement,
+                    BtStringConst const & section = PersistentSettings::Sections::MainWindow) {
+      PersistentSettings::insert_ck(property, uiElement.saveState(), section);
+      return;
+   }
+
+   /**
+    * \brief Restore UI state for a given window / UI element
+    *
+    * \return \c true if state was restored, \c false otherwise (ie no saved state was found)
+    */
+   template<class UiElement>
+   bool restoreUiState(BtStringConst const & property,
+                       UiElement & uiElement,
+                       BtStringConst const & section = PersistentSettings::Sections::MainWindow) {
+      if (PersistentSettings::contains_ck(property, section)) {
+         uiElement.restoreState(PersistentSettings::value_ck(property, QVariant(), section).toByteArray());
+         return true;
+      }
+      return false;
+   }
+
+   /**
+    * \brief Save geometry for a given window
+    */
+   template<class WidgetClass>
+   void saveGeometry(BtStringConst const & property,
+                     WidgetClass const & widget,
+                     BtStringConst const & section = PersistentSettings::Sections::MainWindow) {
+      PersistentSettings::insert_ck(property, widget.saveGeometry(), section);
+      return;
+   }
+
+   /**
+    * \brief Restore geometry for a given window
+    *
+    * \return \c true if geometry was restored, \c false otherwise (ie no saved geometry was found)
+    */
+   template<class WidgetClass>
+   bool restoreGeometry(BtStringConst const & property,
+                        WidgetClass & widget,
+                        BtStringConst const & section = PersistentSettings::Sections::MainWindow) {
+      if (PersistentSettings::contains_ck(property, section)) {
+         widget.restoreGeometry(PersistentSettings::value_ck(property, QVariant(), section).toByteArray());
+         return true;
+      }
+      return false;
+   }
+
+}
+#endif

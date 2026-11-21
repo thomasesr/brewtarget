@@ -1,0 +1,53 @@
+/*======================================================================================================================
+ * BoilTimer.h is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Aidan Roberts <aidanr67@gmail.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
+#ifndef BOILTIMER_H
+#define BOILTIMER_H
+#pragma once
+
+#include <QObject>
+#include <QTimer>
+/*!
+ * \brief Used by TimerMainDialog and TimerWidget
+ *
+ * Makes it possible to trigger multiple timers using one QTimer
+ */
+class BoilTimer : public QObject {
+    Q_OBJECT
+public:
+    explicit BoilTimer(QObject * parent);
+    void setBoilTime(unsigned int boilTime);
+    int getTime();
+    bool isStarted();
+    bool isCompleted();
+    void startTimer();
+    void stopTimer();
+
+private slots:
+    void decrementTime();
+
+signals:
+    void BoilTimeChanged();
+    void timesUp();
+
+private:
+    QTimer* m_timer;
+    unsigned int m_time;
+    bool m_started;
+    bool m_completed;
+};
+
+#endif

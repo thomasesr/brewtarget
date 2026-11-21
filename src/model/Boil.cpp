@@ -1,0 +1,446 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * model/Boil.cpp is part of Brewtarget, and is copyright the following authors 2023-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "model/Boil.h"
+
+#include <algorithm>
+#include <limits>
+
+#include "database/ObjectStoreWrapper.h"
+#include "model/Fermentation.h"
+#include "model/FermentationStep.h"
+#include "model/Folder.h"
+#include "model/Mash.h"
+#include "model/MashStep.h"
+#include "model/NamedParameterBundle.h"
+#include "utils/AutoCompare.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_Boil.cpp"
+#endif
+
+QString Boil::localisedName              () { return tr("Boil"           ); }
+QString Boil::localisedName_description  () { return tr("Description"    ); };
+QString Boil::localisedName_notes        () { return tr("Notes"          ); };
+QString Boil::localisedName_preBoilSize_l() { return tr("Pre-Boil Size"  ); };
+QString Boil::localisedName_boilTime_mins() { return tr("Time At Boiling"); }; // aka "Boil Time"
+
+bool Boil::compareWith(NamedEntity const & other, QList<BtStringConst const *> * propertiesThatDiffer) const {
+   // Base class (NamedEntity) will have ensured this cast is valid
+   Boil const & rhs = static_cast<Boil const &>(other);
+   // Base class will already have ensured names are equal
+   return (
+      AUTO_PROPERTY_COMPARE(this, rhs, m_description  , PropertyNames::Boil::description  , propertiesThatDiffer) &&
+      AUTO_PROPERTY_COMPARE(this, rhs, m_notes        , PropertyNames::Boil::notes        , propertiesThatDiffer) &&
+      AUTO_PROPERTY_COMPARE(this, rhs, m_preBoilSize_l, PropertyNames::Boil::preBoilSize_l, propertiesThatDiffer) &&
+      // Parent classes have to be equal too
+      this->FolderPropertyBase<Boil>             ::doCompareWith(rhs, propertiesThatDiffer) &&
+      this->LockablePropertyBase<Boil>::doCompareWith(rhs, propertiesThatDiffer) &&
+      this->StepOwnerBase<Boil, BoilStep>::doCompareWith(rhs, propertiesThatDiffer)
+   );
+}
+
+ObjectStore & Boil::getObjectStoreTypedInstance() const {
+   return ObjectStoreTyped<Boil>::getInstance();
+}
+
+TypeLookup const Boil::typeLookup {
+   "Boil",
+   {
+      PROPERTY_TYPE_LOOKUP_ENTRY(Boil, description  , m_description  ,           NonPhysicalQuantity::String),
+      PROPERTY_TYPE_LOOKUP_ENTRY(Boil, notes        , m_notes        ,           NonPhysicalQuantity::String),
+      PROPERTY_TYPE_LOOKUP_ENTRY(Boil, preBoilSize_l, m_preBoilSize_l, Measurement::PhysicalQuantity::Volume, DisplayInfo::Precision{1}),
+      // NB: boilTime_mins is only used when we are constructing from BeerXML
+      PROPERTY_TYPE_LOOKUP_NO_MV(Boil, boilTime_mins, boilTime_mins  , Measurement::PhysicalQuantity::Time  , DisplayInfo::Precision{0}),
+   },
+   // Parent classes lookup
+   {&NamedEntity::typeLookup,
+    std::addressof(FolderPropertyBase<Boil>::typeLookup),
+    std::addressof(LockablePropertyBase<Boil>::typeLookup),
+    std::addressof(StepOwnerBase<Boil, BoilStep>::typeLookup)}
+};
+static_assert(std::is_base_of<FolderPropertyBase<Boil>, Boil>::value);
+
+//==================================================== CONSTRUCTORS ====================================================
+
+Boil::Boil(QString name) :
+   NamedEntity{name},
+   FolderPropertyBase<Boil>{},
+   LockablePropertyBase<Boil>{},
+   StepOwnerBase<Boil, BoilStep>{},
+   m_description  {""          },
+   m_notes        {""          },
+   m_preBoilSize_l{std::nullopt} {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Boil::Boil(NamedParameterBundle const & namedParameterBundle) :
+   NamedEntity     {namedParameterBundle},
+   FolderPropertyBase<Boil>{namedParameterBundle},
+   LockablePropertyBase<Boil>{namedParameterBundle},
+   StepOwnerBase<Boil, BoilStep>{namedParameterBundle},
+   SET_REGULAR_FROM_NPB (m_description  , namedParameterBundle, PropertyNames::Boil::description  ),
+   SET_REGULAR_FROM_NPB (m_notes        , namedParameterBundle, PropertyNames::Boil::notes        ),
+   SET_REGULAR_FROM_NPB (m_preBoilSize_l, namedParameterBundle, PropertyNames::Boil::preBoilSize_l) {
+
+   // If we're being constructed from a BeerXML file, we use the property boilTime_mins for RECIPE > BOIL_TIME
+   SET_IF_PRESENT_FROM_NPB_NO_MV(Boil::setBoilTime_mins, namedParameterBundle, PropertyNames::Boil::boilTime_mins);
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Boil::Boil(Boil const & other) :
+   NamedEntity{other},
+   FolderPropertyBase<Boil>{other},
+   LockablePropertyBase<Boil>{other},
+   StepOwnerBase<Boil, BoilStep>{other},
+   m_description  {other.m_description  },
+   m_notes        {other.m_notes        },
+   m_preBoilSize_l{other.m_preBoilSize_l} {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Boil::~Boil() = default;
+
+//============================================= "GETTER" MEMBER FUNCTIONS ==============================================
+QString               Boil::description  () const { return this->m_description  ; }
+QString               Boil::notes        () const { return this->m_notes        ; }
+std::optional<double> Boil::preBoilSize_l() const { return this->m_preBoilSize_l; }
+
+namespace {
+   //
+   // Per dotBeer, an unset boil step temperature means "at boiling", which is no lower than any other temperature in
+   // the boil.  For the purposes of comparing temperatures with each other (and with Boil::minimumBoilTemperature_c),
+   // we therefore treat an unset temperature as +∞.  (Note that we must not use this value for anything other than
+   // comparisons!)
+   //
+   double constexpr atBoilingForComparison = std::numeric_limits<double>::infinity();
+
+   double startTempForComparison(BoilStep const & boilStep) {
+      return boilStep.startTemp_c().value_or(atBoilingForComparison);
+   }
+
+   double endTempForComparison(BoilStep const & boilStep) {
+      return boilStep.endTemp_c().value_or(atBoilingForComparison);
+   }
+}
+
+bool Boil::startsAtBoil(BoilStep const & boilStep) {
+   return startTempForComparison(boilStep) >= Boil::minimumBoilTemperature_c;
+}
+
+bool Boil::endsAtBoil(BoilStep const & boilStep) {
+   return endTempForComparison(boilStep) >= Boil::minimumBoilTemperature_c;
+}
+
+bool Boil::holdsAtBoil(BoilStep const & boilStep) {
+   return Boil::startsAtBoil(boilStep) &&
+          Boil::endsAtBoil(boilStep) &&
+          endTempForComparison(boilStep) >= startTempForComparison(boilStep);
+}
+
+std::vector<Boil::StepPhase> Boil::stepPhases(QList<std::shared_ptr<BoilStep>> const & boilSteps) {
+   std::vector<Boil::StepPhase> phases;
+   phases.reserve(boilSteps.size());
+
+   Boil::StepPhase currentPhase = Boil::StepPhase::PreBoil;
+   BoilStep const * previousStep = nullptr;
+   for (auto const & boilStep : boilSteps) {
+      switch (currentPhase) {
+         case Boil::StepPhase::PreBoil:
+            if (Boil::holdsAtBoil(*boilStep)) {
+               currentPhase = Boil::StepPhase::BoilProper;
+            }
+            break;
+         case Boil::StepPhase::BoilProper:
+            //
+            // The boil proper ends as soon as the wort starts to cool, either during a step (in which case
+            // holdsAtBoil() will be false) or between steps.  Note that previousStep cannot be null here, as we can
+            // only be in the boil proper after we have looked at at least one step.
+            //
+            Q_ASSERT(previousStep);
+            if (!Boil::holdsAtBoil(*boilStep) ||
+                startTempForComparison(*boilStep) < endTempForComparison(*previousStep)) {
+               currentPhase = Boil::StepPhase::PostBoil;
+            }
+            break;
+         case Boil::StepPhase::PostBoil:
+            // Once we're in the post-boil, everything else is post-boil too
+            break;
+         // No default case as we want the compiler to warn us if we missed a case above
+      }
+      phases.push_back(currentPhase);
+      previousStep = boilStep.get();
+   }
+
+   return phases;
+}
+
+std::vector<Boil::StepPhase> Boil::stepPhases() const {
+   return Boil::stepPhases(this->steps());
+}
+
+double Boil::boilTime_mins() const {
+   double boilTimeProper_mins = 0.0;
+   auto const boilSteps = this->steps();
+   auto const phases = Boil::stepPhases(boilSteps);
+   for (int ii = 0; ii < static_cast<int>(boilSteps.size()); ++ii) {
+      if (phases[ii] == Boil::StepPhase::BoilProper && boilSteps[ii]->stepTime_mins()) {
+          boilTimeProper_mins += *boilSteps[ii]->stepTime_mins();
+      }
+   }
+   return boilTimeProper_mins;
+}
+
+std::optional<double> Boil::coolTime_mins() const {
+   //
+   // NB: We used to compare std::optional<double> directly with a double here, which meant an unset start
+   //     temperature was treated as below boiling (because std::nullopt compares less than any value).
+   //
+   auto boilSteps = this->steps();
+   if (boilSteps.size() > 0 &&
+       Boil::startsAtBoil(*boilSteps.last()) &&
+       !Boil::endsAtBoil(*boilSteps.last())) {
+      return boilSteps.last()->stepTime_mins();
+   }
+   return std::nullopt;
+}
+
+
+//============================================= "SETTER" MEMBER FUNCTIONS ==============================================
+void Boil::setDescription  (QString               const & val) { SET_AND_NOTIFY(PropertyNames::Boil::description  , this->m_description  , val); return; }
+void Boil::setNotes        (QString               const & val) { SET_AND_NOTIFY(PropertyNames::Boil::notes        , this->m_notes        , val); return; }
+void Boil::setPreBoilSize_l(std::optional<double> const   val) { SET_AND_NOTIFY(PropertyNames::Boil::preBoilSize_l, this->m_preBoilSize_l, val); return; }
+
+//
+// This setter is only used by BeerXML processing, so we can be a bit fast and loose.  In particular, we assume the
+// first step we find that is a proper boil is also the only such step.
+//
+void Boil::setBoilTime_mins(double const val) {
+   this->ensureStandardProfile();
+   auto const boilSteps = this->steps();
+   auto const phases = Boil::stepPhases(boilSteps);
+   for (int ii = 0; ii < static_cast<int>(boilSteps.size()); ++ii) {
+      if (phases[ii] == Boil::StepPhase::BoilProper) {
+         boilSteps[ii]->setStepTime_mins(val);
+         break;
+      }
+   }
+   return;
+}
+
+void Boil::acceptSetMemberChange(QMetaProperty prop, QVariant val) {
+   this->doAcceptSetMemberChange(this->sender(), prop, val);
+   return;
+}
+
+//=============================================== OTHER MEMBER FUNCTIONS ===============================================
+void Boil::ensureStandardProfile() {
+   //
+   // For the moment, the logic here is pretty simple, just ensuring 3 boil steps (pre-boil, boil proper, and
+   // post-boil).  If it turns out that there are recipes with more complicated boil profiles then we might need to
+   // revisit this.
+   //
+   // We are sort of assuming that, if this function needs to do anything then probably the Boil is only used by one
+   // Recipe -- because we're typically doing this when we're creating a new Boil for a Recipe being read in from a
+   // BeerXML file.  That said, I don't think anything would break too horribly if in the event the Boil were used by
+   // more than one Recipe.
+   //
+   auto recipe = ObjectStoreWrapper::findFirstMatching<Recipe>([this](Recipe * rec) {return rec->uses(*this);});
+   QString const recipeStrippedName = recipe ? recipe->strippedName() : tr("a recipe");
+
+   //
+   // We classify the existing steps by their temperatures (see Boil::startsAtBoil etc) rather than by their positions,
+   // and we re-read the steps after each insertion.  (Previously, we used positions, from a list of steps taken before
+   // any insertions, so, eg, a boil of [boil proper, cooling] would get a pre-boil step and then a second cooling step.)
+   //
+   auto boilSteps = this->steps();
+   if (boilSteps.size() == 0 || Boil::startsAtBoil(*boilSteps.first())) {
+      // We need to add a ramp-up (aka pre-boil) step
+      auto preBoil = std::make_shared<BoilStep>(tr("Pre-boil for %1").arg(recipeStrippedName));
+      preBoil->setDescription(tr("Automatically-generated pre-boil step for %1").arg(recipeStrippedName));
+      // Get the starting temperature for the ramp-up from the end temperature of the mash
+      double startingTemp = Boil::minimumBoilTemperature_c - 1.0;
+      if (recipe && recipe->mash()) {
+         auto mashSteps = recipe->mash()->steps();
+         if (!mashSteps.isEmpty()) {
+            auto lastMashStep = mashSteps.last();
+            startingTemp = std::min(lastMashStep->startTemp_c(),
+                                    lastMashStep->  endTemp_c().value_or(startingTemp));
+         }
+      }
+      preBoil->setStartTemp_c(startingTemp);
+      preBoil->setEndTemp_c(100.0);
+      this->insert(preBoil, 1);
+   }
+
+   boilSteps = this->steps();
+   auto phases = Boil::stepPhases(boilSteps);
+   if (std::none_of(phases.cbegin(), phases.cend(), [](auto const phase) { return phase == Boil::StepPhase::BoilProper; })) {
+      // We need to add a main (aka boil proper) step.  It goes before the first step that cools down from the boil, or
+      // at the end if there isn't one.  (Remember step numbers start from 1.)  NB: A step that cools down from the
+      // boil might still end above Boil::minimumBoilTemperature_c (eg 100°C → 92°C for a hot whirlpool).
+      int position = static_cast<int>(boilSteps.size()) + 1;
+      for (int ii = 0; ii < static_cast<int>(boilSteps.size()); ++ii) {
+         if (Boil::startsAtBoil(*boilSteps[ii]) && !Boil::holdsAtBoil(*boilSteps[ii])) {
+            position = ii + 1;
+            break;
+         }
+      }
+      auto mainBoil = std::make_shared<BoilStep>(tr("Main boil for %1").arg(recipeStrippedName));
+      mainBoil->setDescription(tr("Automatically-generated boil proper step for %1").arg(recipeStrippedName));
+      mainBoil->setStartTemp_c(100.0);
+      mainBoil->setEndTemp_c(100.0);
+      this->insert(mainBoil, position);
+   }
+
+   //
+   // If the boil does not end with a post-boil step, then we need to add one.  NB: It's not enough to check that the
+   // last step ends at boiling, as a step such as a hop stand held at 92°C after a cooling step is post-boil (see
+   // Boil::stepPhases).
+   //
+   boilSteps = this->steps();
+   phases = Boil::stepPhases(boilSteps);
+   if (phases.back() != Boil::StepPhase::PostBoil) {
+      // We need to add a post-boil step
+      auto postBoil = std::make_shared<BoilStep>(tr("Post-boil for %1").arg(recipeStrippedName));
+      postBoil->setDescription(tr("Automatically-generated post-boil step for %1").arg(recipeStrippedName));
+      double endingTemp = 30.0;
+      if (recipe && recipe->fermentation()) {
+         auto fs = recipe->fermentation()->fermentationSteps();
+         if (!fs.isEmpty()) {
+            auto firstFermentationStep = fs.first();
+            endingTemp = firstFermentationStep->startTemp_c().value_or(endingTemp);
+         }
+      }
+      // Start from wherever the boil proper ended (eg it might be below 100°C at altitude)
+      postBoil->setStartTemp_c(boilSteps.last()->endTemp_c().value_or(100.0));
+      postBoil->setEndTemp_c(endingTemp);
+      this->insert(postBoil, static_cast<int>(boilSteps.size()) + 1);
+   }
+
+   return;
+}
+
+std::pair<int, int> Boil::boilProperSteps() const {
+   int firstBoilProperStep = 1;
+   int lastBoilProperStep  = std::max(1, static_cast<int>(this->numSteps()));
+   bool foundBoilProper = false;
+   int stepNumber = 0;
+   for (auto const phase : this->stepPhases()) {
+      ++stepNumber;
+      if (phase == Boil::StepPhase::BoilProper) {
+         if (!foundBoilProper) {
+            firstBoilProperStep = stepNumber;
+            foundBoilProper = true;
+         }
+         lastBoilProperStep = stepNumber;
+      }
+   }
+   return {firstBoilProperStep, lastBoilProperStep};
+}
+
+Boil::PostBoil Boil::postBoilProfile() const {
+   PostBoil profile;
+
+   auto const boilSteps = this->boilSteps();
+   int const numBoilSteps = boilSteps.size();
+   auto const phases = Boil::stepPhases(boilSteps);
+   int lastBoilProperIndex = -1;
+   for (int ii = 0; ii < numBoilSteps; ++ii) {
+      if (phases[ii] == Boil::StepPhase::BoilProper) {
+         lastBoilProperIndex = ii;
+      }
+   }
+   if (lastBoilProperIndex < 0 || lastBoilProperIndex == numBoilSteps - 1) {
+      // Either we can't make sense of the steps, or there are no post-boil steps.  Either way, we don't know anything
+      // about what happens after flameout.
+      return profile;
+   }
+
+   double duration_mins = 0.0;
+   // At flameout, we are at boiling.  (NB: Per dotBeer, an unset boil step temperature means boiling.)
+   double previousEndTemp_c = boilSteps[lastBoilProperIndex]->endTemp_c().value_or(100.0);
+   for (int ii = lastBoilProperIndex + 1; ii < numBoilSteps; ++ii) {
+      auto const & step = boilSteps[ii];
+      std::optional<double> const startTemp_c = step->startTemp_c();
+      std::optional<double> const endTemp_c   = step->endTemp_c  ();
+
+      //
+      // Per dotBeer (and BeerJSON), ramp_time is "the amount of time that passes before this step begins", ie the time
+      // to get from the end temperature of the previous step to the start temperature of this one.  So, if there is a
+      // ramp time, we model it as its own segment, before the segment for the step itself, during which the temperature
+      // moves linearly to the start temperature of the step.  (This is consistent with how we treat ramp time for mash
+      // steps -- see MashFermentability.cpp.)  Eg a whirlpool step with a 5 minute ramp time and start and end
+      // temperatures of 80°C means "chill to 80°C over 5 minutes, then hold at 80°C for the step time".
+      //
+      // The ramp starts from wherever the wort actually got to at the end of the previous segment, which is not
+      // necessarily the end temperature of the previous step -- eg natural cooling might not get all the way down to
+      // it.  We still set startTemp_c (to the nominal end temperature of the previous step) as it is helpful in
+      // logging.
+      //
+      // If there is no ramp time, any difference between the end temperature of the previous step and the start
+      // temperature of this one is treated as instantaneous.
+      //
+      double const rampTime_mins = std::max(0.0, step->rampTime_mins().value_or(0.0));
+      if (rampTime_mins > 0.0) {
+         profile.segments.push_back({
+            .duration_minutes     = rampTime_mins,
+            .startTemp_c          = previousEndTemp_c,
+            .endTemp_c            = startTemp_c.value_or(100.0),
+            .naturalCooling       = false,
+            .startsAtPreviousTemp = true,
+         });
+         duration_mins += rampTime_mins;
+      }
+      previousEndTemp_c = endTemp_c.value_or(100.0);
+
+      std::optional<double> const stepTime_mins = step->stepTime_mins();
+      if (!stepTime_mins) {
+         // We can't place any subsequent steps in time, so this is the end of what we know
+         return profile;
+      }
+      profile.segments.push_back({
+         .duration_minutes = *stepTime_mins,
+         .startTemp_c      = startTemp_c.value_or(100.0),
+         .endTemp_c        = endTemp_c  .value_or(100.0),
+         // A step that starts at the boil and ends below it is what Boil::coolTime_mins regards as cooling time, ie
+         // the time before forced cooling, during which the wort cools naturally.
+         .naturalCooling   = Boil::startsAtBoil(*step) && !Boil::endsAtBoil(*step),
+      });
+      duration_mins += *stepTime_mins;
+   }
+   profile.duration_mins = duration_mins;
+   return profile;
+}
+
+
+// This class supports NamedEntity::numRecipesUsedIn
+IMPLEMENT_NUM_RECIPES_USED_IN(Boil)
+
+// Boilerplate code for FolderPropertyBase
+FOLDER_BASE_COMMON_CODE(Boil)
+
+// Boilerplate code for LockablePropertyBase
+LOCKABLE_BASE_COMMON_CODE(Boil)
+
+// Insert boiler-plate wrapper functions that call down to StepOwnerBase
+STEP_OWNER_COMMON_CODE(Boil, boil)

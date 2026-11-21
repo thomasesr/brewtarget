@@ -1,0 +1,143 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * serialization/json/JsonRecordDefinition.cpp is part of Brewtarget, and is copyright the following authors 2020-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "serialization/json/JsonRecordDefinition.h"
+
+#include <QDebug>
+
+#include "serialization/json/JsonRecord.h"
+
+namespace {
+   EnumStringMapping const fieldTypeToName {
+      {JsonRecordDefinition::FieldType::Bool                      , QObject::tr("Bool"                          )},
+      {JsonRecordDefinition::FieldType::Int                       , QObject::tr("Int"                           )},
+      {JsonRecordDefinition::FieldType::UInt                      , QObject::tr("UInt"                          )},
+      {JsonRecordDefinition::FieldType::Double                    , QObject::tr("Double"                        )},
+      {JsonRecordDefinition::FieldType::String                    , QObject::tr("String"                        )},
+      {JsonRecordDefinition::FieldType::Enum                      , QObject::tr("Enum"                          )},
+      {JsonRecordDefinition::FieldType::Record                    , QObject::tr("Record"                        )},
+      {JsonRecordDefinition::FieldType::ListOfRecords             , QObject::tr("List-Of-Records"               )},
+      {JsonRecordDefinition::FieldType::Date                      , QObject::tr("Date"                          )},
+      {JsonRecordDefinition::FieldType::DateTimeOffset            , QObject::tr("Date-Time-With-Timezone"       )},
+      {JsonRecordDefinition::FieldType::DateOrDateTimeLocal       , QObject::tr("Date-or-Date-Time-Local"       )},
+      {JsonRecordDefinition::FieldType::MeasurementWithUnits      , QObject::tr("Measurement-With-Units"        )},
+      {JsonRecordDefinition::FieldType::OneOfMeasurementsWithUnits, QObject::tr("One-Of-Measurements-With-Units")},
+      {JsonRecordDefinition::FieldType::SingleUnitValue           , QObject::tr("Single-Unit-Value"             )},
+      {JsonRecordDefinition::FieldType::RequiredConstant          , QObject::tr("Required-Constant"             )},
+      {JsonRecordDefinition::FieldType::FolderPath                , QObject::tr("Folder-Path"                   )},
+      {JsonRecordDefinition::FieldType::LocalId                   , QObject::tr("Local-ID"                      )},
+   };
+}
+
+JsonRecordDefinition::FieldDefinition::FieldDefinition(FieldType    const type,
+                                                       JsonXPath    const xPath,
+                                                       PropertyPath const propertyPath,
+                                                       ValueDecoder const valueDecoder,
+                                                       std::optional<Serialization::NullSentinel> const nullSentinel) :
+   type{type},
+   xPath{xPath},
+   propertyPath{propertyPath},
+   valueDecoder{valueDecoder},
+   nullSentinel{nullSentinel} {
+   // We assert that nullSentinel can only be set for the types supported by Serialization::NullSentinel
+   Q_ASSERT(!this->nullSentinel ||
+            JsonRecordDefinition::FieldType::Double               == this->type ||
+            JsonRecordDefinition::FieldType::Int                  == this->type ||
+            JsonRecordDefinition::FieldType::UInt                 == this->type ||
+            JsonRecordDefinition::FieldType::MeasurementWithUnits == this->type ||
+            JsonRecordDefinition::FieldType::SingleUnitValue      == this->type);
+   return;
+}
+
+JsonRecordDefinition::JsonRecordDefinition(
+   char const *                  const   recordName,
+   TypeLookup const *            const   typeLookup,
+   char const *                  const   namedEntityClassName,
+   QString                       const & localisedEntityName,
+   NamedEntityCasters            const   upAndDownCasters,
+   JsonRecordConstructorWrapper          jsonRecordConstructorWrapper,
+   std::initializer_list<JsonRecordDefinition::FieldDefinition> fieldDefinitions,
+   RecordType                    const   recordType
+) :
+   SerializationRecordDefinition{recordName, typeLookup, namedEntityClassName, localisedEntityName, upAndDownCasters},
+   jsonRecordConstructorWrapper{jsonRecordConstructorWrapper},
+   fieldDefinitions{fieldDefinitions},
+   isOutlineRecord{recordType == RecordType::Outline} {
+   return;
+}
+
+JsonRecordDefinition::JsonRecordDefinition(
+   char const *                  const   recordName,
+   TypeLookup const *            const   typeLookup,
+   char const *                  const   namedEntityClassName,
+   QString                       const & localisedEntityName,
+   NamedEntityCasters            const   upAndDownCasters,
+   JsonRecordConstructorWrapper          jsonRecordConstructorWrapper,
+   std::initializer_list< std::initializer_list<FieldDefinition> > fieldDefinitionLists,
+   RecordType                    const   recordType
+) :
+   SerializationRecordDefinition{recordName, typeLookup, namedEntityClassName, localisedEntityName, upAndDownCasters},
+   jsonRecordConstructorWrapper{jsonRecordConstructorWrapper},
+   fieldDefinitions{},
+   isOutlineRecord{recordType == RecordType::Outline} {
+   // This is a bit clunky, but it works and the inefficiency is a one-off cost at start-up
+   for (auto const & list : fieldDefinitionLists) {
+      // After you've initialised a const, you can't modify it, even in the constructor, unless you cast away the
+      // constness (is that a word?) via a pointer or reference to tell the compiler you really do want to modify the
+      // member variable.
+      std::vector<JsonRecordDefinition::FieldDefinition> & myFieldDefinitions =
+         const_cast<std::vector<JsonRecordDefinition::FieldDefinition> &>(this->fieldDefinitions);
+      // You can't do the following with QVector, which is why we're using std::vector here
+      myFieldDefinitions.insert(myFieldDefinitions.end(), list.begin(), list.end());
+   }
+   return;
+}
+
+[[nodiscard]] std::unique_ptr<JsonRecord> JsonRecordDefinition::makeRecord(LocalIdToDbId * localIdToDbId,
+                                                                           JsonCoding const & jsonCoding,
+                                                                           boost::json::value & recordData) const {
+   return this->jsonRecordConstructorWrapper(localIdToDbId, jsonCoding, recordData, *this);
+}
+
+
+template<class S>
+S & operator<<(S & stream, JsonRecordDefinition::FieldType const fieldType) {
+   try {
+      stream << fieldTypeToName[fieldType];
+   } catch (std::out_of_range & e) {
+      // This is a coding error, so stop (after logging) on a debug build
+      stream << "Unrecognised field type: " << static_cast<int>(fieldType);
+      Q_ASSERT(false);
+   }
+   return stream;
+}
+
+//
+// Instantiate the above template function for the types that are going to use it
+// (This is all just a trick to allow the template definition to be here in the .cpp file and not in the header.)
+//
+template QDebug & operator<<(QDebug & stream, JsonRecordDefinition::FieldType const fieldType);
+template QTextStream & operator<<(QTextStream & stream, JsonRecordDefinition::FieldType const fieldType);
+
+
+template<class S>
+S & operator<<(S & stream, JsonRecordDefinition::FieldDefinition const & fieldDefinition) {
+   stream <<
+      "FieldDefinition:" << fieldDefinition.type << "/" << fieldDefinition.xPath << "/" << fieldDefinition.propertyPath;
+   return stream;
+}
+
+template QDebug      & operator<<(QDebug      & stream, JsonRecordDefinition::FieldDefinition const & fieldDefinition);
+template QTextStream & operator<<(QTextStream & stream, JsonRecordDefinition::FieldDefinition const & fieldDefinition);

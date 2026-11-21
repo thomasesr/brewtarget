@@ -1,414 +1,425 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0">
+<ui version="6.0">
  <class>waterEditor</class>
  <widget class="QDialog" name="waterEditor">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>458</width>
-    <height>336</height>
+    <width>1287</width>
+    <height>518</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+    <horstretch>1</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="mouseTracking">
    <bool>false</bool>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Edit Water</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,1">
    <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_name">
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="BtStringEdit" name="lineEdit_name">
-       <property name="maximumSize">
-        <size>
-         <width>256</width>
-         <height>16777215</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_ca">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string notr="true">Ca</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="label_mg">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string notr="true">Mg</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="label_so4">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string notr="true">SO&lt;sub&gt;4&lt;/sub&gt;</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::RichText</enum>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="3">
-      <widget class="QLabel" name="label_na">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string notr="true">Na</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="4">
-      <widget class="QLabel" name="label_cl">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string notr="true">Cl</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5">
-      <widget class="QComboBox" name="comboBox_alk">
-       <item>
-        <property name="text">
-         <string notr="true">HCO3</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string notr="true">CaCO3</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_ca">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="1" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_mg">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="1" column="2">
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_so4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="1" column="3">
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_na">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="1" column="4">
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_cl">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="1" column="5">
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_alk">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_pH">
-       <property name="text">
-        <string notr="true">pH</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout_7">
-       <item>
-        <widget class="BtGenericEdit" name="lineEdit_ph">
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_7">
-     <item>
-      <widget class="QLabel" name="label_notes">
-       <property name="text">
-        <string>Notes</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPlainTextEdit" name="plainTextEdit_notes"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+    <widget class="RadarChart" name="waterEditRadarChart" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     <property name="minimumSize">
+      <size>
+       <width>500</width>
+       <height>500</height>
+      </size>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0,1">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMinimumSize</enum>
+       </property>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_name">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" colspan="4">
+        <widget class="QLineEdit" name="lineEdit_name">
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="SmartLabel" name="label_ca">
+         <property name="text">
+          <string notr="true">Ca</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_ca">
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="4">
+        <widget class="SmartLabel" name="label_cl">
+         <property name="text">
+          <string notr="true">Cl</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="5">
+        <widget class="SmartLineEdit" name="lineEdit_cl">
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="SmartLabel" name="label_mg">
+         <property name="text">
+          <string notr="true">Mg</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_mg">
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="SmartLabel" name="label_so4">
+         <property name="text">
+          <string notr="true">SO&lt;sub&gt;4&lt;/sub&gt;</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="5">
+        <widget class="SmartLineEdit" name="lineEdit_so4">
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="SmartLabel" name="label_na">
+         <property name="text">
+          <string notr="true">Na</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_na">
+        </widget>
+       </item>
+       <item row="3" column="4">
+        <widget class="SmartLabel" name="label_alk">
+         <property name="text">
+          <string>Alkalinity</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="5">
+        <widget class="SmartLineEdit" name="lineEdit_alk">
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="SmartLabel" name="label_pH">
+         <property name="text">
+          <string notr="true">pH</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_ph">
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QLabel" name="label_alkalinityAsHCO3">
+         <property name="text">
+          <string>Alkalinity measured as</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="5">
+        <widget class="BtComboBoxBool" name="boolCombo_alkalinityAsHCO3"></widget>
+       </item>
+
+       <item row="5" column="1">
+        <widget class="SmartLabel" name="label_carbonate">
+         <property name="text">
+          <string notr="true">Carbonate</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_carbonate</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_carbonate">
+        </widget>
+       </item>
+       <item row="5" column="4">
+        <widget class="SmartLabel" name="label_potassium">
+         <property name="text">
+          <string notr="true">Potassium</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_potassium</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="5">
+        <widget class="SmartLineEdit" name="lineEdit_potassium">
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="SmartLabel" name="label_iron">
+         <property name="text">
+          <string notr="true">Iron</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_iron</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_iron">
+        </widget>
+       </item>
+       <item row="6" column="4">
+        <widget class="SmartLabel" name="label_fluoride">
+         <property name="text">
+          <string notr="true">Flouride</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_fluoride</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="5">
+        <widget class="SmartLineEdit" name="lineEdit_fluoride">
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="SmartLabel" name="label_nitrate">
+         <property name="text">
+          <string notr="true">Nitrate</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_nitrate</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="2">
+        <widget class="SmartLineEdit" name="lineEdit_nitrate">
+        </widget>
+       </item>
+       <item row="7" column="4">
+        <widget class="SmartLabel" name="label_nitrite">
+         <property name="text">
+          <string notr="true">Nitrite</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_nitrite</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="5">
+        <widget class="SmartLineEdit" name="lineEdit_nitrite">
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QLabel" name="label_notes">
+         <property name="text">
+          <string>Notes</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="2" colspan="4">
+        <widget class="QTextEdit" name="textEdit_notes"/>
+       </item>
+
+       <item row="13" column="0">
+        <widget class="InfoButton" name="infoButton_id"></widget>
+       </item>
+       <item row="13" column="1">
+        <widget class="QLabel" name="label_id">
+         <property name="text">
+          <string>ID in database</string>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="2">
+        <widget class="QLabel" name="label_id_value">
+        </widget>
+       </item>
+
+       <item row="13" column="4" colspan="2">
+        <widget class="QLabel" name="label_numRecipesUsing">
+        </widget>
+       </item>
+
+       <item row="14" column="1" colspan="5">
+        <widget class="InfoText" name="infoText_id">
+         <property name="buddy">
+          <cstring>infoButton_id</cstring>
+         </property>
+         <property name="text">
+          <string>You can normally ignore this, but it's sometimes useful for debugging.</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="16" column="2" colspan="4">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="pushButton_new">
+           <property name="toolTip">
+            <string>New water</string>
+           </property>
+           <property name="text">
+            <string>New</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_save">
+           <property name="toolTip">
+            <string>Save and close</string>
+           </property>
+           <property name="text">
+            <string>Save</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/filesave.svg</normaloff>:/images/filesave.svg</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_cancel">
+           <property name="toolTip">
+            <string>Discard and close</string>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/exit.svg</normaloff>:/images/exit.svg</iconset>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BtGenericEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
+   <class>BtComboBoxBool</class>
+   <extends>QComboBox</extends>
+   <header>widgets/BtComboBoxBool.h</header>
   </customwidget>
   <customwidget>
-   <class>BtStringEdit</class>
+   <class>InfoButton</class>
+   <extends>QPushButton</extends>
+   <header>widgets/InfoButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>InfoText</class>
+   <extends>QLabel</extends>
+   <header>widgets/InfoText.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmartLabel</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartLabel.h</header>
+   <slots>
+    <signal>changedSystemOfMeasurementOrScale(PreviousScaleInfo)</signal>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>SmartLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
+   <header>widgets/SmartLineEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RadarChart</class>
+   <extends>QWidget</extends>
+   <header>RadarChart.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>lineEdit_name</tabstop>
   <tabstop>lineEdit_ca</tabstop>
   <tabstop>lineEdit_mg</tabstop>
-  <tabstop>lineEdit_so4</tabstop>
   <tabstop>lineEdit_na</tabstop>
   <tabstop>lineEdit_cl</tabstop>
+  <tabstop>lineEdit_so4</tabstop>
   <tabstop>lineEdit_alk</tabstop>
-  <tabstop>comboBox_alk</tabstop>
   <tabstop>lineEdit_ph</tabstop>
-  <tabstop>plainTextEdit_notes</tabstop>
-  <tabstop>buttonBox</tabstop>
+  <tabstop>textEdit_notes</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>waterEditor</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>waterEditor</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>

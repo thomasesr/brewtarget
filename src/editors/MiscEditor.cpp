@@ -1,0 +1,88 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * editors/MiscEditor.cpp is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Brian Rower <brian.rower@gmail.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *   • Samuel Östling <MrOstling@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "editors/MiscEditor.h"
+
+#include <QtGui>
+#include <QIcon>
+#include <QInputDialog>
+
+#include "BtHorizontalTabs.h"
+#include "config.h"
+#include "database/ObjectStoreWrapper.h"
+#include "measurement/Unit.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_MiscEditor.cpp"
+#endif
+
+MiscEditor::MiscEditor(QWidget * parent, QString const editorName) :
+   QDialog(parent),
+   EditorBase<MiscEditor, Misc, MiscEditorOptions>(editorName) {
+   setupUi(this);
+   this->postSetupUiInit({
+      //
+      // Write inventory late to make sure we've the row in the inventory table (because total inventory amount isn't
+      // really an attribute of the Fermentable).
+      //
+      // Note that we do not need to store the value of comboBox_amountType.  It merely controls the available unit for
+      // lineEdit_inventory
+      //
+      EDITOR_FIELD_NORM(Misc, label_name      , lineEdit_name      , NamedEntity::name         ),
+      EDITOR_FIELD_NORM(Misc, label_totalInventory, display_totalInventory, Ingredient::totalInventory, 1, WhenToWriteField::Never),
+      EDITOR_FIELD_ENUM(Misc, label_type      , comboBox_type      , Misc::type                ),
+      EDITOR_FIELD_NORM(Misc, tab_useFor      , textEdit_useFor    , Misc::useFor              ),
+      EDITOR_FIELD_NORM(Misc, tab_notes       , textEdit_notes     , Misc::notes               ),
+      // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+      EDITOR_FIELD_NORM(Misc, label_producer  , lineEdit_producer  , Misc::producer            ),
+      EDITOR_FIELD_NORM(Misc, label_productId , lineEdit_productId , Misc::productId           ),
+      // Moved from Salt
+      EDITOR_FIELD_ENUM(Misc, label_waterAgentType       , comboBox_waterAgentType       , Misc::waterAgentType       ),
+      EDITOR_FIELD_NORM(Misc, label_waterAgentPercentAcid, lineEdit_waterAgentPercentAcid, Misc::waterAgentPercentAcid, 1),
+   });
+
+   connect(this->comboBox_type          , &QComboBox::currentIndexChanged, this, &MiscEditor::hideOrShowWaterAgentFields);
+   connect(this->comboBox_waterAgentType, &QComboBox::currentIndexChanged, this, &MiscEditor::hideOrShowWaterAgentFields);
+
+   return;
+}
+
+MiscEditor::~MiscEditor() = default;
+
+void MiscEditor::postReadFieldsFromEditItem([[maybe_unused]] std::optional<QString> propName) {
+   this->hideOrShowWaterAgentFields();
+   return;
+}
+
+void MiscEditor::hideOrShowWaterAgentFields() {
+   bool const showWaterAgentFields {
+      this->comboBox_type->getNonOptValue<Misc::Type>() == Misc::Type::WaterAgent
+   };
+   this->groupBox_waterAgentFields->setVisible(showWaterAgentFields);
+   if (showWaterAgentFields) {
+      auto const waterAgentType = this->comboBox_waterAgentType->getOptValue<Misc::WaterAgentType>();
+      bool const percentAcidEnabled {waterAgentType && Misc::canHavePercentAcid(*waterAgentType)};
+      this->label_waterAgentPercentAcid->setEnabled(percentAcidEnabled);
+      this->lineEdit_waterAgentPercentAcid->setEnabled(percentAcidEnabled);
+   }
+}
+
+// Insert the boilerplate stuff that we cannot do in EditorBase
+EDITOR_COMMON_CODE(Misc)

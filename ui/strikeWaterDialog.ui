@@ -30,15 +30,12 @@
        <property name="title">
         <string>Initial Infusion</string>
        </property>
-       <property name="configSection" stdset="0">
-        <string notr="true">strikeWaterCalc</string>
-       </property>
        <layout class="QFormLayout" name="formLayout_2">
         <property name="fieldGrowthPolicy">
          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
-         <widget class="BtTemperatureLabel" name="grainTempLbl">
+         <widget class="SmartLabel" name="grainTempLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -51,20 +48,17 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="BtTemperatureEdit" name="grainTempVal">
+         <widget class="SmartLineEdit" name="grainTempVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">grainTempVal</string>
-          </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="BtTemperatureLabel" name="targetMashLbl">
+         <widget class="SmartLabel" name="targetMashLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -77,20 +71,17 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="BtTemperatureEdit" name="targetMashVal">
+         <widget class="SmartLineEdit" name="targetMashVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">targetMashVal</string>
-          </property>
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="BtMassLabel" name="grainWeightInitLbl">
+         <widget class="SmartLabel" name="grainWeightInitLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -103,7 +94,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="BtMassEdit" name="grainWeightInitVal">
+         <widget class="SmartLineEdit" name="grainWeightInitVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -113,13 +104,10 @@
           <property name="decimals" stdset="0">
            <number>1</number>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">grainWeightInitVal</string>
-          </property>
          </widget>
         </item>
         <item row="3" column="0">
-         <widget class="BtVolumeLabel" name="waterVolumeLbl">
+         <widget class="SmartLabel" name="waterVolumeLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -132,15 +120,12 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="BtVolumeEdit" name="waterVolumeVal">
+         <widget class="SmartLineEdit" name="waterVolumeVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
-          </property>
-          <property name="editField" stdset="0">
-           <string notr="true">waterVolumeVal</string>
           </property>
          </widget>
         </item>
@@ -152,15 +137,12 @@
        <property name="title">
         <string>Mash Infusion</string>
        </property>
-       <property name="configSection" stdset="0">
-        <string notr="true">strikeWaterCalc</string>
-       </property>
        <layout class="QFormLayout" name="formLayout">
         <property name="fieldGrowthPolicy">
          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
-         <widget class="BtVolumeLabel" name="mashVolLbl">
+         <widget class="SmartLabel" name="mashVolLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -173,20 +155,17 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="BtVolumeEdit" name="mashVolVal">
+         <widget class="SmartLineEdit" name="mashVolVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">mashVolVal</string>
-          </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="BtMassLabel" name="grainWeightLbl">
+         <widget class="SmartLabel" name="grainWeightLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -199,20 +178,17 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="BtMassEdit" name="grainWeightVal">
+         <widget class="SmartLineEdit" name="grainWeightVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">grainWeight</string>
-          </property>
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="BtTemperatureLabel" name="actualMashLbl">
+         <widget class="SmartLabel" name="actualMashLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -225,20 +201,17 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="BtTemperatureEdit" name="actualMashVal">
+         <widget class="SmartLineEdit" name="actualMashVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">actualMashVal</string>
-          </property>
          </widget>
         </item>
         <item row="3" column="0">
-         <widget class="BtTemperatureLabel" name="targetMashInfLbl">
+         <widget class="SmartLabel" name="targetMashInfLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -251,20 +224,17 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="BtTemperatureEdit" name="targetMashInfVal">
+         <widget class="SmartLineEdit" name="targetMashInfVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="editField" stdset="0">
-           <string notr="true">targetMashInfVal</string>
-          </property>
          </widget>
         </item>
         <item row="4" column="0">
-         <widget class="BtTemperatureLabel" name="infusionWaterLbl">
+         <widget class="SmartLabel" name="infusionWaterLbl">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -277,15 +247,12 @@
          </widget>
         </item>
         <item row="4" column="1">
-         <widget class="BtTemperatureEdit" name="infusionWaterVal">
+         <widget class="SmartLineEdit" name="infusionWaterVal">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
-          </property>
-          <property name="editField" stdset="0">
-           <string notr="true">infusionWaterVal</string>
           </property>
          </widget>
         </item>
@@ -331,7 +298,7 @@
      <item>
       <layout class="QHBoxLayout" name="initialResult">
        <item>
-        <widget class="BtTemperatureLabel" name="initialResultLbl">
+        <widget class="SmartLabel" name="initialResultLbl">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -356,7 +323,7 @@
         </widget>
        </item>
        <item>
-        <widget class="BtTemperatureEdit" name="initialResultTxt">
+        <widget class="SmartLineEdit" name="initialResultTxt">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -366,9 +333,6 @@
          <property name="readOnly">
           <bool>true</bool>
          </property>
-         <property name="editField" stdset="0">
-          <string notr="true">initialResultTxt</string>
-         </property>
         </widget>
        </item>
       </layout>
@@ -376,7 +340,7 @@
      <item>
       <layout class="QHBoxLayout" name="mashResult">
        <item>
-        <widget class="BtVolumeLabel" name="mashResultLbl">
+        <widget class="SmartLabel" name="mashResultLbl">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -401,7 +365,7 @@
         </widget>
        </item>
        <item>
-        <widget class="BtVolumeEdit" name="mashResultTxt">
+        <widget class="SmartLineEdit" name="mashResultTxt">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -410,9 +374,6 @@
          </property>
          <property name="readOnly">
           <bool>true</bool>
-         </property>
-         <property name="editField" stdset="0">
-          <string notr="true">mashResultTxt</string>
          </property>
         </widget>
        </item>
@@ -437,54 +398,22 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BtVolumeLabel</class>
+   <class>SmartLabel</class>
    <extends>QLabel</extends>
-   <header>BtLabel.h</header>
+   <header>widgets/SmartLabel.h</header>
    <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtVolumeEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtMassEdit</class>
-   <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
-   <slots>
-    <signal>textModified()</signal>
-    <slot>lineChanged()</slot>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtMassLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
+    <signal>changedSystemOfMeasurementOrScale(PreviousScaleInfo)</signal>
     <slot>popContextMenu(QPoint)</slot>
    </slots>
   </customwidget>
   <customwidget>
-   <class>BtTemperatureLabel</class>
-   <extends>QLabel</extends>
-   <header>BtLabel.h</header>
-   <slots>
-    <signal>labelChanged(Unit::unitDisplay,Unit::unitScale)</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>BtTemperatureEdit</class>
+   <class>SmartLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>BtLineEdit.h</header>
+   <header>widgets/SmartLineEdit.h</header>
    <slots>
-    <slot>lineChanged(Unit::unitDisplay,Unit::unitScale)</slot>
+    <signal>textModified()</signal>
+    <slot>lineChanged()</slot>
+    <slot>lineChanged(PreviousScaleInfo)</slot>
    </slots>
   </customwidget>
  </customwidgets>

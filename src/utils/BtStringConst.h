@@ -1,0 +1,184 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * utils/BtStringConst.h is part of Brewtarget, and is copyright the following authors 2021-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#ifndef UTILS_BTSTRINGCONST_H
+#define UTILS_BTSTRINGCONST_H
+#pragma once
+
+class QDebug;
+class QString;
+class QTextStream;
+
+/**
+ * \brief Class for compile-time constant ASCII strings
+ *
+ *        This is a thin wrapper around char const * const that ensures the right thing happens when you do comparisons
+ *        with ==, ie meaning you don't have to remember to use std::strcmp.  This is useful, because comparing two
+ *        compile-time constant strings with == often "works" almost all the time (because two identical strings are
+ *        just pointers to the same memory location) but not always (because one particular compiler will have done its
+ *        optimisation differently and there are actually two different locations in memory holding identical strings).
+ *
+ *        In a Qt application such as ours, you might think we could use QString const instead of char const * const.
+ *        However, this has two disadvantages.  Firstly, we sometimes need the constant as a char const * -- eg to pass
+ *        to Qt property functions such as QObject::property() and QObject::setProperty().  Although char const * into a
+ *        QString is trivial, doing the reverse, ie getting getting char const * out of a QString, is a bit painful
+ *        (because QString is inherently UTF-16 so you end up creating implicit or explicit temporaries to hold char *
+ *        data etc).
+ *
+ *        The second disadvantage of QString for string constants is that QString does clever reference counting
+ *        internally (see https://doc.qt.io/qt-5/implicit-sharing.html).  In theory this is invisible to users of
+ *        QString and never a problem.  In practice, you have to be careful about, say, a struct containing
+ *        QString const &, as you can break the reference-counting logic and get a segfault (at least on Clang on Mac OS
+ *        with Qt 5.9.5).
+ */
+class BtStringConst {
+public:
+   /**
+    * \brief Main constructor.
+    *
+    *        NOTE: Although, elsewhere, we tend to make constructors explicit, we deliberately do not do so here.
+    *              Making the constructor explicit would prevent us from using \c std::initializer_list<BtStringConst>
+    *              to initialise \c QVector<BtStringConst>.
+    *
+    *              The downside of this constructor not being explicit is that it can result in ambiguous function
+    *              overloads.  Eg, if we have:
+    *
+    *                 void somefunc(QString       const & parm);
+    *                 void somefunc(BtStringConst const & parm);
+    *                 ...
+    *                 someFunc("My Text");
+    *
+    *              the call on the last line above is ambiguous because both \c QString and \c BtStringConst have
+    *              constructors that can implicitly convert from `char const *`.  The workaround (which we use in
+    *              \c PersistentSettings) is to change the name of one of the overloaded functions.
+    */
+   constexpr BtStringConst(char const * const cString_) : cString{cString_} { return; }
+   //! Copy constructor OK
+   explicit constexpr BtStringConst(BtStringConst const &) = default;
+   //! Move constructor OK
+   explicit constexpr BtStringConst(BtStringConst &&) noexcept = default;
+   ~BtStringConst() = default;
+
+   //! No assignment operator
+   BtStringConst & operator=(BtStringConst const &) = delete;
+   //! No move assignment
+   BtStringConst & operator=(BtStringConst &&) = delete;
+
+   /**
+    * \brief Compare two \c BtStringConst for equality using \c std::strcmp internally after doing short-cut checks (eg
+    *        are lhs and rhs references to the same object, does either/both sides contain null pointer to its C
+    *        string).
+    *
+    *        Note that, in general, it's best \b not to compare \b pointers to \c BtStringConst because it's not
+    *        possible to provide an overload for operator== that handles such a case (and we might have two instances of
+    *        \c BtStringConst at different memory addresses that are "the same" - depending on how the compiler
+    *        optimises instances of \c BtStringConst defined in header files).
+    */
+   bool operator==(BtStringConst const & rhs) const;
+
+   /**
+    * \brief Comparison for inequality is defined in terms of that for equality.
+    */
+   template<class T>
+   bool operator!=(T const & rhs) const {
+      return !(*this == rhs);
+   }
+
+   /**
+    * \brief Returns \c true if the contained char const * const pointer is null
+    */
+   [[nodiscard]] bool isNull() const;
+
+   /**
+    * \brief Returns a copy of the contained char const * const pointer
+    */
+   char const * operator*() const;
+
+   /**
+    * \brief Generic output streaming for \c BtStringConst, including sensible output if the contained pointer is null
+    *        Note that we can't template operator<< as such a template would match too many things and create errors
+    *        along the lines of "ambiguous overload for ‘operator<<’" elsewhere in the code.  (Specifically, the problem
+    *        is that the compiler sees, say, an int and decides "I could implicitly convert int to to char const * const
+    *        and use that to construct a BtStringConst, which would then match this template, but now I've got multiple
+    *        matches and don't know what to do, so stop compilation with an error.")
+    */
+   template<class OS>
+   OS & writeTo(OS & outputStream) const {
+      if (this->isNull()) {
+         outputStream << "[nullptr]";
+      } else {
+         outputStream << **this;
+      }
+      return outputStream;
+   }
+
+   // NB: This needs to be public for us to be able to use BtStringConst instances as compile-time template parameters
+   char const * const cString;
+};
+
+/**
+ * \brief If you want to initialise a \c BtStringConst with \c nullptr you need to pass
+ *        static_cast<char const * const>(nullptr), which is a bit cumbersome, so instead, this pre-defined constant
+ *        allows you to reference a null-containing \c BtStringConst with BtString::NULL_STR.
+ */
+namespace BtString { extern BtStringConst const NULL_STR; }
+
+/**
+ * \brief If you need to pass empty string (ie "") as a \c BtStringConst parameter, you can use this constant
+ */
+namespace BtString { extern BtStringConst const EMPTY_STR; }
+
+/**
+ * \brief Output \c BtStringConst to \c QTextStream
+ *        See comment above for why this is \b not templated
+ */
+QTextStream & operator<<(QTextStream & outputStream, BtStringConst const & btStringConst);
+
+/**
+ * \brief Output \c BtStringConst to \c QDebug
+ *        See comment above for why this is \b not templated
+ */
+QDebug & operator<<(QDebug & outputStream, BtStringConst const & btStringConst);
+
+/**
+ * \brief Compare char const * const to BtStringConst
+ */
+bool operator==(char const * const lhs, BtStringConst const & rhs);
+
+/**
+ * \brief Compare BtStringConst to char const * const
+ */
+bool operator==(BtStringConst const & lhs, char const * const rhs);
+
+/**
+ * \brief Compare QString to BtStringConst
+ */
+bool operator==(QString const & lhs, BtStringConst const & rhs);
+
+/**
+ * \brief Compare BtStringConst to QString
+ */
+bool operator==(BtStringConst const & lhs, QString const & rhs);
+
+/**
+ * \brief Not equals is implemented in terms of equals, which saves a little boilerplate
+ *        Note that we can't template operator!= as such a template would match too many things and create errors
+ *        along the lines of "ambiguous overload for ‘operator!=’" elsewhere in the code
+ *
+ *        .:TODO:. Look at whether spaceship operator can reduce this boilerplate more, once we're using C++20)
+ */
+bool operator!=(QString const & lhs, BtStringConst const & rhs);
+
+#endif

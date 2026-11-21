@@ -1,96 +1,97 @@
-/*
- * TimerWidget.h is part of Brewtarget, and is Copyright the following
- * authors 2009-2014
- * - Philip Greggory Lee <rocketman768@gmail.com>
- * - Aidan Roberts <aidanr67@gmail.com>
+/*======================================================================================================================
+ * TimerWidget.h is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Aidan Roberts <aidanr67@gmail.com>
+ *   • Eric Tamme <etamme@gmail.com>
+ *   • Julein <j2bweb@gmail.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *   • Théophane Martin <theophane.m@gmail.com>
  *
- * Brewtarget is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
  *
- * Brewtarget is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
 #ifndef TIMERWIDGET_H
 #define TIMERWIDGET_H
-
-class TimerWidget;
+#pragma once
 
 #include <QDialog>
-#include "boiltime.h"
-#include "ui_timerWidget.h"
-#include "TimerMainDialog.h"
-#ifndef NO_QTMULTIMEDIA
-#include <QMediaPlayer>
-#include <QMediaPlaylist>
+#include <QSoundEffect>
 #include <QPalette>
-#endif
+
+#include "ui_timerWidget.h"
+
+#include "BoilTimer.h"
+
+class TimerMainDialog;
 
 /*!
  * \class TimerWidget
- * \author Aidan Roberts
  *
  * \brief Individual boil addition timers
  */
-
-class TimerWidget : public QDialog, public Ui::timerWidget
-{
-    Q_OBJECT
+class TimerWidget : public QDialog, public Ui::timerWidget {
+   Q_OBJECT
 
 public:
-    TimerWidget(TimerMainDialog *parent, BoilTime* bt = 0);
-    ~TimerWidget();
-    void setTime(int t);
-    void setNote(QString n);
-    void setBoil(BoilTime* bt);
-    void reset();
-    int getTime();
-    QString getNote();
-    void cancel();
-    void stopAlarm();
-    void setAlarmLimits(bool l, unsigned int a);
+   TimerWidget(TimerMainDialog *parent, BoilTimer* bt = nullptr);
+   ~TimerWidget();
+   void setTime(int t);
+   void setNote(QString n);
+   void setBoil(BoilTimer* bt);
+   void reset();
+   int getTime();
+   QString getNote() const;
+   void cancel();
+   void stopAlarm();
+   void setAlarmLimits(bool l, unsigned int a);
 
 private slots:
-    void on_setSoundButton_clicked();
-    void on_setTimeBox_valueChanged(int t);
-    void decrementTime();
-    void on_stopButton_clicked();
-    void on_cancelButton_clicked();
+   // The names of most of these slots need to correspond with UI elements in ui/timerWidget.ui
+   void on_setSoundButton_clicked();
+   void on_setTimeBox_valueChanged(int t);
+   void decrementTime();
+   void on_stopButton_clicked();
+   void on_cancelButton_clicked();
+   void on_playButton_clicked();
 
 private:
-    Ui::timerWidget *ui;
-    TimerMainDialog* mainTimer;
-    QPalette paletteOld, paletteNew;
-    bool oldColors;
-    BoilTime* boilTime;
-    bool started; //Used to automatically start timers if main timer is running
-    bool stopped; //Used to flash LCDNumber if time has elapsed
-    unsigned int time; /*This will be stored as time to addition, not addition time
-                         ie. 50min for a 10min addition in a 60min boil - not 10min
-                        */
-    bool limitAlarmRing;
-    unsigned int alarmRingLimit;
-#ifndef NO_QTMULTIMEDIA
-   QMediaPlayer* mediaPlayer;
-   QMediaPlaylist* playlist;
-#endif
+//   Ui::timerWidget *ui;
+   TimerMainDialog* mainTimer;
+   QPalette paletteOld, paletteNew;
+   bool oldColors;
+   BoilTimer* boilTime;
+   bool started; // Used to automatically start timers if main timer is running
+   bool stopped; // Used to flash LCDNumber if time has elapsed
+   /**
+    * This will be stored as time to addition, not addition time ie. 50min for a 10min addition in a 60min boil - not 10min
+    */
+   unsigned int time;
+   bool limitAlarmRing;
+   unsigned int alarmRingLimit;
+   QSoundEffect* soundPlayer;
 
-    void updateTime();
-    void timesUp();
-    QString timeToString(int t);
-    void flash();
-    void startAlarm();
-    void setSound(QString s);
-    void setDefualtAlarmSound();
-    void reject();
+   void updateTime();
+   void timesUp();
+   void flash();
+   void startAlarm(bool loop = true);
+   void setSound(QString s);
+   void setDefualtAlarmSound();
+   void reject();
 
+protected:
+   /**
+    * \brief Overrides \c QWidget::changeEvent so that, on \c QEvent::LanguageChange, we update our text to the new
+    *        language.
+    */
+   void changeEvent(QEvent * event) override;
 };
 
-#endif // TimerWidget_H
+#endif

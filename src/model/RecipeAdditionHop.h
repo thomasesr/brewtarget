@@ -1,0 +1,203 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * model/RecipeAdditionHop.h is part of Brewtarget, and is copyright the following authors 2023-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#ifndef MODEL_RECIPEADDITIONHOP_H
+#define MODEL_RECIPEADDITIONHOP_H
+#pragma once
+
+#include <memory>
+
+#include "model/Hop.h"
+#include "model/IngredientAmount.h"
+#include "model/RecipeAddition.h"
+#include "model/RecipeAdditionBase.h"
+#include "model/Recipe.h"
+
+//======================================================================================================================
+//========================================== Start of property name constants ==========================================
+// See comment in model/NamedEntity.h
+#define AddPropertyName(property) namespace PropertyNames::RecipeAdditionHop { inline BtStringConst const property{#property}; }
+AddPropertyName(hop)
+AddPropertyName(use) // Deprecated - retained only for BeerXML
+AddPropertyName(beerXmlTime_mins) // Only for BeerXML
+
+#undef AddPropertyName
+//=========================================== End of property name constants ===========================================
+//======================================================================================================================
+
+class RecipeAdditionHopTableModel;
+class RecipeAdditionHopSortFilterProxyModel;
+class RecipeAdditionHopItemDelegate;
+
+/**
+ * \brief Represents the addition of a \c Hop to a \c Recipe
+ */
+class RecipeAdditionHop : public RecipeAddition,
+                          public RecipeAdditionBase<RecipeAdditionHop, Hop>,
+                          public IngredientAmount<RecipeAdditionHop, Hop> {
+   Q_OBJECT
+
+   RECIPE_ADDITION_DECL(RecipeAdditionHop, Hop, hop)
+
+   INGREDIENT_AMOUNT_DECL(RecipeAdditionHop, Hop)
+
+public:
+   /**
+    * \brief See comment in model/NamedEntity.h
+    */
+   static QString localisedName();
+   static QString localisedName_hop();
+   static QString localisedName_beerXmlTime_mins();
+   static QString localisedName_use();
+
+   /*!
+    * \brief This is the old (BeerXML) way of specifying the stage at which the hop addition happens.  It is retained
+    *        for BeerXML but otherwise deprecated.  With the arrival of BeerJSON, we now use \c RecipeAddition::Stage
+    *        and \c RecipeAddition::Step to hold this information with more consistency and precision.
+    *
+    *        See also \c RecipeAdditionMisc::Use.
+    */
+   enum class Use {Mash,
+                   First_Wort,
+                   Boil,
+                   Aroma,
+                   Dry_Hop};
+   // This allows us to store the above enum class in a QVariant
+   Q_ENUM(Use)
+
+   /*!
+    * \brief Mapping between \c RecipeAdditionHop::Use and string values suitable for serialisation in DB, BeerXML, etc
+    *        (but \b not used in BeerJSON)
+    *
+    *        This can also be used to obtain the number of values of \c Type, albeit at run-time rather than
+    *        compile-time.  (One day, C++ will have reflection and we won't need to do things this way.)
+    */
+   static EnumStringMapping const useStringMapping;
+
+   /*!
+    * \brief Localised names of \c RecipeAdditionHop::Use values suitable for displaying to the end user
+    */
+   static EnumDisplayNameMapping const useDisplayNames;
+
+   //
+   // These aliases make it easier to template a number of functions that are essentially the same for a number of
+   // different RecipeAddition etc subclasses.
+   //
+   using TableModelClass           = RecipeAdditionHopTableModel;
+   using SortFilterProxyModelClass = RecipeAdditionHopSortFilterProxyModel;
+   using ItemDelegateClass         = RecipeAdditionHopItemDelegate;
+
+   /**
+    * \brief Mapping of names to types for the Qt properties of this class.  See \c NamedEntity::typeLookup for more
+    *        info.
+    */
+   static TypeLookup const typeLookup;
+   TYPE_LOOKUP_GETTER
+
+   explicit RecipeAdditionHop(QString name = "", int const recipeId = -1, int const ingredientId = -1);
+   explicit RecipeAdditionHop(NamedParameterBundle const & namedParameterBundle);
+   RecipeAdditionHop(RecipeAdditionHop const & other);
+
+   ~RecipeAdditionHop() override;
+
+   //=================================================== PROPERTIES ====================================================
+   /**
+    * \brief The \c Use.  This is moved from \c Hop with the introduction of BeerJSON.  It is required for BeerXML, but
+    *        \b deprecated for other use.
+    */
+   Q_PROPERTY(Use   use   READ use   WRITE setUse STORED false)
+   /**
+    * \brief The BeerXML TIME field, whose meaning depends on the BeerXML USE field:
+    *          - For "First Wort", it is the boil time, as a first wort hop stays in for the whole boil.  We don't store
+    *            it, because, in our model (as in dotBeer), a first wort addition is made at the start of the pre-boil
+    *            step, so has no \c addAtTime_mins.
+    *          - For "Aroma", it is the steeping time, which, in our model, is \c duration_mins.
+    *          - For "Dry Hop", it is how long the hops stay in, which is also \c duration_mins.
+    *          - Otherwise (ie "Mash" or "Boil"), it is \c addAtTime_mins.
+    *
+    *        This property exists only so that the BeerXML TIME field can be mapped correctly in both directions.
+    *        Nothing else should use it.  (In particular, BeerJSON and dotBeer map their time and duration fields
+    *        directly to \c addAtTime_mins and \c duration_mins.)
+    *
+    *        When reading BeerXML, the TIME value is interpreted in the \c NamedParameterBundle constructor (because we
+    *        need USE to know what it means).
+    */
+   Q_PROPERTY(std::optional<double> beerXmlTime_mins READ beerXmlTime_mins WRITE setBeerXmlTime_mins STORED false)
+   //! See \c RecipeAdditionBase for getter and setter
+   Q_PROPERTY(Hop * hop   READ hop   WRITE setHop             )
+
+   // See model/IngredientAmount.h
+   Q_PROPERTY(int                           ingredientId READ ingredientId WRITE setIngredientId)
+   Q_PROPERTY(Measurement::Amount           amount       READ amount       WRITE setAmount      )
+   Q_PROPERTY(double                        quantity     READ quantity     WRITE setQuantity    )
+   Q_PROPERTY(Measurement::Unit const *     unit         READ unit         WRITE setUnit        )
+   Q_PROPERTY(Measurement::PhysicalQuantity measure      READ measure      WRITE setMeasure     )
+   Q_PROPERTY(bool                          isWeight     READ isWeight     WRITE setIsWeight    )
+
+   //============================================ "GETTER" MEMBER FUNCTIONS ============================================
+   // Ideally this too would be marked [[deprecated]], but we do need to refer to it in RecipeAdditionHop::typeLookup
+   Use use() const;
+   std::optional<double> beerXmlTime_mins() const;
+
+   //============================================ "SETTER" MEMBER FUNCTIONS ============================================
+   [[deprecated]] void setUse(Use const val);
+   void setBeerXmlTime_mins(std::optional<double> const val);
+
+   /**
+    * \brief With BeerJSON changes, there is no longer an explicit flag for a first wort hop addition.  You have to
+    *        jump through a couple of hoops to work it out, which is what this function does for you.
+    *
+    *        Whether an addition is first wort depends on the steps of the boil it is in, so the caller supplies the
+    *        \c Boil.  In particular, code in \c Recipe should always use this version, passing its own boil, rather than
+    *        have us look up our \c Recipe by ID, because the \c Recipe may not yet have an ID.  (Eg, when a \c Recipe
+    *        is copied, the copy's additions have recipe ID -1 until the copy is inserted in the database, but the copy
+    *        constructor still needs to do calculations.)
+    *
+    * \param boil The boil of the \c Recipe this addition belongs to.  Can be \c nullptr (in which case the addition
+    *             is not first wort).
+    */
+   bool isFirstWort(Boil const * boil) const;
+
+   /**
+    * \brief Convenience version of the above that looks up our \c Recipe (and thus \c Boil) by ID.  Returns \c false
+    *        if we do not (yet) have a \c Recipe.  Should not be used from within \c Recipe.
+    */
+   bool isFirstWort() const;
+
+   /**
+    * \brief Similarly, what used to be Hop::Use::Aroma (ie hops added at the end of the boil) is now something we need
+    *        to work out.  See comments above for \c isFirstWort for why there are two versions.
+    */
+   bool isAroma(Boil const * boil) const;
+   bool isAroma() const;
+
+   virtual NamedEntity * ensureExists(BtStringConst const & property) override;
+
+private:
+   /**
+    * \brief The \c Boil of the \c Recipe we belong to, or \c nullptr if we do not (yet) have a \c Recipe or it has no
+    *        \c Boil.
+    */
+   std::shared_ptr<Boil> ownBoil() const;
+
+protected:
+   virtual bool compareWith(NamedEntity const & other, QList<BtStringConst const *> * propertiesThatDiffer) const override;
+   virtual ObjectStore & getObjectStoreTypedInstance() const override;
+
+};
+
+BT_DECLARE_METATYPES(RecipeAdditionHop)
+
+#endif

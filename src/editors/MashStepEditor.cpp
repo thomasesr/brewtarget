@@ -1,0 +1,126 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * editors/MashStepEditor.cpp is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Brian Rower <brian.rower@gmail.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "editors/MashStepEditor.h"
+
+#include "MainWindow.h"
+#include "MashAutoAdjuster.h"
+#include "measurement/Unit.h"
+#include "model/Mash.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_MashStepEditor.cpp"
+#endif
+
+MashStepEditor::MashStepEditor(QWidget* parent, QString const editorName) :
+   QDialog{parent},
+   EnumeratedItemEditorBase<MashStepEditor, MashStep>{},
+   EditorBase<MashStepEditor, MashStep, MashStepEditorOptions>{editorName} {
+   this->setupUi(this);
+   this->postSetupUiInit({
+      //
+      // As explained in model/MashStep.h, there is only one amount for a MashStep, and it is accessed via
+      // MashStep::amount_l.  The decoctionAmount_l and infuseAmount_l properties are only used for reading and writing
+      // BeerXML.
+      //
+      // We retain infuseTemp_c for now, even though it is not part of BeerJSON.  TBD whether it is needed longer-term.
+      //
+      EDITOR_FIELD_NORM(MashStep, label_name        , lineEdit_name        , NamedEntity::name                  ),
+      EDITOR_FIELD_NORM(MashStep, label_stepNum     , label_stepNum_value  , EnumeratedBase::sequenceNumber     ),
+      EDITOR_FIELD_NORM(MashStep, label_description , textEdit_description , Step::description                  ),
+      EDITOR_FIELD_NORM(MashStep, label_amount      , lineEdit_amount      , MashStep::amount_l                 ),
+      EDITOR_FIELD_NORM(MashStep, label_stepTemp    , lineEdit_stepTemp    , StepBase::startTemp_c           , 1),
+      EDITOR_FIELD_NORM(MashStep, label_stepTime    , lineEdit_stepTime    , StepBase::stepTime_mins         , 0),
+      EDITOR_FIELD_NORM(MashStep, label_rampTime    , lineEdit_rampTime    , StepBase::rampTime_mins         , 0),
+      EDITOR_FIELD_NORM(MashStep, label_endTemp     , lineEdit_endTemp     , Step::endTemp_c                 , 1),
+      EDITOR_FIELD_NORM(MashStep, label_infuseTemp  , lineEdit_infuseTemp  , MashStep::infuseTemp_c          , 1),
+      EDITOR_FIELD_NORM(MashStep, label_startAcidity, lineEdit_startAcidity, Step::startAcidity_pH           , 1),
+      EDITOR_FIELD_NORM(MashStep, label_endAcidity  , lineEdit_endAcidity  , Step::endAcidity_pH             , 1),
+      EDITOR_FIELD_NORM(MashStep, label_thickness   , lineEdit_thickness   , MashStep::liquorToGristRatio_lKg, 1),
+      EDITOR_FIELD_ENUM(MashStep, label_mashStepType, comboBox_mashStepType, MashStep::type                     ),
+      // These are only used when calculating the mash in MashEditor (see MashAutoAdjuster)
+      EDITOR_FIELD_NORM(MashStep, label_amountFixed       , checkBox_amountFixed    , MashStep::amountFixed    ),
+      EDITOR_FIELD_NORM(MashStep, label_infuseTempFixed   , checkBox_infuseTempFixed, MashStep::infuseTempFixed),
+   });
+
+   // This is extra for this editor
+   this->connect(this->comboBox_mashStepType, &QComboBox::currentTextChanged, this, &MashStepEditor::grayOutStuff);
+   // NB: QLineEdit::textEdited is only emitted when the user changes the text, not when we set it
+   this->connect(this->lineEdit_amount    , &QLineEdit::textEdited, this, &MashStepEditor::amountEdited    );
+   this->connect(this->lineEdit_infuseTemp, &QLineEdit::textEdited, this, &MashStepEditor::infuseTempEdited);
+   return;
+}
+
+MashStepEditor::~MashStepEditor() = default;
+
+void MashStepEditor::grayOutStuff([[maybe_unused]] QString const & text) {
+   auto const msType = this->comboBox_mashStepType->getNonOptValue<MashStep::Type>();
+   switch (msType) {
+      case MashStep::Type::Infusion:
+      case MashStep::Type::FlySparge  :
+      case MashStep::Type::BatchSparge:
+      case MashStep::Type::SouringMash:
+      case MashStep::Type::SouringWort:
+         lineEdit_infuseTemp->setEnabled(true);
+         checkBox_infuseTempFixed->setEnabled(true);
+         label_infuseTempFixed->setEnabled(true);
+         break;
+
+      case MashStep::Type::Decoction:
+      case MashStep::Type::Temperature:
+         lineEdit_infuseTemp->setEnabled(false);
+         checkBox_infuseTempFixed->setEnabled(false);
+         label_infuseTempFixed->setEnabled(false);
+         break;
+
+      // No default case as we want the compiler to warn us if we missed one
+   }
+   return;
+}
+
+bool MashStepEditor::mashIsKeptInSync() const {
+   // An existing step knows which mash it belongs to.  For a new one, we have been told which mash it will be added to.
+   std::shared_ptr<Mash> mash = nullptr;
+   if (this->m_editItem && this->m_editItem->ownerId() > 0) {
+      mash = this->m_editItem->owner();
+   }
+   if (!mash) {
+      mash = this->m_owner;
+   }
+   return mash && mash->keptInSync();
+}
+
+void MashStepEditor::amountEdited() {
+   if (this->mashIsKeptInSync() &&
+       MashAutoAdjuster::usesAmount(this->comboBox_mashStepType->getNonOptValue<MashStep::Type>())) {
+      this->checkBox_amountFixed->setChecked(true);
+   }
+   return;
+}
+
+void MashStepEditor::infuseTempEdited() {
+   if (this->mashIsKeptInSync() &&
+       MashAutoAdjuster::usesInfuseTemp(this->comboBox_mashStepType->getNonOptValue<MashStep::Type>())) {
+      this->checkBox_infuseTempFixed->setChecked(true);
+   }
+   return;
+}
+
+// Insert the boiler-plate stuff that we cannot do in EditorBase
+EDITOR_COMMON_CODE(MashStep)

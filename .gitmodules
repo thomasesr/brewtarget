@@ -1,0 +1,6 @@
+[submodule "third-party/libbacktrace"]
+        path = third-party/libbacktrace
+        url = https://github.com/ianlancetaylor/libbacktrace
+[submodule "third-party/deps/blaze"]
+        path = third-party/blaze
+        url = https://github.com/sourcemeta/blaze.git

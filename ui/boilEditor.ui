@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="6.0">
+ <class>boilEditor</class>
+ <widget class="QDialog" name="boilEditor">
+  <property name="windowTitle">
+   <string>Boil Editor</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_9">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <property name="spacing">
+      <number>2</number>
+     </property>
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_name">
+         <property name="toolTip">
+          <string>Required</string>
+         </property>
+         <property name="text">
+          <string>Name</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" colspan="3">
+        <widget class="QLineEdit" name="lineEdit_name">
+         <property name="toolTip">
+          <string>Name</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="1" column="2" colspan="3">
+        <widget class="LockAndShareBar" name="lockAndShareBar"/>
+       </item>
+
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_description">
+         <property name="toolTip">
+          <string>Required</string>
+         </property>
+         <property name="text">
+          <string>Description</string>
+         </property>
+         <property name="buddy">
+          <cstring>textEdit_description</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2" colspan="3">
+        <widget class="QTextEdit" name="textEdit_description">
+         <property name="toolTip">
+          <string>Description</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="4" column="1">
+        <widget class="SmartLabel" name="label_preBoilSize">
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
+         <property name="text">
+          <string>Pre-Boil Size</string>
+         </property>
+         <property name="buddy">
+          <cstring>lineEdit_preBoilSize</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2" colspan="3">
+        <widget class="SmartLineEdit" name="lineEdit_preBoilSize">
+         <property name="toolTip">
+          <string>Pre-Boil Size</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="6" column="1" colspan="4">
+        <widget class="BoilStepsWidget" name="enumeratedItemsWidget">
+        </widget>
+       </item>
+
+       <item row="8" column="1">
+        <widget class="QLabel" name="label_notes">
+         <property name="text">
+          <string>Notes</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="2" colspan="3">
+        <widget class="QTextEdit" name="textEdit_notes"/>
+       </item>
+
+       <item row="13" column="0">
+        <widget class="InfoButton" name="infoButton_id"></widget>
+       </item>
+       <item row="13" column="1">
+        <widget class="QLabel" name="label_id">
+         <property name="text">
+          <string>ID in database</string>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="2">
+        <widget class="QLabel" name="label_id_value">
+        </widget>
+       </item>
+
+       <item row="13" column="4" colspan="1">
+        <widget class="QLabel" name="label_numRecipesUsing">
+        </widget>
+       </item>
+
+       <item row="14" column="1" colspan="4">
+        <widget class="InfoText" name="infoText_id">
+         <property name="buddy">
+          <cstring>infoButton_id</cstring>
+         </property>
+         <property name="text">
+          <string>You can normally ignore this, but it's sometimes useful for debugging.</string>
+         </property>
+        </widget>
+       </item>
+
+       <item row="16" column="4">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="pushButton_new">
+           <property name="toolTip">
+            <string>New boil</string>
+           </property>
+           <property name="text">
+            <string>New</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/smallPlus.svg</normaloff>:/images/smallPlus.svg</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_save">
+           <property name="toolTip">
+            <string>Save and close</string>
+           </property>
+           <property name="text">
+            <string>Save</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/filesave.svg</normaloff>:/images/filesave.svg</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_cancel">
+           <property name="toolTip">
+            <string>Discard and close</string>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/images/exit.svg</normaloff>:/images/exit.svg</iconset>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>InfoButton</class>
+   <extends>QPushButton</extends>
+   <header>widgets/InfoButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>InfoText</class>
+   <extends>QLabel</extends>
+   <header>widgets/InfoText.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmartLabel</class>
+   <extends>QLabel</extends>
+   <header>widgets/SmartLabel.h</header>
+   <slots>
+    <signal>changedSystemOfMeasurementOrScale(PreviousScaleInfo)</signal>
+    <slot>popContextMenu(QPoint)</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>SmartLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>widgets/SmartLineEdit.h</header>
+   <slots>
+    <signal>textModified()</signal>
+    <slot>lineChanged()</slot>
+    <slot>lineChanged(PreviousScaleInfo)</slot>
+   </slots>
+  </customwidget>
+
+  <customwidget>
+   <class>BoilStepsWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/EnumeratedItemsWidget.h</header>
+  </customwidget>
+
+  <customwidget>
+   <class>LockAndShareBar</class>
+   <extends>QFrame</extends>
+   <header>widgets/LockAndShareBar.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+</ui>

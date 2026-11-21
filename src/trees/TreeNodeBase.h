@@ -1,0 +1,640 @@
+/*======================================================================================================================
+ * trees/TreeNodeBase.h is part of Brewtarget, and is copyright the following authors 2024-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
+#ifndef TREES_TREENODEBASE_H
+#define TREES_TREENODEBASE_H
+#pragma once
+
+#include <qglobal.h> // For Q_ASSERT and Q_UNREACHABLE
+
+#include "trees/TreeNode.h"
+#include "trees/TreeNodeTraits.h"
+#include "utils/ColumnInfo.h"
+#include "utils/ColumnOwnerTraits.h"
+#include "utils/CuriouslyRecurringTemplateBase.h"
+#include "utils/PropertyHelper.h"
+
+/**
+ * \brief \c TreeNodeBase provides Curiously Recurring Template Base for NewTreeNode subclasses
+ *
+ *        NOTE: This is still mostly an idea at the moment - would require a rework of TreeView and TreeModel to be
+ *              useful.  For now, we just use ColumnIndex and Info.
+ *
+ *        Class structure:
+ *        ----------------
+ *                                           TreeNode
+ *                                              |
+ *                                         TreeNodeBase
+ *                                          /        \ .
+ *                             TreeFolderNode<NE>    TreeItemNode<NE>
+ *
+ *        Note that we have a simpler structure here than in a lot of places where we use CRTP.  This is because these
+ *        classes do not need to inherit from QObject, so we don't need to jump around to ensure the Q_OBJECT pseudo
+ *        macro works etc.
+ *
+ *        Tree structure:
+ *        ---------------
+ *
+ *           TreeModel<Recipe>
+ *             │
+ *           TreeRootNode<Recipe>
+ *             ├── TreeFolderNode<Recipe>
+ *             │   ├── TreeItemNode<Recipe>
+ *             │   │   └── TreeItemNode<BrewLog>
+ *             │   └── TreeItemNode<Recipe>
+ *             ├── TreeFolderNode<Recipe>
+ *             │   └── TreeItemNode<Recipe>
+ *             ├── TreeItemNode<Recipe>
+ *             └── TreeItemNode<Recipe>
+ *
+ *        A folder node in a Hop tree can contain only hop nodes or other Hop Folder nodes.  A Hop node cannot contain
+ *        other nodes.
+ *
+ *        In a Recipe tree it's a bit more complicated:
+ *           - A Folder node can contain only Recipe nodes or other Recipe Folder nodes
+ *           - A Recipe node can contain only BrewLog nodes or Recipe nodes (when using ancestor versioning)
+ *           - A BrewLog node cannot contain other nodes
+ *
+ *        So, in general, depending on the type of node, it can contain:
+ *           - No other nodes
+ *           - Nodes of one other type
+ *           - Nodes of its own type and nodes of one other type
+ *
+ *        This means, depending on the type of node, its parent can be:
+ *           - A node of its own type
+ *           - A node of one other type
+ *           - Either of the above
+ *
+ *        And, similarly, in a given tree, there are either two or three types of node:
+ *           - Folders
+ *           - Primary item - eg Recipe - which is also the type of the tree
+ *           - Secondary item - eg BrewLog in the Recipe tree, but not present in the Hop tree
+ *        This is a helpful classification for code that is traversing or manipulating the tree, so we have an enum for
+ *        it: NodeClassifier
+ *
+ */
+template<class Derived> class TreeNodeBasePhantom;
+template<class Derived, class NE, class TreeType>
+class TreeNodeBase : public TreeNode, public CuriouslyRecurringTemplateBase<TreeNodeBasePhantom, Derived> {
+public:
+   using ColumnIndex        = typename TreeNodeTraits<NE, TreeType>::ColumnIndex;
+   static constexpr TreeNodeClassifier NodeClassifier  = TreeNodeTraits<NE, TreeType>::NodeClassifier;
+   using ParentPtrTypes     = typename TreeNodeTraits<NE, TreeType>::ParentPtrTypes;
+   using ChildPtrTypes      = typename TreeNodeTraits<NE, TreeType>::ChildPtrTypes;
+
+   explicit TreeNodeBase(TreeModel & model,
+                         ParentPtrTypes parent = {},
+                         std::shared_ptr<NE> underlyingItem = nullptr) :
+      TreeNode{model},
+      m_parent{parent},
+      m_underlyingItem{underlyingItem} {
+      return;
+   }
+   ~TreeNodeBase() override = default;
+
+   [[nodiscard]] TreeNodeClassifier classifier() const override {
+      return NodeClassifier;
+   }
+
+   /**
+    * \brief Similar to \c TreeModelBase::get_ColumnInfo
+    */
+   ColumnInfo const & get_ColumnInfo(ColumnIndex const columnIndex) const {
+      return ColumnOwnerTraits<Derived>::getColumnInfo(static_cast<size_t>(columnIndex));
+   }
+
+   QVariant readDataFromModel(ColumnInfo const & columnInfo, int const role) const {
+      TypeInfo const & typeInfo = columnInfo.typeInfo;
+      if (role == Qt::TextAlignmentRole) {
+         return PropertyHelper::getAlignment(typeInfo);
+      }
+
+      // There's no data for the root node
+      if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+         return {};
+      } else {
+         QVariant const modelData = columnInfo.propertyPath.getValue(*this->m_underlyingItem);
+         if (!modelData.isValid()) {
+            //
+            // You might think it's a programming error if we couldn't read a property modelData, but there are
+            // circumstances where this is expected -- eg reading "style/name" from a Recipe that does not have style set.
+            //
+            // Therefore normally keep this warning commented out, so we don't spam the logs when we have a bunch of
+            // recipes that, eg, don't yet have a style set.
+            //
+            //         qWarning() <<
+            //            Q_FUNC_INFO <<
+            //               "Unable to read" << this->derived() << "property" << columnInfo.propertyPath << "(Got" << modelData <<
+            //               ")";
+            return QVariant{};
+         }
+
+         // Uncomment this log statement if asserts in PropertyHelper::readDataFromPropertyValue are firing
+         //      qDebug() <<
+         //         Q_FUNC_INFO << columnInfo.columnFqName << ", propertyPath:" << columnInfo.propertyPath << "TypeInfo:" <<
+         //         typeInfo << ", modelData:" << modelData;
+
+         return PropertyHelper::readDataFromPropertyValue(modelData,
+                                                          typeInfo,
+                                                          role,
+                                                          columnInfo.extras.has_value(),
+                                                          columnInfo.getForcedSystemOfMeasurement(),
+                                                          columnInfo.getForcedRelativeScale());
+      }
+
+   }
+
+   /**
+    * \brief Similar to \c TreeModelBase::readDataFromModel
+    */
+   QVariant readDataFromModel(ColumnIndex const columnIndex, int const role) const {
+
+      ColumnInfo const & columnInfo = this->get_ColumnInfo(columnIndex);
+      return this->readDataFromModel(columnInfo, role);
+   }
+
+   /**
+    *
+    */
+   bool columnIsLessThan(Derived const & other, ColumnIndex const columnIndex) const {
+      ColumnInfo const & columnInfo = this->get_ColumnInfo(columnIndex);
+      QVariant  leftItem = this->readDataFromModel(columnInfo, Qt::UserRole);
+      QVariant rightItem = other.readDataFromModel(columnInfo, Qt::UserRole);
+
+      return PropertyHelper::isLessThan(leftItem, rightItem, columnInfo.typeInfo);
+   }
+
+   virtual QVariant data(int const column, int const role) const override {
+      int const numColumns = static_cast<int>(ColumnOwnerTraits<Derived>::numColumns());
+      if (column < 0 || column >= numColumns) {
+         return QVariant{};
+      }
+
+      // Check above means this cast is valid
+      auto const columnIndex = static_cast<ColumnIndex>(column);
+      ColumnInfo const & columnInfo = this->get_ColumnInfo(columnIndex);
+
+      switch (role) {
+         case Qt::ToolTipRole:
+            if (this->m_underlyingItem) {
+               if constexpr (NodeClassifier == TreeNodeClassifier::Folder) {
+                  // Tooltip for folders is just the name of the tree - eg "Recipes" for the Recipe tree
+                  // We only ever care about this for primary items where, by definition, the tree type is the same as
+                  // the primary item type.
+                  return QVariant(TreeNodeTraits<TreeType, TreeType>::getRootName());
+               } else if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+                  // This shouldn't be possible, but I think we are OK to ignore it if it happens
+                  qWarning() << Q_FUNC_INFO << "Root!";
+                  return {};
+               } else {
+                  return this->derived().getToolTip();
+               }
+            }
+            break;
+
+         case Qt::DisplayRole:
+            if (this->m_underlyingItem) {
+               return this->readDataFromModel(columnInfo, role);
+            }
+            // Special handling for the root node
+            if (!this->rawParent()) {
+               // For the root node, we display the name of the tree in the first column
+               if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+                  if (columnIndex == ColumnIndex::TreeName) {
+                     return QVariant(TreeNodeTraits<TreeType, TreeType>::getRootName());
+                  }
+               }
+               return QVariant{};
+            }
+            break;
+
+         case Qt::DecorationRole:
+            if (column == 0 && NodeClassifier == TreeNodeClassifier::Folder) {
+               return QIcon(":images/folder.png");
+            }
+            break;
+
+         case Qt::TextAlignmentRole:
+            if (this->m_underlyingItem) {
+               return this->readDataFromModel(columnInfo, role);
+            }
+            break;
+
+         default:
+            break;
+      }
+
+      return QVariant();
+   }
+
+   static QVariant header(size_t const section) {
+      auto const numColumns = static_cast<size_t>(ColumnOwnerTraits<Derived>::numColumns());
+      if (section >= numColumns) {
+         return QVariant();
+      }
+      return ColumnOwnerTraits<Derived>::getColumnLabel(section);
+   }
+
+   /**
+    * \brief returns item's parent
+    */
+   ParentPtrTypes parent() const {
+      return this->m_parent;
+   }
+
+   virtual TreeNode * rawParent() const override {
+      // Every substantive member of ParentPtrTypes is always a raw pointer to some subclass of TreeNode, so this
+      // generic lambda suffices to obtain whatever member the variant holds.
+      auto theParent{this->parent()};
+      return std::visit([](auto&& arg) { return static_cast<TreeNode *>(arg); }, theParent);
+   }
+
+   std::shared_ptr<NE> underlyingItem() const {
+      return this->m_underlyingItem;
+   }
+
+   virtual NamedEntity * rawUnderlyingItem() const override {
+      if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+         return nullptr;
+      } else {
+         return this->m_underlyingItem.get();
+      }
+   }
+
+   void setUnderlyingItem(std::shared_ptr<NE> val) {
+      this->m_underlyingItem = val;
+      return;
+   }
+
+   /**
+    * \brief inserts a new item at \c position.  Note that it is the caller's responsibility to call
+    *        \c QAbstractItemModel::beginInsertRows etc (via \c TreeModelChangeGuard).
+    *
+    *        TBD: We could probably simplify the code in a number of places by always adding a new child at the end of
+    *             our list (this->m_children).  The order of child nodes in the TreeModel classes is somewhat irrelevant
+    *             because they get sorted by the TreeSortFilterProxyModel classes.
+    *
+    * \return \c true if succeeded, \c false otherwise
+    */
+   bool insertChild(std::size_t position, ChildPtrTypes child) requires IsSubstantiveVariant<ChildPtrTypes> {
+      if (position > this->m_children.size()) {
+         // This is probably a coding error, but we can probably recover by just not doing the insert
+         qWarning() << Q_FUNC_INFO << "Position" << position << "outside range (0, " << this->m_children.size() << ")";
+         return false;
+      }
+
+      this->m_children.insert(this->m_children.begin() + position, child);
+
+      return true;
+   }
+
+   /**
+    * \brief Removes \c count items starting at \c position.  NB: This just removes the nodes from the tree structure;
+    *        it does not delete the contents of the nodes (m_underlyingItem).  Similarly, it is not recursive, so it is
+    *        the caller's responsibility to do any processing of children's children etc.
+    *
+    *        Note that it is the caller's responsibility to call \c QAbstractItemModel::beginRemoveRows etc (via
+    *        \c TreeModelChangeGuard).
+    *
+    * \return \c true if succeeded, \c false otherwise
+    */
+   virtual bool removeChildren(int position, int count) override {
+      if constexpr (IsSubstantiveVariant<ChildPtrTypes>) {
+         if (position < 0  || position > static_cast<int>(this->m_children.size())) {
+            // This is probably a coding error, but we can probably recover by just not doing the remove
+            qWarning() <<
+               Q_FUNC_INFO << "Position" << position << "outside range (0, " << this->m_children.size() << ")";
+            return false;
+         }
+
+         // The range for erase is inclusive of the first element, and exclusive of the last, so the second parameter is
+         // one beyond where we want to erase (and can legitimately be cend()).
+         this->m_children.erase(this->m_children.cbegin() + position, this->m_children.cbegin() + position + count);
+         return true;
+      }
+
+      // Shouldn't ever get here
+      qWarning() << Q_FUNC_INFO << "This function should not be called on nodes that cannot have children!";
+      return false;
+   }
+
+   //! \brief returns the number of children of the folder (or recipe)
+   virtual int childCount() const override {
+      if constexpr (IsSubstantiveVariant<ChildPtrTypes>) {
+         return static_cast<int>(this->m_children.size());
+      } else {
+         return 0;
+      }
+   }
+
+   /**
+    * \brief Return specified child.
+    *
+    *        TODO: One day it would be neat to have an iterator for looping over children etc.
+    */
+   ChildPtrTypes child(int const number) const {
+      if constexpr (IsSubstantiveVariant<ChildPtrTypes>) {
+         Q_ASSERT(number < static_cast<int>(this->m_children.size()));
+         Q_ASSERT(number >= 0);
+         return this->m_children.at(static_cast<unsigned int>(number));
+      } else {
+         // For the moment, it is simpler to allow calls to this function even when there can be no children.  We just
+         // always return the null variant in such cases.
+         return std::variant<std::monostate>{};
+      }
+   }
+
+   virtual TreeNode * rawChild(int const number) const override {
+      // If this node type does not support children, there are never any to return.  (It is in fact unlikely we'd get
+      // called in such circumstances, but we can't have a requires clause on a virtual function, so it's easier just to
+      // cover the case here.)
+      if constexpr (IsNullVariant<ChildPtrTypes>) {
+         return nullptr;
+      } else {
+         // Every substantive member of ChildPtrTypes is always a shared pointer to some subclass of TreeNode, so this
+         // generic lambda suffices to give us a raw pointer that can be cast to TreeNode *.
+         auto theChild{this->child(number)};
+         return std::visit([](auto&& arg) { return static_cast<TreeNode *>(arg.get()); }, theChild);
+      }
+   }
+
+   virtual QList<TreeNode *> rawChildren() const override {
+      QList<TreeNode *> rawChildren;
+      if constexpr (!IsNullVariant<ChildPtrTypes>) {
+         for (ChildPtrTypes const & childPtr : this->m_children) {
+            rawChildren.append(std::visit([](auto&& arg) { return static_cast<TreeNode *>(arg.get()); }, childPtr));
+         }
+      }
+      return rawChildren;
+   }
+
+   /**
+    * \brief Return a raw pointer to specified child, suitable for call to \c QAbstractItemModel::createIndex
+    */
+   void const * voidChild(std::size_t number) const requires IsSubstantiveVariant<ChildPtrTypes> {
+      if (number < this->m_children.size()) {
+         auto const & theChild = this->m_children.at(number);
+         return std::visit([](auto visited){ return static_cast<void *>(visited.get()); }, theChild);
+      }
+      return nullptr;
+   }
+
+   /**
+    * \brief If the supplied parameter is a pointer to one of the children of this node, then return the number of
+    *        that child in our list.  Otherwise, return -1.
+    */
+   virtual int numberOfChild(TreeNode const * childToCheck) const override {
+      // Comment from rawChild above applies equally here
+      if constexpr (IsNullVariant<ChildPtrTypes>) {
+         qCritical() << Q_FUNC_INFO << "TreeNode::numberOfChild() called on node type that has no children!";
+         Q_ASSERT(false);
+      } else {
+         for (int childNumber = 0; childNumber < static_cast<int>(this->m_children.size()); ++childNumber) {
+            auto const & currentChild = this->m_children.at(childNumber);
+            if (std::visit([&](auto visited){ return (visited.get() == childToCheck); }, currentChild)) {
+               return childNumber;
+            }
+         }
+         // Usually it's a coding error if we get here
+         qCritical() <<
+            Q_FUNC_INFO << "Unable to find child" << childToCheck << "of" << this->derived() << "amongst" <<
+            this->m_children.size();
+         qCritical().noquote() << Q_FUNC_INFO << Logging::getStackTrace();
+      }
+
+      return -1;
+   }
+
+   /**
+    * \brief returns the index of the item in its parent's list.  This is needed for constructing \c QModelIndex
+    *        objects.
+    */
+   [[nodiscard]] int childNumber() const override {
+      TreeNode const * rawParent = this->rawParent();
+      if (!rawParent) {
+         return 0;
+      }
+
+      return rawParent->numberOfChild(this);
+   }
+
+   [[nodiscard]] QString className() const override {
+      if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+         // RootMarkerFor doesn't have staticMetaObject
+         return NE::className();
+      } else {
+         return NE::staticMetaObject.className();
+      }
+   }
+
+   [[nodiscard]] QString localisedClassName() const override {
+      return NE::localisedName();
+   }
+
+   [[nodiscard]] QString name() const override {
+      if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+         // Shouldn't normally be called for root node, as it doesn't have a real underlying item
+         return "-";
+      } else {
+         if (!this->m_underlyingItem) {
+            return QObject::tr("None!");
+         }
+         return this->m_underlyingItem->name();
+      }
+   }
+
+   [[nodiscard]] int underlyingItemKey() const override {
+      if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+         // Shouldn't normally be called for root node, as it doesn't have a real underlying item
+         return -1;
+      } else {
+         if (!this->m_underlyingItem) {
+            //
+            // I don't think we ever have things in the tree that aren't in the DB (ie with ID -1), but we might as well
+            // return a different negative number for "null pointer" (which should also be rare-to-never).
+            //
+            return -2;
+         }
+         return this->m_underlyingItem->key();
+      }
+   }
+
+   [[nodiscard]] static constexpr QString dragAndDropMimeType() {
+      if constexpr (NodeClassifier == TreeNodeClassifier::Root) {
+         //
+         // Root node cannot be dragged or dropped
+         //
+         return "NotImplemented";
+      } else {
+         return TreeNodeTraits<NE, TreeType>::getDragNDropMimeType();
+      }
+   }
+
+   //================================================ Member variables =================================================
+   ParentPtrTypes m_parent;
+   //
+   // Although it's easy to have conditional member functions (ie ones that only exist when certain template constraints
+   // are satisfied), there isn't (yet) a straightforward way to do the equivalent for member variables.  About as close
+   // as we can get is using [[no_unique_address]] here, which allows the compiler to optimise away the variable storage
+   // when it's an empty class type
+   //
+   [[no_unique_address]] std::conditional_t<IsSubstantiveVariant<ChildPtrTypes>,
+                                            std::vector<ChildPtrTypes>,
+                                            Empty>  m_children;
+   //
+   // The underlying item stored in this tree node -- eg the Recipe object stored in a particular TreeItemNode<Recipe>
+   // object.
+   //
+   std::shared_ptr<NE> m_underlyingItem = nullptr;
+};
+
+//=================================================== TreeFolderNode ===================================================
+
+/**
+ * \brief Besides other folders of the same type, a given type of folder can only contain one type of thing (eg
+ *        FermentableTreeItem, HopTreeItem, etc).
+ */
+template<NonFolderClass NE>
+class TreeFolderNode : public TreeNodeBase<TreeFolderNode<NE>, Folder<NE>, NE> {
+public:
+   using TreeNodeBase<TreeFolderNode<NE>, Folder<NE>, NE>::TreeNodeBase;
+   ~TreeFolderNode() override = default;
+
+   // Have to override the version in \c TreeNodeBase as that will give FolderCommon::staticMetaObject.className()
+   // rather than NE::staticMetaObject.className()
+   [[nodiscard]] QString className() const override {
+      return NE::staticMetaObject.className();
+   }
+
+   [[nodiscard]] std::shared_ptr<Folder<NE>> folder() const requires HasFolder<NE> {
+      return this->underlyingItem();
+   }
+};
+
+/**
+ * \brief Each tree has one primary type of object that it stores.  However, some trees (eg Recipe, Mash) can hold
+ *        secondary items (eg Recipe tree holds Recipes and BrewLogs owned by those Recipes).  It's useful to have a
+ *        compile-time mapping from object type to show which class belongs in which tree.  The rule here is that things
+ *        belong in their own tree (eg Equipment is in Equipment tree) unless there's a specialisation that says
+ *        otherwise.
+ *
+ *        If a secondary item \c FooBar is omitted from this list, we'll get compile errors along the lines of `invalid
+ *        use of incomplete type ‘struct TreeNodeTraits<FooBar, FooBar>’`.
+ */
+template <class NE> struct TreeTypeDeducer                      { using TreeType = NE                      ; };
+template<>          struct TreeTypeDeducer<BrewLog            > { using TreeType = Recipe                  ; };
+template<>          struct TreeTypeDeducer<MashStep           > { using TreeType = Mash                    ; };
+template<>          struct TreeTypeDeducer<BoilStep           > { using TreeType = Boil                    ; };
+template<>          struct TreeTypeDeducer<FermentationStep   > { using TreeType = Fermentation            ; };
+template<>          struct TreeTypeDeducer<StockUseFermentable> { using TreeType = StockPurchaseFermentable; };
+template<>          struct TreeTypeDeducer<StockUseHop        > { using TreeType = StockPurchaseHop        ; };
+template<>          struct TreeTypeDeducer<StockUseMisc       > { using TreeType = StockPurchaseMisc       ; };
+template<>          struct TreeTypeDeducer<StockUseYeast      > { using TreeType = StockPurchaseYeast      ; };
+
+//==================================================== TreeItemNode ====================================================
+//
+// NOTE when we add new SecondaryItem nodes, we also have to add a specialisation for TreeTypeDeducer above
+//
+template<NonFolderClass NE>
+class TreeItemNode : public TreeNodeBase<TreeItemNode<NE>, NE, typename TreeTypeDeducer<NE>::TreeType> {
+public:
+   using TreeNodeBase<TreeItemNode<NE>, NE, typename TreeTypeDeducer<NE>::TreeType>::TreeNodeBase;
+   ~TreeItemNode() override = default;
+
+   [[nodiscard]] QString getToolTip() const;
+
+   std::shared_ptr<Folder<NE>> folder() const {
+
+      if constexpr (TreeNodeTraits<NE, typename TreeTypeDeducer<NE>::TreeType>::NodeClassifier ==
+                    TreeNodeClassifier::PrimaryItem) {
+         if constexpr (HasNoFolder<NE>) {
+            //
+            // For elements that don't support folders (eg StockPurchase) we just want the root folder, which will also
+            // be the parent node.
+            //
+            // TBD: This currently doesn't make a huge amount of sense as you can create folders in the inventory tree
+            // but not put anything in them!
+            //
+            return this->rawParent()->folder();
+         } else {
+            //
+            // It's quicker to get the folder directly than chase up the node tree to try to find a TreeFolderNode.
+            //
+            return this->underlyingItem()->folder();
+         }
+      } else {
+         //
+         // For a SecondaryItem node, it must, by definition, have a parent node, so we just defer to that.
+         //
+         static_assert (TreeNodeTraits<NE, typename TreeTypeDeducer<NE>::TreeType>::NodeClassifier ==
+                        TreeNodeClassifier::SecondaryItem);
+         return this->rawParent()->folder();
+      }
+   }
+
+};
+
+//==================================================== TreeRootNode ====================================================
+
+template<NonFolderClass NE>
+class TreeRootNode : public TreeNodeBase<TreeRootNode<NE>, RootMarkerFor<NE>, NE> {
+public:
+   using TreeNodeBase<TreeRootNode<NE>, RootMarkerFor<NE>, NE>::TreeNodeBase;
+   ~TreeRootNode() override = default;
+};
+
+
+//
+// Check the concepts we use above are working as we intend
+//
+static_assert(IsSubstantiveVariant<TreeFolderNode<Equipment>::ChildPtrTypes>);
+static_assert(IsSubstantiveVariant<TreeFolderNode<Style>::ChildPtrTypes>);
+static_assert(IsNullVariant<TreeItemNode<Equipment>::ChildPtrTypes>);
+
+
+//
+// All folders have the same columns, so we do a partial specialisation here.
+//
+template<class NE>
+struct ColumnOwnerTraitsData<TreeFolderNode<NE>> {
+   static std::vector<ColumnInfo> const & getColumnInfos() {
+      // Meyers singleton
+      static std::vector<ColumnInfo> const columnInfos {
+         COLINFO_TREE_FOLDER_NODE(NE, Name    , PropertyNames::NamedEntity::name), // "Name"
+         COLINFO_TREE_FOLDER_NODE(NE, Path    , PropertyNames::FolderCommon::path     ), // "Path"
+         COLINFO_TREE_FOLDER_NODE(NE, FullPath, PropertyNames::FolderCommon::fullPath ), // "Full Path"
+      };
+      return columnInfos;
+   }
+};
+
+//
+// Same approach for root nodes.  We actually don't need column info for root nodes because it is never displayed
+// anywhere.  For the moment, at least, we have this dummy info to make things compile.
+//
+template<class NE>
+struct ColumnOwnerTraitsData<TreeRootNode<NE>> {
+   static std::vector<ColumnInfo> const & getColumnInfos() {
+      // Meyers singleton
+      static std::vector<ColumnInfo> const columnInfos {
+         // This isn't actually correct.  If we ever needed to display this info, we'd need to change this to add the
+         // localised class name as a property.
+         COLINFO_TREE_ROOT_NODE(NE, TreeName, PropertyNames::NamedEntity::name),
+      };
+      return columnInfos;
+   }
+};
+
+#endif

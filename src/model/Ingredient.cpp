@@ -1,0 +1,62 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * model/Ingredient.cpp is part of Brewtarget, and is copyright the following authors 2023-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "model/Ingredient.h"
+
+#include "database/ObjectStoreWrapper.h" // Needed by FOLDER_BASE_COMMON_CODE
+#include "model/NamedParameterBundle.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_Ingredient.cpp"
+#endif
+
+QString Ingredient::localisedName() { return tr("Ingredient"); }
+QString Ingredient::localisedName_totalInventory(){ return tr("Total Inventory"); }
+
+TypeLookup const Ingredient::typeLookup {
+   "Ingredient",
+   {
+      // Empty list - for now at least.  (We can't do PropertyNames::Ingredient::totalInventory here because the
+      // QuantityFieldType value for it depends on the Ingredient subclass.  Hence, it is instead done in
+      // IngredientBase.
+   },
+   // Parent classes lookup
+   {&OutlineableNamedEntity::typeLookup}
+};
+static_assert(std::is_base_of<OutlineableNamedEntity, Ingredient>::value);
+
+Ingredient::Ingredient(QString const & name) :
+   OutlineableNamedEntity{name} {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Ingredient::Ingredient(NamedParameterBundle const & namedParameterBundle) :
+   OutlineableNamedEntity{namedParameterBundle} {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Ingredient::Ingredient(Ingredient const & other) :
+   OutlineableNamedEntity{other} {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Ingredient::~Ingredient() = default;

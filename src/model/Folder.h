@@ -1,0 +1,411 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * model/Folder.h is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#ifndef MODEL_FOLDER_H
+#define MODEL_FOLDER_H
+#pragma once
+
+#include <QObject>
+#include <QString>
+
+#include "database/ObjectStoreWrapper.h"
+#include "model/FolderPropertyBase.h"
+
+//======================================================================================================================
+//========================================== Start of property name constants ==========================================
+// See comment in model/NamedEntity.h
+#define AddPropertyName(property) namespace PropertyNames::FolderCommon { inline BtStringConst const property{#property}; }
+AddPropertyName(fullPath)
+AddPropertyName(path)
+#undef AddPropertyName
+//=========================================== End of property name constants ===========================================
+//======================================================================================================================
+
+/*!
+ * \class FolderCommon
+ *
+ * \brief Non-templated base for \c Folder class (see below) needed to implement folders in the trees.
+ */
+class FolderCommon : public NamedEntity {
+   Q_OBJECT
+
+public:
+   /**
+    * \brief See comment in model/NamedEntity.h
+    */
+   static QString localisedName();
+   static QString localisedName_path();
+   static QString localisedName_fullPath();
+
+   /**
+    * \brief Mapping of names to types for the Qt properties of this class.  See \c NamedEntity::typeLookup for more
+    *        info.
+    */
+   static TypeLookup const typeLookup;
+   TYPE_LOOKUP_GETTER
+
+   explicit FolderCommon(QString const & name);
+   explicit FolderCommon(NamedParameterBundle const & namedParameterBundle);
+   FolderCommon(FolderCommon const & other);
+
+   ~FolderCommon() override;
+
+   //=================================================== PROPERTIES ====================================================
+   //! The ID of the folder (if any) that contains this one
+   Q_PROPERTY(int     containedInFolderId     READ containedInFolderId     WRITE setContainedInFolderId  )
+   //! The full path of the folder (if any) that contains this one
+   Q_PROPERTY(QString containedInFolderPath   READ containedInFolderPath   WRITE setContainedInFolderPath)
+
+   //! \brief The \c path is the names of all the parent folders concatenated together with '/'
+   Q_PROPERTY(QString path     READ path     /*WRITE setPath*/    )
+
+   //! \brief \c fullPath is just \c path plus \c name, so this property is merely a convenience
+   Q_PROPERTY(QString fullPath READ fullPath /*WRITE setFullPath*/)
+
+   //============================================ "GETTER" MEMBER FUNCTIONS ============================================
+   [[nodiscard]] virtual int     containedInFolderId  () const = 0;
+   [[nodiscard]] virtual QString containedInFolderPath() const = 0;
+   [[nodiscard]] virtual QString path() const = 0;
+   [[nodiscard]] virtual QString fullPath() const = 0;
+
+   //============================================ "SETTER" MEMBER FUNCTIONS ============================================
+   virtual void setContainedInFolderId  (int     const   var) = 0;
+   virtual void setContainedInFolderPath(QString const & var) = 0;
+
+   //================================================= OTHER FUNCTIONS =================================================
+   /**
+    * Concatenates two paths, ensuring the correct number of slashes between them.  Eg  "/foo" + "/bar", "/foo" + "bar",
+    * "/foo/" + "/bar" all give the same result ("/foo/bar").
+    *
+    * @param leftPath   It is OK for this to be "" or "/"
+    * @param rightPath  It is OK for this to be "" or "/"
+    * @return
+    */
+   [[nodiscard]] static QString joinPaths(QString const & leftPath, QString const & rightPath);
+
+   /**
+    * Converts \c fullPath to a sub-path of \c basePath if \c basePath is a path prefix of \c fullPath.  Otherwise
+    * returns \c fullPath unchanged.  NB: "/foo/bar" is a path prefix of "/foo/bar/hum" but not of "/foo/barbie".
+    *
+    * @param basePath
+    * @param fullPath
+    * @return
+    */
+   [[nodiscard]] static QString subPath(QString const & basePath, QString const & fullPath);
+
+   /**
+    * @brief Given two folder paths, modifies the first one to be the common path prefix of both
+    *
+    * @param baseFolderPath
+    * @param folderPath
+    */
+   static void commonPathPrefix(QString & baseFolderPath, QString const & folderPath);
+
+protected:
+   bool compareWith(NamedEntity const & other, QList<BtStringConst const *> * propertiesThatDiffer) const override;
+};
+
+
+/**
+ * \brief Folder
+ *
+ * @tparam NE  Ideally we would constrain this to not itself be a Folder (eg so that Folder<Folder<FooBar>> is invalid).
+ *             However, this is a bit tricky to do, as we need to be able to forward declare Folder classes in the
+ *             FolderPropertyBase header.  Suppose, in that header, we were to write the following:
+ *
+ *                template<class NE, std::enable_if_t<!std::is_base_of_v<FolderCommon, NE>, bool> = true> class Folder;
+ *
+ *             Then we would get compiler errors because Recipe needs to inherit from FolderPropertyBase<Recipe> and
+ *             therefore needs the forward declaration of Folder<Recipe>, but std::is_base_of_v<FolderCommon, Recipe>
+ *             cannot be determined before Recipe has been defined.
+ *
+ *             So, for now at least, the best we can do is the static asserts below.
+ */
+template<class NE>
+class Folder : public FolderCommon, public FolderPropertyBase<Folder<NE>, IsFolder::Yes> {
+   static_assert(HasFolder<NE>);
+   static_assert(!std::is_base_of_v<FolderCommon, NE>);
+
+   //×××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××
+   // We can't use the Q_OBJECT or Q_PROPERTY macros in this class (as it's a template).  Nor can we use the
+   // FOLDER_BASE_DECL or FOLDER_BASE_COMMON_CODE macros (because template classes don't have the same declaration /
+   // definition split as regular ones).  So we manually insert the same member functions here.
+   friend class FolderPropertyBase<Folder<NE>, IsFolder::Yes>;
+public:
+   [[nodiscard]] int containedInFolderId() const override { return this->doContainedInFolderId(); }
+   [[nodiscard]] QString containedInFolderPath() const override {
+      Folder<NE> const * const containedIn = this->containedInFolderRaw();
+      return containedIn ? containedIn->fullPath() : QString{"/"};
+   }
+   void setContainedInFolderId(int const val) override { this->doSetContainedInFolderId(val); return; }
+   void setContainedInFolderPath(QString const & val) override {
+      this->doSetContainedInFolderId(Folder<NE>::ensure(val)->key());
+      return;
+   }
+   static std::shared_ptr<Folder<NE>> getById(int const id) { return ObjectStoreWrapper::getById<Folder<NE>>(id); }
+   static Folder<NE> * getByIdRaw(int const id) { return ObjectStoreWrapper::getByIdRaw<Folder<NE>>(id); }
+   //
+   // NB: If we make changes to FOLDER_BASE_DECL and/or FOLDER_BASE_COMMON_CODE, the above needs to be kept in sync.
+   //×××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××
+
+   [[nodiscard]] static QString staticClassName() {
+      return QString("Folder<%1>").arg(NE::staticMetaObject.className());
+   }
+   [[nodiscard]] QString className() const override {
+      return Folder::staticClassName();
+   }
+
+   // Note that, because this is static, it cannot be initialised inside the class definition
+   static TypeLookup const typeLookup;
+   TYPE_LOOKUP_GETTER
+
+   explicit Folder(QString const & name) :
+      FolderCommon{name},
+      FolderPropertyBase<Folder<NE>, IsFolder::Yes>{} {
+      CONSTRUCTOR_END
+      return;
+   }
+
+   explicit Folder(NamedParameterBundle const & namedParameterBundle) :
+      FolderCommon{namedParameterBundle},
+      FolderPropertyBase<Folder<NE>, IsFolder::Yes>{namedParameterBundle} {
+      CONSTRUCTOR_END
+      return;
+   }
+
+   Folder(Folder const & other) :
+      FolderCommon{other},
+      FolderPropertyBase<Folder<NE>, IsFolder::Yes>{other} {
+      CONSTRUCTOR_END
+      return;
+   }
+
+   [[nodiscard]] QString path() const override {
+      return this->doPath("");
+   }
+
+   [[nodiscard]] QString fullPath() const override {
+      return this->doPath(this->name());
+   }
+
+   [[nodiscard]] QString extraLogInfo() const override {
+      return QString("%1 (Parent # %2)").arg(this->fullPath()).arg(this->containedInFolderId());
+   }
+
+   /**
+    * @return All the parents of the current folder in natural order (immediate parent will be last item, grandparent
+    *         will be second last item, etc).
+    */
+   QList<Folder<NE> *> parentFolders() const {
+      QList<Folder<NE> *> parents;
+      // The folder() and folderRaw() functions return the folder (if any) to which the item belongs, including if the
+      // item is itself a folder.
+      for (Folder<NE> * parent = this->containedInFolderRaw(); parent; parent = parent->containedInFolderRaw()) {
+         //
+         // It would be more efficient to append to the list and have the caller deal with the fact that it's in
+         // reverse order.  However, the lists are not large (eg a dozen nested folders would be a LOT for a typical
+         // user), so the efficiency gain would not be worth the increased complexity IMHO.
+         //
+         qDebug() << Q_FUNC_INFO << "Inserting" << parent;
+         parents.insert(0, parent);
+      }
+      return parents;
+   }
+
+   /**
+    * @brief Check whether we are the same as another folder or one of its ancestors
+    *
+    * @param other
+    * @return \c true if this folder is \c other or is one of its parents (or grandparents etc).  Used to stop a folder
+    *         being moved into itself or into one of its own subfolders, which would create a loop in the folder
+    *         hierarchy.
+    */
+   bool isSelfOrAncestorOf(Folder<NE> const & other) const {
+      if (other.key() == this->key()) {
+         return true;
+      }
+      for (Folder<NE> const * ancestor : other.parentFolders()) {
+         if (ancestor->key() == this->key()) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   /**
+    * @return As \c parentFolders, but with the current folder (ie this) appended
+    */
+   QList<Folder<NE> *> folderPath() const {
+      QList<Folder<NE> *> folders = this->parentFolders();
+      folders.append(const_cast<Folder<NE> *>(this));
+      return folders;
+   }
+
+   /**
+    *\brief Does the work for \c get and \c ensure
+    */
+   static Folder<NE> * getAndOptionallyCreate(QString const & fullPath, bool const createIfNotFound) {
+      Folder<NE> * folder = nullptr;
+      QStringList pieces = fullPath.split("/", Qt::SkipEmptyParts);
+      if (pieces.empty()) {
+         return nullptr;
+      }
+      while (!pieces.empty()) {
+         auto const parentId = folder ? folder->key() : -1;
+         QString const folderName = pieces.takeFirst();
+         std::shared_ptr<Folder<NE>> subFolder = ObjectStoreWrapper::findFirstMatching<Folder<NE>>(
+            [&](std::shared_ptr<Folder<NE>> val) {
+               // Note that we are assuming that the "null" ID is always -1 here (rather than allowing any negative
+               // value as null
+               if (parentId != val->containedInFolderId()) {
+                  return false;
+               }
+               // If parents match, we just need to compare names
+               return (val->name() == folderName);
+            }
+         );
+         // If we didn't find the sub-folder, we either bail or create it, depending on which behaviour the caller
+         // requested.
+         if (!subFolder) {
+            if (createIfNotFound) {
+               subFolder = std::make_shared<Folder<NE>>(folderName);
+               subFolder->setContainedInFolderId(folder ? folder->key() : -1);
+               ObjectStoreWrapper::insert(subFolder);
+            } else {
+               return nullptr;
+            }
+         }
+         folder = subFolder.get();
+      }
+
+      return folder;
+   }
+
+   /**
+    * \brief Returns the \c Folder with the supplied full path, or \c nullptr if no such folder exists.
+    */
+   static Folder<NE> * get(QString const & fullPath) {
+      return Folder<NE>::getAndOptionallyCreate(fullPath, false);
+   }
+
+   /**
+    * \brief Returns a \c Folder for the supplied full path, creating any folders (and parent folders) as needed.
+    *
+    *        If "" or "/" is specified as the fullPath, then \c nullptr is returned
+    *
+    * @param fullPath
+    * @return
+    */
+   static Folder<NE> * ensure(QString const & fullPath) {
+      return Folder<NE>::getAndOptionallyCreate(fullPath, true);
+   }
+
+   /**
+    * Get either the NE or the Folder<NE> children of this folder
+    * @return
+    */
+   template<class ChildType>
+   QList<std::shared_ptr<ChildType>> children() const requires (std::same_as<ChildType, NE> ||
+                                                                std::same_as<ChildType, Folder<NE>>) {
+      auto const folderId = this->key();
+      return ObjectStoreWrapper::findAllMatching<ChildType>(
+         [folderId] (std::shared_ptr<ChildType> obj) { return (obj->containedInFolderId() == folderId); }
+      );
+   }
+
+   /**
+    * Recursively get either the NE or the Folder<NE> children of this folder and its subfolders
+    * @return
+    */
+   template<class ChildType>
+   QList<std::shared_ptr<ChildType>> descendants() const requires (std::same_as<ChildType, NE> ||
+                                                                   std::same_as<ChildType, Folder<NE>>) {
+      QList<std::shared_ptr<ChildType>> result = this->children<ChildType>();
+
+      QList<std::shared_ptr<Folder<NE>>> subFolders;
+      if constexpr (std::same_as<ChildType, NE>) {
+         subFolders = this->children<Folder<NE>>();
+      } else {
+         // We don't need to call children<Folder<NE>>() here as we already called it to populate result
+         subFolders = result;
+      }
+      for (auto const & subFolder : subFolders) {
+         result.append(subFolder->template descendants<ChildType>());
+      }
+      return result;
+   }
+
+   /**
+    * Convenience wrappers for above
+    */
+   QList<std::shared_ptr<NE>        > childItems  () const { return this->children<NE        >(); }
+   QList<std::shared_ptr<Folder<NE>>> childFolders() const { return this->children<Folder<NE>>(); }
+   int numChildren() const {
+      return this->childItems().size() + this->childFolders().size();
+   }
+   bool empty() const {
+      // This isn't the most efficient way to do this, but it works, and we can always optimise it later if need be.
+      return this->numChildren() == 0;
+   }
+   QList<std::shared_ptr<NE>        > descendantItems  () const { return this->descendants<NE        >(); }
+   QList<std::shared_ptr<Folder<NE>>> descendantFolders() const { return this->descendants<Folder<NE>>(); }
+   int numDescendants() const {
+      return this->descendantItems().size() + this->descendantFolders().size();
+   }
+
+protected:
+   [[nodiscard]] ObjectStore & getObjectStoreTypedInstance() const override {
+      return ObjectStoreTyped<Folder<NE>>::getInstance();
+   }
+
+private:
+
+   /**
+    * Implementation for path() and fullPath().  Constructs a path working back up through the parent folders.
+    *
+    * @param startWith Either blank or the name of the object for which we are constructing a path, depending on whether
+    *                  we are implementing path() or fullPath().
+    * @return
+    */
+   [[nodiscard]] QString doPath(QString const & startWith) const {
+      QString myPath = startWith;
+      for (auto myParent = this->containedInFolderRaw(); myParent; myParent = myParent->containedInFolderRaw()) {
+         // A folder can't ever be its own parent.
+         Q_ASSERT(myParent != myParent->containedInFolderRaw());
+         myPath = QString("%1/%2").arg(myParent->name()).arg(myPath);
+      }
+      return myPath;
+   }
+
+};
+
+template<class NE>
+TypeLookup const Folder<NE>::typeLookup {
+   "Folder",
+   {
+      //
+      // See comment in model/IngredientAmount.h for why we can't use the PROPERTY_TYPE_LOOKUP_ENTRY or
+      // PROPERTY_TYPE_LOOKUP_ENTRY_NO_MV macros here.
+      //
+      // For the moment at least, we have no additional properties over those of our parents
+      //
+   },
+   // Parent class lookups
+   {&FolderCommon::typeLookup, &FolderPropertyBase<Folder<NE>>::typeLookup}
+};
+
+#endif

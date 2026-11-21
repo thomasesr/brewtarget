@@ -1,52 +1,1074 @@
 # Brewtarget Changelog
 
-This changelog is for high-level user-visible changes to Brewtarget, intended
-for consumption by the typical end-user.
+This change log is for high-level user-visible changes to Brewtarget, intended for consumption by the typical end-user.
+Note however that we also process it into a Debian-compliant text change log, so we need to keep the format consistent.
+In particular, the Release Timestamp section is needed as part of this (and you need to be meticulous about the date
+format therein, otherwise you'll get, eg, no-changelogname-tag error from rpmlint).  You get problems if you set the
+release timestamp to be a date in the future, and I'm guessing nobody cares about the exact time of day a release
+happens, so I'm now setting it to a slightly arbitrary time early in the morning.
 
-## v2.5.0
+## Forthcoming in future releases
+* Shopping Lists
+* We'll list other new features here...
+
+## v5.3.2
+Bug fix release
+
+### New Features
+* Snap builds working in dev mode
+* A fermentable added part-way through the boil proper now counts proportionally towards boil gravity [1194](https://github.com/Brewtarget/brewtarget/issues/1194)
+  * Most recipes will show slightly fewer IBUs with Tinseth, Rager, Noonan, Daniels or mIBU estimation methods.
+  * Because evaporation is now counted, any recipe with a pre-boil size set will drop by about 2.5–3% for a typical 25 L → 20 L boil.
+  * Recipes without a pre-boil size don’t change.
+* Missing translations filled in for all supported languages, so the user interface is now (almost) fully translated.  These new translations are machine-generated and marked for review, so corrections from native speakers are very welcome.
+
+### Bug Fixes
+* Compile error with latest versions of Qt
+* Drop-down lists of types, forms, stages etc (eg yeast type, hop form), and Yes/No values, were always shown in English, regardless of the language setting.  They now also update straight away when you change the language. (Part of [1040](https://github.com/Brewtarget/brewtarget/issues/1040))
+* Changing the language now updates the whole user interface straight away, rather than only after a restart. [1040](https://github.com/Brewtarget/brewtarget/issues/1040)
+* Logging level names on the Options dialog were always shown in English, regardless of the language setting.
+
+### Release Timestamp
+Thu, 19 Nov 2026 05:03:02 +0100
+
+## v5.3.1
+Bug fix release
 
 ### New Features
 
-* It is now possible to print and export your inventory.
+### Bug Fixes
+* Taking a recipe snapshot causes a crash (null pointer) [1191](https://github.com/Brewtarget/brewtarget/issues/1191)
 
-## v2.4.0
+### Release Timestamp
+Thu, 19 Nov 2026 05:03:01 +0100
+
+## v5.3.0
+Several new features, and bug fixes for some long-standing issues.
+
+### New Features
+* Remainder of work on: Enhancement - allow per-field selection of displayed decimal places [1098](https://github.com/Brewtarget/brewtarget/issues/1098)
+* Additional methods for calculating IBU, including the SMPH IBU formula, which takes into account:
+  * the boiling point set on the equipment (eg for brewing at altitude)
+  * the expected clarity of the wort going into the fermenter (on the recipe's Boil tab)
+  * what happens to the krausen (in the Fermentation Editor).
+* We now calculate the IBU of steeped and flameout hops -- see [414](https://github.com/Brewtarget/brewtarget/issues/414) and [774](https://github.com/Brewtarget/brewtarget/issues/774)
+* Wort clarity seen on brew day can be recorded in the brew log.
+* New fields (eg as mentioned above) are saved in dotBeer files (new in dotBeer 1.1.0).
+* Mash water amounts and temperatures (strike water, other infusions, decoctions and sparge water) can now be adjusted to suit the recipe in the Mash Editor, replacing the Mash Wizard and Mash Designer.  Individual amounts and temperatures can be pinned so that only the rest are adjusted.  Optionally, the mash can adjust automatically whenever the recipe changes.
+* Mash steps (and mash fields) that don't make sense for the recipe are highlighted
+* Remaining points from Mash Designer / Mash Wizard feedback [204](https://github.com/Brewtarget/brewtarget/issues/204):
+  * When a mash is kept in sync with its recipe, changing a step temperature now adjusts the rest of the mash straight away.  Typing in an amount or infusion temperature pins it (so it is not overwritten) and adjusts the rest of the mash around it.
+  * The Water:Grain column in the table of mash steps now shows the actual mash thickness for the recipe, and a new Mash Volume column shows the volume of the mash (grain plus water) in the tun at the end of each step.
+  * The Mash Editor shows how full the mash tun gets and how much wort will be collected, each as a percentage of what the equipment and recipe allow for (including when that is more than 100%).
+* Auto-Adjust on the Water tab works out the brewing salts needed to match the target water profile and, optionally, the acid needed to reach a target mash pH.  Optionally, the water agents can adjust automatically whenever the recipe changes.
+* Clicking Auto-Adjust (for the mash or the water) can be undone and redone in one step
+* Example mash profiles, which are locked so they can be shared between recipes
+* Twelve style target water profiles (eg "Pale, Hoppy", "Black, Dry") that Auto-Adjust can match from RO water, and starting profiles for the tap water of eleven well-known cities
+* Target mash pH is saved in dotBeer files (as `target_mash_pH` on recipes, new in dotBeer 1.1.0), and defaults to any pH set on the recipe's mash
+* Estimated final gravity (and hence ABV etc) can now take account of the mash profile -- temperatures, rest times and ramps, over any number of steps -- using a published kinetic model of starch conversion (Brandam et al 2003), as well as the diastatic power of the grain bill and the mash thickness (see [344](https://github.com/Brewtarget/brewtarget/issues/344) and [779](https://github.com/Brewtarget/brewtarget/issues/779)).  Turn on "Use mash profile in FG calculation" on the recipe's Mash tab.  Existing recipes are unchanged; whether new and imported recipes use it is set in Options > Default Values.
+
+### Bug Fixes
+* Late Addition IBU calc wrong [438](https://github.com/Brewtarget/brewtarget/issues/438)
+* Changes to equipment profile not picked up by recipes [531](https://github.com/Brewtarget/brewtarget/issues/531)
+* Inventory updates don't show inside a recipe [756](https://github.com/Brewtarget/brewtarget/issues/756)
+* Water profile adjustment tool issues [970](https://github.com/Brewtarget/brewtarget/issues/970)
+* Mash Wizard can give negative temperatures [1039](https://github.com/Brewtarget/brewtarget/issues/1039)
+* Removing a hop addition sometimes causes an assert [1113](https://github.com/Brewtarget/brewtarget/issues/1113)
+* Input values with more than 1 decimal round to 1 place [1142](https://github.com/Brewtarget/brewtarget/issues/1142)
+* Not intuitive how to create new mash on new recipe [1182](https://github.com/Brewtarget/brewtarget/issues/1182)
+* Choosing equipment from the drop-down on the recipe tab now offers to set the recipe's batch size and pre-boil size to match it, as dragging the equipment onto the recipe already did (Brewtarget [531](https://github.com/Brewtarget/brewtarget/issues/531)).  Re-selecting the recipe's current equipment (or style, mash, etc) no longer adds an empty step to the undo history.
+* Saving changes to equipment now offers to update the batch size and pre-boil size of recipes using it that still had the sizes it previously specified (Brewtarget [531](https://github.com/Brewtarget/brewtarget/issues/531)).  Previously, recipes' pre-boil sizes were changed without asking (even if the recipe's boil was locked or shared) and batch sizes were not changed at all.
+* Closing the Mash, Boil or Fermentation Editor with Escape or the window's close button (or quitting with it open) no longer leaves behind the new, unsaved mash, boil or fermentation created by "Edit this mash" etc (Brewtarget [1182](https://github.com/Brewtarget/brewtarget/issues/1182))
+* Clicking "New" in the Mash, Boil or Fermentation Editor while editing the new, unsaved one for a recipe now makes the new one for that recipe, rather than one not used by any recipe
+* A whirlpool or hop stand step that stays above 81°C (eg 100°C → 92°C, or held at 92°C after a cooling step) is now treated as post-boil, rather than being counted as part of the boil (which made the boil time too long and treated hops added in it as boil additions).  The boil proper now ends as soon as the wort starts to cool, per the dotBeer 1.1.0 rules for boil steps, which also work at altitude.
+* Editing a recipe's boil (eg the length of a boil step, the temperature of a hop stand, the pre-boil size, or adding or removing steps) now immediately updates the recipe's calculated volumes, gravities and IBUs.  Previously, these were only updated when something else in the recipe changed.  Also, changes to a boil, mash or fermentation created automatically for a new recipe are now picked up straight away, rather than only after restarting.
+* Predicted mash pH on the Water tab was wildly wrong if the recipe had any lactic acid (or acidulated malt or phosphoric acid), as acid amounts were converted with the wrong units.  The mash pH model has also been corrected to scale by the weight of grain rather than mash thickness, and to count all specialty malts rather than just the last one.
+* Water agent figures for gypsum (calcium overstated by about 26%), magnesium chloride (no chloride, and a possible crash) and pickling lime were wrong
+* Water tab didn't update predicted mash pH when the grain bill changed, and could give wrong figures after switching between recipes
+
+### Release Timestamp
+Mon, 16 Nov 2026 05:03:00 +0100
+
+## v5.2.3
+More bug fixes.
+
+### New Features
+None
+
+### Bug Fixes
+* Fixed a regression in 5.2.2 that had the program looking in the wrong place for its config
+* Second attempt at fixing "v5.2.0 not working on some older hardware" [1179](https://github.com/Brewtarget/brewtarget/issues/1179)
+
+### Release Timestamp
+Thu, 5 Nov 2026 05:02:03 +0100
+
+## v5.2.2
+Fix some key bugs in 5.2.0 release.  Start of work on improving decimal place handling.
+
+### New Features
+* Enhancement - allow per-field selection of displayed decimal places [1098](https://github.com/Brewtarget/brewtarget/issues/1098)
+
+### Bug Fixes
+* v5.2.0 not working on some older hardware [1179](https://github.com/Brewtarget/brewtarget/issues/1179)
+* "Error Loading Data" and Recipe UI issue on 5.2.0 [1180](https://github.com/Brewtarget/brewtarget/issues/1180)
+
+### Release Timestamp
+Wed, 4 Nov 2026 05:02:02 +0100
+
+## v5.2.1
+Fix Mac packaging
+
+### New Features
+None
+
+### Bug Fixes
+* macOS release bundles fail to launch on clean Apple Silicon systems [1176](https://github.com/Brewtarget/brewtarget/issues/1176)
+
+### Release Timestamp
+Mon, 2 Nov 2026 05:02:01 +0100
+
+## v5.2.0
+Various improvements, including:
+* Migrate to new XML libraries (libxml2 replaces Xerces and Xalan) [1131](https://github.com/Brewtarget/brewtarget/issues/1131)
+* Migrate to new JSON schema validation library [1150](https://github.com/Brewtarget/brewtarget/issues/1150)
+
+### New Features
+* DotBeer file format support [1122](https://github.com/Brewtarget/brewtarget/issues/1122)
+* Water Calculator improvements [252](https://github.com/Brewtarget/brewtarget/issues/252)
+* Salts (aka water agents) are now a subcategory of Miscellaneous ingredients
+* Hops now support optional min/max values for alpha acid and beta acid
+* Import to folder [1133](https://github.com/Brewtarget/brewtarget/issues/1133)
+* Equipment: new "Foundation Water" field for the mash tun, for the space below a false bottom or malt pipe (eg in
+  all-in-one systems) that has to be filled before the grain is covered but which drains out with the wort -- see
+  also [720: request for the function of the minimum water level in the mash tun](https://github.com/Brewtarget/brewtarget/issues/720)
+* Mash and lauter tun losses are now correctly allowed for in the mash wizard's total water
+* BeerXML export and import now keep folders (via an extension tag)
+* Additional ingredients, including malts from The Swaen malthouse in The Netherlands (https://theswaen.com/)
+* Equipment profiles for several popular all-in-one (single vessel) electric brewing systems
+* When a recipe's pre-boil size is set from equipment whose default pre-boil volume was calculated (eg on import from
+  dotBeer or BeerJSON), it is now adjusted for the recipe's boil time
+
+### Bug Fixes
+* Exporting a style with no style letter to BeerJSON creates a file that cannot be imported [1121](https://github.com/Brewtarget/brewtarget/issues/1121)
+* Brewtarget fails to update PostgreSQL database schema [1126](https://github.com/Brewtarget/brewtarget/issues/1126)
+* Root-level drag-and-drop [1137](https://github.com/Brewtarget/brewtarget/issues/1137)
+* Mash tree not updated when you add a mash step [1043](https://github.com/Brewtarget/brewtarget/issues/1043) (NB: May have been fixed in an earlier release!)
+* Range comparison on the water chemistry is not quite right [572](https://github.com/Brewtarget/brewtarget/issues/572)
+* 5.1.x - snapshots are not showing [1139](https://github.com/Brewtarget/brewtarget/issues/1139)
+* 5.1.1 Install Issue, upgrading from 2.0.2 - database fails to update [1143](https://github.com/Brewtarget/brewtarget/issues/1143)
+* Selecting a folder doesn't let you export its contents [1148](https://github.com/Brewtarget/brewtarget/issues/1148)
+* Brewtarget 5.1.2 crashes when importing BeerXML recipe containing a WATERS record [1154](https://github.com/Brewtarget/brewtarget/issues/1154)
+* Importing from BeerXML sets fermentable addition stage to boil instead of mash [1156](https://github.com/Brewtarget/brewtarget/issues/1156)
+* Creating a fermentable stock purchase with no color causes a crash [1159](https://github.com/Brewtarget/brewtarget/issues/1159)
+* Conversion amounts for imperial tablespoons and teaspoons are wrong [1160](https://github.com/Brewtarget/brewtarget/issues/1160)
+* Brewhouse efficiency is applied to honey, juice, fruit and “other” fermentables [1161](https://github.com/Brewtarget/brewtarget/issues/1161)
+* Whirlpool / hop-stand additions are counted as boiling for their time [1162](https://github.com/Brewtarget/brewtarget/issues/1162)
+* IBU calculation treats a post-boil addition's time as boil time [1167](https://github.com/Brewtarget/brewtarget/issues/1167)
+* Instructions use the whole boil length for a step addition with no time [1168](https://github.com/Brewtarget/brewtarget/issues/1168)
+* A boil step with no start/end temperature should be treated as being at boiling [1165](https://github.com/Brewtarget/brewtarget/issues/1165)
+* Possible to drag-and-drop a folder onto itself or one of its subfolders [1157](https://github.com/Brewtarget/brewtarget/issues/1157)
+* Exporting a hop, yeast or style with only one end of a range set (eg minimum but not maximum alpha acid) no longer
+  creates a dotBeer or BeerJSON file that cannot be imported
+
+### Release Timestamp
+Sat, 31 Oct 2026 05:02:00 +0100
+
+## v5.1.1
+Bug fixes.
+
+### New Features
+None
+
+### Bug Fixes
+* Options dialog does not remember its size [1118](https://github.com/Brewtarget/brewtarget/issues/1118)
+* Mash wizard crashes every time now. version 5.1.0 [1123](https://github.com/Brewtarget/brewtarget/issues/1123)
+
+### Release Timestamp
+Thu, 4 Jun 2026 05:01:01 +0100
+
+## v5.1.0
+Improvements to Folders, plus bug fixes and minor enhancements.  In particular:
+* "Options" and "Recipe to Clipboard as Text" moved from "Tools" to "Edit" menu
+* Tools that were only accessible via the Tools menu are now also on the Toolbar
+* Tools that shared the same icon now each have their own icon
+* Default Boil length is no longer an attribute of Equipment
+* You can set a global default boil length via Edit > Options > Default Values
+
+### New Features
+* Folders are now first-class entities and thus can be renamed and moved
+* Edit folder names [10](https://github.com/Brewtarget/brewtarget/issues/10)
+* Add Batch Number to brew day record [1105](https://github.com/Brewtarget/brewtarget/issues/1105)
+* Enhancements to Gravity Correction Tool [1104](https://github.com/Brewtarget/brewtarget/issues/1104)
+
+### Bug Fixes
+* Can't drag a folder inside another folder [1067](https://github.com/Brewtarget/brewtarget/issues/1067)
+* On the brew-it tab (with the date), if you enter FG > OG, the program terminates with an assert [1069](https://github.com/Brewtarget/brewtarget/issues/1069)
+* 5.0.4: Crash at startup [1102](https://github.com/Brewtarget/brewtarget/issues/1102)
+* Mouse-over date label on brew log tab causes assert [1107](https://github.com/Brewtarget/brewtarget/issues/1107)
+* Hop Addition in Recipe Builder [1112](https://github.com/Brewtarget/brewtarget/issues/1112)
+* Clarify "Add At Time" label for Hop additions etc [1114](https://github.com/Brewtarget/brewtarget/issues/1114)
+* Brew-It button on toolbar not working [1115](https://github.com/Brewtarget/brewtarget/issues/1115)
+
+### Release Timestamp
+Fri, 15 May 2026 05:01:00 +0100
+
+## v5.0.4
+Bug fixes and minor enhancements.
+
+### New Features
+None
+
+### Bug Fixes
+* AppImage versions fail to run - execv error: No such file or directory [1071](https://github.com/Brewtarget/brewtarget/issues/1071)
+* AppImage 5.0.3 fails to run - symbol lookup error [1077](https://github.com/Brewtarget/brewtarget/issues/1077)
+* Flatpak 5.0.3 fails to run - error while loading shared libraries [1078](https://github.com/Brewtarget/brewtarget/issues/1078)
+* AppImage 5.0.3 doesn't include libqsqlite.so [1081](https://github.com/Brewtarget/brewtarget/issues/1081)
+* Windows 5.03 Hop Boil Times [1082](https://github.com/Brewtarget/brewtarget/issues/1082)
+* Always forced to pre-populate database [1084](https://github.com/Brewtarget/brewtarget/issues/1084)
+* Deleting recipe locks associated linked processes from deletion [1085](https://github.com/Brewtarget/brewtarget/issues/1085)
+* Stock Purchase button showing on incorrect catalog pages [1086](https://github.com/Brewtarget/brewtarget/issues/1086)
+* --create-blank cli option exits with segfault [1088](https://github.com/Brewtarget/brewtarget/issues/1088)
+* Fermentables percentage fields won't allow floats [1090](https://github.com/Brewtarget/brewtarget/issues/1090)
+* Right clicking on sub-item in tree view causes assertion crash [1092](https://github.com/Brewtarget/brewtarget/issues/1092)
+
+### Release Timestamp
+Wed, 25 Mar 2026 05:00:04 +0100
+
+## v5.0.3
+Bug fixes and minor enhancements.
+
+### New Features
+None
+
+### Bug Fixes
+* Right-clicking on a folder causes a segmentation fault [1066](https://github.com/Brewtarget/brewtarget/issues/1066)
+* AppImage versions fail to run - execv error: No such file or directory [1071](https://github.com/Brewtarget/brewtarget/issues/1071)
+
+### Release Timestamp
+Sun, 8 Feb 2026 05:00:03 +0100
+
+## v5.0.2
+Bug fixes and minor enhancements.
+
+### New Features
+* More precision on Mash Wizard for mash thickness [1059](https://github.com/Brewtarget/brewtarget/issues/1059)
+* 5.0.1 - Cannot edit inventory quantities from catalog [1057](https://github.com/Brewtarget/brewtarget/issues/1057)
+
+### Bug Fixes
+* Amending "Notes" field of a Stock Purchase record causes an assert when you click save [1061](https://github.com/Brewtarget/brewtarget/issues/1061)
+* Can't export Mashes, Boils or Fermentations to BeerJSON or BeerXML [1064](https://github.com/Brewtarget/brewtarget/issues/1064)
+
+### Release Timestamp
+Wed, 28 Jan 2026 05:00:02 +0100
+
+## v5.0.1
+Fix for error in previous release, plus further fix for Mac packaging.
+
+### New Features
+None
+
+### Bug Fixes
+* After upgrading to 5.0.0, program starts with default Database instead of existing one [1054](https://github.com/Brewtarget/brewtarget/issues/1054)
+* Mac OS 26.2 Not Working [1052](https://github.com/Brewtarget/brewtarget/issues/1052)
+
+### Release Timestamp
+Mon, 5 Jan 2026 05:00:01 +0100
+
+## v5.0.0
+New inventory management system tracks individual stock purchases and uses
+Mac packaging should be fixed in this release.
+AppImage as additional packaging option on Linux
+
+### New Features
+* Quick Inventory Snapshot [761](https://github.com/Brewtarget/brewtarget/issues/761)
+* Provide Linux builds as AppImages [1041](https://github.com/Brewtarget/brewtarget/issues/1041)
+
+### Bug Fixes
+* Qt Libs missing in 4.2.0 on MacOS [1022](https://github.com/Brewtarget/brewtarget/issues/1022)
+* Various XML import problems [1032](https://github.com/Brewtarget/brewtarget/issues/1032)
+* Linux package .sha256sum files contain incorrect file names (but the actual sha256sums are correct) [1036](https://github.com/Brewtarget/brewtarget/issues/1036)
+* Missing USE-field when exporting to XML [1049](https://github.com/Brewtarget/brewtarget/issues/1049)
+
+### Release Timestamp
+Sun, 4 Jan 2026 05:00:00 +0100
+
+## v4.2.1
+Bug fixes and minor enhancements.  Mac packaging is still broken in this release.
+
+### New Features
+* None
+
+### Bug Fixes
+* Mash editor needs some tidy-up [963](https://github.com/Brewtarget/brewtarget/issues/963)
+* Better Hop Stage default for hop additions [1018](https://github.com/Brewtarget/brewtarget/issues/1018)
+* Qt Libs missing in 4.2.0 on MacOS [1022](https://github.com/Brewtarget/brewtarget/issues/1022)
+* XML recipe export doesn't work when no file extension supplied [1025](https://github.com/Brewtarget/brewtarget/issues/1025)
+
+### Release Timestamp
+Sat, 6 Sep 2025 04:02:01 +0100
+
+## v4.2.0
+Bug fixes and minor enhancements.
+
+### New Features
+* Add ability to merge identical items [1013](https://github.com/Brewtarget/brewtarget/issues/1013)
+
+### Bug Fixes
+* Bug in recipe tab when changing mash [728](https://github.com/Brewtarget/brewtarget/issues/728)
+* Sort by Inventory seems to have broke in 4.1.3 (maybe 4.1.2?) [1003](https://github.com/Brewtarget/brewtarget/issues/1003)
+* Post ferment default date is 2014-10-08 [1006](https://github.com/Brewtarget/brewtarget/issues/1006)
+* Editing a Mash step moves it to the end of the list [1008](https://github.com/Brewtarget/brewtarget/issues/1008)
+* Lovibond not showing in Options>Units>Color [1010](https://github.com/Brewtarget/brewtarget/issues/1010)
+* Mash Wizard seems a bit broken [1012](https://github.com/Brewtarget/brewtarget/issues/1012)
+* Inconsistent meaning of double-click [1016](https://github.com/Brewtarget/brewtarget/issues/1016)
+
+### Release Timestamp
+Sat, 23 Aug 2025 04:02:00 +0100
+
+## v4.1.3
+Bug fixes and minor enhancements.
+
+### New Features
+* Feature Request: Ability to set the default brewhouse efficiency [992](https://github.com/Brewtarget/brewtarget/issues/992)
+
+### Bug Fixes
+* Fermentables wrong colour unit in default database [366](https://github.com/Brewtarget/brewtarget/issues/366)
+* Modifying grain quantity doesn't cause any of the other fields to recalculate [443](https://github.com/Brewtarget/brewtarget/issues/443)
+* Deleting a BrewNote does not remove it from the recipe tree [990](https://github.com/Brewtarget/brewtarget/issues/990)
+* Bitterness value not updated after editing hops alpha [1001](https://github.com/Brewtarget/brewtarget/issues/1001)
+
+### Release Timestamp
+Sun, 20 Jul 2025 04:01:03 +0100
+
+## v4.1.2
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Crash when deleting a water profile [974](https://github.com/Brewtarget/brewtarget/issues/974)
+* Windows version opens a console in addition to the main window [976](https://github.com/Brewtarget/brewtarget/issues/976)
+* Crash (in TreeModelBase::insertChild) on import of new ingredients to clean database [977](https://github.com/Brewtarget/brewtarget/issues/977)
+* Assert on copy recipe [980](https://github.com/Brewtarget/brewtarget/issues/980)
+* Brewtarget 4.1.1 crashes on opening [984](https://github.com/Brewtarget/brewtarget/issues/984)
+* Brewtarget 4.1.1 crashing or not opening [985](https://github.com/Brewtarget/brewtarget/issues/985)
+
+### Release Timestamp
+Fri, 13 Jun 2025 04:01:02 +0100
+
+## v4.1.1
+This release adds mash steps / boil steps / fermentation steps in the "tree" view, and fixes a number of bugs.
+
+### New Features
+* Show mash steps, boil steps, fermentation steps under mashes, boils, fermentations in tree in left-hand section
+
+### Bug Fixes
+* Equipment Editor ignores "calculate pre-boil volume" checkbox [957](https://github.com/Brewtarget/brewtarget/issues/957)
+* Brewtarget 4.1.0 database upgrade error at startup with PostgreSQL database [958](https://github.com/Brewtarget/brewtarget/issues/958)
+* Combo-boxes for style, equipment, mash, etc don't show current value [961](https://github.com/Brewtarget/brewtarget/issues/961)
+* Each recipe snapshot generates another tree on the recipe view (4.1.0) [964](https://github.com/Brewtarget/brewtarget/issues/964)
+* Taking a Recipe snapshot causes an assert [965](https://github.com/Brewtarget/brewtarget/issues/965)
+* New recipe snapshot does not show up until after program restart [967](https://github.com/Brewtarget/brewtarget/issues/967)
+* Various water creation issues [969](https://github.com/Brewtarget/brewtarget/issues/969)
+* 4.1 brew date duplication (Each BrewNote is shown twice in the Recipe tree) [971](https://github.com/Brewtarget/brewtarget/issues/971)
+
+### Release Timestamp
+Sun, 1 Jun 2025 04:01:01 +0100
+
+## v4.1.0
+This release exposes mash/boil/fermentation profiles in more of the UI, tidies up some of the technical hang-overs from before the BeerJSON work, and fixes a number of bugs.
+
+### New Features
+* Mash, Boil and Fermentation profiles appear in the left-hand section
+* Salts appear in left-hand section, are editable, and can be added to recipes
+* Boil and Fermentation buttons added to the toolbar
+* Mash/Boil/Fermentation editors should allow you to edit steps [947](https://github.com/Brewtarget/brewtarget/issues/947)
+* Mash/Boil/Fermentation editors should show how many recipes use the displayed mash/boil/fermentation profile [948](https://github.com/Brewtarget/brewtarget/issues/948)
+
+### Bug Fixes
+* Clicking '+' in Water Chemistry tool terminates the application with an assert [819](https://github.com/Brewtarget/brewtarget/issues/819)
+* Wayland placeholder icon instead of Brewtarget's being used in KDE Plasma Wayland session [933](https://github.com/Brewtarget/brewtarget/issues/933)
+* When copying a recipe originals date is used on the copy [936](https://github.com/Brewtarget/brewtarget/issues/936)
+* Application crash when changing value in Carbonation Volumes field [943](https://github.com/Brewtarget/brewtarget/issues/943)
+* Application crash related to Alkalinity combobox in Edit Water dialog [944](https://github.com/Brewtarget/brewtarget/issues/944)
+* Copy recipe not working [949](https://github.com/Brewtarget/brewtarget/issues/949)
+* Folders in tree view don't show whether they are expanded or not [951](https://github.com/Brewtarget/brewtarget/issues/951)
+
+### Release Timestamp
+Wed, 14 May 2025 04:01:00 +0100
+
+## v4.0.17
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Crashing when making new recipe [929](https://github.com/Brewtarget/brewtarget/issues/929)
+
+### Release Timestamp
+Sat, 15 Feb 2025 04:00:17 +0100
+
+## v4.0.16
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Inconsistent ABV calculation [918](https://github.com/Brewtarget/brewtarget/issues/918)
+* US / Imperial quart ("qt") conversion is treated as pints instead [923](https://github.com/Brewtarget/brewtarget/issues/923)
+* "Converter Tool" does not respect Units settings for US vs Imperial [924](https://github.com/Brewtarget/brewtarget/issues/924)
+* Beerjson import results in crash [922](https://github.com/Brewtarget/brewtarget/issues/922)
+
+### Release Timestamp
+Tue, 11 Feb 2025 04:00:16 +0100
+
+## v4.0.15
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* 4.0.13 and ubuntu 24.10 crash [913](https://github.com/Brewtarget/brewtarget/issues/913)
+
+### Release Timestamp
+Wed, 1 Jan 2025 04:00:15 +0100
+
+## v4.0.14
+Bug fixes and minor enhancements.
+
+### New Features
+* Updated Danish translations (courtesy of Orla Valbjørn Møller)
+
+### Bug Fixes
+* Crash when creating or opening user recipe [910](https://github.com/Brewtarget/brewtarget/issues/910)
+
+### Release Timestamp
+Tue, 31 Dec 2024 04:00:14 +0100
+
+## v4.0.13
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Buttons not displaying icons on Windows, and some missing button text [903](https://github.com/Brewtarget/brewtarget/issues/903)
+* Country flags not shown on Windows [907](https://github.com/Brewtarget/brewtarget/issues/907)
+* Ctrl-C copied recipe not shown in correct folder until after restart [909](https://github.com/Brewtarget/brewtarget/issues/909)
+* Combo boxes not displaying properly on Windows [894](https://github.com/Brewtarget/brewtarget/issues/894)
+* Compiler warning: "'void QCheckBox::stateChanged(int)' is deprecated: Use checkStateChanged() instead" [884](https://github.com/Brewtarget/brewtarget/issues/884)
+
+### Release Timestamp
+Sun, 29 Dec 2024 04:00:13 +0100
+
+## v4.0.12
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Brewtarget 4.0.7 Qt6 issue on Ubuntu (libQt6Multimedia.so.6 missing) [861](https://github.com/Brewtarget/brewtarget/issues/861)
+* Update Development Prerequisites to qt6 [892](https://github.com/Brewtarget/brewtarget/issues/892)
+* Combo boxes not displaying properly on Windows [894](https://github.com/Brewtarget/brewtarget/issues/894)
+* Icons Missing [895](https://github.com/Brewtarget/brewtarget/issues/895)
+* Installation of new version results in duplicates of recipes and ingredients [896](https://github.com/Brewtarget/brewtarget/issues/896)
+* Opening user recipe causes crash [897](https://github.com/Brewtarget/brewtarget/issues/897)
+* Copy recipe crash [899](https://github.com/Brewtarget/brewtarget/issues/899)
+* Error in BeerXML recipe export [901](https://github.com/Brewtarget/brewtarget/issues/901)
+* BeerXML imports of our own exports log lots of warnings [902](https://github.com/Brewtarget/brewtarget/issues/902)
+* Buttons not displaying button text [903](https://github.com/Brewtarget/brewtarget/issues/903)
+* Trying to export a folder to BeerXML causes a segfault [905](https://github.com/Brewtarget/brewtarget/issues/905)
+
+### Release Timestamp
+Wed, 18 Dec 2024 04:00:12 +0100
+
+## v4.0.11
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Crash on Windows when opening Print and Print Preview dialog [873](https://github.com/Brewtarget/brewtarget/issues/873)
+* Crash when you click Yes or No in the pop-up about downloading the latest version [878](https://github.com/Brewtarget/brewtarget/issues/878)
+* Drop down menu for Style and Equipment are so narrow, cannot see contents [879](https://github.com/Brewtarget/brewtarget/issues/879)
+* OG doesn't immediately change when adding malt to a recipe [880](https://github.com/Brewtarget/brewtarget/issues/880)
+* IBU doesn't update when adding hops [881](https://github.com/Brewtarget/brewtarget/issues/881)
+* Errors when loading translations [889](https://github.com/Brewtarget/brewtarget/pull/889)
+* Debian package depencies [890](https://github.com/Brewtarget/brewtarget/issues/890)
+
+### Release Timestamp
+Sun, 24 Nov 2024 04:00:11 +0100
+
+## v4.0.10
+Bug fixes and minor enhancements.
+
+### New Features
+* Danish translation, courtesy of Orla Valbjørn Møller
+
+### Bug Fixes
+* Crash when copying recipe, then on adding new steps in mash, ferment, boil, others [868](https://github.com/Brewtarget/brewtarget/issues/868)
+* Changing Yeast or Attenuation doesn't change ABV [872](https://github.com/Brewtarget/brewtarget/issues/872)
+* Brewtarget 4.0.X doesn't work on MacOS [809](https://github.com/Brewtarget/brewtarget/issues/809)
+
+### Release Timestamp
+Sat, 16 Nov 2024 04:00:10 +0100
+
+## v4.0.9
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Crash (stack overflow in Qt) on some Windows builds during "check for new version" [866](https://github.com/Brewtarget/brewtarget/issues/866)
+* Crash when copying recipe, then on adding new steps in mash, ferment, boil, others [868](https://github.com/Brewtarget/brewtarget/issues/868)
+
+### Release Timestamp
+Sun, 3 Nov 2024 04:00:09 +0100
+
+## v4.0.8
+Bug fixes and minor enhancements.
+
+### New Features
+* None
+
+### Bug Fixes
+* Clicking 'Generate Instructions' on the Brewday tab overwrites existing instructions without warning [862](https://github.com/Brewtarget/brewtarget/issues/862)
+* Brewtarget 4.0.7 Qt6 issue on Ubuntu (libQt6Multimedia.so.6 missing) [861](https://github.com/Brewtarget/brewtarget/issues/861)
+* Missing libb2-1.dll [863](https://github.com/Brewtarget/brewtarget/issues/863)
+
+### Release Timestamp
+Sat, 26 Oct 2024 04:00:08 +0100
+
+## v4.0.7
+Bug fixes and minor enhancements.
+
+### New Features
+* Add vertical splitter on Recipe tab, make kettle diameter editable
+* Minor improvements to editor layouts
+
+### Bug Fixes
+* Some input fields not wide enough on various editors [849](https://github.com/Brewtarget/brewtarget/issues/849)
+* Upgrade to Qt 6 [841](https://github.com/Brewtarget/brewtarget/issues/841)
+* Equipment should be optional in Recipes in BeerXML [853](https://github.com/Brewtarget/brewtarget/issues/853)
+* Salt additions with when-to-add time of Never not handled in DB upgrade [840](https://github.com/Brewtarget/brewtarget/issues/840)
+
+### Release Timestamp
+Tue, 16 Oct 2024 04:00:07 +0100
+
+## v4.0.6
+Bug fixes for the 4.0.5 release (ie bugs in 4.0.5 are fixed in this 4.0.6 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Can't add fermentation steps [831](https://github.com/Brewtarget/brewtarget/issues/831)
+* Ingredient inventory edits not saved [832](https://github.com/Brewtarget/brewtarget/issues/832)
+* Unsatisfied dependency for Brewtarget update in ubuntu 24.01 [840](https://github.com/Brewtarget/brewtarget/issues/840)
+* Cmake error on Linux Mint 22 Wilma [843](https://github.com/Brewtarget/brewtarget/issues/843)
+* Binaries are not signed on Windows [827](https://github.com/Brewtarget/brewtarget/issues/827)
+* Adding Mash Step causes core dump [847](https://github.com/Brewtarget/brewtarget/issues/847)
+
+### Release Timestamp
+Sun, 6 Oct 2024 04:00:06 +0100
+
+## v4.0.5
+Bug fixes for the 4.0.4 release (ie bugs in 4.0.4 are fixed in this 4.0.5 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Crash on new ingredient import (brewtarget v4.0.4) at startup time [828](https://github.com/Brewtarget/brewtarget/issues/828)
+* Crash on new recipe creation [829](https://github.com/Brewtarget/brewtarget/issues/829)
+* Brewtarget asks to migrate db from vers 9 to version 13 even if no previous DB is there [834](https://github.com/Brewtarget/brewtarget/issues/834)
+* BeerXML/BeerJSON Recipe export does not match selected type [835](https://github.com/Brewtarget/brewtarget/issues/835)
+
+### Release Timestamp
+Sun, 29 Sep 2024 04:00:05 +0100
+
+## v4.0.4
+Minor bug fixes for the 4.0.3 release (ie bugs in 4.0.3 are fixed in this 4.0.4 release).
+
+### New Features
+* Improve equality tests [824](https://github.com/Brewtarget/brewtarget/issues/824)
+
+### Bug Fixes
+* Crash editing Target Boil Size [817](https://github.com/Brewtarget/brewtarget/issues/817)
+* Crash when exporting recipe [821](https://github.com/Brewtarget/brewtarget/issues/821)
+* Inventory not displaying (further fixes) [814](https://github.com/Brewtarget/brewtarget/issues/814)
+* Edit Boil and Edit Fermentation buttons not working [826](https://github.com/Brewtarget/brewtarget/issues/826)
+
+### Release Timestamp
+Wed, 18 Sep 2024 04:00:04 +0100
+
+## v4.0.3
+Minor bug fixes for the 4.0.2 release (ie bugs in 4.0.2 are fixed in this 4.0.3 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Yeasts have no Attenuation [812](https://github.com/Brewtarget/brewtarget/issues/812)
+* Inventory not displaying and crash when try to edit [814](https://github.com/Brewtarget/brewtarget/issues/814)
+
+### Release Timestamp
+Tue, 27 Aug 2024 04:00:03 +0100
+
+## v4.0.2
+Minor bug fixes for the 4.0.1 release (ie bugs in 4.0.1 are fixed in this 4.0.2 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Unable to add ingredients to recipe (4.0.X) [810](https://github.com/Brewtarget/brewtarget/issues/810)
+
+### Release Timestamp
+Tue, 20 Aug 2024 04:00:02 +0100
+
+## v4.0.1
+Minor bug fixes for the 4.0.0 release (ie bugs in 4.0.0 are fixed in this 4.0.1 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Windows installation blocked by Data Conversion failure [804](https://github.com/Brewtarget/brewtarget/issues/804)
+* DefaultContent004-MoreYeasts.json not in cmake files [806](https://github.com/Brewtarget/brewtarget/issues/806)
+
+### Release Timestamp
+Thu, 8 Aug 2024 04:00:01 +0100
+
+## v4.0.0
+Support for BeerJSON, which includes adding a lot of new fields
+
+### New Features
+* Import from, and export to, BeerJSON [388](https://github.com/Brewtarget/brewtarget/issues/388)
+* Support for optional fields (ie where value can be blank)
+* Lovibond as color unit option [428](https://github.com/Brewtarget/brewtarget/issues/428)
+* Use Brewerwall ingredient data [290](https://github.com/Brewtarget/brewtarget/issues/290)
+* Update Styles to 2015 or even 2021 BJCP Guidelines [125](https://github.com/Brewtarget/brewtarget/issues/125)
+* Add alcohol tolerance as optional parameter in yeast database model and manufacturer's link ? [639](https://github.com/Brewtarget/brewtarget/issues/639)
+* Remove Default amounts in ingredients editors [359](https://github.com/Brewtarget/brewtarget/issues/359)
+* Mechanism to add new content [750](https://github.com/Brewtarget/brewtarget/issues/750)
+* Add "each" as a unit of measurement [383](https://github.com/Brewtarget/brewtarget/issues/383)
+
+### Bug Fixes
+* Default SQLite database file: hop, fermentable, mashstep, misc and yeast tables have unused columns [557](https://github.com/Brewtarget/brewtarget/issues/557)
+* Problem with Windows installer NSIS plugins [522](https://github.com/Brewtarget/brewtarget/issues/522)
+* Add values for pH [386](https://github.com/Brewtarget/brewtarget/issues/386)
+* Hops Use combo has entry that says "Aroma" but ends up listed as "Post-Boil" in the display [775](https://github.com/Brewtarget/brewtarget/issues/775)
+* We currently display a Recipe's date as "Brew Date", when it should probably be "Creation Date" [619](https://github.com/Brewtarget/brewtarget/issues/619)
+
+### Release Timestamp
+Tue, 11 Jun 2024 04:00:00 +0100
+
+## v3.0.11
+Minor bug fixes for the 3.0.10 release (ie bugs in 3.0.10 are fixed in this 3.0.11 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Crash changing fermentation duration [785](https://github.com/Brewtarget/brewtarget/issues/785)
+* Tabs on Editor Windows not displaying correctly on macOS [787](https://github.com/Brewtarget/brewtarget/issues/787)
+* Efficiency into boil kettle calculation unstable after closing and re-opening Brewtarget [789](https://github.com/Brewtarget/brewtarget/issues/789)
+
+### Release Timestamp
+Sun, 4 Feb 2024 15:46:47 +0100
+
+## v3.0.10
+Minor bug fixes for the 3.0.9 release (ie bugs in 3.0.9 are fixed in this 3.0.10 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Database error since 3.0.7 [#780](https://github.com/Brewtarget/brewtarget/issues/780)
+* Restoring database from another version of Brewtarget (self-compiled version 2.0.4 from 2018 codebase) on MacOS 11.7.8 causes application to fail to load on Brewtarget 3.0.9 on Linux Mint 21.1 [#766](https://github.com/Brewtarget/brewtarget/issues/766)
+* Postgres issue w/ fresh install [#760](https://github.com/Brewtarget/brewtarget/issues/760)
+* Import Error [#751](https://github.com/Brewtarget/brewtarget/issues/751)
+
+### Release Timestamp
+Wed, 27 Dec 2023 10:00:10 +0100
+
+## v3.0.9
+Minor bug fixes for the 3.0.8 release (ie bugs in 3.0.8 are fixed in this 3.0.9 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* Broken build on Linux Mint [#738](https://github.com/Brewtarget/brewtarget/issues/738)
+* "Brew it" crashes Mac app [#747](https://github.com/Brewtarget/brewtarget/issues/747)
+* Memory access crash on create new recipe [#748](https://github.com/Brewtarget/brewtarget/issues/748)
+
+### Release Timestamp
+Mon, 15 May 2023 08:29:09 +0100
+
+## v3.0.8
+Minor bug fixes for the 3.0.7 release (ie bugs in 3.0.7 are fixed in this 3.0.8 release).
+
+### New Features
+* Case insensitive matching of unit names (mL vs ml etc) [#725](https://github.com/Brewtarget/brewtarget/issues/725)
+* More fields show their units (eg "%", "vol", etc) and number of decimal places on some fields is amended
+
+### Bug Fixes
+* Errors in SucroseConversion.cpp when Compiling on Windows 10 under Visual Studio 2022 [#743](https://github.com/Brewtarget/brewtarget/issues/743)
+* M_PI undefined when Compiling on Windows 10 under Visual Studio 2022 [#741](https://github.com/Brewtarget/brewtarget/issues/741)
+* Water chemistry is still broken [#736](https://github.com/Brewtarget/brewtarget/issues/736)
+* Some more confusion about decimal separators [#733](https://github.com/Brewtarget/brewtarget/issues/733)
+
+### Release Timestamp
+Sun, 30 Apr 2023 09:29:08 +0100
+
+## v3.0.7
+Minor bug fixes for the 3.0.6 release (ie bugs in 3.0.6 are fixed in this 3.0.7 release).
+
+### New Features
+* None
+
+### Bug Fixes
+* import or export xml records crashes 3.0.x Win app [#711](https://github.com/Brewtarget/brewtarget/issues/711)
+* win10 native MSYS2 build make package error [714](https://github.com/Brewtarget/brewtarget/issues/714)
+* Hop calculation issues [715](https://github.com/Brewtarget/brewtarget/issues/715)
+* Reset values of Specific Heat [719](https://github.com/Brewtarget/brewtarget/issues/719)
+
+### Release Timestamp
+Tue, 28 Feb 2023 05:51:36 +0100
+
+## v3.0.6
+Minor bug fixes for the 3.0.5 release (ie bugs in 3.0.5 are fixed in this 3.0.6 release).
 
 ### New Features
 
-* PostgreSQL 9.5 is now a supported database.
+* None
+
+### Bug Fixes
+* brewkenPersistentSettings.conf? [#694](https://github.com/Brewtarget/brewtarget/issues/694)
+* Could not decode "Pellet" to enum and others [#695](https://github.com/Brewtarget/brewtarget/issues/695)
+* Brewtarget logo is missing from main window [#697](https://github.com/Brewtarget/brewtarget/issues/697)
+* Drag and drop is broken [#701](https://github.com/Brewtarget/brewtarget/issues/701)
+* WARNING : QObject::connect: No such signal BrewNote::brewDateChanged(QDateTime) in /home/mik/brewtarget/mik/src/BtTreeModel.cpp [#703](https://github.com/Brewtarget/brewtarget/issues/703)
+* Water chemistry was misbehaving [#705](https://github.com/Brewtarget/brewtarget/issues/705)
+* core dump when right clicking the OG label on the main screen [#708](https://github.com/Brewtarget/brewtarget/issues/708)
+* Hop calculation issues [#715](https://github.com/Brewtarget/brewtarget/issues/715)
+* Hop editor crashes App [#717](https://github.com/Brewtarget/brewtarget/issues/717)
+
+### Release Timestamp
+Sun, 5 Feb 2023 10:04:23 +0100
+
+## v3.0.5
+Minor bug fixes for the 3.0.4 release (ie bugs in 3.0.4 are fixed in this 3.0.5 release).
+
+### New Features
+
+* None
+
+### Bug Fixes
+* macOS release v3.0.3 is damaged [#679](https://github.com/Brewtarget/brewtarget/issues/679)
+* Boil Time not saved when you edit a copied recipe [#688](https://github.com/Brewtarget/brewtarget/issues/688)
+* Imported recipes are inconsistent and inaccurate [#689](https://github.com/Brewtarget/brewtarget/issues/689)
+
+### Release Timestamp
+Tue, 20 Dec 2022 09:03:12 +0100
+
+## v3.0.4
+Minor bug fixes for the 3.0.3 release (ie bugs in 3.0.3 are fixed in this 3.0.4 release).
+
+### New Features
+
+* None
+
+### Bug Fixes
+* Compiling Brewtarget from source for the first time produces a Segmentation Fault [#669](https://github.com/Brewtarget/brewtarget/issues/669)
+* Desktop file and icon installed to wrong location on Linux [#683](https://github.com/Brewtarget/brewtarget/issues/683)
+* macOS release v3.0.3 is damaged [#679](https://github.com/Brewtarget/brewtarget/issues/679)
+* Water Chemistry: Crash when selecting added salt name or amount [#685](https://github.com/Brewtarget/brewtarget/issues/685)
+
+### Release Timestamp
+Sun, 27 Nov 2022 10:45:45 +0100
+
+## v3.0.3
+Minor bug fixes for the 3.0.2 release (ie bugs in 3.0.2 are fixed in this 3.0.3 release).
+
+### New Features
+
+* None
+
+### Bug Fixes
+* Flags in language selection [#675](https://github.com/Brewtarget/brewtarget/issues/675)
+
+### Release Timestamp
+Sun, 6 Nov 2022 11:11:11 +0100
+
+## v3.0.2
+Minor bug fixes for the 3.0.1 release (ie bugs in 3.0.1 are fixed in this 3.0.2 release).
+
+### New Features
+
+* None
+
+### Bug Fixes
+* LGPL-2.1-only and LGPL-3.0-only license text not shipped [#664](https://github.com/Brewtarget/brewtarget/issues/664)
+* Release 3.0.1 is uninstallable on Ubuntu 22.04.1 [#665](https://github.com/Brewtarget/brewtarget/issues/665)
+* Turkish Language selection in settings not working [#670])https://github.com/Brewtarget/brewtarget/issues/670)
+
+### Release Timestamp
+Wed, 26 Oct 2022 10:10:10 +0100
+
+## v3.0.1
+Minor bug fixes for the 3.0 release (ie bugs in 3.0.0 are fixed in this 3.0.1 release).
+
+### New Features
+
+* None
+
+### Bug Fixes
+* 3.0.0 release puts config and DB in the wrong folder [#662](https://github.com/Brewtarget/brewtarget/issues/662)
+* Brewtarget exit after clicking on... [#649](https://github.com/Brewtarget/brewtarget/issues/649)
+
+### Release Timestamp
+Sun, 9 Oct 2022 09:09:09 +0100
+
+## v3.0.0
+New features, rewrites of several low-level interfaces, changes to the basic data model, lots of bug fixes.
+
+### New Features
+* PostgreSQL 9.5 is now a supported database
 * SQLite database is automatically backed up
 * Temporary database has been removed, in favor of the automated backups
 * All writes are now live -- no need to save your work.
-* Three new mash types have been added: Batch Sparge, Fly Sparge and No
-  Sparge. The maths should work.
-* Units&scale now work for input as well as output
+* Three new mash types have been added: Batch Sparge, Fly Sparge and No Sparge. The maths should work.
+* Units and scale now work for input as well as output
+* Recipe versioning
 * UI state persists
-* Improved equipment editor.
+* Improved equipment editor
+* Undo/Redo [#370](https://github.com/Brewtarget/brewtarget/issues/370)
+* XML import is more robust
+* Improved display on HDPI displays
 
 ### Bug Fixes
-
-* When you change the scale of the Boil Time in the equipment dialog the prg crash [#137](https://github.com/Brewtarget/brewtarget/issues/137)
-* Can't delete a style from the tree [#155](https://github.com/Brewtarget/brewtarget/issues/155)
-* OG P wrongly calculated for OG sg in refractometer tool [#159](https://github.com/Brewtarget/brewtarget/issues/159)
-* We are not properly deleting things [#164](https://github.com/Brewtarget/brewtarget/issues/164)
-* Not linking with QtSvg: macdeployqt misses the svg plugins [#169](https://github.com/Brewtarget/brewtarget/issues/169)
-* First wort hop adjustment too high by a factor of 100 [#177](https://github.com/Brewtarget/brewtarget/issues/177)
-* Program crashes after moving up or down a mash step for an empty mash profile [#180](https://github.com/Brewtarget/brewtarget/issues/180)
-* HopSortFilterProxy isn't quite behaving properly on TIMECOL [#182](https://github.com/Brewtarget/brewtarget/issues/182)
-* Display amount always in volumeunit in yeast editor [#183](https://github.com/Brewtarget/brewtarget/issues/183)
-* Half the recipes in a folder are moved when dragged-and-dropped into another folder [#195](https://github.com/Brewtarget/brewtarget/issues/195)
-* Brewtarget::Initialize fails on a blank system [#210](https://github.com/Brewtarget/brewtarget/issues/210)
-* Bug: Incorrect mash temperature is shown in editor and grid [#220](https://github.com/Brewtarget/brewtarget/issues/220)
-* Changing IBU formula or mash/fwh percentages, nothing happens [#223](https://github.com/Brewtarget/brewtarget/issues/223)
-* fromXML methods are not fault tolerant [#239](https://github.com/Brewtarget/brewtarget/issues/239)
-* Database VANISHED!!! [#247](https://github.com/Brewtarget/brewtarget/issues/247)
-* Instant crash when export to print (on Ubuntu) [#250](https://github.com/Brewtarget/brewtarget/issues/250)
+* 2.3.0 usability enhancement [#179](https://github.com/Brewtarget/brewtarget/issues/179)
+* 2.4 creating recipe crashes brewtarget [#419](https://github.com/Brewtarget/brewtarget/issues/419)
+* 2.4 Verson [#481](https://github.com/Brewtarget/brewtarget/issues/481)
+* ABV Calculation Error [#398](https://github.com/Brewtarget/brewtarget/issues/398)
+* Adding yeast to a recipe crashes when using postgresql [#508](https://github.com/Brewtarget/brewtarget/issues/508)
+* Adjusting volume on preboil tab doesn't change bk efficiency [#255](https://github.com/Brewtarget/brewtarget/issues/255)
+* A new dir misbehave? [#643](https://github.com/Brewtarget/brewtarget/issues/643)
+* Avoid recipe recalc on load enhancement [#270](https://github.com/Brewtarget/brewtarget/issues/270)
+* A zombie recipe ;), just cosmetic thing. [#645](https://github.com/Brewtarget/brewtarget/issues/645)
+* Backup Database - can't choose filename, and clicking Cancel gives error [#497](https://github.com/Brewtarget/brewtarget/issues/497)
 * Bad css on recipe output [#251](https://github.com/Brewtarget/brewtarget/issues/251)
-* Printed pages do not fill page width on high-dpi displays [#88](https://github.com/Brewtarget/brewtarget/issues/88)
-* New ingredient can't be created into a folder [#117](https://github.com/Brewtarget/brewtarget/issues/117)
-* ibu/color formulas do not persist [#133](https://github.com/Brewtarget/brewtarget/issues/133)
-* Two running Brewtargets Resets Database [#73](https://github.com/Brewtarget/brewtarget/issues/73)
+* Beer XML imports don't seem to be working. [#576](https://github.com/Brewtarget/brewtarget/issues/576)
+* beerxml import seems broken [#500](https://github.com/Brewtarget/brewtarget/issues/500)
+* Boil time for hops is shown in whole hours (90 min -> 2h) [#560](https://github.com/Brewtarget/brewtarget/issues/560)
+* Brew it / generate brew notes [#403](https://github.com/Brewtarget/brewtarget/issues/403)
+* Brewnotes don't work any more [#417](https://github.com/Brewtarget/brewtarget/issues/417)
+* BrewNote should contain a copy of a the recipe on the day it was brewed. enhancement normal priority [#106](https://github.com/Brewtarget/brewtarget/issues/106)
+* Brewtarget (2.4.0) crashes when copying recipe [#589](https://github.com/Brewtarget/brewtarget/issues/589)
+* brewtarget crashed, now I am warned there are two instances running [#533](https://github.com/Brewtarget/brewtarget/issues/533)
+* Brewtarget crashes when exporting a recipe with a Sparge mash [#626](https://github.com/Brewtarget/brewtarget/issues/626)
+* Brewtarget doesn't stop you running multiple instances [#526](https://github.com/Brewtarget/brewtarget/issues/526)
+* Brewtarget::initialize() fails on a blank system [#210](https://github.com/Brewtarget/brewtarget/issues/210)
+* Brewtarget misinterprets the mash temperatures: 65,000 C as 65.000,000 C [#569](https://github.com/Brewtarget/brewtarget/issues/569)
+* Brewtarget release 2.4.0 is coming [#271](https://github.com/Brewtarget/brewtarget/issues/271)
+* Brewtarget should log its version number [#495](https://github.com/Brewtarget/brewtarget/issues/495)
+* Broken unit tests after #453 [#455](https://github.com/Brewtarget/brewtarget/issues/455)
+* BT 2.3.1: BeerXML output does not contain estimated IBU value [#452](https://github.com/Brewtarget/brewtarget/issues/452)
+* BT DEV 2.4.0 - dependency libgcc-s1 on ubuntu 18.04 [#623](https://github.com/Brewtarget/brewtarget/issues/623)
+* btOS - BrewTarget OS GNU Linux Embedded - RaspberryPI 3 [#355](https://github.com/Brewtarget/brewtarget/issues/355)
+* BtTreeView selected items take precedence over locally selected entities [#340](https://github.com/Brewtarget/brewtarget/issues/340)
+* Buggy refactor [#230](https://github.com/Brewtarget/brewtarget/issues/230)
+* Bug: Incorrect mash temperature is shown in editor and grid [#220](https://github.com/Brewtarget/brewtarget/issues/220)
+* Bug With database not creating in windows on fresh install [#486](https://github.com/Brewtarget/brewtarget/issues/486)
+* Building on windows and getting started on Windows? [#397](https://github.com/Brewtarget/brewtarget/issues/397)
+* Build problems on guidsx [#248](https://github.com/Brewtarget/brewtarget/issues/248)
+* Cannot delete style [#371](https://github.com/Brewtarget/brewtarget/issues/371)
+* Cannot Start Brewtarget [#470](https://github.com/Brewtarget/brewtarget/issues/470)
+* Can't add mash step in dev [#221](https://github.com/Brewtarget/brewtarget/issues/221)
+* Can't delete a style from the tree [#155](https://github.com/Brewtarget/brewtarget/issues/155)
+* Can't enter 90 minutes in hops schedule duplicate [#243](https://github.com/Brewtarget/brewtarget/issues/243)
+* Chaging unit or scale on a table column does not automatically refresh [#43](https://github.com/Brewtarget/brewtarget/issues/43)
+* Changing IBU formula or mash/fwh percentages, nothing happens [#223](https://github.com/Brewtarget/brewtarget/issues/223)
+* CI/CD automated builds [#456](https://github.com/Brewtarget/brewtarget/issues/456)
+* Color of the malt as displayed in the treeView_ferm is expressed in SRM regardless of unit settings [#345](https://github.com/Brewtarget/brewtarget/issues/345)
+* Compile error in MashWizard.cpp [#422](https://github.com/Brewtarget/brewtarget/issues/422)
+* Copy database doesn't copy the settings table properly [#306](https://github.com/Brewtarget/brewtarget/issues/306)
+* Copying database fails [#303](https://github.com/Brewtarget/brewtarget/issues/303)
+* "Copy Recipe" doesn't input inventory quantities [#72](https://github.com/Brewtarget/brewtarget/issues/72)
+* core dump on creating new database [#142](https://github.com/Brewtarget/brewtarget/issues/142)
+* Core dump when closing brewtarget [#311](https://github.com/Brewtarget/brewtarget/issues/311)
+* Crash at closing after deleting a hop [#116](https://github.com/Brewtarget/brewtarget/issues/116)
+* Crash when creating new Equipment [#634](https://github.com/Brewtarget/brewtarget/issues/634)
+* Crash when importing .xml-file [#280](https://github.com/Brewtarget/brewtarget/issues/280)
+* Creating a new recipe makes the program crash on start-up [#518](https://github.com/Brewtarget/brewtarget/issues/518)
+* Custom instructions aren't added to Recipe [#656](https://github.com/Brewtarget/brewtarget/issues/656)
+* Database gone/reset to defaults [#469](https://github.com/Brewtarget/brewtarget/issues/469)
+* Database performance [#309](https://github.com/Brewtarget/brewtarget/issues/309)
+* DatabaseSchemaHelper::create doesn't define mashstep table properly [#145](https://github.com/Brewtarget/brewtarget/issues/145)
+* DatabaseSchemaHelper() defines hop table incorrectly [#150](https://github.com/Brewtarget/brewtarget/issues/150)
+* DatabaseSchemaHelper defines mash.name as not null [#149](https://github.com/Brewtarget/brewtarget/issues/149)
+* Database VANISHED!!! [#247](https://github.com/Brewtarget/brewtarget/issues/247)
+* Database wiped on Mac OS X 10.12 due to logout [#333](https://github.com/Brewtarget/brewtarget/issues/333)
+* "Date First Brewed" should default to date recipe was created [#301](https://github.com/Brewtarget/brewtarget/issues/301)
+* DB edits in Options dialog [#570](https://github.com/Brewtarget/brewtarget/issues/570)
+* Default database directory location [#272](https://github.com/Brewtarget/brewtarget/issues/272)
+* default_database.sqlite is a little broken [#476](https://github.com/Brewtarget/brewtarget/issues/476)
+* Deleting equipment, style or named mash dumps core [#237](https://github.com/Brewtarget/brewtarget/issues/237)
+* Deleting fermentable from recipe causes a crash. [#436](https://github.com/Brewtarget/brewtarget/issues/436)
+* Dependencies are not the same in the main README and the vagrant provisioning file [#376](https://github.com/Brewtarget/brewtarget/issues/376)
+* develop branch announcement [#168](https://github.com/Brewtarget/brewtarget/issues/168)
+* develop crashing on adding equipment to a new recipe [#507](https://github.com/Brewtarget/brewtarget/issues/507)
+* Disconnected signal/slot pair when printing [#276](https://github.com/Brewtarget/brewtarget/issues/276)
+* Display amount always in volumeunit in yeast editor [#183](https://github.com/Brewtarget/brewtarget/issues/183)
+* Docker with Linux+Brewtarget 2.4.0 [#393](https://github.com/Brewtarget/brewtarget/issues/393)
+* Doesn't build using cmake 3.x [#409](https://github.com/Brewtarget/brewtarget/issues/409)
+* dpkg -i deb throws up errors - old dependenices listed as required [#489](https://github.com/Brewtarget/brewtarget/issues/489)
+* Editing mash crashes the program [#606](https://github.com/Brewtarget/brewtarget/issues/606)
+* Enable GitHub Discussions? [#528](https://github.com/Brewtarget/brewtarget/issues/528)
+* Error in equipment editor definitions [#214](https://github.com/Brewtarget/brewtarget/issues/214)
+* Feature proposal: Duplicate button in inventory [#332](https://github.com/Brewtarget/brewtarget/issues/332)
+* Feature request: Add logging options to GUI [#474](https://github.com/Brewtarget/brewtarget/issues/474)
+* Feature request - Alpha % in Inventory Report [#466](https://github.com/Brewtarget/brewtarget/issues/466)
+* Fermentable added to recipe has inventory amount set to zero. [#396](https://github.com/Brewtarget/brewtarget/issues/396)
+* FG calculation does not take into account unfermentable ingredients (example: Lactose) [#358](https://github.com/Brewtarget/brewtarget/issues/358)
+* Final Batch Sparge always assuming 15min in Mash Wizard enhancement normal priority [#63](https://github.com/Brewtarget/brewtarget/issues/63)
+* First wort hop adjustment too high by a factor of 100 [#177](https://github.com/Brewtarget/brewtarget/issues/177)
+* Fixed efficiency [#641](https://github.com/Brewtarget/brewtarget/issues/641)
+* Foreign keys seem to need to be last [#144](https://github.com/Brewtarget/brewtarget/issues/144)
+* fromXML methods are not fault tolerant [#239](https://github.com/Brewtarget/brewtarget/issues/239)
+* Generate instructions on a new recipe dumps core [#513](https://github.com/Brewtarget/brewtarget/issues/513)
+* Graphical/text representation of gravity,color, IBUs, etc has mis-sized and truncated text [#484](https://github.com/Brewtarget/brewtarget/issues/484)
+* Graphics on new install glitched [#537](https://github.com/Brewtarget/brewtarget/issues/537)
+* Half the recipes in a folder are moved when dragged-and-dropped into another folder [#195](https://github.com/Brewtarget/brewtarget/issues/195)
+* High DPI Display problems [#434](https://github.com/Brewtarget/brewtarget/issues/434)
+* Hops inventory does not update duplicate [#324](https://github.com/Brewtarget/brewtarget/issues/324)
+* HopSortFilterProxy isn't quite behaving properly on TIMECOL [#182](https://github.com/Brewtarget/brewtarget/issues/182)
+* HTML and XML files [#646](https://github.com/Brewtarget/brewtarget/issues/646)
+* Hydrometer 60F calibration [#330](https://github.com/Brewtarget/brewtarget/issues/330)
+* I broke database conversions again [#580](https://github.com/Brewtarget/brewtarget/issues/580)
+* IBU/color formulas do not persist [#133](https://github.com/Brewtarget/brewtarget/issues/133)
+* Importing an XML file from our export throws a lot of warnings [#475](https://github.com/Brewtarget/brewtarget/issues/475)
+* Importing a recipe is broken [#444](https://github.com/Brewtarget/brewtarget/issues/444)
+* Improve XML import/export error handling. enhancement normal priority [#421](https://github.com/Brewtarget/brewtarget/issues/421)
+* Incorrect balloon comments for Strike Temp and Final Temp [#54](https://github.com/Brewtarget/brewtarget/issues/54)
+* Incorrect mash temperature is shown in editor and grid [#220](https://github.com/Brewtarget/brewtarget/issues/220)
+* Ingredients - add Levteck yeast enhancement [#284](https://github.com/Brewtarget/brewtarget/issues/284)
+* Initialising a new database [#319](https://github.com/Brewtarget/brewtarget/issues/319)
+* Initial value of IBU Adjustments erroneous on systems that use coma as decimal separator [#158](https://github.com/Brewtarget/brewtarget/issues/158)
+* Installer: skip terminates [#11](https://github.com/Brewtarget/brewtarget/issues/11)
+* Instant crash when export to print (on Ubuntu) [#250](https://github.com/Brewtarget/brewtarget/issues/250)
+* Instruction increment trigger may be broken [#141](https://github.com/Brewtarget/brewtarget/issues/141)
+* Inventory error?! Unknown signal. Trying to add inventory to yeasts. [#601](https://github.com/Brewtarget/brewtarget/issues/601)
+* Is there anyone building this on macOS? [#375](https://github.com/Brewtarget/brewtarget/issues/375)
+* I was thinking about windows installer build [#512](https://github.com/Brewtarget/brewtarget/issues/512)
 * Keep inventory when copying a recipe [#72] (https://github.com/Brewtarget/brewtarget/issues/72)
+* Kettle volume loss due to trub [#385](https://github.com/Brewtarget/brewtarget/issues/385)
+* Macbook pro retina display fonts are pixelated (HiDPI) enhancement normal priority [#259](https://github.com/Brewtarget/brewtarget/issues/259)
+* Make XML import more robust [#504](https://github.com/Brewtarget/brewtarget/issues/504)
+* Mash Designer - batch sparge type has no affect on water slider amount range [#282](https://github.com/Brewtarget/brewtarget/issues/282)
+* Mash Designer lets you over-shoot target collected wort volume [#339](https://github.com/Brewtarget/brewtarget/issues/339)
+* Mash designer - lower step temperature causes negative infusion [#94](https://github.com/Brewtarget/brewtarget/issues/94)
+* Mash designer produces inconsistent results [#279](https://github.com/Brewtarget/brewtarget/issues/279)
+* Mash Designer Temperature Bugs [#412](https://github.com/Brewtarget/brewtarget/issues/412)
+* Mash Designer - temperature slider reversal [#283](https://github.com/Brewtarget/brewtarget/issues/283)
+* Mash Profile deletion causes fatal error [#342](https://github.com/Brewtarget/brewtarget/issues/342)
+* Mash wizard creates fly sparge step even when "No sparge" radio button checked [#351](https://github.com/Brewtarget/brewtarget/issues/351)
+* Mash wizard does not adjust sparge water temperature for changes in mash temperature [#357](https://github.com/Brewtarget/brewtarget/issues/357)
+* Minimum and maximum recommended IBU values do not change when switching between Tinseth's and Rager's [#630](https://github.com/Brewtarget/brewtarget/issues/630)
+* Moving mash steps causes crash. [#265](https://github.com/Brewtarget/brewtarget/issues/265)
+* Moving mash steps doesn't update form. [#267](https://github.com/Brewtarget/brewtarget/issues/267)
+* Nested html documents in recipe printout [#277](https://github.com/Brewtarget/brewtarget/issues/277)
+* New ingredient can't be created into a folder [#117](https://github.com/Brewtarget/brewtarget/issues/117)
+* Newly created folders are not stored in the db [#346](https://github.com/Brewtarget/brewtarget/issues/346)
+* New MashStep doesn't get saved properly [#628](https://github.com/Brewtarget/brewtarget/issues/628)
+* New mash type are behaving poorly [#244](https://github.com/Brewtarget/brewtarget/issues/244)
+* No menu question [#136](https://github.com/Brewtarget/brewtarget/issues/136)
+* Notepad style recipe option. [#394](https://github.com/Brewtarget/brewtarget/issues/394)
+* Not linking with QtSvg: macdeployqt misses the svg plugins [#169](https://github.com/Brewtarget/brewtarget/issues/169)
+* Number of decimals for the color in the fermentable editor [#314](https://github.com/Brewtarget/brewtarget/issues/314)
+* OG P wrongly calculated for OG sg in refractometer tool [#159](https://github.com/Brewtarget/brewtarget/issues/159)
+* Old recipe crashes Brewtarget [#420](https://github.com/Brewtarget/brewtarget/issues/420)
+* OSX - Crashes when run directly from DMG (read-only installer image) [#269](https://github.com/Brewtarget/brewtarget/issues/269)
+* Pedantic compiler warnings [#233](https://github.com/Brewtarget/brewtarget/issues/233)
+* Persistent backups and temporary backups enhancement [#261](https://github.com/Brewtarget/brewtarget/issues/261)
+* PPA is out of date [#381](https://github.com/Brewtarget/brewtarget/issues/381)
+* PPA is Way Out of Date [#236](https://github.com/Brewtarget/brewtarget/issues/236)
+* Printed pages do not fill page width on high-dpi displays [#88](https://github.com/Brewtarget/brewtarget/issues/88)
+* Printing not working in develop [#263](https://github.com/Brewtarget/brewtarget/issues/263)
+* Printouts are black with dark theme [#454](https://github.com/Brewtarget/brewtarget/issues/454)
+* Print preview is no longer WYSIWYG [#258](https://github.com/Brewtarget/brewtarget/issues/258)
+* Problems with OGs and FGs for each style (2.3.0) [#166](https://github.com/Brewtarget/brewtarget/issues/166)
+* Problem with amounts in inventory [#532](https://github.com/Brewtarget/brewtarget/issues/532)
+* Program crashes after moving up or down a mash step for an empty mash profile [#180](https://github.com/Brewtarget/brewtarget/issues/180)
+* Put string constants for property names in namespaces and match names to values [#520](https://github.com/Brewtarget/brewtarget/issues/520)
+* QCoreApplication::applicationDirPath: Please instantiate the QApplication object first bug needs info [#115](https://github.com/Brewtarget/brewtarget/issues/115)
+* qt 5.11 breaks fermentables [#416](https://github.com/Brewtarget/brewtarget/issues/416)
+* QT5 minimal version [#521](https://github.com/Brewtarget/brewtarget/issues/521)
+* QtMultimedia gstreamer link issue [#9](https://github.com/Brewtarget/brewtarget/issues/9)
+* Recalc button enhancement [#135](https://github.com/Brewtarget/brewtarget/issues/135)
+* Recipe Extras Tab >> Notes & Taste Notes should be saved? [#365](https://github.com/Brewtarget/brewtarget/issues/365)
+* Recipe versioning [#327](https://github.com/Brewtarget/brewtarget/issues/327)
+* Removing ingredient from the recipe does not update calculated beer parameters [#341](https://github.com/Brewtarget/brewtarget/issues/341)
+* Request: Double click ingredient opens ingredient editor [#350](https://github.com/Brewtarget/brewtarget/issues/350)
+* Require specific minimum Qt version in CMakeLists.txt [#152](https://github.com/Brewtarget/brewtarget/issues/152)
+* Right-click on top level Recipes in treeview Segfaults with null pointer [#609](https://github.com/Brewtarget/brewtarget/issues/609)
+* Saving a "note" to a the dated tab causes application to crash [#483](https://github.com/Brewtarget/brewtarget/issues/483)
+* Saving error [#373](https://github.com/Brewtarget/brewtarget/issues/373)
+* Scottland -> Scotland [#529](https://github.com/Brewtarget/brewtarget/issues/529)
+* Segfault merging database [#291](https://github.com/Brewtarget/brewtarget/issues/291)
+* Signals, signals everywhere enhancement [#274](https://github.com/Brewtarget/brewtarget/issues/274)
+* Slots: signals in BeerXMLElement subclasses? [#473](https://github.com/Brewtarget/brewtarget/issues/473)
+* Specific heat label fix (cal/(g*K)) to (Cal/(g*K)) [#404](https://github.com/Brewtarget/brewtarget/issues/404)
+* SQL Database Error in mashstep [#461](https://github.com/Brewtarget/brewtarget/issues/461)
+* SQLite to postgres is broken. Again. [#505](https://github.com/Brewtarget/brewtarget/issues/505)
+* Support for Brew-in-a-bag enhancement [#41](https://github.com/Brewtarget/brewtarget/issues/41)
+* TESTs failing when Testing::initTestCase() is creating new Hop or Fermentable [#604](https://github.com/Brewtarget/brewtarget/issues/604)
+* Text Notes on Brew Days gone and do not work anymore [#457](https://github.com/Brewtarget/brewtarget/issues/457)
+* Thank you very much for the free open source program! [#494](https://github.com/Brewtarget/brewtarget/issues/494)
+* The feature of calculating ingredients enhancement [#188](https://github.com/Brewtarget/brewtarget/issues/188)
+* There is no Q_PROPERTY line in brewnotes for the new attenuation field [#440](https://github.com/Brewtarget/brewtarget/issues/440)
+* Time automatically displayed in hours if the value in minute exceeds 60 min enhancement [#46](https://github.com/Brewtarget/brewtarget/issues/46)
+* TravisCI can't find webkit because it's gone forever [#217](https://github.com/Brewtarget/brewtarget/issues/217)
+* Trying to delete "brewtarget" folder in the Recipes list causes segfault [#338](https://github.com/Brewtarget/brewtarget/issues/338)
+* Tun Volume Entered is 0 [#298](https://github.com/Brewtarget/brewtarget/issues/298)
+* Two running Brewtargets Resets Database [#73](https://github.com/Brewtarget/brewtarget/issues/73)
+* Two Running Brewtargets Resets Database [#73](https://github.com/Brewtarget/brewtarget/issues/73)
+* Typo in Yeast editor [#384](https://github.com/Brewtarget/brewtarget/issues/384)
+* UI -2.3.0 usability enhancement [#179](https://github.com/Brewtarget/brewtarget/issues/179)
+* UI compiler complains about missing widget [#209](https://github.com/Brewtarget/brewtarget/issues/209)
+* UI - DB edits in Options dialog [#570](https://github.com/Brewtarget/brewtarget/issues/570)
+* Unable to build on Linux Mint 18.1 [#337](https://github.com/Brewtarget/brewtarget/issues/337)
+* Units on input are not working [#238](https://github.com/Brewtarget/brewtarget/issues/238)
+* updating the database is misbehaving [#564](https://github.com/Brewtarget/brewtarget/issues/564)
+* Updating the inventory seems broken [#315](https://github.com/Brewtarget/brewtarget/issues/315)
+* use bool type in schema enhancement normal priority [#148](https://github.com/Brewtarget/brewtarget/issues/148)
+* UTF-8 compatible export for BeerXML [#624](https://github.com/Brewtarget/brewtarget/issues/624)
+* Version 2.4.0 branched [#289](https://github.com/Brewtarget/brewtarget/issues/289)
+* We are not properly deleting things [#164](https://github.com/Brewtarget/brewtarget/issues/164)
+* When removing a style through Style Editor and clicking on cancel the change is not undone enhancement [#198](https://github.com/Brewtarget/brewtarget/issues/198)
+* When you change the scale of the Boil Time in the equipment dialog the prg crash [#137](https://github.com/Brewtarget/brewtarget/issues/137)
+* Where is database stored? [#441](https://github.com/Brewtarget/brewtarget/issues/441)
+* Why does MainWindow create a recipe by poking directly into the Database()? [#446](https://github.com/Brewtarget/brewtarget/issues/446)
+* Why Xerces & Xalan? [#625](https://github.com/Brewtarget/brewtarget/issues/625)
+* Will there be version 2.3.1 for Windows? [#464](https://github.com/Brewtarget/brewtarget/issues/464)
+* Windows build failing with error: 'M_PI' was not declared in this scope [#538](https://github.com/Brewtarget/brewtarget/issues/538)
+* Windows build fails [#292](https://github.com/Brewtarget/brewtarget/issues/292)
+* Xerces-C and Xalan-C is not included in NSIS Installer [#567](https://github.com/Brewtarget/brewtarget/issues/567)
+* XML recipe import not setting amounts [#588](https://github.com/Brewtarget/brewtarget/issues/588)
+* Yeast attenuation min-max [#410](https://github.com/Brewtarget/brewtarget/issues/410)
+
+### Release Timestamp
+Thu, 18 Aug 2022 08:46:19 +0100
 
 ## v2.3.1
 
@@ -60,6 +1082,9 @@ for consumption by the typical end-user.
 * Bad time sorting in hop table [#182](https://github.com/Brewtarget/brewtarget/issues/182)
 * First wort hop adjustment 100x too high [#177](https://github.com/Brewtarget/brewtarget/issues/177)
 * OG in Plato wrongly displayed in refracto dialog [#159](https://github.com/Brewtarget/brewtarget/issues/159)
+
+### Release Timestamp
+Sat, 19 Mar 2016 14:27:30 -0700
 
 ## v2.3.0
 
@@ -77,7 +1102,8 @@ for consumption by the typical end-user.
 * Oddities in brewday step numbering [#97](https://github.com/Brewtarget/brewtarget/pull/97)
 * Crash in instruction editor [#86](https://github.com/Brewtarget/brewtarget/issues/86)
 
-### Incompatibilities
+### Release Timestamp
+Sun, 10 Jan 2016 13:38:30 -0800
 
 ## v2.2.0
 
@@ -110,7 +1136,8 @@ for consumption by the typical end-user.
 * Fixes import/export of brewnotes
 * Bug 1374421 -- cannot delete brewnotes
 
-### Incompatibilities
+### Release Timestamp
+Sun, 09 Nov 2014 13:14:30 -0600
 
 ## v2.1.0
 
@@ -130,7 +1157,8 @@ for consumption by the typical end-user.
 * Missing icons for some distributions [#1346342](https://bugs.launchpad.net/bugs/1346342).
 * Failed to launch on OSX with case-sensitive filesystems [#1259374](https://bugs.launchpad.net/bugs/1259374).
 
-### Incompatibilities
+### Release Timestamp
+Sun, 14 Sep 2014 13:41:30 -0500
 
 ## v2.0.3
 
@@ -145,7 +1173,8 @@ Minor bugfix release.
 * Windows builds now properly find phonon library [#1226862](https://bugs.launchpad.net/brewtarget/+bug/1226862).
 * Mash wizard does not overshoot target boil size when recipe includes extract or sugar.[#1233744](https://bugs.launchpad.net/brewtarget/+bug/1233744)
 
-### Incompatibilities
+### Release Timestamp
+Sat, 03 May 2014 09:38:30 -0500
 
 ## v2.0.2
 
@@ -177,9 +1206,8 @@ This is a minor bugfix release.
 * No longer crashes when copying recipe that has no style selected. [#1233745](https://bugs.launchpad.net/brewtarget/+bug/1233745)
 * Made the manual open in a browser. [#1224584](https://bugs.launchpad.net/brewtarget/+bug/1224584).
 
-### Incompatibilities
-
-None
+### Release Timestamp
+Mon, 27 Jan 2014 08:38:30 -0600
 
 ## v2.0.1
 
@@ -198,9 +1226,8 @@ This is a minor bugfix release.
 * Fixed Windows issue causing changes not to be saved [#1133821](https://bugs.launchpad.net/bugs/1133821)
 * Fixed strange boil kettle efficiency calculations in brewnotes [#1121200](https://bugs.launchpad.net/bugs/1121200)
 
-### Incompatibilities
-
-None
+### Release Timestamp
+Sun, 17 Mar 2013 20:41:21 -0600
 
 ## v2.0.0
 
@@ -224,3 +1251,21 @@ Numerous
   can still export recipes and ingredients that can be read by earlier
   versions.
 
+### Release Timestamp
+Sat, 29 Dec 2012 09:02:42 -0500
+
+
+## v1.2.4
+
+New upstream release
+
+### Release Timestamp
+Sun, 02 Oct 2011 12:23:44 -0500
+
+## v1.2.3
+
+New upstream release 1.2.3
+* Initial debian release (Closes: #538751)
+
+### Release Timestamp
+Sun, 13 Mar 2011 09:38:00 -0600

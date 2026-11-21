@@ -1,638 +1,1339 @@
-PROJECT(brewtarget)
-CMAKE_MINIMUM_REQUIRED( VERSION 3.0 )
-CMAKE_POLICY( VERSION 3.0 )
+#----------------------------------------------------------------------------------------------------------------------
+# CMakeLists.txt is part of Brewtarget, and is copyright the following authors 2009-2026:
+#   • Chris Pavetto <chrispavetto@gmail.com>
+#   • Dan Cavanagh <dan@dancavanagh.com>
+#   • Daniel Moreno <danielm5@users.noreply.github.com>
+#   • Daniel Pettersson <pettson81@gmail.com>
+#   • Kregg Kemper <gigatropolis@yahoo.com>
+#   • Matt Young <mfsy@yahoo.com>
+#   • Maxime Lavigne (malavv) <duguigne@gmail.com>
+#   • Mik Firestone <mikfire@gmail.com>
+#   • Philip Greggory Lee <rocketman768@gmail.com>
+#   • Robby Workman <rworkman@slackware.com>
+#   • Théophane Martin <theophane.m@gmail.com>
+#
+# Brewtarget is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Brewtarget is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
 
-# Creates a Makefile.
+# ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+# NB: Meson and the `bt` build tool Python script are now the primary way of building and packaging the software.  You
+#     can also still CMake to compile the product and install it locally, but we no longer support using CMake to do
+#     packaging.  (Over time the intention is to remove packaging-specific code from this script, not least as it does
+#     not work properly on Mac and Windows.)
+# ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+
+#
+# Creates a Makefile in the build directory, from where you can do builds and installs.
+#
 # NOTE: cmake . -DCMAKE_INSTALL_PREFIX=/tmp/blah && make DESTDIR=/foo
 # will install to /foo/tmp/blah.
+#
+# See also - src/CMakeLists.txt
+#
+# Standard make targets:
+#   * make                  -  Regenerate the makefile if necessary and compile the source code.  (On Linux, also
+#                              converts the markdown list of changes (CHANGES.markdown) to Debian package format
+#                              changelog.)
+#
+#                              NB: Other make targets will NOT regenerate the makefile from this CMakeLists.txt file.
+#                              That means that, if you make a change that affects "make package" or "make clean" etc,
+#                              you must run "make" before you run "make package" or "make clean" etc, otherwise your
+#                              change will not be picked up.  (If necessary, you can interrupt the build that "make"
+#                              kicks off, as, by that point, the makefile will be updated.)
+#
+#   * make clean            -  Delete compiled objects so next build starts from scratch
+#   * sudo make install     -  Install locally
+#   * make test             -  Run unit tests via CTest
+#
+# Custom make targets:
+#   * make source_doc       -  Makes Doxygen HTML documentation of the source in doc/html
+#   * make install-data
+#   * make install-runtime
+#
+# CMake options
+#   * CMAKE_INSTALL_PREFIX  - /usr/local by default. Set this to /usr on Debian-based systems like Ubuntu.
+#   * DO_RELEASE_BUILD      - OFF by default. If ON, will do a release build. Otherwise, debug build.
+#   * NO_MESSING_WITH_FLAGS - OFF by default. ON means do not add any build flags whatsoever. May override other options.
+# NOTE: You need to run CMake to change the options (you can't change them just by running make, not even by running
+# make clean.  Eg, in the build directory, run the following to switch to debug builds:
+#     cmake -DDO_RELEASE_BUILD=OFF ..
+#
 
-# Where the binary goes.
-IF( APPLE )
+# Uncomment the next "set" line for slightly verbose build output
+# Alternatively, for very verbose output, invoke make as follows:
+#
+#    make VERBOSE=1
+#
+# On Windows, you need:
+#
+#    cmake --build . --verbose
+#
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
+#=======================================================================================================================
+#================================================= CMake Configuration =================================================
+#=======================================================================================================================
+# Need CMake 3.20 for cmake_path
+cmake_minimum_required(VERSION 3.20)
+###cmake_policy(VERSION 3.16)
+#### Ensure we are using modern behaviour of the project command (introduced in CMake 3.0) which enables setting version
+#### numbers via it (rather than manually setting individual major/minor/patch vars).
+###cmake_policy(SET CMP0048 NEW)
+
+# Compatibility settings used with modern CMAKE (>= 3.29) used to pull BoostConfig.cmake from upstream
+# -> FindBoost cmake module was removed in recent versions.
+# See https://cmake.org/cmake/help/latest/module/FindBoost.html
+if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER_EQUAL 3.29)
+cmake_policy(SET CMP0167 NEW)
+endif()
+
+# find_package() uses upper-case <PACKAGENAME>_ROOT variables
+cmake_policy(SET CMP0144 NEW)
+
+#=======================================================================================================================
+#================================================ Other preliminaries =================================================
+#=======================================================================================================================
+# Set the target binary architecture for targets on macOS
+if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
+   # Per https://cmake.org/cmake/help/latest/variable/CMAKE_OSX_ARCHITECTURES.html, "the value of this variable should
+   # be set prior to the first project() or enable_language() command invocation because it may influence configuration
+   # of the toolchain and flags".
+   set(CMAKE_OSX_ARCHITECTURES x86_64, arm64) # Build both x86_64 and arm64 for Apple silicon.
+   #set(CMAKE_OSX_ARCHITECTURES i386 x86_64) # Build intel binary.
+   #set(CMAKE_OSX_ARCHITECTURES ppc i386 ppc64 x86_64) # Build universal binary.
+endif()
+
+#=======================================================================================================================
+#============================================== Project name and Version ===============================================
+#=======================================================================================================================
+# It's simplest to keep the project name all lower-case as it means we can use a lot more of the default settings for
+# Linux packaging (where directory names etc are expected to be all lower-case).
+project(brewtarget VERSION 5.3.2 LANGUAGES CXX)
+message(STATUS "Building ${PROJECT_NAME} version ${PROJECT_VERSION} with CMake ${CMAKE_VERSION}")
+message(STATUS "PROJECT_SOURCE_DIR is ${PROJECT_SOURCE_DIR}")
+
+# (a) First letter capitalised: "myproject" -> "Myproject"
+string(SUBSTRING "${CMAKE_PROJECT_NAME}" 0 1 firstLetter)
+string(TOUPPER "${firstLetter}" firstLetter)
+string(SUBSTRING "${CMAKE_PROJECT_NAME}" 1 -1 remainder)   # -1 = to end of string
+set(CONFIG_APPLICATION_NAME_UC "${firstLetter}${remainder}")
+
+# (b) Whole thing upper case: "myproject" -> "MYPROJECT"
+string(TOUPPER "${CMAKE_PROJECT_NAME}" CONFIG_APPLICATION_NAME_AC)
+
+# We use this in the program, to tell users where to get support.
+set(CONFIG_GITHUB_URL "https://github.com/${CONFIG_APPLICATION_NAME_UC}/${projectName}")
+set(CONFIG_WEBSITE_URL "https://www.brewtarget.beer/")
+set(CONFIG_ORGANIZATION_DOMAIN "brewtarget.beer")
+
+#=======================================================================================================================
+#======================================================= Options =======================================================
+#=======================================================================================================================
+option(DO_RELEASE_BUILD "If on, will do a release build. Otherwise, debug build." OFF)
+option(NO_MESSING_WITH_FLAGS "On means do not add any build flags whatsoever. May override other options." OFF)
+
+#=======================================================================================================================
+#===================================================== Directories =====================================================
+#=======================================================================================================================
+
+#================================================== Source directories =================================================
+#
+# ${repoDir}                   = the directory containing this (CMakeLists.txt) file
+# ${repoDir}/src               = C++ source code
+# ${repoDir}/ui                = QML UI layout files
+# ${repoDir}/data              = Binary files, including sounds and default database
+# ${repoDir}/translations      = Translated texts
+# ${repoDir}/mac               = Mac-specific files (desktop icon)
+# ${repoDir}/win               = Windows-specific files (desktop icon)
+# ${repoDir}/packaging         = Packaging-related config
+#
+set(repoDir "${CMAKE_CURRENT_SOURCE_DIR}")
+
+#### Location of custom CMake modules. (At the moment, there is only one, which is used for Windows packaging
+###set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules")
+
+#================================================= Install directories =================================================
+# Note that WIN32 is true "when the target system is Windows, including Win64" (see
+# https://cmake.org/cmake/help/latest/variable/WIN32.html), so this is ALL versions of Windows, not just 32-bit.
+# UNIX is true when the "the target system is UNIX or UNIX-like", so it is set when we're building for Mac and for
+# Linux.  There is a separate flag (APPLE) when we're building for Mac, but, AFAICT, no specific flag for Linux.
+#
+if(UNIX AND NOT APPLE)
+   #============================================= Linux Install Directories ============================================
+   # By default, CMAKE_INSTALL_PREFIX is:
+   #   - /usr/local                           on Linux (& Mac)
+   #   - c:/Program Files/${PROJECT_NAME}     on Windows
+   #
+   # On a lot of Linux distros, including Debian and derived systems (such as Ubuntu), it's more normal for pretty much
+   # all user-installed apps to go in /usr/bin rather than /usr/local/bin, so CMAKE_INSTALL_PREFIX can be overridden on
+   # the command line via "--prefix usr"
+   #
+   # (See http://lists.busybox.net/pipermail/busybox/2010-December/074114.html for a great, albeit slightly depressing,
+   # explanation of why there are so many places for binaries to live on Unix/Linux systems.  FWIW, the current
+   # "standards" for Linux are at https://refspecs.linuxfoundation.org/fhs.shtml but these are open to interpretation.)
+   #
+   # .:TBD: We also allow -DEXEC_PREFIX=/usr (used in .github/workflows/linux-ubuntu.yml) but I'm not sure if this is
+   #        needed or could be replaced by "--prefix usr"
+   #
+   # Debian standard directories.
+   if(NOT EXEC_PREFIX)
+      set(EXEC_PREFIX ${CMAKE_INSTALL_PREFIX})
+   endif()
+
+   set(installSubDir_data         "share/${CMAKE_PROJECT_NAME}")
+   set(installSubDir_doc          "share/doc/${CMAKE_PROJECT_NAME}")
+   set(installSubDir_bin          "bin")
+   # According to https://specifications.freedesktop.org/menu-spec/menu-spec-1.0.html#paths, .desktop files need to live
+   # in one of the $XDG_DATA_DIRS/applications/.  (Note that $XDG_DATA_DIRS is a colon-separated list of directories, typically
+   # defaulting to /usr/local/share/:/usr/share/. but on another system it might be
+   # /usr/share/plasma:/usr/local/share:/usr/share:/var/lib/snapd/desktop:/var/lib/snapd/desktop).  When combined with
+   # CMAKE_INSTALL_PREFIX, "share/applications" should end up being one of these.
+   set(installSubDir_applications "share/applications")
+   # It's a similar but slightly more complicated story for where to put icons.  (See
+   # https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html#directory_layout for all the
+   # details.)
+   set(installSubDir_icons        "share/icons")
+
+elseif(WIN32)
+   #============================================ Windows Install Directories ===========================================
+   set(installSubDir_data "data")
+   set(installSubDir_doc  "doc")
+   set(installSubDir_bin  "bin")
+elseif(APPLE)
+   #============================================== Mac Install Directories =============================================
+   set(installSubDir_data "Contents/Resources")
+   set(installSubDir_doc  "Contents/Resources/en.lproj")
+   set(installSubDir_bin  "Contents/MacOS")
+endif()
+
+#=======================================================================================================================
+#====================================================== File Names =====================================================
+#=======================================================================================================================
+if(APPLE)
    # Use capital letters. Don't question the APPLE.
-   SET(brewtarget_EXECUTABLE "Brewtarget")
-ELSE()
-   SET(brewtarget_EXECUTABLE "brewtarget")
-ENDIF()
+   set(fileName_executable "${CONFIG_APPLICATION_NAME_UC}")
+else()
+   set(fileName_executable "${PROJECT_NAME}")
+endif()
+set(fileName_unitTestRunner "${PROJECT_NAME}_tests")
 
-#=============================Installation Components==========================
+#=======================================================================================================================
+#=================================================== General Settings ==================================================
+#=======================================================================================================================
+# This is needed to enable the add_test() command
+enable_testing()
+if (APPLE)
+   # On Mac we ask CMake to try to find static libraries when available -- because it's so painful shipping dynamic
+   # libraries in a Bundle.
+   set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+endif()
 
+#=======================================================================================================================
+#=============================================== Installation Components ===============================================
+#=======================================================================================================================
 # For architecture-independent data
-SET( DATA_INSTALL_COMPONENT "Data" )
+set(DATA_INSTALL_COMPONENT "Data")
 # For architecture-dependent binaries
-SET( RUNTIME_INSTALL_COMPONENT "Runtime" )
+set(RUNTIME_INSTALL_COMPONENT "Runtime")
+
+#=======================================================================================================================
+#============================================== Compiler settings & flags ==============================================
+#=======================================================================================================================
+# We use different compilers on different platforms.  Where possible, we want to let CMake handle the actual compiler
+# settings
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# We need C++23 for std::ranges::zip_view, C++20 for std::map::contains() and concepts, C++17 or later for nested
+# namespaces and structured bindings, and C++11 or later for lambdas.
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+include_directories(${PROJECT_SOURCE_DIR}/third-party/blaze/build/dist/include)
+include_directories(${repoDir}/src)
+include_directories("${CMAKE_BINARY_DIR}/src") # In case of out-of-source build.
+
+# GCC-specific flags
+if(NOT ${NO_MESSING_WITH_FLAGS})
+   if(CMAKE_COMPILER_IS_GNUCXX)
+      #
+      # We would like to avoid having an executable stack, partly as a good thing in itself, and partly because, by
+      # default, rpmlint with throw a missing-PT_GNU_STACK-section error if we don't.
+      #
+      # In theory, the compiler should work out automatically whether we need an executable stack, decide the answer is
+      # "No" and pass all the right options to the linker.   In practice, it seems this doesn't happen for reasons I
+      # have, as yet, to discover.
+      #
+      # We attempt here to to assert manually that the stack should not be executable.  The "-z noexecstack" should
+      # get passed through by gcc the linker (see https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html#Link-Options) and
+      # the GNU linker (https://sourceware.org/binutils/docs/ld/Options.html) should recognise "-z noexecstack" as
+      # "Marks the object as not requiring executable stack".
+      #
+      # However, this is not sufficient.  So, for the moment, we suppress the rpmlint error (see
+      # packaging/linux/rpmLintFilters.toml).
+      #
+      # Additionally, NOTE that "-z options are just not supported for Windows versions of ld" (as mentioned at
+      # https://stackoverflow.com/questions/55418931/ld-exe-unrecognized-option-z).  So we have to exclude that option
+      # on Windows.
+      #
+      if(NOT WIN32)
+         set(CMAKE_CXX_FLAGS_RELEASE "-Wall -ansi -pedantic -Wno-long-long -O2 -z noexecstack")
+      else()
+         set(CMAKE_CXX_FLAGS_RELEASE "-Wall -ansi -pedantic -Wno-long-long -O2")
+      endif()
+      #
+      # -g3 should give even more debugging information than -g (which is equivalent to -g2)
+      # -no-pie -fno-pie -rdynamic are needed for Boost stacktrace to work properly - at least according to comments
+      # at https://stackoverflow.com/questions/52583544/boost-stack-trace-not-showing-function-names-and-line-numbers
+      #
+      # But, for some reason, gcc on Windows does not accept -rdynamic
+      #
+      if(NOT WIN32)
+         set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g3 -no-pie -fno-pie -rdynamic")
+      else()
+         set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g3 -no-pie -fno-pie")
+      endif()
+   endif()
+
+   # Speed up compilation if using gcc.
+   if(UNIX AND NOT APPLE)
+      set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pipe")
+      set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pipe")
+   endif()
+endif()
+if(CMAKE_COMPILER_IS_GNUCXX)
+   #
+   # On older versions of GCC, it is not sufficient to specify C++20 to enable concepts, you also have to set a
+   # special compiler flag.
+   #
+   add_compile_options(-fconcepts)
+endif()
+
+#
+# We have to tell the compiler if we want Link-Time Optimization (LTO) to run in parallel.  Fortunately it's the same
+# flag for both Clang and GCC.
+#
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=auto")
+
+#
+# On x86-64, build for the baseline instruction set so that the binaries run on older CPUs, rather than relying on the
+# compiler's default target on the build machine.  See comments in meson.build for more details.  Because we use LTO,
+# CMAKE_CXX_FLAGS is the right place, as it is used for linking as well as compiling.
+#
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$" AND NOT MSVC)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -mtune=generic")
+endif()
+
+#
+# On Ubuntu 22.04, the packages for Qt6 differ from those for Qt5 in that they require you to build with the PIC option,
+# otherwise we'll get the error: "You must build your code with position independent code if Qt was built with
+# -reduce-relocations. " "Compile your code with -fPIC (and not with -fPIE)."
+#
+# On certain instances of Windows, we'll get "relocation truncated to fit" linker errors if we don't build with position
+# independent code (see
+# https://stackoverflow.com/questions/10486116/what-does-this-gcc-error-relocation-truncated-to-fit-mean for more
+# explanation).
+#
+if((UNIX AND NOT APPLE) OR WIN32)
+   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
+# Windows-specific compilation settings
+if(WIN32)
+   # See https://gcc.gnu.org/onlinedocs/gcc-12.2.0/gcc/Link-Options.html#Link-Options for more on GCC linker options
+   # In theory, we could specify "-static-libgcc -static-libstdc++ -static" to statically link all the GCC and MinGW
+   # libraries, so we don't have to ship DLLs for them.  In practice, this (a) does not prevent us needing a fair few
+   # other DLLs and (b) per https://gcc.gnu.org/onlinedocs/gcc-12.2.0/gcc/Link-Options.html#Link-Options it's advised
+   # not to because:
+   #    "There are several situations in which an application should use the shared libgcc instead of the static
+   #    version. The most common of these is when the application wishes to throw and catch exceptions across different
+   #    shared libraries. In that case, each of the libraries as well as the application itself should use the shared
+   #    libgcc.
+   #       "Therefore, the G++ driver automatically adds -shared-libgcc whenever you build a shared library or a main
+   #    executable, because C++ programs typically use exceptions, so this is the right thing to do."
+   #
+#   set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
+endif()
+
+if(APPLE)
+   # As explained at https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply, defining _GNU_SOURCE
+   # gives access to various non-standard GNU/Linux extension functions and changes the behaviour of some POSIX
+   # functions.
+   #
+   # This is needed for Boost stacktrace on Mac
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GNU_SOURCE")
+endif()
+
+#=======================================================================================================================
+#=================================================== Set build type ====================================================
+#=======================================================================================================================
+# We might always to tell the compiler to include debugging information (eg via the -g option on gcc).  It makes the
+# binaries slightly bigger on Linux, but helps greatly in analysing core dumps etc.  (In closed-source projects people
+# sometimes turn it off for release builds to make it harder to reverse engineer the software, but obviously that's not
+# an issue for us.)
+#
+# However, setting CMAKE_BUILD_TYPE to "Debug", also changes other things, such as the default location for config
+# files, which we don't want on a release build, so we would probably need to set compiler flags directly.
+#
+# .:TBD:. Investigate whether setting CMAKE_BUILD_TYPE to "RelWithDebInfo" does what we want.
+#
+if(${DO_RELEASE_BUILD})
+   set(CMAKE_BUILD_TYPE "Release")
+else()
+   set(CMAKE_BUILD_TYPE "Debug")
+   set(CMAKE_ENABLE_EXPORTS true)
+endif()
+message(STATUS "Doing ${CMAKE_BUILD_TYPE} build (DO_RELEASE_BUILD = ${DO_RELEASE_BUILD})")
+
+#=======================================================================================================================
+#========================================= Find various libraries we depend on =========================================
+#=======================================================================================================================
+
+#======================================================= Find Qt =======================================================
+# We need not just the "core" bit of Qt but various "optional" elements.
+#
+# We try to keep the minimum Qt version we need as low as we can.
+#
+# Note that if you change the minimum Qt version, you need to make corresponding changes to the .github/workflows/*.yml
+# files so that GitHub uses the appropriate version of Qt for the automated builds.
+#
+if(UNIX AND NOT APPLE)
+   execute_process(COMMAND lsb_release -rs OUTPUT_VARIABLE RELEASE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+   # As of 2024-09-30:
+   #   - Qt 6.2.4 is the maximum available in Ubuntu 22.04 (Jammy).
+   #   - Qt 6.4.2 is the maximum available in Ubuntu 24.04 (Noble).
+   set(QT_MIN_VERSION 6.2.4)
+else()
+   # Windows and Mac may have newer versions, but we keep everything the same for now
+   set(QT_MIN_VERSION 6.2.4)
+endif()
+
+if(APPLE)
+   #
+   # The Qt6 documentation to using CMake at https://doc.qt.io/qt-5/cmake-get-started.html says we need to set
+   # CMAKE_PREFIX_PATH environment variable to the Qt 5 installation prefix.  In theory, setting the corresponding CMake
+   # variable should do the same job (per https://cmake.org/cmake/help/latest/variable/CMAKE_PREFIX_PATH.html).
+   #
+   # It seems this is only needed on MacOS.  (According to the README.md of Valijson, which we used to use for JSON schema
+   # validation, we are not the only ones to experience this!)
+   #
+   execute_process(COMMAND brew --prefix qt6 OUTPUT_VARIABLE CMAKE_PREFIX_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
+   message(STATUS "CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH}")
+endif()
+
+# Set the AUTOMOC property on all targets.  This tells CMake to automatically handle the Qt Meta-Object Compiler (moc)
+# preprocessor (ie the thing that handles Qt's C++ extensions), without having to use commands such as QT4_WRAP_CPP(),
+# QT5_WRAP_CPP(), etc.  In particular, it also means we no longer have to manually identify which headers have Q_OBJECT
+# declarations etc.
+set(CMAKE_AUTOMOC ON)
+
+# Although AUTOMOC is pretty neat when it works, it can be problematic.  Part of what it does is #include all the
+# generated files (eg "moc_AboutDialog.cpp") into a single intermediate source file, which it then compiles.  We have
+# sometimes had compiler errors from this because of various Qt headers complaining about things being redefined.  The
+# brute-force workaround is, on CMake builds, to manually include these generated files in our corresponding .cpp file
+# (eg "AboutDialog.cpp"), which then stops CMake pulling those generated files into its intermediate source file.
+#
+# (We don't want to do this extra manual include on the Meson builds because then we'd get duplicate symbols at the
+# linking stage.)
+add_compile_definitions(MANUALLY_INCLUDE_MOC)
+
+# Set the AUTOUIC property on all targets.  This tells CMake to automatically handle the Qt uic code generator, without
+# having to use commands such as QT4_WRAP_UI(), QT5_WRAP_UI(), etc.
+set(CMAKE_AUTOUIC ON)
+
+# This tells CMake where to look for .ui files when AUTOUIC is on
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${repoDir}/ui)
+
+# Set the AUTORCC property on all targets.  This tells CMake to automatically handle the Qt Resource Compiler (rcc),
+# without having to use commands such as QT4_ADD_RESOURCES(), QT5_ADD_RESOURCES(), etc.
+# Note that you need to add your .qrc file(s) as sources to the target you are building
+set(CMAKE_AUTORCC ON)
+
+# Name of FOLDER for *_autogen targets that are added automatically by CMake for targets for which AUTOMOC is enabled.
+# Note that this replaces AUTOMOC_TARGETS_FOLDER.
+set_property(GLOBAL PROPERTY AUTOGEN_TARGETS_FOLDER ${CMAKE_CURRENT_BINARY_DIR}/autogen)
+
+# Directory where AUTOMOC, AUTOUIC and AUTORCC generate files for the target.
+set_property(GLOBAL PROPERTY AUTOGEN_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/autogen)
+
+# As moc files are generated in the binary dir, tell CMake
+# to always look for includes there:
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+#
+# Although it's possible to do individual find_package commands for each bit of Qt we want to use (Qt6Core, Qt6Widgets,
+# Qt6Sql, etc), the newer, and more compact, way of doing things (per
+# https://cmake.org/cmake/help/latest/manual/cmake-qt.7.html and https://doc.qt.io/qt-5/cmake-get-started.html) is to do
+# one find for Qt as a whole and to list the components that we need.  Depending on what versions of CMake and Qt you
+# have installed, the way to find out what components exist varies a bit, but there is a relatively recent list at
+# https://stackoverflow.com/questions/62676472/how-to-list-all-cmake-components-of-qt5
+#
+set(qtCommonComponents
+   Core
+   Gui
+   Multimedia
+   Network
+   PrintSupport
+   Sql
+   Svg          # Required to make the deploy scripts pick up the svg plugins
+   Widgets
+   Xml          # TBD: Not sure we need this any more
+)
+set(qtTestComponents
+   Test
+)
+set(qtToolsComponents
+   LinguistTools
+)
+list(APPEND qtAllComponents ${qtCommonComponents} ${qtToolsComponents} ${qtTestComponents})
+find_package(Qt6 ${QT_MIN_VERSION} COMPONENTS ${qtAllComponents} REQUIRED)
+# Each package has its own include directories that we need to make sure the compiler knows about
+foreach(qtComponent IN LISTS qtAllComponents)
+   # Sometimes it's useful that part of a variable name can be specified by expanding another variable!
+   include_directories(${Qt6${qtComponent}_INCLUDE_DIRS})
+endforeach()
+
+# Qt wants position independent code in certain circumstances - specifically "You must build your code with position
+# independent code if Qt was built with -reduce-relocations. Compile your code with -fPIC (and not with -fPIE)."
+if(Qt6_POSITION_INDEPENDENT_CODE)
+   # This will initialize the POSITION_INDEPENDENT_CODE property on all the targets
+   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
+# There's apparently a whole bunch of extra work we need to do to use Qt on Windows and Mac
+if(WIN32)
+   #====================================================================================================================
+   #================================================= Windows Qt Stuff =================================================
+   #====================================================================================================================
+   # .:TBD:.  Not sure whether/why we need these additional Qt components on Windows
+   #find_package(Qt6MultimediaWidgets REQUIRED)
+   #find_package(Qt6OpenGL REQUIRED)
+
+#   get_target_property(QtMultimediaWidgets_location Qt6::MultimediaWidgets         LOCATION_${CMAKE_BUILD_TYPE})
+#   get_target_property(QtOpenGL_location            Qt6::OpenGL                    LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtCore_location              Qt6::Core                      LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtGui_location               Qt6::Gui                       LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtMultimedia_location        Qt6::Multimedia                LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtNetwork_location           Qt6::Network                   LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtPrintSupport_location      Qt6::PrintSupport              LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtQgif_location              Qt6::QGifPlugin                LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtQico_location              Qt6::QICOPlugin                LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtQjpeg_location             Qt6::QJpegPlugin               LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtQsvgIcon_location          Qt6::QSvgIconPlugin            LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtQsvg_location              Qt6::QSvgPlugin                LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtQtiff_location             Qt6::QTiffPlugin               LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtQWindows_location          Qt6::QWindowsIntegrationPlugin LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtSqliteDriver_location      Qt6::QSQLiteDriverPlugin       LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtSql_location               Qt6::Sql                       LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtSvg_location               Qt6::Svg                       LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtWidgets_location           Qt6::Widgets                   LOCATION_${CMAKE_BUILD_TYPE})
+   get_target_property(QtXml_location               Qt6::Xml                       LOCATION_${CMAKE_BUILD_TYPE})
+
+   # .:TBD:. Not clear whether/where these xxx_DLLs variables get used
+   set(Qt_DLLs            ${QtCore_location}
+                          ${QtGui_location}
+                          ${QtMultimedia_location}
+#                          ${QtMultimediaWidgets_location}
+                          ${QtNetwork_location}
+#                          ${QtOpenGL_location}
+                          ${QtPrintSupport_location}
+                          ${QtSql_location}
+                          ${QtSvg_location}
+                          ${QtWebKit_location}
+                          ${QtWebKitWidgets_location}
+                          ${QtWidgets_location}
+                          ${QtXml_location})
+
+   set(SQL_Drivers_DLLs   ${QtSqliteDriver_location})
+
+   set(Image_Formats_DLLs ${QtQgif_location}
+                          ${QtQico_location}
+                          ${QtQjpeg_location}
+                          ${QtQmng_location}
+                          ${QtQsvg_location}
+                          ${QtQtiff_location})
+
+   set(Icon_Engines_DLLs ${QtQsvgIcon_location})
+
+   set(Platform_DLLs     ${QtQWindows_location})
+
+   get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
+   get_filename_component(QT_BIN_DIR "${_qmake_executable}" DIRECTORY)
+   message("QT_BIN_DIR = ${QT_BIN_DIR}")
+
+   # International Components for Unicode
+   file(GLOB IcuDlls "${QT_BIN_DIR}/libicu*.dll")
+
+endif()
+
+# Uncomment the following line to show what version of Qt is actually being used
+message(STATUS "Using Qt version " ${Qt6Core_VERSION})
+
+#===================================================== Find Boost ======================================================
+# Boost is a collection of separate libraries, some, but not all, of which are header-only.  We only specify the Boost
+# libraries that we actually use.
+#
+# On Linux, there are cases where we need a more recent version of a Boost library than is readily-available in system-
+# supplied packages.  I haven't found a slick way to solve this in CMake, though https://github.com/Orphis/boost-cmake
+# looks promising.  (For header-only Boost libraries, you might think it would be relatively painless to pull them in
+# from where they are hosted on GitHub (see https://github.com/boostorg), but this is not the case.  AFAICT you can't
+# easily pull a specific release, and just pulling master doesn't guarantee that everything compiles.)  So, anyway, on
+# Debian-based distros of Linux, such as Ubuntu, you need to do the following to install Boost 1.79 in place of whatever
+# (if anything) is already installed:
+#
+#    $ sudo apt remove boost-all-dev
+#    $ cd ~
+#    $ mkdir boost-tmp
+#    $ cd boost-tmp
+#    $ wget https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2
+#    $ tar --bzip2 -xf boost_1_79_0.tar.bz2
+#    $ cd boost_1_79_0
+#    $ ./bootstrap.sh --prefix=/usr
+#    $ sudo ./b2 install
+#    $ cd ../..
+#    $ sudo rm -rf boost-tmp
+#
+# (Obviously if you want to make the necessary change to install an even more recent version than Boost 1.79 then that
+# should be fine.)
+#
+# We do the same in .github/workflows/linux-ubuntu.yml to make GitHub automated builds work.
+#
+# Note that this means we want to _statically_ link Boost rather than force end users to have to do all the palava above
+#
+#    ************************
+#    *** Boost Stacktrace ***
+#    ************************
+#
+#    We use this for diagnostics.  In certain error cases it's very helpful to be able to log the call stack.
+#
+#    On Windows, using MSYS2, the mingw-w64-boost packages do not include libboost_stacktrace_backtrace, but
+#    https://www.boost.org/doc/libs/1_76_0/doc/html/stacktrace/configuration_and_build.html suggests it is not required
+#    (because on Windows, if you have libbacktrace installed, you can set BOOST_STACKTRACE_USE_BACKTRACE in header-only
+#    mode).
+#
+#    .:TODO:. Not sure how to get libboost_stacktrace_backtrace installed on Mac.  It doesn't seem to be findable by
+#    CMake after installing Boost via Homebrew (https://brew.sh/).  For the moment, skip trying to use
+#    libboost_stacktrace_backtrace on Mac
+#
+#    .:TODO:. So far don't have stacktraces working properly on Windows (everything shows as register_frame_ctor), so
+#    that needs some more investigation.  (It could be that it's a bug in Boost, at least according to
+#    https://stackoverflow.com/questions/54333608/boost-stacktrace-not-demangling-names-when-cross-compiled)
+#
+#    ******************
+#    *** Boost JSON ***
+#    ******************
+#
+#    Boost JSON is an (optionally) header-only library that was introduced in Boost 1.75 in December 2020.  One of the
+#    features we use, JSON pointers (the equivalent of XML's XPaths) was only introduced in Boost 1.79.  As of March
+#    2022, Ubunutu 20.04 LTS only has packages for Boost 1.71 from August 2019, hence the need to manually install a
+#    newer Boost.
+#
+#    ******************
+#    *** Boost.Core ***
+#    ******************
+#
+#    Boost.Core, part of collection of the Boost C++ Libraries, is a collection of core utilities used by other Boost
+#    libraries.  Boost JSON needs a more recent version than 1.71.
+#
+set(Boost_USE_STATIC_LIBS ON)
+if(WIN32)
+   find_package(Boost 1.79.0 REQUIRED)
+elseif(APPLE)
+   find_package(Boost 1.79.0 REQUIRED)
+else()
+   # Note that header-only libraries don't have a component
+   find_package(Boost 1.79.0 REQUIRED COMPONENTS stacktrace_backtrace)
+endif()
+include_directories(${Boost_INCLUDE_DIRS})
+# Uncomment the next two lines if you want to find where Boost headers and DLLs are on your system
+message("Boost include directories: ${Boost_INCLUDE_DIRS}")
+message("Boost libraries: ${Boost_LIBRARIES}")
+
+#
+# Extra requirements for Boost Stacktrace
+#
+# Per https://www.boost.org/doc/libs/1_76_0/doc/html/stacktrace/configuration_and_build.html, by default
+# Boost.Stacktrace is a header-only library.  However, you get better results by linking (either statically or
+# dynamically) with a helper library.  Of the various options, it seems like boost_stacktrace_backtrace gives the most
+# functionality over the most platforms.  This has dependencies on:
+#   - libdl on POSIX platforms -- but see note below
+#   - libbacktrace
+# The latter is an external library on Windows.  On POSIX plaforms it's typically already either installed on the system
+# (eg see https://man7.org/linux/man-pages/man3/backtrace.3.html) or built in to the compiler.  Fortunately, CMake knows
+# how to do the right thing in either case, thanks to https://cmake.org/cmake/help/latest/module/FindBacktrace.html.
+#
+# Just to make things extra fun, in 2021, the GNU compilers did away with libdl and incorporated its functionality into
+# libc, per the announcement of GNU C Library v2.3.4 at
+# https://sourceware.org/pipermail/libc-alpha/2021-August/129718.html.  This means, if we're using the GNU tool chain
+# and libc is v2.3.4 or newer, then we should NOT look for libdl, as we won't find it!
+#
+# Fortunately, CMake has a special variable, CMAKE_DL_LIBS, that is, essentially "whatever library you need to link to
+# for dlopen and dlclose", so we don't need to worry about libc versions.
+#
+if(NOT WIN32)
+   set(DL_LIBRARY ${CMAKE_DL_LIBS})
+endif()
+find_package(Backtrace REQUIRED)
+# For the moment, leave default settings for Mac as can't work out how to get the backtrace version of stacktrace
+# working.  (Should still get stack traces on Mac, but might not get as much info in them as we'd like.)
+if(NOT APPLE)
+   if(NOT WIN32)
+# TBD Some users report problems getting CMake to find libboost_stacktrace_backtrace on Ubuntu and Gentoo, so disable it
+# for now and fallback to the header-only version
+#      add_compile_definitions(BOOST_STACKTRACE_DYN_LINK)
+   endif()
+#   add_compile_definitions(BOOST_STACKTRACE_USE_BACKTRACE)
+endif()
+message("Backtrace libs  ${DL_LIBRARY}  |  ${Backtrace_LIBRARIES}  |  ${Boost_LIBRARIES}")
+
+# Defining BOOST_JSON_STANDALONE tells Boost.JSON to use std::string_view (requires C++17) rather than
+# boost::string_view (part of Boost.Utility).  However, as of recent versions of Boost.JSON, this is "deprecated and
+# will be removed in a future release of Boost.JSON".
+#ADD_COMPILE_DEFINITIONS(BOOST_JSON_STANDALONE)
+
+#=================================================== Find libxml2 ===================================================
+# CMake already knows how to find and configure libxml2, see
+# https://cmake.org/cmake/help/latest/module/FindLibXml2.html
+find_package(LibXml2 REQUIRED)
+include_directories(${LIBXML2_INCLUDE_DIRS})
+# Uncomment the next two lines if you want to find where libxml2 headers and DLLs are on your system
+message("libxml2 include directories: ${LIBXML2_INCLUDE_DIRS}")
+message("libxml2 libraries: ${LIBXML2_LIBRARIES}")
+
+#===================================================== Find OpenSSL ====================================================
+# This is needed for us to use https with Boost.Asio
+find_package(OpenSSL REQUIRED)
+include_directories(${OPENSSL_INCLUDE_DIR})
+message("OpenSSL include directories: ${OPENSSL_INCLUDE_DIR}")
+message("OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+
+if(APPLE)
+# TBD: Is this still needed?
+find_package(CURL REQUIRED)
+endif()
+
+#================================================== Sourcemeta Blaze ===================================================
+# See comments in meson.build for why we need extra options here (mostly to make things work on Windows/MSYS2).
+# Note that, whatever we do in find_package here needs a counterpart addition to appAndTestCommonLibraries below,
+# otherwise we'll get link errors.
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PROJECT_SOURCE_DIR}/third-party/blaze/build/dist)
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+set(CMAKE_FIND_DEBUG_MODE TRUE)
+find_package(Blaze REQUIRED COMPONENTS compiler evaluator output)
+find_package(Core REQUIRED COMPONENTS json jsonpointer)
+
+#========================================= Find MinGW (only needed on Windows) =========================================
+if(WIN32)
+   # This is to detect whether we're using MSYS2 and/or MinGW
+   if(WIN32)
+      execute_process(COMMAND uname OUTPUT_VARIABLE uname)
+      message(STATUS "Uname is " ${uname})
+      if(uname MATCHES "^MSYS" OR uname MATCHES "^MINGW")
+         message(STATUS "Running on MSYS/MinGW")
+         set(MINGW true)
+      endif()
+   endif()
+
+   # Find extra MinGW-specific dlls.
+   if(MINGW)
+      if(NOT MINGW_BIN_DIR)
+         # The easiest way to find the MinGW bin dir is from the fact that we know the compiler lives there, and CMake
+         # already knows where that is.
+         get_filename_component(MINGW_BIN_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+      endif()
+      if(NOT EXISTS ${MINGW_BIN_DIR})
+         message(FATAL_ERROR "MinGW bin dir not found. Run cmake again with the option -DMINGW_BIN_DIR=c:/path/to/mingw/bin")
+      else()
+         get_filename_component(Mingw_Path ${CMAKE_CXX_COMPILER} PATH)
+      endif()
+      message(STATUS "MINGW_BIN_DIR " ${MINGW_BIN_DIR})
+   endif()
+endif()
+
+# Shows all the places we are looking for headers
+message(STATUS "CMAKE_SYSTEM_INCLUDE_PATH: ${CMAKE_SYSTEM_INCLUDE_PATH}")
+message(STATUS "CMAKE_INCLUDE_PATH: ${CMAKE_INCLUDE_PATH}")
+
+include(InstallRequiredSystemLibraries)
+
+#=======================================================================================================================
+#=========================================== Generate config.h from config.in ==========================================
+#=======================================================================================================================
+# Taking src/config.in as input, we generate (in the build subdirectory only) config.h.  This is a way to inject CMake
+# variables into the code.
+#
+# All variables written as "${VAR}" in config.in  will be replaced by the value of VAR in config.h.
+# Eg "#define CONFIG_DATA_DIR ${CONFIG_DATA_DIR}" in config.in will be replaced by the below corresponding value in
+# ${CONFIG_DATA_DIR} below when configure_file() is called.
+#
+set(CONFIG_DATA_DIR "${CMAKE_INSTALL_PREFIX}/${installSubDir_data}/")
+set(CONFIG_TEST_DATA_DIR "${PROJECT_SOURCE_DIR}/testData")
+string(TIMESTAMP BUILD_TIMESTAMP "%Y-%m-%d %H:%M:%S (UTC)" UTC)
+configure_file(src/config.in src/config.h)
+
+#=======================================================================================================================
+#=============================================== Embedded Resource Files ===============================================
+#=======================================================================================================================
+# We don't need to list the embedded resource files themselves here, just the "Resource Collection File" that lists what
+# they are.
+set(filesToCompile_qrc "${CMAKE_CURRENT_SOURCE_DIR}/resources.qrc")
+
+#=======================================================================================================================
+#=========================================== Files included with the program ===========================================
+#=======================================================================================================================
+# These are files that actually ship/install as real files, rather than Qt resources
+#
+# List of documentation files to be installed.  Note that ${repoDir}/COPYRIGHT is NOT included here as it needs special
+# case handling below.
+set(filesToInstall_docs ${repoDir}/README.md)
+
+# List of data files to be installed.
+set(filesToInstall_data ${repoDir}/data/default_db.sqlite
+                        ${repoDir}/data/DefaultContent001-OriginalDefaultData.xml
+                        ${repoDir}/data/DefaultContent002-BJCP_2021_Styles.json
+                        ${repoDir}/data/DefaultContent003-Ingredients-Hops-Yeasts.json
+                        ${repoDir}/data/DefaultContent004-MoreYeasts.json
+                        ${repoDir}/data/DefaultContent005-Fermentables-Recipes.beer
+                        ${repoDir}/data/DefaultContent006-MashAndWaterProfiles.beer)
+
+# Desktop files to install.
+#
+# TODO: The linux/desktop.in needs some processing to become ${PROJECT_NAME}.desktop
+#
+# set(filesToInstall_desktop ${repoDir}/linux/${PROJECT_NAME}.desktop)
+
+# Icon files to install.
+set(filesToInstall_icons ${repoDir}/images/${PROJECT_NAME}.svg)
+
+# This is the list of translation files to update (from translatable strings in the source code) and from which the
+# binary .qm files will be generated and shipped.  Note that src/OptionDialog.cpp controls which languages are shown to
+# the user as options for the UI
+set(translationSourceFiles ${repoDir}/translations/bt_ca.ts # Catalan
+                           ${repoDir}/translations/bt_cs.ts # Czech
+                           ${repoDir}/translations/bt_de.ts # German
+                           ${repoDir}/translations/bt_en.ts # English
+                           ${repoDir}/translations/bt_el.ts # Greek
+                           ${repoDir}/translations/bt_es.ts # Spanish
+                           ${repoDir}/translations/bt_et.ts # Estonian
+                           ${repoDir}/translations/bt_eu.ts # Basque
+                           ${repoDir}/translations/bt_fr.ts # French
+                           ${repoDir}/translations/bt_gl.ts # Galician
+                           ${repoDir}/translations/bt_nb.ts # Norwegian Bokmal
+                           ${repoDir}/translations/bt_it.ts # Italian
+                           ${repoDir}/translations/bt_lv.ts # Latvian
+                           ${repoDir}/translations/bt_nl.ts # Dutch
+                           ${repoDir}/translations/bt_pl.ts # Polish
+                           ${repoDir}/translations/bt_pt.ts # Portuguese
+                           ${repoDir}/translations/bt_hu.ts # Hungarian
+                           ${repoDir}/translations/bt_ru.ts # Russian
+                           ${repoDir}/translations/bt_sr.ts # Serbian
+                           ${repoDir}/translations/bt_sv.ts # Swedish
+                           ${repoDir}/translations/bt_da.ts # Danish
+                           ${repoDir}/translations/bt_tr.ts # Turkish
+                           ${repoDir}/translations/bt_zh.ts) # Chinese
+
+set(filesToInstall_windowsIcon ${repoDir}/win/icon.rc)
+
+set(filesToInstall_sounds ${repoDir}/data/sounds/45minLeft.wav
+                          ${repoDir}/data/sounds/addFuckinHops.wav
+                          ${repoDir}/data/sounds/aromaHops.wav
+                          ${repoDir}/data/sounds/beep.wav
+                          ${repoDir}/data/sounds/bitteringHops.wav
+                          ${repoDir}/data/sounds/checkBoil.wav
+                          ${repoDir}/data/sounds/checkFirstRunnings.wav
+                          ${repoDir}/data/sounds/checkGravity.wav
+                          ${repoDir}/data/sounds/checkHydrometer.wav
+                          ${repoDir}/data/sounds/checkMashTemps.wav
+                          ${repoDir}/data/sounds/checkTemp.wav
+                          ${repoDir}/data/sounds/clarifyingAgent.wav
+                          ${repoDir}/data/sounds/cleanup.wav
+                          ${repoDir}/data/sounds/closeFuckinValves.wav
+                          ${repoDir}/data/sounds/closeValves.wav
+                          ${repoDir}/data/sounds/doughIn.wav
+                          ${repoDir}/data/sounds/drinkAnotherHomebrew.wav
+                          ${repoDir}/data/sounds/drinkHomebrew.wav
+                          ${repoDir}/data/sounds/emptyMashTun.wav
+                          ${repoDir}/data/sounds/extraPropane.wav
+                          ${repoDir}/data/sounds/flameout.wav
+                          ${repoDir}/data/sounds/flavorHops.wav
+                          ${repoDir}/data/sounds/heatWater.wav
+                          ${repoDir}/data/sounds/mashHops.wav
+                          ${repoDir}/data/sounds/pitchYeast.wav
+                          ${repoDir}/data/sounds/sanitize.wav
+                          ${repoDir}/data/sounds/sparge.wav
+                          ${repoDir}/data/sounds/startBurner.wav
+                          ${repoDir}/data/sounds/startChill.wav
+                          ${repoDir}/data/sounds/stirMash.wav)
+
+# We mostly don't need to explicitly specify the .ui files because AUTOUIC will find them all for us.  However, I
+# haven't found a way to connect AUTOUIC with the translation stuff below, so grab a list of all the .ui files here for
+# that.
+file(GLOB_RECURSE filesToCompile_ui "${repoDir}/ui/*.ui")
+
+set(filesToInstall_macPropertyList "${repoDir}/mac/Info.plist")
+
+set(filesToInstall_macIcons "${repoDir}/mac/BrewtargetIcon.icns")
+
+set(filesToInstall_changeLogUncompressed "${repoDir}/CHANGES.markdown")
+
+# See below for how this one gets created from filesToInstall_changeLogUncompressed
+set(filesToInstall_changeLogCompressed "${CMAKE_CURRENT_BINARY_DIR}/changelog.gz")
+
+#=======================================================================================================================
+#=========================================== Process other CMakeList.txt files =========================================
+#=======================================================================================================================
+# We try to restrict src/CMakeLists.txt to just holding lists of source files,
+# otherwise the dependencies and interactions between those files and this one get a bit hard to follow.
+include(src/CMakeLists.txt)
+
+#=======================================================================================================================
+#==================================================== Translations =====================================================
+#=======================================================================================================================
+#
+# We need to do two processes with Translation Source (.ts) XML files:
+#   - Update them from the source code, ie to ensure they have all the tr(), QObject::tr() etc calls from the .cpp files
+#     and all the translatable strings from the .ui files -- which can be done manually from the command line with
+#     lupdate
+#   - Generate the binary .qm files that ship with the application and are used at run time -- which can be done
+#     manually from the command line with lrelease
+#
+# Getting both these things done in Qt5 was a bit complicated as qt_add_translation() _only_ does the latter.  But,
+# with Qt6, we now have qt_add_lupdate that does the former.  NOTE that we will want to tweak the syntax of
+# qt_add_lupdate once we are on Qt 6.7 -- per https://doc.qt.io/qt-6/qtlinguist-cmake-qt-add-lupdate.html -- because a
+# change is introduced with that release and the syntax used here then becomes deprecated.
+#
+qt_add_translation(QM_FILES ${translationSourceFiles})
+
+# Add a target for the QM_FILES so that we can add the translations as a dependency for the executable later.
+add_custom_target(translationsTarget DEPENDS ${QM_FILES})
+qt_add_lupdate(translationsTarget TS_FILES ${repoDir}/src -ts ${translationSourceFiles} SOURCES ${filesToCompile_cpp} ${filesToCompile_ui})
+
+#============================Icon for Windows==================================
+
+set(desktopIcon "")
+
+if(WIN32 AND MINGW)
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/icon.o
+                     COMMAND windres.exe -I${CMAKE_CURRENT_SOURCE_DIR}
+                     -i${filesToInstall_windowsIcon}
+                     -o${CMAKE_BINARY_DIR}/src/icon.o
+                     DEPENDS ${filesToInstall_windowsIcon}
+  )
+  set(desktopIcon ${CMAKE_BINARY_DIR}/src/icon.o)
+elseif(WIN32)
+  set(desktopIcon ${filesToInstall_windowsIcon})
+endif()
+
+#===========================File ownership==================================
+#
+# When you do "make install", the last thing CMake does is generate a file called install_manifest.txt in the build
+# output directory containing a list of all the files that were installed.  On Linux, since we need to run make install
+# as root (eg via "sudo make install"), this file would get created with root:root ownership.  That's a problem because
+# you then when you run "make package" as a non-root user, you get an error "file failed to open for writing (Permission
+# denied)".  The workaround is to create the install_manifest.txt file as a normal user when "make" is run, so that
+# "sudo make install" is just updating an existing file rather than creating it from scratch.
+#
+file(TOUCH ${CMAKE_BINARY_DIR}/install_manifest.txt)
+
+#===========================Create the binary==================================
+
+# This intermediate library target simplifies building the main app and the test app from largely the same sources
+# Note that using this is why we can't include src/main.cpp in filesToCompile_cpp.
+add_library(btobjlib
+            OBJECT
+            ${filesToCompile_cpp}
+            ${filesToCompile_qrc})
+
+
+
+if(APPLE)
+   #
+   # We have to tell CMake what things other than the executable etc to include in the Mac Applicaiton Bundle
+   #
+   set_source_files_properties(${filesToInstall_macIcons}
+                              PROPERTIES
+                              MACOSX_PACKAGE_LOCATION "Resources")
+   set_source_files_properties(${filesToInstall_data}
+                              PROPERTIES
+                              MACOSX_PACKAGE_LOCATION "Resources")
+   set_source_files_properties(${filesToInstall_docs}
+                              PROPERTIES
+                              MACOSX_PACKAGE_LOCATION "Resources/en.lproj")
+   set_source_files_properties(${filesToInstall_sounds}
+                              PROPERTIES
+                              MACOSX_PACKAGE_LOCATION "Resources/sounds")
+   set_source_files_properties(${QM_FILES}
+                              PROPERTIES
+                              MACOSX_PACKAGE_LOCATION "Resources/translations_qm")
+
+   # The MACOSX_BUNDLE parameter here sets the MACOSX_BUNDLE property on the created target.  This means the executable
+   # is built as an Application Bundle, which makes it a GUI executable that can be launched from the Finder.
+   #
+   # TBD: When we move to Qt6, look at qt_add_executable
+   add_executable(${fileName_executable}
+                  MACOSX_BUNDLE
+                  ${repoDir}/src/main.cpp
+                  ${translationSourceFiles}
+                  ${QM_FILES}
+                  ${filesToInstall_macIcons}
+                  ${filesToInstall_data}
+                  ${filesToInstall_docs}
+                  ${filesToInstall_sounds}
+                  $<TARGET_OBJECTS:btobjlib>)
+
+   #====================================================================================================================
+   #================================================ Mac Bundle Settings ===============================================
+   #====================================================================================================================
+   # See https://cmake.org/cmake/help/latest/prop_tgt/MACOSX_BUNDLE_INFO_PLIST.html for the CMake doco and
+   # https://developer.apple.com/documentation/bundleresources/information_property_list/bundle_configuration for the
+   # Apple documentation
+   #
+
+   # Sets the CFBundleName bundle property.  "This name can contain up to 15 characters. The system may display it to
+   # users if CFBundleDisplayName isn't set."  (I can't see a way in CMake for us to set CFBundleDisplayName.)
+   set(MACOSX_BUNDLE_BUNDLE_NAME "${CONFIG_APPLICATION_NAME_UC}")
+
+   # Sets the CFBundleIdentifier bundle property which is a case-insensitive string that "uniquely identifies a single
+   # app throughout the system ... Typically ... a reverse-DNS format".  It is used when "applying specified
+   # preferences" (whatever that means), to "locate an app capable of opening a particular file", and for validating an
+   # app's signature.
+   set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.${PROJECT_NAME}.${fileName_executable}")
+
+   # We do not set MACOSX_BUNDLE_INFO_STRING, which sets the CFBundleGetInfoString bundle property, as AFAICT
+   # CFBundleGetInfoString is obsolete.
+
+   # Sets the CFBundleVersion, which is "a machine-readable string composed of one to three period-separated integers,
+   # such as 10.14.1. The string can only contain numeric characters (0-9) and periods."
+   set(MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION})
+
+   #
+   # This sets the bundle property key CFBundleShortVersionString, which is "a user-visible string for the version of
+   # the bundle. The required format is three period-separated integers, such as 10.14.1. The string can only contain
+   # numeric characters (0-9) and periods."
+   #
+   # One might think that CFBundleShortVersionString and CFBundleVersion are so similar as not to merit being separate
+   # keys, but it is not for us to question whether the left hand of Apple knows what the right hand is doing.
+   #
+   # Confusingly there is also a CMake target property called MACOSX_BUNDLE_LONG_VERSION_STRING which claims to set a
+   # CFBundleLongVersionString bundle property key.  However, it seems this bundle property key is long obsolete.
+   #
+   set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION})
+
+   # Sets the CFBundleIconFile bundle property key
+   set(MACOSX_BUNDLE_ICON_FILE "Brewtarget.icns")
+
+   # Sets the NSHumanReadableCopyright bundle property key, which is "a human-readable copyright notice for the bundle".
+   set(MACOSX_BUNDLE_COPYRIGHT
+       "Copyright 2009-2026.  Distributed under the terms of the GNU General Public License (version 3).")
+
+else()
+   add_executable(${fileName_executable}
+                  ${repoDir}/src/main.cpp
+                  ${translationSourceFiles}
+                  ${QM_FILES}
+                  ${desktopIcon}
+                  $<TARGET_OBJECTS:btobjlib>)
+endif()
+
+#=======================================================================================================================
+#=======================================================================================================================
+# Windows-specific library linking
+if(WIN32 AND MINGW)
+   ############################################################################
+   # Need to set some linker flags that I don't know how to get
+   # automatically.
+   ############################################################################
+
+   # MinGW-specific flags.
+   #    -Wl,-subsystem,windows - suppresses the output command window.
+   #    -Wl,-enable-stdcall-fixup - If the link finds a symbol that it cannot resolve, it will attempt to do “fuzzy
+   #                                linking” by looking for another defined symbol that differs only in the format of
+   #                                the symbol name (cdecl vs stdcall) and will resolve that symbol by linking to the
+   #                                match (and also print a warning).
+   #    -Wl,-enable-auto-import - Do sophisticated linking of _symbol to __imp__symbol for DATA imports from DLLs, and
+   #                              create the necessary thunking symbols when building the import libraries with those
+   #                              DATA exports.
+   #    -Wl,-enable-runtime-pseudo-reloc - Fixes some of the problems that can occur with -enable-auto-import
+   #    -mthreads - specifies that MinGW-specific thread support is to be used
+   set_target_properties(
+      ${fileName_executable}
+      PROPERTIES
+      LINK_FLAGS "-Wl,-enable-stdcall-fixup -Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl,-subsystem,windows"
+   )
+
+endif()
+
+add_dependencies(${fileName_executable} translationsTarget)
+
+# All the libraries (except the Qt ones we add immediately below) that are used by both the main app and the unit
+# testing app
+set(appAndTestCommonLibraries
+   ${Backtrace_LIBRARIES}
+   ${Boost_LIBRARIES}
+   ${DL_LIBRARY}
+   ${LIBXML2_LIBRARIES}
+   ${OPENSSL_LIBRARIES}
+)
+if(APPLE)
+   # Static linking with libraries on MacOS means we have to explicitly say what other libraries and frameworks they in
+   # turn depend on.  It would be neat to find some automated tool that does this for us.
+   list(APPEND appAndTestCommonLibraries CURL::libcurl
+                                         "-framework CoreFoundation"
+                                         "-framework CoreServices"
+                                         "-framework Carbon"
+                                         "-framework Foundation"
+                                         "-framework Cocoa"
+                                         "-framework ApplicationServices")
+endif()
+
+foreach(qtComponent IN LISTS qtCommonComponents)
+   list(APPEND appAndTestCommonLibraries "Qt6::${qtComponent}")
+endforeach()
+list(APPEND appAndTestCommonLibraries "sourcemeta::blaze::evaluator")
+list(APPEND appAndTestCommonLibraries "sourcemeta::blaze::compiler")
+list(APPEND appAndTestCommonLibraries "sourcemeta::blaze::output")
+
+target_link_libraries(${fileName_executable} PRIVATE ${appAndTestCommonLibraries})
+
+#=================================Tests========================================
+# We used to build the unit test executable in the bin subdirectory because, on Windows, we're going to copy a lot of
+# other files in there (see below).  HOWEVER, we've never done that on the Meson build and it's a pain in the neck to
+# do things differently on the CMake build: when we're running the unit tests because of the way we look for the data
+# directory (see initResourceDir() function in Application.cpp).
+add_executable(${fileName_unitTestRunner}
+               ${unitTestFiles_cpp}
+               $<TARGET_OBJECTS:btobjlib>)
+#set_target_properties(${fileName_unitTestRunner} PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
+
+# Test app needs all the same libraries as the main app, plus Qt6::Test
+target_link_libraries(${fileName_unitTestRunner} PRIVATE ${appAndTestCommonLibraries} Qt6::Test)
+
+message("Unit Test Runner: ./${fileName_unitTestRunner}")
+
+add_test(NAME CoreTests.pstdintTest                                 COMMAND ./${fileName_unitTestRunner} CoreTests pstdintTest                                )
+add_test(NAME CoreTests.testNamedParameterBundle                    COMMAND ./${fileName_unitTestRunner} CoreTests testNamedParameterBundle                   )
+add_test(NAME CoreTests.testTypeLookups                             COMMAND ./${fileName_unitTestRunner} CoreTests testTypeLookups                            )
+add_test(NAME CoreTests.testMultiVector                             COMMAND ./${fileName_unitTestRunner} CoreTests testMultiVector                            )
+add_test(NAME CoreTests.testLogRotation                             COMMAND ./${fileName_unitTestRunner} CoreTests testLogRotation                            )
+add_test(NAME DatabaseTests.testUpgradeBrewtarget231Database        COMMAND ./${fileName_unitTestRunner} DatabaseTests testUpgradeBrewtarget231Database       )
+add_test(NAME DatabaseTests.testLockingAndSharing                   COMMAND ./${fileName_unitTestRunner} DatabaseTests testLockingAndSharing                  )
+add_test(NAME DatabaseTests.testAutomaticVersioning                 COMMAND ./${fileName_unitTestRunner} DatabaseTests testAutomaticVersioning                )
+add_test(NAME MashAutoAdjusterTests.testStrikeWater                 COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testStrikeWater                )
+add_test(NAME MashAutoAdjusterTests.testFixedValues                 COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testFixedValues                )
+add_test(NAME MashAutoAdjusterTests.testStepInfusions               COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testStepInfusions              )
+add_test(NAME MashAutoAdjusterTests.testDecoction                   COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testDecoction                  )
+add_test(NAME MashAutoAdjusterTests.testSparge                      COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testSparge                     )
+add_test(NAME MashAutoAdjusterTests.testNoSparge                    COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testNoSparge                   )
+add_test(NAME MashAutoAdjusterTests.testErrorsAndWarnings           COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testErrorsAndWarnings          )
+add_test(NAME MashAutoAdjusterTests.testSensibleTemperatures        COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testSensibleTemperatures       )
+add_test(NAME MashAutoAdjusterTests.testCheck                       COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testCheck                      )
+add_test(NAME MashAutoAdjusterTests.testRoundedValues               COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testRoundedValues              )
+add_test(NAME MashAutoAdjusterTests.testWithRecipe                  COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testWithRecipe                 )
+add_test(NAME MashAutoAdjusterTests.testExampleProfiles             COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testExampleProfiles            )
+add_test(NAME MashAutoAdjusterTests.testAutoAdjust                  COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testAutoAdjust                 )
+add_test(NAME MashAutoAdjusterTests.testVolumes                     COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testVolumes                    )
+add_test(NAME MashAutoAdjusterTests.testAffectsAdjustment           COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testAffectsAdjustment          )
+add_test(NAME MashAutoAdjusterTests.testStepChangesAutoAdjust       COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testStepChangesAutoAdjust      )
+add_test(NAME MashAutoAdjusterTests.testUndo                        COMMAND ./${fileName_unitTestRunner} MashAutoAdjusterTests testUndo                       )
+add_test(NAME MashFermentabilityTests.testReproducesPaper           COMMAND ./${fileName_unitTestRunner} MashFermentabilityTests testReproducesPaper          )
+add_test(NAME MashFermentabilityTests.testTemperatureAndTime        COMMAND ./${fileName_unitTestRunner} MashFermentabilityTests testTemperatureAndTime       )
+add_test(NAME MashFermentabilityTests.testBuildProfile              COMMAND ./${fileName_unitTestRunner} MashFermentabilityTests testBuildProfile             )
+add_test(NAME MashFermentabilityTests.testStepMashes                COMMAND ./${fileName_unitTestRunner} MashFermentabilityTests testStepMashes               )
+add_test(NAME MashFermentabilityTests.testNoDiscontinuities         COMMAND ./${fileName_unitTestRunner} MashFermentabilityTests testNoDiscontinuities        )
+add_test(NAME MashFermentabilityTests.testEnzymeLevels              COMMAND ./${fileName_unitTestRunner} MashFermentabilityTests testEnzymeLevels             )
+add_test(NAME MashFermentabilityTests.testLimits                    COMMAND ./${fileName_unitTestRunner} MashFermentabilityTests testLimits                   )
+add_test(NAME MeasurementTests.testUnitConversions                  COMMAND ./${fileName_unitTestRunner} MeasurementTests testUnitConversions                 )
+add_test(NAME MeasurementTests.testUnitInverses                     COMMAND ./${fileName_unitTestRunner} MeasurementTests testUnitInverses                    )
+add_test(NAME MeasurementTests.testNumberDisplayAndParsing          COMMAND ./${fileName_unitTestRunner} MeasurementTests testNumberDisplayAndParsing         )
+add_test(NAME MeasurementTests.testAlgorithms                       COMMAND ./${fileName_unitTestRunner} MeasurementTests testAlgorithms                      )
+add_test(NAME MeasurementTests.testPercentageDecimalPlaces          COMMAND ./${fileName_unitTestRunner} MeasurementTests testPercentageDecimalPlaces         )
+add_test(NAME RecipeCalcTests.recipeCalcTest_allGrain               COMMAND ./${fileName_unitTestRunner} RecipeCalcTests recipeCalcTest_allGrain              )
+add_test(NAME RecipeCalcTests.postBoilLossOgTest                    COMMAND ./${fileName_unitTestRunner} RecipeCalcTests postBoilLossOgTest                   )
+add_test(NAME RecipeCalcTests.testBoilAdditionTiming                COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testBoilAdditionTiming               )
+add_test(NAME RecipeCalcTests.testBoilStepsWithoutTemperatures      COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testBoilStepsWithoutTemperatures     )
+add_test(NAME RecipeCalcTests.testBoilStepPhases                    COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testBoilStepPhases                   )
+add_test(NAME RecipeCalcTests.testBoilChangesRecalculate            COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testBoilChangesRecalculate           )
+add_test(NAME RecipeCalcTests.testPostBoilIbus                      COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testPostBoilIbus                     )
+add_test(NAME RecipeCalcTests.testPostBoilRampTime                  COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testPostBoilRampTime                 )
+add_test(NAME RecipeCalcTests.testIbuFormulas                       COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testIbuFormulas                      )
+add_test(NAME RecipeCalcTests.testInventory                         COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testInventory                        )
+add_test(NAME RecipeCalcTests.testMashWaterVolumes                  COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testMashWaterVolumes                 )
+add_test(NAME RecipeCalcTests.testEvaporationRate                   COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testEvaporationRate                  )
+add_test(NAME RecipeCalcTests.testEquipmentDefaultVolumes           COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testEquipmentDefaultVolumes          )
+add_test(NAME RecipeCalcTests.testMashTunHeatCapacity               COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testMashTunHeatCapacity              )
+add_test(NAME RecipeCalcTests.testWaterAlkalinity                   COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testWaterAlkalinity                  )
+add_test(NAME RecipeCalcTests.testLateFermentableAdditions          COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testLateFermentableAdditions         )
+add_test(NAME RecipeCalcTests.testTimeWeightedBoilGravity           COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testTimeWeightedBoilGravity          )
+add_test(NAME RecipeCalcTests.testRecipeSnapshot                    COMMAND ./${fileName_unitTestRunner} RecipeCalcTests testRecipeSnapshot                   )
+add_test(NAME SerializationTests.testDotBeerImportedRecipeCalcs     COMMAND ./${fileName_unitTestRunner} SerializationTests testDotBeerImportedRecipeCalcs    )
+add_test(NAME SerializationTests.testDotBeerAdditionStepCorrection  COMMAND ./${fileName_unitTestRunner} SerializationTests testDotBeerAdditionStepCorrection )
+add_test(NAME SerializationTests.testBrewLogCalcs                   COMMAND ./${fileName_unitTestRunner} SerializationTests testBrewLogCalcs                  )
+add_test(NAME SerializationTests.testDotBeerVersionHandling         COMMAND ./${fileName_unitTestRunner} SerializationTests testDotBeerVersionHandling        )
+add_test(NAME SerializationTests.testDotBeerExport                  COMMAND ./${fileName_unitTestRunner} SerializationTests testDotBeerExport                 )
+add_test(NAME SerializationTests.testDotBeerLocked                  COMMAND ./${fileName_unitTestRunner} SerializationTests testDotBeerLocked                 )
+add_test(NAME SerializationTests.testDotBeerTargetMashPh            COMMAND ./${fileName_unitTestRunner} SerializationTests testDotBeerTargetMashPh           )
+add_test(NAME SerializationTests.testClearUnusedOptionalVessels     COMMAND ./${fileName_unitTestRunner} SerializationTests testClearUnusedOptionalVessels    )
+add_test(NAME SerializationTests.testBeerXmlNullYield               COMMAND ./${fileName_unitTestRunner} SerializationTests testBeerXmlNullYield              )
+add_test(NAME SerializationTests.testNullSentinel                   COMMAND ./${fileName_unitTestRunner} SerializationTests testNullSentinel                  )
+add_test(NAME SerializationTests.testBeerJsonRoundTrip              COMMAND ./${fileName_unitTestRunner} SerializationTests testBeerJsonRoundTrip             )
+add_test(NAME SerializationTests.testAllInOneEquipmentImport        COMMAND ./${fileName_unitTestRunner} SerializationTests testAllInOneEquipmentImport       )
+add_test(NAME SerializationTests.testBeerXmlFoundationVolume        COMMAND ./${fileName_unitTestRunner} SerializationTests testBeerXmlFoundationVolume       )
+add_test(NAME SerializationTests.testFolderPaths                    COMMAND ./${fileName_unitTestRunner} SerializationTests testFolderPaths                   )
+add_test(NAME SerializationTests.testEquipmentComparison            COMMAND ./${fileName_unitTestRunner} SerializationTests testEquipmentComparison           )
+add_test(NAME SerializationTests.testEquipmentVolumes               COMMAND ./${fileName_unitTestRunner} SerializationTests testEquipmentVolumes              )
+add_test(NAME SerializationTests.testClearUnusedMashTun             COMMAND ./${fileName_unitTestRunner} SerializationTests testClearUnusedMashTun            )
+add_test(NAME WaterAutoAdjusterTests.testSaltChemistry              COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testSaltChemistry             )
+add_test(NAME WaterAutoAdjusterTests.testExactAmounts               COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testExactAmounts              )
+add_test(NAME WaterAutoAdjusterTests.testDefaultSalts               COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testDefaultSalts              )
+add_test(NAME WaterAutoAdjusterTests.testBaseWaterAndFixedAdditions COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testBaseWaterAndFixedAdditions)
+add_test(NAME WaterAutoAdjusterTests.testUnreachableTarget          COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testUnreachableTarget         )
+add_test(NAME WaterAutoAdjusterTests.testMinimumAddition            COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testMinimumAddition           )
+add_test(NAME WaterAutoAdjusterTests.testErrors                     COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testErrors                    )
+add_test(NAME WaterAutoAdjusterTests.testAcidChemistry              COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testAcidChemistry             )
+add_test(NAME WaterAutoAdjusterTests.testMashPh                     COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testMashPh                    )
+add_test(NAME WaterAutoAdjusterTests.testAcidAmounts                COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testAcidAmounts               )
+add_test(NAME WaterAutoAdjusterTests.testRecipeUndoAndKeepInSync    COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testRecipeUndoAndKeepInSync   )
+add_test(NAME WaterAutoAdjusterTests.testSuggestedTargetMashPh      COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testSuggestedTargetMashPh     )
+add_test(NAME WaterAutoAdjusterTests.testExampleProfiles            COMMAND ./${fileName_unitTestRunner} WaterAutoAdjusterTests testExampleProfiles           )
+
+#=================================Installs=====================================
+
+# Install executable.
+install(TARGETS ${fileName_executable}
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION ${installSubDir_bin}
+        COMPONENT ${RUNTIME_INSTALL_COMPONENT})
+
+# Install the translations.
+install(FILES ${QM_FILES}
+        DESTINATION "${installSubDir_data}/translations_qm"
+        COMPONENT ${DATA_INSTALL_COMPONENT} )
+
+#=======================================================================================================================
+#================================================== Install (locally) ==================================================
+#=======================================================================================================================
+# This is for "make install" (or "sudo make install")
+#
+# When a relative path is given in the DESTINATION option of the install() command, it is interpreted relative to the
+# value of the CMAKE_INSTALL_PREFIX variable.
+#
+# Install the data
+install(FILES ${filesToInstall_data}
+        DESTINATION ${installSubDir_data}
+        COMPONENT ${DATA_INSTALL_COMPONENT})
+
+# Install the documentation
+install(FILES ${filesToInstall_docs}
+        DESTINATION ${installSubDir_doc}
+        COMPONENT ${DATA_INSTALL_COMPONENT})
+
+# Install sounds
+install(FILES ${filesToInstall_sounds}
+        DESTINATION "${installSubDir_data}/sounds"
+        COMPONENT ${DATA_INSTALL_COMPONENT})
+
+if(UNIX AND NOT APPLE)
+   #----------- Linux -----------
+   # Install the icons
+   # Per https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html#install_icons, "installing a
+   # svg icon in $prefix/share/icons/hicolor/scalable/apps means most desktops will have one icon that works for all
+   # sizes".
+   install(FILES ${filesToInstall_icons}
+           DESTINATION "${installSubDir_icons}/hicolor/scalable/apps/"
+           COMPONENT ${DATA_INSTALL_COMPONENT})
+
+   # Install the .desktop file
+   install(FILES ${filesToInstall_desktop}
+           DESTINATION "${installSubDir_applications}"
+           COMPONENT ${DATA_INSTALL_COMPONENT})
+endif()
+
+if(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+   install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
+           DESTINATION bin
+           COMPONENT System)
+endif()
+
+#=======================================================================================================================
+#=============================================== Post-compilation message ==============================================
+#=======================================================================================================================
+#
+# After running `make`, you usually want to run `make install`.  This is an easy step to miss for someone compiling from
+# source for the first time, so it's common practice to give a reminder about it.  This trick of making a special cmake
+# target comes from https://stackoverflow.com/questions/25240105/how-to-print-messages-after-make-done-with-cmake.  It
+# does mean the message also gets printed during `sudo make install` which is, at best, unnecessary.  But I think, on
+# balance, it's better than not having a message.
+#
+# Putting the message in a different color is usually helpful because it makes it stand out from all the other CMake
+# output.  Hard-coding the color here is a small risk in that we don't know how well it will show up on whatever color
+# scheme the terminal is using.  OTOH, AIUI the color of CMake's own messages is hard-coded, so, if we use one of the
+# same colors, we're not making things any worse.
+# (BTW, I cannot find reference to cmake_echo_color in the CMake documentation, but it seems to work!)
+#
+add_custom_target(
+   FinalMessage ALL
+   ${CMAKE_COMMAND} -E cmake_echo_color --bold --green "⭐⭐⭐ Finished compiling ${CONFIG_APPLICATION_NAME_UC}.  Please run  sudo make install  to install locally. ⭐⭐⭐"
+   COMMENT "Final Message"
+)
+add_dependencies(FinalMessage ${fileName_executable})
+
+#=======================================================================================================================
+#================================================= Custom Make Targets =================================================
+#=======================================================================================================================
+# These go at the end of the file so that they can use any of the variables created above
 
 # `make install-data` or `make install-runtime`
-ADD_CUSTOM_TARGET(
+add_custom_target(
    install-data
    COMMAND "${CMAKE_COMMAND}"
            -DCOMPONENT=${DATA_INSTALL_COMPONENT}
            -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
 )
-ADD_CUSTOM_TARGET(
+add_custom_target(
    install-runtime
-   DEPENDS ${brewtarget_EXECUTABLE}
+   DEPENDS ${fileName_executable}
    COMMAND "${CMAKE_COMMAND}"
            -DCOMPONENT=${RUNTIME_INSTALL_COMPONENT}
            -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
 )
 
-#=================================Version======================================
-SET( brewtarget_VERSION_MAJOR 2 )
-SET( brewtarget_VERSION_MINOR 4 )
-SET( brewtarget_VERSION_PATCH 0 )
-SET( brewtarget_VERSION_STRING "${brewtarget_VERSION_MAJOR}.${brewtarget_VERSION_MINOR}.${brewtarget_VERSION_PATCH}" )
-
-#===================================Options====================================
-OPTION( BUILD_DESIGNER_PLUGINS
-        "If on, you will only build and install the designer plugins."
-        OFF )
-OPTION( DO_RELEASE_BUILD
-        "If on, will do a release build. Otherwise, debug build."
-        OFF )
-OPTION( NO_MESSING_WITH_FLAGS
-        "On means do not add any build flags whatsoever. May override other options."
-        OFF )
-OPTION( NO_QTMULTIMEDIA
-        "On means QtMultimedia won't be linked to the final binary and related functionalities will be disabled."
-        OFF )
-
-# Do this right off the bat
-ENABLE_TESTING()
-
-#==============================Bundle Settings================================
-SET( MACOSX_BUNDLE_BUNDLE_NAME "Brewtarget" )
-#SET( MACOSX_BUNDLE_GUI_IDENTIFIER )
-#SET( MACOSX_BUNDLE_INFO_STRING )
-#SET( MACOSX_BUNDLE_BUNDLE_VERSION )
-#SET( MACOSX_BUNDLE_SHORT_VERSION_STRING )
-SET( MACOSX_BUNDLE_LONG_VERSION_STRING ${brewtarget_VERSION_STRING} )
-SET( MACOSX_BUNDLE_ICON_FILE "BrewtargetIcon.icns" )
-SET( MACOSX_BUNDLE_COPYRIGHT "GPLv3" )
-
-#==============================Compile flags===================================
-
-set( CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# Enable and enforce c++11 standards, so that we may lambda
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED_ON)
-
-IF( NOT ${NO_MESSING_WITH_FLAGS} )
-   IF( CMAKE_COMPILER_IS_GNUCXX )
-      SET( CMAKE_CXX_FLAGS_RELEASE "-Wall -ansi -pedantic -Wno-long-long -O2" )
-      SET( CMAKE_CXX_FLAGS_DEBUG "-Wall -g3" )
-   ENDIF()
-
-   # Speed up compilation if using gcc.
-   IF( UNIX AND NOT APPLE )
-      SET( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pipe" )
-      SET( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pipe" )
-   ENDIF()
-ENDIF()
-
-IF( ${NO_QTMULTIMEDIA} )
-   ADD_DEFINITIONS( -DNO_QTMULTIMEDIA )
-ENDIF()
-
-IF( ${DO_RELEASE_BUILD} )
-   SET( CMAKE_BUILD_TYPE "Release" )
-ELSE()
-   SET( CMAKE_BUILD_TYPE "Debug" )
-ENDIF()
-
-IF( APPLE AND NOT CMAKE_OSX_ARCHITECTURES )
-   SET( CMAKE_OSX_ARCHITECTURES x86_64 ) # Build intel 64-bit binary.
-   #SET( CMAKE_OSX_ARCHITECTURES i386 x86_64 ) # Build intel binary.
-   #SET( CMAKE_OSX_ARCHITECTURES ppc i386 ppc64 x86_64 ) # Build universal binary.
-ENDIF()
-
-ADD_DEFINITIONS("-std=c++14")
-
-#============================Directories=======================================
-SET(ROOTDIR "${CMAKE_CURRENT_SOURCE_DIR}")
-SET(SRCDIR "${ROOTDIR}/src")
-SET(UIDIR "${ROOTDIR}/ui")
-SET(DATADIR "${ROOTDIR}/data")
-SET(TRANSLATIONSDIR "${ROOTDIR}/translations")
-SET(WINDIR "${ROOTDIR}/win")
-
-INCLUDE_DIRECTORIES(${SRCDIR})
-INCLUDE_DIRECTORIES("${CMAKE_BINARY_DIR}/src") # In case of out-of-source build.
-INCLUDE_DIRECTORIES("${CMAKE_BINARY_DIR}/QtDesignerPlugins")
-
-# Custom cmake modules.
-SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules" )
-
-#==============================OS-specific Commands============================
-IF( UNIX )
-   SET( RM_COMMAND "rm" )
-   SET( RM_ARGS "-f" )
-ELSEIF( WIN32 )
-   SET( RM_COMMAND "del" )
-   SET( RM_ARGS "" )
-ENDIF()
-
-#==================================Find Qt5====================================
-
-# The minimum QT5 version we need. Keep as low as necessary.
-SET(QT5_MIN_VERSION 5.3)
-
-# Automatically run moc on source files when necessary
-SET(CMAKE_AUTOMOC ON)
-# As moc files are generated in the binary dir, tell CMake
-# to always look for includes there:
-SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-FIND_PACKAGE(Qt5Core ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5Core_INCLUDE_DIRS})
-
-FIND_PACKAGE(Qt5Widgets ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5Widgets_INCLUDE_DIRS})
-
-FIND_PACKAGE(Qt5Network ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5Network_INCLUDE_DIRS})
-
-FIND_PACKAGE(Qt5PrintSupport ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5PrintSupport_INCLUDE_DIRS})
-
-FIND_PACKAGE(Qt5Sql ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5Sql_INCLUDE_DIRS})
-
-# This is required to make the deploy scripts pick up the svg plugins
-FIND_PACKAGE(Qt5Svg ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5Svg_INCLUDE_DIRS})
-
-FIND_PACKAGE(Qt5Xml ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5Xml_INCLUDE_DIRS})
-
-IF( NOT ${NO_QTMULTIMEDIA} )
-   FIND_PACKAGE(Qt5Multimedia ${QT5_MIN_VERSION} REQUIRED)
-   INCLUDE_DIRECTORIES(${Qt5Multimedia_INCLUDE_DIRS})
-ENDIF()
-
-FIND_PACKAGE(Qt5Test ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5Test_INCLUDE_DIRS})
-
-FIND_PACKAGE(Qt5LinguistTools ${QT5_MIN_VERSION} REQUIRED)
-INCLUDE_DIRECTORIES(${Qt5LinguistTools_INCLUDE_DIRS})
-
-# Fuckin Qt5 requires -fPIC if Qt5 itself was built with -fPIC
-IF(Qt5_POSITION_INDEPENDENT_CODE)
-   SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
-ENDIF()
-
-MESSAGE( STATUS "CMAKE_SYSTEM_INCLUDE_PATH: ${CMAKE_SYSTEM_INCLUDE_PATH}" )
-
-# Some extra files for the "make clean" target.
-SET_PROPERTY(
-   DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-   PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
-   ".*~$" # Kate backup files.
-   "CMakeLists.txt.user" # From QtCreator I think.
-   "CPackConfig.cmake"
-   "CPackSourceConfig.cmake"
-)
-
-#=========================Configure brewtarget.qrc.in==========================
-
-SET( brewtarget_QRC "${CMAKE_CURRENT_SOURCE_DIR}/brewtarget.qrc" )
-
-#============================Doxygen Custom Target=============================
-FIND_PROGRAM( DOXYGEN_CMD doxygen )
-IF( DOXYGEN_CMD )
-  SET( DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile" )
-  CONFIGURE_FILE( "${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in" ${DOXYFILE} )
-  ADD_CUSTOM_TARGET( source_doc
+# Doxygen Custom Target
+FIND_PROGRAM(DOXYGEN_CMD doxygen)
+if(DOXYGEN_CMD)
+  set(DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile")
+  CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.cmake.in" ${DOXYFILE})
+  add_custom_target(source_doc
                      COMMAND ${DOXYGEN_CMD} ${DOXYFILE}
                      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/doc"
-                   )
-ENDIF()
+                  )
+endif()
 
-#=========================Changelog custom target==============================
-FIND_PROGRAM( GZIP_CMD gzip )
-IF( GZIP_CMD )
-   SET( CHANGELOG_UNCOMPRESSED "${CMAKE_CURRENT_SOURCE_DIR}/CHANGES.markdown" )
-   SET( CHANGELOG "${CMAKE_CURRENT_BINARY_DIR}/changelog.gz" )
-   ADD_CUSTOM_COMMAND(
-      OUTPUT ${CHANGELOG}
-      COMMAND ${GZIP_CMD} -9 -n -c ${CHANGELOG_UNCOMPRESSED} > ${CHANGELOG}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      MAIN_DEPENDENCY ${CHANGELOG_UNCOMPRESSED}
-   )
-   ADD_CUSTOM_TARGET(changelog ALL DEPENDS ${CHANGELOG})
-ENDIF()
-
-#========================Construct the directories=============================
-
-# Debian standard directories.
-IF( NOT EXEC_PREFIX )
-   SET( EXEC_PREFIX ${CMAKE_INSTALL_PREFIX} )
-ENDIF()
-
-SET( DATAROOTDIR "${EXEC_PREFIX}/share" )
-SET( BINDIR "${EXEC_PREFIX}/bin" )
-IF( NOT DOCDIR )
-   SET( DOCDIR "${DATAROOTDIR}/doc/${CMAKE_PROJECT_NAME}" )
-ENDIF()
-
-# Actual install directories.
-IF( UNIX AND NOT APPLE )
-  SET( DATAPATH "${DATAROOTDIR}/${CMAKE_PROJECT_NAME}" )
-  SET( TARGETPATH ${BINDIR} )
-  SET( DOCPATH ${DOCDIR} )
-ELSEIF( WIN32 )
-  # Works for regular "make install", but not CPack/NSIS installer.
-  #SET( CMAKE_INSTALL_PREFIX "C:/Program Files/brewtarget-${brewtarget_VERSION_STRING}" )
-  #SET( DATAPATH "brewtarget-${brewtarget_VERSION_STRING}" )
-  #SET( TARGETPATH "brewtarget-${brewtarget_VERSION_STRING}" )
-  #SET( DOCPATH "brewtarget-${brewtarget_VERSION_STRING}/doc" )
-
-  # For some damn reason, for the NSIS installer,
-  # the prefix needs to be empty. Also, seems that the .exe
-  # needs to be in bin/. Fucking piece of shit CPack...
-  # Can anybody shed some light on this situation?
-  #SET( CMAKE_INSTALL_PREFIX "" )
-  SET( CPACK_INSTALL_PREFIX "" )
-  SET( DATAPATH "data" )
-  SET( TARGETPATH "bin" )
-  SET( DOCPATH "doc" )
-ELSEIF( APPLE )
-  SET( DATAPATH "${BT_BUNDLE_DIR}/Contents/Resources" )
-  SET( TARGETPATH "${BT_BUNDLE_DIR}/Contents/MacOS" )
-  SET( DOCPATH  "${BT_BUNDLE_DIR}/Contents/Resources/en.lproj" )
-ENDIF()
-
-#==============================Setup the config.h==============================
-
-# "#define CONFIGDATADIR ${CONFIGDATADIR}$" in config.in will be replaced
-# by the below corresponding value in ${CONFIGDATADIR} below when
-# CONFIGURE_FILE() is called.
-IF( ${DATAPATH} MATCHES "^/" )
-   SET( CONFIGDATADIR "${DATAPATH}/" )
-ELSE()
-   SET( CONFIGDATADIR "/${DATAPATH}/" )
-ENDIF()
-
-IF( ${DOCPATH} MATCHES "^/" )
-   SET( CONFIGDOCDIR "${DOCPATH}/" )
-ELSE()
-   SET( CONFIGDOCDIR "/${DOCPATH}/" )
-ENDIF()
-
-# Tell cmake where the configure file is and where
-# to put the output. All variables in config.in written as "${VAR}$
-# will be replaced by VAR as determined by cmake in config.h.
-# Outputs only in the build directory.
-CONFIGURE_FILE( src/config.in src/config.h )
-
-#================================Files=========================================
-
-# List of documentation files to be installed.
-SET( brewtarget_DOCS
-     ${ROOTDIR}/README.markdown
-     ${ROOTDIR}/COPYRIGHT
-)
-
-# List of data files to be installed.
-SET( brewtarget_DATA
-     ${DATADIR}/default_db.sqlite
-# Yes, I know this is 'documentation', but Debian policy suggests it should be
-# with the data (see section 12.3 of the policy manual).
-     ${ROOTDIR}/doc/manual-en.pdf
-)
-
-# Desktop files to install.
-SET( brewtarget_DESKTOP
-     ${ROOTDIR}/brewtarget.desktop
-)
-
-# Icon files to install.
-SET( brewtarget_ICONS
-     ${ROOTDIR}/images/brewtarget.svg
-)
-
-SET( TRANSLATIONS_FILES
-     ${TRANSLATIONSDIR}/bt_ca.ts # Catalan
-     ${TRANSLATIONSDIR}/bt_cs.ts # Czech
-     ${TRANSLATIONSDIR}/bt_de.ts # German
-     ${TRANSLATIONSDIR}/bt_en.ts # English
-     ${TRANSLATIONSDIR}/bt_el.ts # Greek
-     ${TRANSLATIONSDIR}/bt_es.ts # Spanish
-     ${TRANSLATIONSDIR}/bt_et.ts # Estonian
-     ${TRANSLATIONSDIR}/bt_eu.ts # Basque
-     ${TRANSLATIONSDIR}/bt_fr.ts # French
-     ${TRANSLATIONSDIR}/bt_gl.ts # Galician
-     ${TRANSLATIONSDIR}/bt_nb.ts # Norwegian Bokmal
-     ${TRANSLATIONSDIR}/bt_it.ts # Italian
-     ${TRANSLATIONSDIR}/bt_lv.ts # Latvian
-     ${TRANSLATIONSDIR}/bt_nl.ts # Dutch
-     ${TRANSLATIONSDIR}/bt_pl.ts # Polish
-     ${TRANSLATIONSDIR}/bt_pt.ts # Portuguese
-     ${TRANSLATIONSDIR}/bt_hu.ts # Hungarian
-     ${TRANSLATIONSDIR}/bt_ru.ts # Russian
-     ${TRANSLATIONSDIR}/bt_sr.ts # Serbian
-     ${TRANSLATIONSDIR}/bt_sv.ts # Swedish
-     ${TRANSLATIONSDIR}/bt_tr.ts # Turkish
-     ${TRANSLATIONSDIR}/bt_zh.ts # Chinese
-)
-
-SET( RCFILE ${WINDIR}/icon.rc )
-
-SET( brewtarget_SOUNDS
-     ${DATADIR}/sounds/45minLeft.ogg
-     ${DATADIR}/sounds/addFuckinHops.ogg
-     ${DATADIR}/sounds/aromaHops.ogg
-     ${DATADIR}/sounds/beep.ogg
-     ${DATADIR}/sounds/bitteringHops.ogg
-     ${DATADIR}/sounds/checkBoil.ogg
-     ${DATADIR}/sounds/checkFirstRunnings.ogg
-     ${DATADIR}/sounds/checkGravity.ogg
-     ${DATADIR}/sounds/checkHydrometer.ogg
-     ${DATADIR}/sounds/checkMashTemps.ogg
-     ${DATADIR}/sounds/checkTemp.ogg
-     ${DATADIR}/sounds/clarifyingAgent.ogg
-     ${DATADIR}/sounds/cleanup.ogg
-     ${DATADIR}/sounds/closeFuckinValves.ogg
-     ${DATADIR}/sounds/closeValves.ogg
-     ${DATADIR}/sounds/doughIn.ogg
-     ${DATADIR}/sounds/drinkAnotherHomebrew.ogg
-     ${DATADIR}/sounds/drinkHomebrew.ogg
-     ${DATADIR}/sounds/emptyMashTun.ogg
-     ${DATADIR}/sounds/extraPropane.ogg
-     ${DATADIR}/sounds/flameout.ogg
-     ${DATADIR}/sounds/flavorHops.ogg
-     ${DATADIR}/sounds/heatWater.ogg
-     ${DATADIR}/sounds/mashHops.ogg
-     ${DATADIR}/sounds/pitchYeast.ogg
-     ${DATADIR}/sounds/sanitize.ogg
-     ${DATADIR}/sounds/sparge.ogg
-     ${DATADIR}/sounds/startBurner.ogg
-     ${DATADIR}/sounds/startChill.ogg
-     ${DATADIR}/sounds/stirMash.ogg
-)
-
-SET( brewtarget_INFO_PLIST "${ROOTDIR}/mac/Info.plist" )
-
-SET( brewtarget_MAC_ICNS "${ROOTDIR}/mac/BrewtargetIcon.icns" )
-
-#==========================Find dlls for Win32=================================
-
-IF( WIN32 )
-   IF( NOT ${NO_QTMULTIMEDIA} )
-   FIND_PACKAGE(Qt5MultimediaWidgets REQUIRED)
-   ENDIF()
-   FIND_PACKAGE(Qt5OpenGL REQUIRED)
-
-   GET_TARGET_PROPERTY(QtCore_location Qt5::Core LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtGui_location Qt5::Gui LOCATION_${CMAKE_BUILD_TYPE})
-   IF( NOT ${NO_QTMULTIMEDIA} )
-   GET_TARGET_PROPERTY(QtMultimedia_location Qt5::Multimedia LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtMultimediaWidgets_location Qt5::MultimediaWidgets LOCATION_${CMAKE_BUILD_TYPE})
-   ENDIF()
-   GET_TARGET_PROPERTY(QtNetwork_location Qt5::Network LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtOpenGL_location Qt5::OpenGL LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtPrintSupport_location Qt5::PrintSupport LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtSql_location Qt5::Sql LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtSvg_location Qt5::Svg LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtWidgets_location Qt5::Widgets LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtXml_location Qt5::Xml LOCATION_${CMAKE_BUILD_TYPE})
-
-   GET_TARGET_PROPERTY(QtSqliteDriver_location Qt5::QSQLiteDriverPlugin LOCATION_${CMAKE_BUILD_TYPE})
-
-   GET_TARGET_PROPERTY(QtQgif_location Qt5::QGifPlugin LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtQico_location Qt5::QICOPlugin LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtQjpeg_location Qt5::QJpegPlugin LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtQsvg_location Qt5::QSvgPlugin LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtQtiff_location Qt5::QTiffPlugin LOCATION_${CMAKE_BUILD_TYPE})
-   GET_TARGET_PROPERTY(QtQWindows_location Qt5::QWindowsIntegrationPlugin LOCATION_${CMAKE_BUILD_TYPE})
-
-   GET_TARGET_PROPERTY(QtQsvgIcon_location Qt5::QSvgIconPlugin LOCATION_${CMAKE_BUILD_TYPE})
-
-   SET( Qt_DLLs
-        ${QtCore_location}
-        ${QtWidgets_location}
-        ${QtNetwork_location}
-        ${QtPrintSupport_location}
-        ${QtSql_location}
-        ${QtSvg_location}
-        ${QtXml_location}
-        ${QtWebKit_location}
-        ${QtGui_location}
-        ${QtWebKitWidgets_location}
-        ${QtOpenGL_location}
-   )
-   IF( NOT ${NO_QTMULTIMEDIA})
-      SET( Qt_DLLs
-        ${Qt_DLLs}
-        ${QtMultimedia_location}
-        ${QtMultimediaWidgets_location}
-   )
-   ENDIF()
-   SET( SQL_Drivers_DLLs
-        ${QtSqliteDriver_location}
-   )
-   SET( Image_Formats_DLLs
-        ${QtQgif_location}
-        ${QtQico_location}
-        ${QtQjpeg_location}
-        ${QtQmng_location}
-        ${QtQsvg_location}
-        ${QtQtiff_location}
-   )
-   SET( Icon_Engines_DLLs
-        ${QtQsvgIcon_location}
-   )
-   SET( Platform_DLLs
-      ${QtQWindows_location}
-   )
-
-   # This is ugly. UGLY.
-   FIND_PATH(QT5_BIN_DIR "qmake.exe")
-   FILE( GLOB IcuDlls
-        "${QT5_BIN_DIR}/ic*.dll"
-   )
-
-   # Find extra MinGW-specific dlls.
-   IF( MINGW )
-      IF( NOT MINGW_BIN_DIR )
-         FIND_PATH(MINGW_BIN_DIR "mingw32-make.exe")
-      ENDIF()
-     IF( NOT EXISTS ${MINGW_BIN_DIR} )
-        MESSAGE( FATAL_ERROR "MinGW bin dir not found. Run cmake again with the option -DMINGW_BIN_DIR=c:/path/to/mingw/bin" )
-     ELSE()
-        SET( Qt_DLLs
-             ${Qt_DLLs}
-             ${IcuDlls}
-             ${MINGW_BIN_DIR}/libgcc_s_dw2-1.dll
-             ${MINGW_BIN_DIR}/libstdc++-6.dll
-             ${MINGW_BIN_DIR}/libwinpthread-1.dll
-        )
-     ENDIF()
-   ENDIF()
-ENDIF()
-
-#===============================Packaging======================================
-# To make the packages, "make package". For source packages, "make package_source"
-
-IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
-  SET(CPACK_SET_DESTDIR "on")
-  SET(CPACK_PACKAGING_INSTALL_PREFIX "/tmp")
-  SET(CPACK_SOURCE_GENERATOR "TBZ2;")
-  SET(CPACK_SOURCE_IGNORE_FILES
-      "/.svn/"
-      "~$"
-      "/CMakeFiles/"
-      "/_CPack_Packages/"
-      "^brewtarget.*deb$"
-      "^brewtarget.*rpm$"
-      "^brewtarget.*tar.*$"
-      "CPack.*"
-      "Makefile"
-      "cmake_install.*"
-      "\\\\.o$"
-      "/brewtarget.dir/"
-      "moc_.*"
-      "qrc_brewtarget.*"
-      "ui_.*h"
-      "install_manifest.*"
-      "config\\\\.h"
-  )
-
-  SET( CPACK_PACKAGE_VERSION ${brewtarget_VERSION_STRING} )
-  SET( CPACK_PACKAGE_VENDOR  "Philip G. Lee" )
-  SET( CPACK_PACKAGE_CONTACT "Philip G. Lee <rocketman768@gmail.com>" )
-  SET( CPACK_PACKAGE_DESCRIPTION_SUMMARY "GUI beer brewing software" )
-  SET( CPACK_PACKAGE_DESCRIPTION
-       "Brewtarget is a calculator for brewing beer. It is a Qt-based program which
-       allows you to create recipes from a database of ingredients. It calculates all
-       the important parameters, helps you with mash temperatures, and just makes the
-       process of recipe formulation much easier." )
-
-  SET(CPACK_PACKAGE_VERSION_MAJOR       ${brewtarget_VERSION_MAJOR})
-  SET(CPACK_PACKAGE_VERSION_MINOR       ${brewtarget_VERSION_MINOR})   # to create a debian confirm file-version-string
-  SET(CPACK_PACKAGE_FILE_NAME           "${CMAKE_PROJECT_NAME}_${brewtarget_VERSION_STRING}_${CMAKE_SYSTEM_PROCESSOR}")
-  SET(CPACK_SOURCE_PACKAGE_FILE_NAME    "${CMAKE_PROJECT_NAME}_${brewtarget_VERSION_STRING}_source")
-  SET(CPACK_PACKAGE_EXECUTABLES "${brewtarget_EXECUTABLE}" "Brewtarget" )
-  IF( ${DO_RELEASE_BUILD} )
-    SET(CPACK_STRIP_FILES ${brewtarget_EXECUTABLE})
-  ENDIF()
-
-  #===========================UNIX======================================
-  IF(UNIX AND NOT APPLE)
-    SET(CPACK_GENERATOR "DEB;RPM;TBZ2;")
-
-    #-----------------DEB----------------
-    SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Philip G. Lee <rocketman768@gmail.com>" )
-    # NOTE: Use the getdependencies script to get the dependencies!
-    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.6-6~), libc6 (>= 2.1.3), libgcc1 (>= 1:4.1.1), libphonon4 (>= 4:4.2.0), libqt4-dbus (>= 4:4.5.3), libqt4-network (>= 4:4.5.3), libqt4-svg (>= 4:4.5.3), libqtwebkit4 (>= 2.3.4.dfsg-9.1), libqt4-xml (>= 4:4.5.3), libqtcore4 (>= 4:4.6.1), libqtgui4 (>= 4:4.5.3), libstdc++6 (>= 4.1.1), phonon (>= 4:4.5.2)" )
-
-    SET( CPACK_DEBIAN_PACKAGE_SECTION "misc" )
-    SET( CPACK_DEBIAN_PACKAGE_VERSION "${brewtarget_VERSION_STRING}-1")
-    SET( CPACK_DEBIAN_PACKAGE_PRIORITY "optional" )
-
-    SET(CPACK_DEBIAN_PACKAGE_NAME ${CMAKE_PROJECT_NAME}_${brewtarget_VERSION_STRING})
-
-    #-----------------RPM-----------------
-    SET(CPACK_RPM_PACKAGE_LICENSE "GPLv3")
-    SET(CPACK_RPM_PACKAGE_GROUP "Applications/Productivity")
-    SET(CPACK_RPM_PACKAGE_REQUIRES "qt >= 4.6.0, phonon >= 4.2.0") # NOTE: I'm just guessing here. Somebody needs to check.
-    SET(CPACK_RPM_SPEC_MORE_DEFINE "%define ignore \#")
-    SET(CPACK_RPM_USER_FILELIST "%ignore /usr" "%ignore /usr/local" "%ignore /usr/local/bin" "%ignore /usr/local/share" "%ignore /usr/local/share/applications")
-  #============================WINDOWS===============================
-  ELSEIF(WIN32)
-    # http://www.thegigsite.com/cmake-2.6.0/CMakeCPackOptions.cmake
-    SET( CPACK_GENERATOR "NSIS" )
-
-    SET( CPACK_RESOURCE_FILE_LICENSE "${ROOTDIR}/COPYING.GPLv3" )
-
-    SET( CPACK_NSIS_PACKAGE_NAME "Brewtarget-${brewtarget_VERSION_STRING}" )
-    SET( CPACK_NSIS_DISPLAY__NAME "Brewtarget-${brewtarget_VERSION_STRING}" )
-    SET( CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Brewtarget-${brewtarget_VERSION_STRING}" )
-    SET( CPACK_PACKAGE_INSTALL_DIRECTORY "Brewtarget-${brewtarget_VERSION_STRING}" )
-    SET( CPACK_NSIS_MODIFY_PATH ON )
-
-    # Extra start menu items.
-    #SET( CPACK_NSIS_MENU_LINKS
-    #     "bin/${brewtarget_EXECUTABLE}" "My Brewtarget"
-    #   )
-  #============================APPLE=================================
-  #ELSEIF(APPLE)
-  #  SET( CPACK_GENERATOR "Bundle" )
-  #
-  #  SET( CPACK_BUNDLE_NAME            "${CMAKE_PROJECT_NAME}_${brewtarget_VERSION_STRING}" )
-  #  SET( CPACK_BUNDLE_ICON            "../mac/BrewtargetIcon.icns" )
-  #  SET( CPACK_BUNDLE_PLIST           "../mac/Info.plist" )
-  #  SET( CPACK_BUNDLE_STARTUP_COMMAND "${brewtarget_EXECUTABLE}")
-  #
-  ELSEIF(APPLE)
-    #SET( CPACK_GENERATOR "DragNDrop" )
-    #SET( CPACK_DMG_FORMAT "UDBZ" )
-  ENDIF()
-
- INCLUDE(CPack)
-ENDIF()
-
-#================================Installs======================================
-
-IF( NOT ${BUILD_DESIGNER_PLUGINS} )
-
-   # Install the data.
-   INSTALL( FILES ${brewtarget_DATA}
-            DESTINATION ${DATAPATH}
-            COMPONENT ${DATA_INSTALL_COMPONENT} )
-
-   # Install the documentation.
-   INSTALL( FILES ${brewtarget_DOCS}
-            DESTINATION ${DOCPATH}
-            COMPONENT ${DATA_INSTALL_COMPONENT} )
-
-   # Install sounds.
-   INSTALL( FILES ${brewtarget_SOUNDS}
-            DESTINATION "${DATAPATH}/sounds"
-            COMPONENT ${DATA_INSTALL_COMPONENT} )
-
-   #-----------Unix-----------
-   IF( UNIX AND NOT APPLE )
-      # Install the icons.
-      INSTALL( FILES ${brewtarget_ICONS}
-               DESTINATION "${DATAROOTDIR}/icons/hicolor/scalable/apps/"
-               COMPONENT ${DATA_INSTALL_COMPONENT} )
-
-      # Install the .desktop file.
-      INSTALL( FILES ${brewtarget_DESKTOP}
-               DESTINATION "${DATAROOTDIR}/applications"
-               COMPONENT ${DATA_INSTALL_COMPONENT} )
-
-      # Install changelog
-      INSTALL( FILES ${CHANGELOG}
-               DESTINATION ${DOCPATH}
-               COMPONENT ${DATA_INSTALL_COMPONENT} )
-   ENDIF()
-
-   #--------Windows--------
-   IF( WIN32 )
-      INSTALL( FILES ${Qt_DLLs}
-               DESTINATION "bin"
-               COMPONENT ${RUNTIME_INSTALL_COMPONENT} )
-      INSTALL( FILES ${SQL_Drivers_DLLs}
-               DESTINATION "bin/sqldrivers"
-               COMPONENT ${RUNTIME_INSTALL_COMPONENT} )
-      INSTALL( FILES ${Image_Formats_DLLs}
-               DESTINATION "bin/imageformats"
-               COMPONENT ${RUNTIME_INSTALL_COMPONENT} )
-      INSTALL( FILES ${Icon_Engines_DLLs}
-               DESTINATION "bin/iconengines"
-               COMPONENT ${RUNTIME_INSTALL_COMPONENT} )
-      INSTALL( FILES ${Platform_DLLs}
-               DESTINATION "bin/platforms"
-               COMPONENT ${RUNTIME_INSTALL_COMPONENT})
-   ENDIF()
-ENDIF()
-
-# =====================Process other CMakeList.txt's===========================
-IF( ${BUILD_DESIGNER_PLUGINS} )
-   MESSAGE( STATUS "Building Qt Designer plugins." )
-   ADD_SUBDIRECTORY(QtDesignerPlugins)
-ELSE()
-   MESSAGE( STATUS "Building Brewtarget." )
-   ADD_SUBDIRECTORY(${SRCDIR})
-ENDIF()
+# Some extra files for the "make clean" target
+# Note that the ADDITIONAL_CLEAN_FILES property does NOT do any sort of glob pattern matching, so we have to use the
+# file command to do that.
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+             APPEND
+             PROPERTY ADDITIONAL_CLEAN_FILES ".*~$" # Kate backup files.
+                                             "CMakeLists.txt.user" # From QtCreator I think.
+                                             )
+file(GLOB packagesDebFiles      "${CMAKE_CURRENT_BINARY_DIR}/*.deb")
+file(GLOB packagesRpmFiles      "${CMAKE_CURRENT_BINARY_DIR}/*.rpm")
+file(GLOB packagesTarBz2Files   "${CMAKE_CURRENT_BINARY_DIR}/*.tar.bz2")
+file(GLOB packagesChecksumFiles "${CMAKE_CURRENT_BINARY_DIR}/*.*.sha256")
+set_property(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+             APPEND
+             PROPERTY ADDITIONAL_CLEAN_FILES "install_manifest.txt"
+                                             ${packagesDebFiles}
+                                             ${packagesRpmFiles}
+                                             ${packagesTarBz2Files}
+                                             ${packagesChecksumFiles})

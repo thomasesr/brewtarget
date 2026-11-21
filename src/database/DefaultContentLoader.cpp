@@ -1,0 +1,248 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * database/DefaultContentLoader.cpp is part of Brewtarget, and is copyright the following authors 2021-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "database/DefaultContentLoader.h"
+
+#include <QDebug>
+#include <QDir>
+#include <QMessageBox>
+#include <QSqlDatabase>
+#include <QTextStream>
+
+#include "Application.h"
+#include "config.h"
+#include "database/DatabaseSchemaHelper.h"
+#include "database/ObjectStoreWrapper.h"
+#include "model/Folder.h"
+#include "model/Recipe.h"
+#include "serialization/ImportExport.h"
+
+namespace {
+   char const * const FOLDER_PATH_FOR_SUPPLIED_RECIPES = CONFIG_APPLICATION_NAME_LC;
+}
+
+int constexpr DefaultContentLoader::availableContentVersion = 6;
+
+DefaultContentLoader::UpdateResult DefaultContentLoader::updateContentIfNecessary(QSqlDatabase & db,
+                                                                                  QTextStream  & userMessage) {
+   //
+   // Note that it's a coding error to call this function before the DB schema has been updated to whatever the most
+   // current version is.  This is because all the various bits of code that we use to import data will be assuming
+   // the DB schema is up-to-date.
+   //
+   // It's quick to check here, so it doesn't hurt.
+   //
+   int const dbSchemaVersion = DatabaseSchemaHelper::schemaVersion(db);
+   Q_ASSERT(dbSchemaVersion == DatabaseSchemaHelper::latestVersion);
+
+   //
+   // In older versions of the software, default data was copied from a SQLite database file (default_db.sqlite) into
+   // the user's database (which could be SQLite or PostgreSQL), and special tables (bt_hop, bt_fermentable, etc) kept
+   // track of which records in the user's database had been copies from the default database.  This served two
+   // purposes.  One was to know which default records were present in the user's database, so we could copy across any
+   // new ones when the default data set is augmented.  The other was to allow us to attempt to modify the user's
+   // records when corresponding records in the default data set were changed (typically to make corrections).  However,
+   // it's risky to modify the user's existing data because you might overwrite changes they've made themselves since
+   // the record was imported.  So we stopped trying to do that, and used the special tables just to track which default
+   // records had and hadn't yet been imported.
+   //
+   // The next step was to move the default data a single BeerXML file which, besides simplifying the data import, had a
+   // couple of advantages:
+   //    - Being a text rather than a binary format, it's much easier in the source code repository to make (and
+   //      see) changes to default data.
+   //    - Our XML import code already does duplicate detection, so don't need the special tracking tables any more.
+   //      We just try to import all the default data, and any records that the user already has will be skipped
+   //      over.
+   //
+   // The plan was then to convert this to BeerJSON once we had support for that (which we now do).  However, there are
+   // a couple of downsides to this approach:
+   //    - As we add data over time, using a single default data file starts to become cumbersome to maintain.
+   //    - Although BeerJSON is generally "better" than BeerXML, there are different nuances to both formats (eg BeerXML
+   //      includes Equipment in a Recipe, where as BeerJSON does not).  Where we have source data in one format, it's
+   //      better to retain it in that format than convert it.
+   //
+   // So, now we load a sequence of "default content" files, each of which can be BeerXML, BeerJSON or dotBeer.  Each
+   // filename begins "DefaultContentNNN-" where NNN is a unique three-digit number from a sequence starting 001.  So,
+   // eg, we can have:
+   //    DefaultContent001-OriginalBtContent.xml
+   //    DefaultContent002-BJCP_2021_Styles.json
+   //    DefaultContent003-Yeasts.json
+   //    DefaultContent004-MoreYeasts.json
+   //    DefaultContent005-Fermentables-Recipes.beer
+   //    DefaultContent006-MashAndWaterProfiles.beer
+   //    etc
+   //
+   // *******************************************************************************************************
+   // * NOTE that when a new DefaultContentNNN- is added, there are changes to make to the following files: *
+   // *    meson.build                                                                                      *
+   // *    CMakeLists.txt                                                                                   *
+   // *******************************************************************************************************
+   //
+   // We store in the DB settings table what file number we've already reached.
+   //
+   int const defaultContentAlreadyLoaded = DatabaseSchemaHelper::getDefaultContentVersionFromDb(db);
+   if (defaultContentAlreadyLoaded < 0) {
+      qWarning() << Q_FUNC_INFO << "Could not read default_content column from settings table";
+      userMessage << "Error reading settings from DB";
+      return DefaultContentLoader::UpdateResult::Failed;
+   }
+
+   qInfo() <<
+      Q_FUNC_INFO << "availableContentVersion:" << DefaultContentLoader::availableContentVersion <<
+      ", defaultContentAlreadyLoaded:" << defaultContentAlreadyLoaded;
+
+   if (!Application::isInteractive() ||
+       defaultContentAlreadyLoaded >= DefaultContentLoader::availableContentVersion) {
+      return DefaultContentLoader::UpdateResult::NothingToDo;
+   }
+
+   if (QMessageBox::question(nullptr,
+                             QObject::tr("Merge Database"),
+                             QObject::tr("New ingredients etc are available. Would you like to add them to your database?"),
+                             QMessageBox::Yes | QMessageBox::No,
+                             QMessageBox::Yes) == QMessageBox::Yes) {
+      bool succeeded = true;
+
+      QStringList inputFiles;
+      QDir const dir = Application::getResourceDir();
+      for (auto ii = defaultContentAlreadyLoaded + 1; ii <= DefaultContentLoader::availableContentVersion; ++ii) {
+         QString const globPattern = QString{"DefaultContent%1-*"}.arg(ii, 3, 10, QChar{'0'});
+         QStringList const nameFilters{globPattern};
+         QStringList const matchingFiles = dir.entryList(nameFilters, QDir::Files);
+         if (matchingFiles.size() != 1) {
+            //
+            // This is typically a coding error or a packaging error, unless our data directory has been messed with.
+            //
+            qCritical() <<
+               Q_FUNC_INFO << "Search for" << globPattern << "in directory" << dir << "yielded" <<
+               matchingFiles.size() << "results (expecting 1):" << matchingFiles.join(", ");
+            userMessage << QObject::tr("Error matching %1 file pattern in %2 directory").arg(globPattern,
+                                                                                             dir.absolutePath());
+            return DefaultContentLoader::UpdateResult::Failed;
+         }
+         qDebug() << Q_FUNC_INFO << "Will read in" << matchingFiles.at(0);
+         inputFiles << dir.absoluteFilePath(matchingFiles.at(0));
+      }
+
+      if (inputFiles.size() > 0) {
+         //
+         // For recipes that are considered "default" ones, we want to put them in a top-level folder that corresponds
+         // to the application's name (either "brewken" or "brewtarget").
+         //
+         // For other things (ingredients, styles, equipments, etc), we'll put them in a folder called "New ⭐".  (At one
+         // point, I thought about this having a different name depending on
+         // DefaultContentLoader::availableContentVersion, but, on balance, I think that's more confusing than helpful.)
+         //
+         // Now that we have folder paths in dotBeer and (by extension tags) in BeerXML, we can get what we want by:
+         //    - Importing everything into the top-level folder "New ⭐"
+         //    - Looking for any recipes in the subfolder "default" (ie in folder "/New ⭐/default") and moving them to
+         //      the top-level folder "brewken" or "brewtarget".
+         //
+         static QString const importFolderPath = QString{"New ⭐"};
+         succeeded = ImportExport::importFromFiles(importFolderPath, inputFiles);
+         if (succeeded) {
+            QString const importedDefaultsFolderPath = FolderCommon::joinPaths(importFolderPath, "default");
+            if (Folder<Recipe> * const importedDefaultRecipesFolder = Folder<Recipe>::get(importedDefaultsFolderPath)) {
+               int const importedDefaultRecipesFolderKey = importedDefaultRecipesFolder->key();
+               QList<Recipe *> const allNewDefaultRecipes = ObjectStoreWrapper::findAllMatching<Recipe>(
+                  [importedDefaultRecipesFolderKey](Recipe const * recipe) {
+                     return recipe->containedInFolderId() == importedDefaultRecipesFolderKey;
+                  }
+               );
+               qDebug() <<
+                  Q_FUNC_INFO << "Moving" << allNewDefaultRecipes.size() << "Recipes from" <<
+                  importedDefaultsFolderPath << "to" << FOLDER_PATH_FOR_SUPPLIED_RECIPES;
+               if (!allNewDefaultRecipes.isEmpty()) {
+                  // TODO: It would be neat, at some point, to to have a mechanism for setting a property on multiple
+                  //       objects of the same type, so that we could do it in a single DB update.
+                  Folder<Recipe> const * folder = Folder<Recipe>::ensure(FOLDER_PATH_FOR_SUPPLIED_RECIPES);
+                  for (auto const recipe : allNewDefaultRecipes) {
+                     recipe->setContainedInFolderId(folder->key());
+                  }
+               }
+
+               //
+               // Now that we moved the newly-imported default Recipes, we remove the "default" Recipe subfolder and
+               // then its parent (the "New ⭐" folder).  Any "New ⭐" Hop folder, or Yeast folder etc can be assumed
+               // either non-empty or user-created.
+               //
+               for (Folder<Recipe> * folder : {importedDefaultRecipesFolder, Folder<Recipe>::get(importFolderPath)}) {
+                  if (folder) {
+                     if (folder->empty()) {
+                        qDebug() << Q_FUNC_INFO << "Deleting empty folder:" << folder;
+                        ObjectStoreWrapper::hardDelete(*folder);
+                     }
+                  }
+               }
+            }
+
+            //
+            // Record that we're up-to-date on default content, so we don't try to read the files in again next time.
+            //
+            succeeded &= DatabaseSchemaHelper::setDefaultContentVersionFromDb(
+               db,
+               DefaultContentLoader::availableContentVersion
+            );
+         }
+
+      }
+
+      //
+      // ImportExport::importFromFiles will already have shown success/failure pop-ups, so we don't need to interact
+      // further with the user here.
+      //
+      return succeeded ? DefaultContentLoader::UpdateResult::Succeeded : DefaultContentLoader::UpdateResult::Failed;
+   }
+
+   //
+   // The user didn't want to load the new content.  Some users will never want this content, so we should allow
+   // them not to have to get asked about it every time they run the application.
+   //
+   // This is akin to what we do in Application::checkAgainstLatestRelease
+   //
+   if (QMessageBox::question(nullptr,
+                             QObject::tr("New Data"),
+                             QObject::tr("Stop bothering you about new data?"),
+                             QMessageBox::Yes | QMessageBox::No,
+                             QMessageBox::Yes) == QMessageBox::Yes) {
+      //
+      // The easiest way to stop further reminders about loading the new data is simply to pretend we already loaded it.
+      //
+      // As with Application::checkAgainstLatestRelease, this will suppress the reminders until newer data is available.
+      // However, unlike with an upgrade, we won't "catch up" on the skipped data if the user later loads a newer set of
+      // default data.  (This shouldn't matter as (a) the default data sets are independent and (b) the data sets can be
+      // loaded manually.)
+      //
+      // For example, suppose defaultContentAlreadyLoaded is 2 and DefaultContentLoader::availableContentVersion is 3,
+      // and the user doesn't want to take default data set #3.  We set defaultContentAlreadyLoaded to 3 and there are
+      // no more reminders, until a later date when DefaultContentLoader::availableContentVersion becomes 4.  At that
+      // point, starting the application will again give a prompt about loading in new default data.  The user can
+      // refuse (and optionally suppress the reminders in the same way as before) or accept, in which case default data
+      // set #4 will be loaded.  But data set #3 will not have been loaded (and never will be by this function).
+      //
+      //
+      bool const succeeded = DatabaseSchemaHelper::setDefaultContentVersionFromDb(
+         db,
+         DefaultContentLoader::availableContentVersion
+      );
+      if (!succeeded) {
+         // Not a lot we can do here, but at least log a message so the user can know why their request to suppress
+         // "Do you want new data" messages was not honoured.
+         qCritical() << Q_FUNC_INFO << "Could not update default content version";
+      }
+   }
+
+   return DefaultContentLoader::UpdateResult::NothingToDo;
+}

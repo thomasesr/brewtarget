@@ -1,0 +1,224 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * model/MashStep.cpp is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Brian Rower <brian.rower@gmail.com>
+ *   • Mattias Måhl <mattias@kejsarsten.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "model/MashStep.h"
+
+#include <QDebug>
+#include <QVector>
+
+#include "database/ObjectStoreWrapper.h"
+#include "MainWindow.h"
+#include "model/NamedParameterBundle.h"
+#include "utils/AutoCompare.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_MashStep.cpp"
+#endif
+
+QString MashStep::localisedName() { return tr("Mash Step"); }
+QString MashStep::localisedName_amount_l              () { return tr("Amount"            ); }
+QString MashStep::localisedName_amountFixed           () { return tr("Amount Fixed"      ); }
+QString MashStep::localisedName_decoctionAmount_l     () { return tr("Decoction Amount"  ); }
+QString MashStep::localisedName_infuseAmount_l        () { return tr("Infuse Amount"     ); }
+QString MashStep::localisedName_infuseTemp_c          () { return tr("Infuse Temperature"); }
+QString MashStep::localisedName_infuseTempFixed       () { return tr("Infuse Temperature Fixed"); }
+QString MashStep::localisedName_liquorToGristRatio_lKg() { return tr("Water:Grain"       ); } // Shorter than "Liquor To Grist Ratio"
+QString MashStep::localisedName_mashVolume_l          () { return tr("Mash Volume"       ); }
+QString MashStep::localisedName_type                  () { return tr("Type"              ); }
+
+EnumStringMapping const MashStep::typeStringMapping {
+   {MashStep::Type::Infusion   , "infusion"      },
+   {MashStep::Type::Temperature, "temperature"   },
+   {MashStep::Type::Decoction  , "decoction"     },
+   {MashStep::Type::FlySparge  , "sparge"        },
+   {MashStep::Type::BatchSparge, "drain mash tun"},
+   {MashStep::Type::SouringMash, "souring mash"  },
+   {MashStep::Type::SouringWort, "souring wort"  },
+};
+
+EnumDisplayNameMapping const MashStep::typeDisplayNames {"MashStep", {
+   {MashStep::Type::Infusion   , QT_TRANSLATE_NOOP("MashStep", "Infusion"                     )},
+   {MashStep::Type::Temperature, QT_TRANSLATE_NOOP("MashStep", "Temperature"                  )},
+   {MashStep::Type::Decoction  , QT_TRANSLATE_NOOP("MashStep", "Decoction"                    )},
+   {MashStep::Type::FlySparge  , QT_TRANSLATE_NOOP("MashStep", "Normal (Fly) Sparge"          )},
+   {MashStep::Type::BatchSparge, QT_TRANSLATE_NOOP("MashStep", "Batch Sparge (Drain Mash Tun)")},
+   {MashStep::Type::SouringMash, QT_TRANSLATE_NOOP("MashStep", "Souring Mash"                 )},
+   {MashStep::Type::SouringWort, QT_TRANSLATE_NOOP("MashStep", "Souring Wort"                 )},
+}};
+
+
+bool MashStep::compareWith(NamedEntity const & other, QList<BtStringConst const *> * propertiesThatDiffer) const {
+   // NamedEntity::operator==() will have ensured this cast is valid
+   MashStep const & rhs = static_cast<MashStep const &>(other);
+   // Base class will already have ensured names are equal
+   return (
+      AUTO_PROPERTY_COMPARE(this, rhs, m_type        , PropertyNames::MashStep::type        , propertiesThatDiffer) &&
+      AUTO_PROPERTY_COMPARE(this, rhs, m_amount_l    , PropertyNames::MashStep::amount_l    , propertiesThatDiffer) &&
+      AUTO_PROPERTY_COMPARE(this, rhs, m_infuseTemp_c, PropertyNames::MashStep::infuseTemp_c, propertiesThatDiffer) &&
+      // Parent classes have to be equal too
+      this->Step::compareWith(other, propertiesThatDiffer) &&
+      this->StepBase<MashStep,
+                     Mash,
+                     MashStepOptions>::doCompareWith(rhs, propertiesThatDiffer)
+   );
+}
+
+MashStepEditor & MashStep::getEditor() {
+   return MainWindow::instance().getEditor<MashStep>();
+}
+
+TypeLookup const MashStep::typeLookup {
+   "MashStep",
+   {
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, type                  , m_type                  , ENUM_INFO(MashStep::type)          ),
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, amount_l              , m_amount_l              , Measurement::PhysicalQuantity::Volume        , DisplayInfo::Precision{2}),
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, infuseAmount_l        , m_amount_l              , Measurement::PhysicalQuantity::Volume        ), // Type Lookup retained for BeerXML
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, decoctionAmount_l     , m_amount_l              , Measurement::PhysicalQuantity::Volume        ), // Type Lookup retained for BeerXML
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, infuseTemp_c          , m_infuseTemp_c          , Measurement::PhysicalQuantity::Temperature   , DisplayInfo::Precision{1}),
+      // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, liquorToGristRatio_lKg, m_liquorToGristRatio_lKg, Measurement::PhysicalQuantity::VolumePerMass),
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, amountFixed           , m_amountFixed           , BOOL_INFO_NO_YES                             ),
+      PROPERTY_TYPE_LOOKUP_ENTRY(MashStep, infuseTempFixed       , m_infuseTempFixed       , BOOL_INFO_NO_YES                             ),
+      PROPERTY_TYPE_LOOKUP_RD_MF(MashStep, mashVolume_l          , mashVolume_l            , Measurement::PhysicalQuantity::Volume        , DisplayInfo::Precision{1}), // Placeholder, not in DB
+   },
+   // Parent class lookup.  NB: Step not NamedEntity!
+   {&Step::typeLookup,
+    std::addressof(StepBase<MashStep, Mash, MashStepOptions>::typeLookup)}
+};
+static_assert(std::is_base_of<Step, MashStep>::value);
+
+//==================================================== CONSTRUCTORS ====================================================
+
+MashStep::MashStep(QString name) :
+   Step                    {name},
+   StepBase<MashStep,
+            Mash,
+            MashStepOptions>{},
+   m_type                  {MashStep::Type::Infusion},
+   m_amount_l              {0.0                     },
+   m_infuseTemp_c          {std::nullopt            },
+   // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+   m_liquorToGristRatio_lKg{std::nullopt            },
+   m_amountFixed           {false                   },
+   m_infuseTempFixed       {false                   } {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+MashStep::MashStep(NamedParameterBundle const & namedParameterBundle) :
+   Step{namedParameterBundle},
+   StepBase<MashStep,
+            Mash,
+            MashStepOptions>{namedParameterBundle},
+   SET_REGULAR_FROM_NPB (m_type                  , namedParameterBundle, PropertyNames::MashStep::type                  ),
+   SET_REGULAR_FROM_NPB (m_amount_l              , namedParameterBundle, PropertyNames::MashStep::amount_l              , 0.0),
+   SET_REGULAR_FROM_NPB (m_infuseTemp_c          , namedParameterBundle, PropertyNames::MashStep::infuseTemp_c          ),
+   // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+   SET_REGULAR_FROM_NPB (m_liquorToGristRatio_lKg, namedParameterBundle, PropertyNames::MashStep::liquorToGristRatio_lKg),
+   SET_REGULAR_FROM_NPB (m_amountFixed           , namedParameterBundle, PropertyNames::MashStep::amountFixed           , false),
+   SET_REGULAR_FROM_NPB (m_infuseTempFixed       , namedParameterBundle, PropertyNames::MashStep::infuseTempFixed       , false) {
+   //
+   // If we were constructed from BeerXML, it will have set decoctionAmount_l or infuseAmount_l instead of amount_l
+   //
+   if (0.0 == m_amount_l) {
+      if (m_type == MashStep::Type::Decoction) {
+         ASSIGN_REGULAR_FROM_NPB(m_amount_l, namedParameterBundle, PropertyNames::MashStep::decoctionAmount_l, 0.0);
+      } else {
+         ASSIGN_REGULAR_FROM_NPB(m_amount_l, namedParameterBundle, PropertyNames::MashStep::infuseAmount_l   , 0.0);
+      }
+   }
+
+   CONSTRUCTOR_END
+   return;
+}
+
+MashStep::MashStep(MashStep const & other) :
+   Step                    {other},
+   StepBase<MashStep,
+            Mash,
+            MashStepOptions>{other},
+   m_type                  {other.m_type                  },
+   m_amount_l              {other.m_amount_l              },
+   m_infuseTemp_c          {other.m_infuseTemp_c          },
+   // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+   m_liquorToGristRatio_lKg{other.m_liquorToGristRatio_lKg},
+   m_amountFixed           {other.m_amountFixed           },
+   m_infuseTempFixed       {other.m_infuseTempFixed       } {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+MashStep::~MashStep() = default;
+
+//============================================= "GETTER" MEMBER FUNCTIONS ==============================================
+MashStep::Type        MashStep::type                  () const { return this->m_type                  ; }
+double                MashStep::amount_l              () const { return this->m_amount_l              ; }
+std::optional<double> MashStep::infuseTemp_c          () const { return this->m_infuseTemp_c          ; }
+// ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+std::optional<double> MashStep::liquorToGristRatio_lKg() const { return this->m_liquorToGristRatio_lKg; }
+std::optional<double> MashStep::mashVolume_l          () const { return std::nullopt                  ; } // See header
+bool                  MashStep::amountFixed           () const { return this->m_amountFixed           ; }
+bool                  MashStep::infuseTempFixed       () const { return this->m_infuseTempFixed       ; }
+
+// TBD: Do we need to add type-checking logic in these legacy functions?
+[[deprecated]] double MashStep::infuseAmount_l   () const { return this->m_amount_l; }
+[[deprecated]] double MashStep::decoctionAmount_l() const { return this->m_amount_l; }
+
+//============================================= "SETTER" MEMBER FUNCTIONS ==============================================
+void MashStep::setType        (MashStep::Type        const   val) { SET_AND_NOTIFY(PropertyNames::MashStep::type        , this->m_type        , val); return; }
+void MashStep::setAmount_l    (double                const   val) { SET_AND_NOTIFY(PropertyNames::MashStep::amount_l    , this->m_amount_l    , val); return; }
+void MashStep::setInfuseTemp_c(std::optional<double> const   val) { SET_AND_NOTIFY(PropertyNames::MashStep::infuseTemp_c, this->m_infuseTemp_c, val); return; }
+// ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+void MashStep::setLiquorToGristRatio_lKg(std::optional<double> const   val) { SET_AND_NOTIFY(PropertyNames::MashStep::liquorToGristRatio_lKg, this->m_liquorToGristRatio_lKg, val                                                                ); return; }
+void MashStep::setAmountFixed    (bool                  const   val) { SET_AND_NOTIFY(PropertyNames::MashStep::amountFixed    , this->m_amountFixed    , val); return; }
+void MashStep::setInfuseTempFixed(bool                  const   val) { SET_AND_NOTIFY(PropertyNames::MashStep::infuseTempFixed, this->m_infuseTempFixed, val); return; }
+
+//=============================================== OTHER MEMBER FUNCTIONS ===============================================
+bool MashStep::isInfusion() const {
+   return (m_type == MashStep::Type::Infusion    ||
+           m_type == MashStep::Type::BatchSparge ||
+           m_type == MashStep::Type::FlySparge);
+}
+
+bool MashStep::isSparge() const {
+   // NOTE: We have a bit of a hack here checking the name.  It's because BeerXML doesn't natively support sparge as a
+   //       mash step type.  So this is a heuristic to detect what was "really meant" in a recipe that originated in
+   //       BeerXML.  (Once we have persuaded the entire brewing world to switch to BeerJSON, and to update all existing
+   //       recipes, this will no longer be necessary.  So it's only temporary. :D)
+   return (m_type == MashStep::Type::BatchSparge ||
+           m_type == MashStep::Type::FlySparge   ||
+           name() == "Final Batch Sparge");
+}
+
+bool MashStep::isTemperature() const {
+   return (m_type == MashStep::Type::Temperature);
+}
+
+bool MashStep::isDecoction() const {
+   return (m_type == MashStep::Type::Decoction);
+}
+
+// Check that IsBaseClassTemplateOf is working
+static_assert(IsBaseClassTemplateOf<EnumeratedBase, MashStep>);
+
+// Insert boiler-plate wrapper functions that call down to StepBase
+STEP_COMMON_CODE(Mash)

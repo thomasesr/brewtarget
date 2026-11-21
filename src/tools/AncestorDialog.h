@@ -1,0 +1,65 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * tools/AncestorDialog.h is part of Brewtarget, and is copyright the following authors 2021-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mik Firestone <mikfire@fastmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
+#ifndef TOOLS_ANCESTORDIALOG_H
+#define TOOLS_ANCESTORDIALOG_H
+#pragma once
+
+#include <QtCore/QVariant>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QWidget>
+
+#include "model/Recipe.h"
+#include "ui_ancestorDialog.h"
+
+/*!
+ * \class AncestorDialog
+ *
+ * \brief View/controller dialog for setting up ancestoral trees
+ */
+class AncestorDialog : public QDialog, public Ui::ancestorDialog {
+   Q_OBJECT
+
+public:
+   explicit AncestorDialog(QWidget * parent = nullptr);
+   ~AncestorDialog() override;
+
+   void setAncestor(Recipe * anc);
+
+public slots:
+   void connectDescendant();
+   void activateButton();
+   void ancestorSelected(int ndx);
+
+signals:
+   void ancestryChanged(Recipe * ancestor, Recipe * descendant);
+
+private:
+   void buildAncestorBox();
+   void buildDescendantBox(Recipe const * ignore);
+   static bool recipeLessThan(Recipe const * right, Recipe const * left);
+protected:
+   /**
+    * \brief Overrides \c QWidget::changeEvent so that, on \c QEvent::LanguageChange, we update our text to the new
+    *        language.
+    */
+   void changeEvent(QEvent * event) override;
+};
+
+#endif

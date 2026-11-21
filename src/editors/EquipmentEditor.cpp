@@ -1,0 +1,596 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * editors/EquipmentEditor.cpp is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • A.J. Drobnich <aj.drobnich@gmail.com>
+ *   • Brian Rower <brian.rower@gmail.com>
+ *   • David Grundberg <individ@acc.umu.se>
+ *   • Mattias Måhl <mattias@kejsarsten.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mike Evans <mikee@saxicola.co.uk>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *   • Priceless Brewing <shadowchao99@gmail.com>
+ *   • Tyler Cipriani <tcipriani@wikimedia.org>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "editors/EquipmentEditor.h"
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
+#include <QCloseEvent>
+#include <QDebug>
+#include <QIcon>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QStringList>
+
+#include "config.h"
+#include "BtHorizontalTabs.h"
+#include "database/ObjectStoreWrapper.h"
+#include "Localization.h"
+#include "measurement/Measurement.h"
+#include "measurement/PhysicalConstants.h"
+#include "measurement/Unit.h"
+#include "model/Boil.h"
+#include "model/Recipe.h"
+#include "model/RecipeUtils.h"
+#include "PersistentSettings.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_EquipmentEditor.cpp"
+#endif
+
+//
+// TODO: According to https://www.engineersedge.com/materials/specific_heat_capacity_of_metals_13259.htm, the specific
+// heat capacity of 304 grade stainless steel is 502.416 J/kg·K = 0.120080 c/g·C.  Would be nice to have a way for the
+// user to grab this value (and that of other common materials if we can find them).
+//
+
+namespace {
+   /**
+    * \brief Decide whether vessel should be shown or not.
+    *
+    *        These aren't fields we store in the DB, rather they control which bits of the editor are visible.  As well
+    *        as showing the tabs for vessels that are in use (ie have a non-zero volume), we put an asterisk after the
+    *        name of each such vessel, so the user can see that it is in use even if s/he has hidden the tab.  (See
+    *        infoText_optionalVessels.)
+    */
+   void showOptionalVesselIfPresent(QCheckBox * const checkBox, double const volume_l) {
+      bool const inUse{volume_l != 0.0};
+      checkBox->setChecked(inUse);
+      QString text = checkBox->text();
+      if (text.endsWith(" *")) {
+         text.chop(2);
+      }
+      checkBox->setText(inUse ? text + " *" : text);
+      return;
+   };
+
+   //! The check boxes that \c showOptionalVesselIfPresent marks with an asterisk
+   std::vector<QCheckBox *> optionalVesselCheckBoxes(EquipmentEditor & editor) {
+      return {
+         editor.checkBox_showHlt            ,
+         editor.checkBox_showMashTun        ,
+         editor.checkBox_showLauterTun      ,
+         editor.checkBox_showAgingVessel    ,
+         editor.checkBox_showPackagingVessel,
+      };
+   }
+
+}
+
+EquipmentEditor::EquipmentEditor(QWidget* parent, QString const editorName) :
+   QDialog(parent),
+   EditorBase<EquipmentEditor, Equipment, EquipmentEditorOptions>(editorName) {
+   this->setupUi(this);
+   this->tabWidget_editor->tabBar()->setStyle(new BtHorizontalTabs);
+   this->postSetupUiInit({
+      EDITOR_FIELD_NORM(Equipment, label_name                    , lineEdit_name                    , NamedEntity::name                      ),
+      EDITOR_FIELD_NORM(Equipment, label_mashTunSpecificHeat     , lineEdit_mashTunSpecificHeat     , Equipment::mashTunSpecificHeat_calGC   ),
+      EDITOR_FIELD_NORM(Equipment, label_grainAbsorption         , lineEdit_grainAbsorption         , Equipment::grainAbsorption_LKg         ),
+      EDITOR_FIELD_NORM(Equipment, label_foundationVolume        , lineEdit_foundationVolume        , Equipment::foundationVolume_l          ),
+      EDITOR_FIELD_NORM(Equipment, label_hopUtilization          , lineEdit_hopUtilization          , Equipment::hopUtilization_pct       , 0),
+      EDITOR_FIELD_NORM(Equipment, label_mashTunWeight           , lineEdit_mashTunWeight           , Equipment::mashTunWeight_kg            ),
+      EDITOR_FIELD_NORM(Equipment, label_boilingPoint            , lineEdit_boilingPoint            , Equipment::boilingPoint_c           , 1),
+      EDITOR_FIELD_NORM(Equipment, label_fvBatchSize      , lineEdit_fvBatchSize      , Equipment::fvBatchSize_l        ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleBoilSize          , lineEdit_kettleBoilSize          , Equipment::kettleBoilSize_l            ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleEvaporationPerHour, lineEdit_kettleEvaporationPerHour, Equipment::kettleEvaporationPerHour_l  ),
+      EDITOR_FIELD_NORM(Equipment, label_lauterTunDeadspaceLoss  , lineEdit_lauterTunDeadspaceLoss  , Equipment::lauterTunDeadspaceLoss_l    ),
+      EDITOR_FIELD_NORM(Equipment, label_topUpKettle             , lineEdit_topUpKettle             , Equipment::topUpKettle_l               ),
+      EDITOR_FIELD_NORM(Equipment, label_topUpWater              , lineEdit_topUpWater              , Equipment::topUpWater_l                ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleTrubChillerLoss   , lineEdit_kettleTrubChillerLoss   , Equipment::kettleTrubChillerLoss_l     ),
+      EDITOR_FIELD_NORM(Equipment, label_mashTunVolume           , lineEdit_mashTunVolume           , Equipment::mashTunVolume_l             ),
+      // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+      EDITOR_FIELD_NORM(Equipment, label_hltType                 , lineEdit_hltType                 , Equipment::hltType                     ),
+      EDITOR_FIELD_NORM(Equipment, label_mashTunType             , lineEdit_mashTunType             , Equipment::mashTunType                 ),
+      EDITOR_FIELD_NORM(Equipment, label_lauterTunType           , lineEdit_lauterTunType           , Equipment::lauterTunType               ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleType              , lineEdit_kettleType              , Equipment::kettleType                  ),
+      EDITOR_FIELD_NORM(Equipment, label_fvType           , lineEdit_fvType           , Equipment::fvType               ),
+      EDITOR_FIELD_NORM(Equipment, label_agingVesselType         , lineEdit_agingVesselType         , Equipment::agingVesselType             ),
+      EDITOR_FIELD_NORM(Equipment, label_packagingVesselType     , lineEdit_packagingVesselType     , Equipment::packagingVesselType         ),
+      EDITOR_FIELD_NORM(Equipment, label_hltVolume               , lineEdit_hltVolume               , Equipment::hltVolume_l                 ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleVolume            , lineEdit_kettleVolume            , Equipment::kettleVolume_l              ),
+      EDITOR_FIELD_NORM(Equipment, label_fvVolume                , lineEdit_fvVolume                , Equipment::fvVolume_l                  ),
+      EDITOR_FIELD_NORM(Equipment, label_lauterTunVolume         , lineEdit_lauterTunVolume         , Equipment::lauterTunVolume_l           ),
+      EDITOR_FIELD_NORM(Equipment, label_agingVesselVolume       , lineEdit_agingVesselVolume       , Equipment::agingVesselVolume_l         ),
+      EDITOR_FIELD_NORM(Equipment, label_packagingVesselVolume   , lineEdit_packagingVesselVolume   , Equipment::packagingVesselVolume_l     ),
+      EDITOR_FIELD_NORM(Equipment, label_hltLoss                 , lineEdit_hltLoss                 , Equipment::hltLoss_l                   ),
+      EDITOR_FIELD_NORM(Equipment, label_mashTunLoss             , lineEdit_mashTunLoss             , Equipment::mashTunLoss_l               ),
+      EDITOR_FIELD_NORM(Equipment, label_fvLoss           , lineEdit_fvLoss           , Equipment::fvLoss_l             ),
+      EDITOR_FIELD_NORM(Equipment, label_agingVesselLoss         , lineEdit_agingVesselLoss         , Equipment::agingVesselLoss_l           ),
+      EDITOR_FIELD_NORM(Equipment, label_packagingVesselLoss     , lineEdit_packagingVesselLoss     , Equipment::packagingVesselLoss_l       ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleOutflowPerMinute  , lineEdit_kettleOutflowPerMinute  , Equipment::kettleOutflowPerMinute_l    ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleInternalDiameter  , lineEdit_kettleInternalDiameter  , Equipment::kettleInternalDiameter_cm, 1),
+      EDITOR_FIELD_NORM(Equipment, label_kettleOpeningDiameter   , lineEdit_kettleOpeningDiameter   , Equipment::kettleOpeningDiameter_cm , 1),
+      EDITOR_FIELD_NORM(Equipment, label_hltWeight               , lineEdit_hltWeight               , Equipment::hltWeight_kg                ),
+      EDITOR_FIELD_NORM(Equipment, label_lauterTunWeight         , lineEdit_lauterTunWeight         , Equipment::lauterTunWeight_kg          ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleWeight            , lineEdit_kettleWeight            , Equipment::kettleWeight_kg             ),
+      EDITOR_FIELD_NORM(Equipment, label_hltSpecificHeat         , lineEdit_hltSpecificHeat         , Equipment::hltSpecificHeat_calGC       ),
+      EDITOR_FIELD_NORM(Equipment, label_lauterTunSpecificHeat   , lineEdit_lauterTunSpecificHeat   , Equipment::lauterTunSpecificHeat_calGC ),
+      EDITOR_FIELD_NORM(Equipment, label_kettleSpecificHeat      , lineEdit_kettleSpecificHeat      , Equipment::kettleSpecificHeat_calGC    ),
+   });
+
+   // Connect all the boxen
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+   connect(this->checkBox_showHlt                  , &QCheckBox::checkStateChanged, this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showMashTun              , &QCheckBox::checkStateChanged, this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showLauterTun            , &QCheckBox::checkStateChanged, this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showAgingVessel          , &QCheckBox::checkStateChanged, this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showPackagingVessel      , &QCheckBox::checkStateChanged, this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_defaultEquipment         , &QCheckBox::checkStateChanged, this, &EquipmentEditor::updateDefaultEquipment   );
+#else
+   connect(this->checkBox_showHlt                  , &QCheckBox::stateChanged     , this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showMashTun              , &QCheckBox::stateChanged     , this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showLauterTun            , &QCheckBox::stateChanged     , this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showAgingVessel          , &QCheckBox::stateChanged     , this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_showPackagingVessel      , &QCheckBox::stateChanged     , this, &EquipmentEditor::hideOrShowOptionalVessels);
+   connect(this->checkBox_defaultEquipment         , &QCheckBox::stateChanged     , this, &EquipmentEditor::updateDefaultEquipment   );
+#endif
+   connect(this->pushButton_absorption             , &QAbstractButton::clicked    , this, &EquipmentEditor::resetAbsorption          );
+
+   return;
+}
+
+EquipmentEditor::~EquipmentEditor() = default;
+
+bool EquipmentEditor::validateBeforeSave() {
+   bool problems = false;
+
+   // Do some prewarning things. I would prefer to do this only on change, but
+   // we need to be worried about new equipment too.
+
+   //
+   // Note that the latest qFuzzyCompare documentation says it "will not work" if either of the parameters is 0.0, and
+   // we are directed to use qFuzzyIsNull instead in such circumstances.  The latter checks whether its argument is
+   // smaller than 0.000000000001, which is good enough for our purposes here.
+   //
+   // We could, I suppose, validate that vessel volumes etc are within some sane bounds (say larger than a liter and
+   // smaller than a swimming pool), but, for the moment at least we are just looking for some obvious "You might not
+   // realise but this will break things" errors.  We otherwise trust the user to be able to spot if s/he has
+   // accidentally entered nonsensical field values.
+   //
+   QString message = tr("This equipment profile may break %1's maths").arg(CONFIG_APPLICATION_NAME_UC);
+   QString notSet;
+   //
+   // Note that we no longer warn about the mash tun volume not being set, because that just means there is no separate
+   // mash tun, so the mash happens in the kettle (see Equipment::mashesInKettle).
+   //
+   if (qFuzzyIsNull(lineEdit_fvBatchSize->getNonOptCanonicalQty())) {
+      notSet += QString("<li>%1</li>").arg(tr("default batch size"));
+   }
+
+   if (qFuzzyIsNull(lineEdit_hopUtilization->getOptValue<double>().value_or(0.0))) {
+      notSet += QString("<li>%1</li>").arg(tr("hop utilization"));
+   }
+
+   QString inform;
+   if (!notSet.isEmpty()) {
+      problems = true;
+      inform = QString("%1<ul>%2</ul>").arg(tr("The following values are not set:"), notSet);
+   }
+
+   //
+   // The foundation water and mash tun loss both take up room in the vessel where the mash happens (see comments in
+   // model/Equipment.h), so, if they fill it, there is no room for the mash.  (This is the same check as DotBeer's
+   // validate.py makes.)  This most likely means the user has put something other than the volumes we are asking for
+   // in one of these fields.  If there is no mash tun, the mash happens in the kettle, and the kettle's loss is about
+   // what is left after the boil, so is not relevant here.
+   //
+   double const mashTunVolume_l = lineEdit_mashTunVolume   ->getNonOptCanonicalQty();
+   double const foundation_l    = lineEdit_foundationVolume->getNonOptCanonicalQty();
+   if (mashTunVolume_l > 0.0) {
+      double const mashTunLoss_l = lineEdit_mashTunLoss->getNonOptCanonicalQty();
+      if (foundation_l + mashTunLoss_l >= mashTunVolume_l) {
+         problems = true;
+         inform += QString("<p>%1</p>").arg(
+            tr("Foundation water (%1) plus mash tun loss (%2) leaves no room for the mash in a mash tun with total "
+               "capacity %3.").arg(
+               Measurement::displayAmount(Measurement::Amount{foundation_l   , Measurement::Units::liters}),
+               Measurement::displayAmount(Measurement::Amount{mashTunLoss_l  , Measurement::Units::liters}),
+               Measurement::displayAmount(Measurement::Amount{mashTunVolume_l, Measurement::Units::liters})
+            )
+         );
+      }
+   } else {
+      double const kettleVolume_l = lineEdit_kettleVolume->getNonOptCanonicalQty();
+      if (kettleVolume_l > 0.0 && foundation_l >= kettleVolume_l) {
+         problems = true;
+         inform += QString("<p>%1</p>").arg(
+            tr("Foundation water (%1) leaves no room for the mash in the kettle (total capacity %2).  (As there is no "
+               "separate mash tun, the mash happens in the kettle.)").arg(
+               Measurement::displayAmount(Measurement::Amount{foundation_l  , Measurement::Units::liters}),
+               Measurement::displayAmount(Measurement::Amount{kettleVolume_l, Measurement::Units::liters})
+            )
+         );
+      }
+   }
+
+   //
+   // Capacities should be at least as big as the default volumes that go in them
+   //
+   double const kettleVolume_l = lineEdit_kettleVolume  ->getNonOptCanonicalQty();
+   double const boilSize_l     = lineEdit_kettleBoilSize->getNonOptCanonicalQty();
+   if (kettleVolume_l > 0.0 && boilSize_l > kettleVolume_l) {
+      problems = true;
+      inform += QString("<p>%1</p>").arg(
+         tr("The default pre-boil volume (%1) is more than the kettle can hold (%2).").arg(
+            Measurement::displayAmount(Measurement::Amount{boilSize_l    , Measurement::Units::liters}),
+            Measurement::displayAmount(Measurement::Amount{kettleVolume_l, Measurement::Units::liters})
+         )
+      );
+   }
+   double const fvVolume_l  = lineEdit_fvVolume   ->getNonOptCanonicalQty();
+   double const batchSize_l = lineEdit_fvBatchSize->getNonOptCanonicalQty();
+   if (fvVolume_l > 0.0 && batchSize_l > fvVolume_l) {
+      problems = true;
+      inform += QString("<p>%1</p>").arg(
+         tr("The default batch size (%1) is more than the fermentor can hold (%2).").arg(
+            Measurement::displayAmount(Measurement::Amount{batchSize_l, Measurement::Units::liters}),
+            Measurement::displayAmount(Measurement::Amount{fvVolume_l , Measurement::Units::liters})
+         )
+      );
+   }
+
+   if (problems) {
+      QMessageBox theQuestion;
+      theQuestion.setWindowTitle( tr("Calculation Warnings") );
+      theQuestion.setText(message);
+      theQuestion.setInformativeText(inform);
+      theQuestion.setStandardButtons(QMessageBox::Save | QMessageBox::Cancel);
+      theQuestion.setDefaultButton(QMessageBox::Save);
+      theQuestion.setIcon(QMessageBox::Warning);
+      if (theQuestion.exec() == QMessageBox::Cancel) {
+         return false;
+      }
+   }
+
+   //
+   // Maybe two separate alert boxes is a but much, but I worry about putting too much info in a single one
+   //
+   // What we particularly care about here is not having, eg, lauter deadspace set when the lauter tun volume is 0.0
+   // (and thus, by default, hidden in the UI).  We are rather less worried about, say, lauter tun notes being set in
+   // this circumstance, as it won't break anything.
+   //
+   // (We need to reset problems here, otherwise any problem found above would mean we always showed this second box,
+   // even if there was nothing in it.)
+   problems = false;
+   message = tr("Numerical values on zero-sized \"optional\" vessels will be unset or zeroed when you save");
+   inform = QString("%1%2").arg(tr("The following values will be discarded:")).arg(QString("<ul>"));
+   if (qFuzzyIsNull(lineEdit_hltVolume->getNonOptCanonicalQty())) {
+      if (lineEdit_hltLoss               ->getNonOptCanonicalQty()            > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Hot liquor tank losses"                )); }
+      if (lineEdit_hltWeight             ->getOptCanonicalQty().value_or(0.0) > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Hot liquor tank weight"                )); }
+      if (lineEdit_hltSpecificHeat       ->getOptCanonicalQty().value_or(0.0) > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Hot liquor tank specific heat capacity")); }
+   }
+   if (qFuzzyIsNull(lineEdit_mashTunVolume->getNonOptCanonicalQty())) {
+      if (lineEdit_mashTunLoss           ->getNonOptCanonicalQty()            > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Mash tun losses"                       )); }
+      if (lineEdit_mashTunWeight         ->getOptCanonicalQty().value_or(0.0) > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Mash tun weight"                       )); }
+      if (lineEdit_mashTunSpecificHeat   ->getOptCanonicalQty().value_or(0.0) > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Mash tun specific heat capacity"       )); }
+   }
+   if (qFuzzyIsNull(lineEdit_lauterTunVolume->getNonOptCanonicalQty())) {
+      if (lineEdit_lauterTunDeadspaceLoss->getNonOptCanonicalQty()            > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Lauter tun losses"                     )); }
+      if (lineEdit_lauterTunWeight       ->getOptCanonicalQty().value_or(0.0) > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Lauter tun weight"                     )); }
+      if (lineEdit_lauterTunSpecificHeat ->getOptCanonicalQty().value_or(0.0) > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Lauter tun specific heat capacity"     )); }
+   }
+   if (qFuzzyIsNull(lineEdit_packagingVesselVolume->getNonOptCanonicalQty())) {
+      if (lineEdit_packagingVesselLoss   ->getNonOptCanonicalQty()            > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Packaging vessel losses"               )); }
+   }
+   if (qFuzzyIsNull(lineEdit_agingVesselVolume->getNonOptCanonicalQty())) {
+      if (lineEdit_agingVesselLoss       ->getNonOptCanonicalQty()            > 0.0) { problems = true; inform = inform + QString("<li>%1</li>").arg(tr("Aging vessel losses"                   )); }
+   }
+
+   inform += QString("</ul>");
+
+   if (problems) {
+      QMessageBox theQuestion;
+      theQuestion.setWindowTitle( tr("Data Discard Warnings") );
+      theQuestion.setText(message);
+      theQuestion.setInformativeText( inform );
+      theQuestion.setStandardButtons(QMessageBox::Save | QMessageBox::Cancel);
+      theQuestion.setDefaultButton(QMessageBox::Save);
+      theQuestion.setIcon(QMessageBox::Warning);
+      if (theQuestion.exec() == QMessageBox::Cancel) {
+         return false;
+      }
+   }
+
+   // Now zero out / unset anything we said we would
+   if (qFuzzyIsNull(lineEdit_hltVolume->getNonOptCanonicalQty())) {
+      lineEdit_hltVolume      ->setQuantity(0.0);
+      lineEdit_hltLoss        ->setQuantity(0.0);
+      lineEdit_hltWeight      ->setQuantity<double>(std::nullopt);
+      lineEdit_hltSpecificHeat->setQuantity<double>(std::nullopt);
+   }
+   if (qFuzzyIsNull(lineEdit_mashTunVolume->getNonOptCanonicalQty())) {
+      lineEdit_mashTunVolume      ->setQuantity(0.0);
+      lineEdit_mashTunLoss        ->setQuantity(0.0);
+      lineEdit_mashTunWeight      ->setQuantity<double>(std::nullopt);
+      lineEdit_mashTunSpecificHeat->setQuantity<double>(std::nullopt);
+   }
+   if (qFuzzyIsNull(lineEdit_lauterTunVolume->getNonOptCanonicalQty())) {
+      lineEdit_lauterTunVolume       ->setQuantity(0.0);
+      lineEdit_lauterTunDeadspaceLoss->setQuantity(0.0);
+      lineEdit_lauterTunWeight       ->setQuantity<double>(std::nullopt);
+      lineEdit_lauterTunSpecificHeat ->setQuantity<double>(std::nullopt);
+   }
+   if (qFuzzyIsNull(lineEdit_packagingVesselVolume->getNonOptCanonicalQty())) {
+      lineEdit_packagingVesselVolume->setQuantity(0.0);
+      lineEdit_packagingVesselLoss  ->setQuantity(0.0);
+   }
+   if (qFuzzyIsNull(lineEdit_agingVesselVolume->getNonOptCanonicalQty())) {
+      lineEdit_agingVesselVolume->setQuantity(0.0);
+      lineEdit_agingVesselLoss  ->setQuantity(0.0);
+   }
+
+   // We're going to save, so this is our last chance to see what the equipment said before the user's changes
+   this->rememberRecipeSizesBeforeSave();
+
+   return true;
+}
+
+void EquipmentEditor::rememberRecipeSizesBeforeSave() {
+   this->m_recipeSizesBeforeSave.clear();
+   // A new equipment profile isn't used by any recipe yet
+   if (!this->m_editItem || this->m_editItem->key() <= 0) {
+      return;
+   }
+   for (Recipe * recipe : RecipeUtils::recipesUsing(*this->m_editItem)) {
+      auto const boil = recipe->boil();
+      // See comment in Equipment::defaultPreBoilSize_l for why we pass in the boil time
+      double const boilTime_mins = boil ? boil->boilTime_mins() : Boil::default_boilTime_mins;
+      this->m_recipeSizesBeforeSave.push_back({
+         .recipe        = recipe,
+         .batchSize_l   = this->m_editItem->fvBatchSize_l(),
+         .preBoilSize_l = this->m_editItem->defaultPreBoilSize_l(boilTime_mins)
+      });
+   }
+   return;
+}
+
+void EquipmentEditor::offerToUpdateRecipeSizes() {
+   // Same tolerance as MainWindow::setForRecipe
+   static constexpr double tolerance_l = 0.001;
+   auto same = [](double const lhs, double const rhs) { return std::abs(lhs - rhs) < tolerance_l; };
+
+   struct RecipeUpdate {
+      Recipe * recipe;
+      std::optional<double> newBatchSize_l;
+      std::optional<double> newPreBoilSize_l;
+   };
+   std::vector<RecipeUpdate> updates;
+   for (auto const & before : this->m_recipeSizesBeforeSave) {
+      Recipe & recipe = *before.recipe;
+      // We can't change a locked recipe
+      if (recipe.locked()) {
+         continue;
+      }
+      RecipeUpdate update{.recipe = &recipe, .newBatchSize_l = std::nullopt, .newPreBoilSize_l = std::nullopt};
+      double const newBatchSize_l = this->m_editItem->fvBatchSize_l();
+      if (same(recipe.batchSize_l(), before.batchSize_l) && !same(newBatchSize_l, before.batchSize_l)) {
+         update.newBatchSize_l = newBatchSize_l;
+      }
+      if (auto const boil = recipe.boil(); boil && boil->preBoilSize_l()) {
+         double const newPreBoilSize_l = this->m_editItem->defaultPreBoilSize_l(boil->boilTime_mins());
+         if (same(*boil->preBoilSize_l(), before.preBoilSize_l) && !same(newPreBoilSize_l, before.preBoilSize_l)) {
+            update.newPreBoilSize_l = newPreBoilSize_l;
+         }
+      }
+      if (update.newBatchSize_l || update.newPreBoilSize_l) {
+         updates.push_back(update);
+      }
+   }
+
+   //
+   // The pre-boil size is on the recipe's Boil, which might be locked, or shared with other recipes.  We can't change a
+   // locked boil, and we only change a shared one if all the recipes sharing it are also getting the new pre-boil size
+   // (because otherwise we'd be changing recipes the user hasn't been asked about).
+   //
+   for (auto & update : updates) {
+      if (!update.newPreBoilSize_l) {
+         continue;
+      }
+      auto const boil = update.recipe->boil();
+      bool canChange = (RecipeUtils::lockReason(*boil) == RecipeUtils::LockReason::NotLocked);
+      for (Recipe const * sharer : RecipeUtils::recipesUsing(*boil)) {
+         if (!canChange) {
+            break;
+         }
+         canChange = std::ranges::any_of(
+            updates,
+            [sharer](RecipeUpdate const & other) { return other.recipe == sharer && other.newPreBoilSize_l; }
+         );
+      }
+      if (!canChange) {
+         qInfo() <<
+            Q_FUNC_INFO << "Not offering to change pre-boil size of Boil #" << boil->key() << "on Recipe #" <<
+            update.recipe->key() << "as boil is locked or shared with recipes not being updated";
+         update.newPreBoilSize_l = std::nullopt;
+      }
+   }
+   std::erase_if(updates,
+                 [](RecipeUpdate const & update) { return !update.newBatchSize_l && !update.newPreBoilSize_l; });
+   if (updates.empty()) {
+      return;
+   }
+
+   auto displayVolume = [](double const volume_l) {
+      return Measurement::displayAmount(Measurement::Amount{volume_l, Measurement::Units::liters});
+   };
+   QString details;
+   for (auto const & update : updates) {
+      QStringList changes;
+      if (update.newBatchSize_l) {
+         changes << tr("batch size %1").arg(displayVolume(*update.newBatchSize_l));
+      }
+      if (update.newPreBoilSize_l) {
+         changes << tr("pre-boil size %1").arg(displayVolume(*update.newPreBoilSize_l));
+      }
+      details += QString("<li>%1: %2</li>").arg(update.recipe->name().toHtmlEscaped(), changes.join(", "));
+   }
+
+   QMessageBox theQuestion{this};
+   theQuestion.setWindowTitle(tr("Update recipes?"));
+   theQuestion.setIcon(QMessageBox::Question);
+   theQuestion.setText(
+      tr("The following recipes use equipment \"%1\" and have the batch size and/or pre-boil size that it previously "
+         "specified.  Would you like to update them to match the changes you just made?").arg(
+         this->m_editItem->name().toHtmlEscaped()
+      )
+   );
+   theQuestion.setInformativeText(QString("<ul>%1</ul>").arg(details));
+   theQuestion.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+   theQuestion.setDefaultButton(QMessageBox::Yes);
+   if (theQuestion.exec() != QMessageBox::Yes) {
+      return;
+   }
+
+   for (auto const & update : updates) {
+      if (update.newBatchSize_l) {
+         update.recipe->setBatchSize_l(*update.newBatchSize_l);
+      }
+      if (update.newPreBoilSize_l) {
+         update.recipe->boil()->setPreBoilSize_l(*update.newPreBoilSize_l);
+      }
+   }
+   return;
+}
+
+
+void EquipmentEditor::retranslateUi() {
+   //
+   // The generated retranslateUi will reset the text of the optional vessel check boxes, losing the asterisks that
+   // showOptionalVesselIfPresent adds, so we note which ones have them and put them back afterwards.  (We don't want to
+   // call showOptionalVesselIfPresent itself, as that would also undo any changes the user has made to which boxes are
+   // ticked.)
+   //
+   std::vector<QCheckBox *> markedInUse;
+   for (QCheckBox * checkBox : optionalVesselCheckBoxes(*this)) {
+      if (checkBox->text().endsWith(" *")) {
+         markedInUse.push_back(checkBox);
+      }
+   }
+   this->Ui::equipmentEditor::retranslateUi(this);
+   for (QCheckBox * checkBox : markedInUse) {
+      checkBox->setText(checkBox->text() + " *");
+   }
+   return;
+}
+
+void EquipmentEditor::postReadFieldsFromEditItem([[maybe_unused]] std::optional<QString> propName) {
+
+   showOptionalVesselIfPresent(this->checkBox_showHlt            , m_editItem->hltVolume_l            ());
+   showOptionalVesselIfPresent(this->checkBox_showMashTun        , m_editItem->mashTunVolume_l        ());
+   showOptionalVesselIfPresent(this->checkBox_showLauterTun      , m_editItem->lauterTunVolume_l      ());
+   showOptionalVesselIfPresent(this->checkBox_showAgingVessel    , m_editItem->agingVesselVolume_l    ());
+   showOptionalVesselIfPresent(this->checkBox_showPackagingVessel, m_editItem->packagingVesselVolume_l());
+
+   this->hideOrShowOptionalVessels();
+
+   this->checkBox_defaultEquipment->blockSignals(true);
+   this->checkBox_defaultEquipment->setChecked(
+      m_editItem->key() == PersistentSettings::value_ck(PersistentSettings::Names::defaultEquipmentKey, -1)
+   );
+   this->checkBox_defaultEquipment->blockSignals(false);
+
+   return;
+}
+
+void EquipmentEditor::postWriteLateFieldsToEditItem() {
+   // As we tell the user in infoText_optionalVessels, we don't save the attributes of an optional vessel whose volume
+   // is blank or zero.
+   this->m_editItem->clearUnusedOptionalVessels();
+
+   this->offerToUpdateRecipeSizes();
+   this->m_recipeSizesBeforeSave.clear();
+   return;
+}
+
+void EquipmentEditor::hideOrShowOptionalVessels() {
+   QObject * sender = this->sender();
+   if (!sender || sender == this->checkBox_showHlt            ) {
+      this->tabWidget_editor->setTabVisible(this->tabWidget_editor->indexOf(this->tab_hlt            ),
+                                            this->checkBox_showHlt            ->isChecked());
+      if (sender) { return; }
+   }
+   if (!sender || sender == this->checkBox_showMashTun        ) {
+      this->tabWidget_editor->setTabVisible(this->tabWidget_editor->indexOf(this->tab_mashTun        ),
+                                            this->checkBox_showMashTun        ->isChecked());
+      if (sender) { return; }
+   }
+   if (!sender || sender == this->checkBox_showLauterTun      ) {
+      this->tabWidget_editor->setTabVisible(this->tabWidget_editor->indexOf(this->tab_lauterTun      ),
+                                            this->checkBox_showLauterTun      ->isChecked());
+      if (sender) { return; }
+   }
+   if (!sender || sender == this->checkBox_showAgingVessel    ) {
+      this->tabWidget_editor->setTabVisible(this->tabWidget_editor->indexOf(this->tab_agingVessel    ),
+                                            this->checkBox_showAgingVessel    ->isChecked());
+      if (sender) { return; }
+   }
+   if (!sender || sender == this->checkBox_showPackagingVessel) {
+      this->tabWidget_editor->setTabVisible(this->tabWidget_editor->indexOf(this->tab_packagingVessel),
+                                            this->checkBox_showPackagingVessel->isChecked());
+      if (sender) { return; }
+   }
+   return;
+}
+
+void EquipmentEditor::resetAbsorption() {
+   if (!m_editItem) {
+      return;
+   }
+
+   lineEdit_grainAbsorption->setQuantity(PhysicalConstants::grainAbsorption_Lkg);
+   return;
+}
+
+void EquipmentEditor::updateDefaultEquipment() {
+   if (!m_editItem) {
+      return;
+   }
+
+   if (this->checkBox_defaultEquipment->isChecked()) {
+      PersistentSettings::insert_ck(PersistentSettings::Names::defaultEquipmentKey, m_editItem->key());
+      return;
+   }
+
+   QVariant const currentDefault = PersistentSettings::value_ck(PersistentSettings::Names::defaultEquipmentKey, -1);
+   if (currentDefault == m_editItem->key()) {
+      PersistentSettings::insert_ck(PersistentSettings::Names::defaultEquipmentKey, -1);
+   }
+   return;
+}
+
+// Insert the boilerplate stuff that we cannot do in EditorBase
+EDITOR_COMMON_CODE(Equipment)

@@ -1,0 +1,1595 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * serialization/json/JsonRecord.cpp is part of Brewtarget, and is copyright the following authors 2020-2026:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "serialization/json/JsonRecord.h"
+
+#include <cmath>
+#include <optional>
+#include <string_view>
+#include <system_error>
+
+#include <QDate>
+#include <QDebug>
+#include <QMetaType>
+#include <qglobal.h> // For Q_ASSERT and Q_UNREACHABLE
+
+#include "serialization/json/JsonCoding.h"
+#include "serialization/json/JsonRecordDefinition.h"
+#include "serialization/json/JsonUtils.h"
+#include "model/Folder.h"
+#include "model/Hop.h"  // Only needed for workaround/hack for Hop year property
+#include "model/NamedEntity.h"
+#include "model/NamedParameterBundle.h"
+#include "model/OutlineableNamedEntity.h"
+#include "model/Recipe.h"
+#include "model/RecipeUtils.h"
+#include "utils/ErrorCodeToStream.h"
+#include "utils/ImportRecordCount.h"
+#include "utils/OptionalHelpers.h"
+
+//
+// Variables and constant definitions that we need only in this file
+//
+namespace {
+   /**
+    * \brief Read value and unit fields from a JSON record
+    *
+    *        We assume that the requested fields exist and are of the correct type (double and string respectively)
+    *        because this should have been enforced already by JSON schema validation.
+    *
+    * \param type
+    * \param xPath
+    * \param unitField
+    * \param valueField
+    * \param recordData
+    * \param value Variable in which value is returned
+    * \param unitName Variable in which unit is returned
+    * \return \c true if succeeded, \c false otherwise
+    */
+   bool readValueAndUnit(JsonRecordDefinition::FieldType const type,
+                         JsonXPath const & xPath,
+                         JsonXPath const & unitField,
+                         JsonXPath const & valueField,
+                         boost::json::value const * recordData,
+                         double & value,
+                         std::string_view & unitName) {
+      // It's a coding error to supply a null pointer for recordData
+      Q_ASSERT(recordData);
+
+      // It's a coding error if we're trying to read sub-values from something that is not a JSON object
+      Q_ASSERT(recordData->is_object());
+
+      //
+      // Read the value and unit fields.  We assert that they exist and are of the correct type (double and string
+      // respectively) because this should have been enforced already by JSON schema validation.
+      //
+
+      // Usually leave next line commented as otherwise generates too much logging
+//      qDebug() <<
+//         Q_FUNC_INFO << "Reading" << valueField << "and" << unitField << "sub-fields from" << xPath << "record:" <<
+//         *recordData;
+
+      std::error_code errCode;
+      boost::json::value const * valueRaw = valueField.followPathFrom(recordData, errCode);
+      if (!valueRaw) {
+         // Not expecting this to happen given that we've already validated the JSON file against its schema.
+         qWarning() << Q_FUNC_INFO << "Error parsing value from" << xPath << " (" << type << "): " << errCode;
+         return false;
+      }
+      // Usually leave next line commented as otherwise generates too much logging
+//      qDebug() << Q_FUNC_INFO << "Raw Value=" << *valueRaw << "(" << valueRaw->kind() << ")";
+
+      // The JSON type should be number.  Boost.JSON will have chosen either double or int64  (or conceivably uint64) to
+      // store the number, depending eg on whether it has a decimal separator.  So we cannot assert that
+      // valueRaw->is_double().  Fortunately, Boost.JSON helps us with the necessary casting.
+      Q_ASSERT(valueRaw->is_number());
+      value = valueRaw->to_number<double>(errCode);
+      if (errCode) {
+         // Not expecting this to happen as doco says "If T is a floating point type and the stored value is a number,
+         // the conversion is performed without error. The converted number is returned, with a possible loss of
+         // precision. "
+         qWarning() <<
+            Q_FUNC_INFO << "Error extracting double from" << *valueRaw << "(" << valueRaw->kind() << ") for" <<
+            xPath << " (" << type << "): " << errCode;
+         return false;
+      }
+      // Usually leave next line commented as otherwise generates too much logging
+//      qDebug() << Q_FUNC_INFO << "Value=" << value;
+
+      boost::json::value const * unitNameRaw = unitField.followPathFrom(recordData, errCode);
+      if (!unitNameRaw) {
+         // Not expecting this to happen given that we've already validated the JSON file against its schema.
+         qWarning() << Q_FUNC_INFO << "Error parsing units from" << xPath << " (" << type << "): " << errCode;
+         return false;
+      }
+      Q_ASSERT(unitNameRaw);
+      Q_ASSERT(unitNameRaw->is_string());
+      unitName = unitNameRaw->get_string();
+
+      // Usually leave next line commented as otherwise generates too much logging
+//      qDebug() << Q_FUNC_INFO << "Read" << xPath << " (" << type << ") as" << value << " " <<
+//         std::string(unitName).c_str();
+      return true;
+   }
+
+   /**
+    * \brief Read value and unit fields from a JSON record with a single mapping (ie relating to a single physical
+    *        quantity) and convert to canonical units
+    *
+    *        We assume that the requested fields exist and are of the correct type (double and string respectively)
+    *        because this should have been enforced already by JSON schema validation.
+    *
+    * \param fieldDefinition
+    * \param recordData
+    * \return The value, converted to canonical scale, or \c std::nullopt if there was an error
+    */
+   std::optional<Measurement::Amount> readMeasurementWithUnits(
+      JsonRecordDefinition::FieldDefinition const & fieldDefinition,
+      boost::json::value const * recordData
+   ) {
+      // It's a coding error to supply a null pointer for recordData
+      Q_ASSERT(recordData);
+
+      double value{0};
+      std::string_view unitName{""};
+      if (!readValueAndUnit(fieldDefinition.type,
+                            fieldDefinition.xPath,
+                            std::get<JsonMeasureableUnitsMapping const *>(fieldDefinition.valueDecoder)->unitField,
+                            std::get<JsonMeasureableUnitsMapping const *>(fieldDefinition.valueDecoder)->valueField,
+                            recordData,
+                            value,
+                            unitName)) {
+         return std::nullopt;
+      }
+
+      //
+      // The schema validation should have ensured that the unit name is constrained to one of the values we are
+      // expecting, so it's almost certainly a coding error if it doesn't.
+      //
+      // Note that we have to do case-insensitive matching here.  Eg, although the BeerJSON schema defines ColorUnitType
+      // as an enum of "EBC", "Lovi" and "SRM", schema validation will accept "srm" as valid.  AFAIK, it doesn't matter
+      // if the case is "wrong" because there are no enums where members differ only by case.
+      //
+      auto const mapper = std::get<JsonMeasureableUnitsMapping const *>(fieldDefinition.valueDecoder);
+      if (!mapper->containsUnit(unitName, JsonMeasureableUnitsMapping::MatchType::CaseInsensitive)) {
+         qCritical() << Q_FUNC_INFO << "Unexpected unit name:" << std::string(unitName).c_str();
+         // Stop here on debug build
+         Q_ASSERT(false);
+         return std::nullopt;
+      }
+
+      Measurement::Unit const * unit = mapper->findUnit(unitName,
+                                                        JsonMeasureableUnitsMapping::MatchType::CaseInsensitive);
+      Measurement::Amount canonicalValue = unit->toCanonical(value);
+
+      qDebug() <<
+         Q_FUNC_INFO << "Converted" << value << " " << std::string(unitName).c_str() << "to" << canonicalValue;
+
+      return canonicalValue;
+   }
+
+   /**
+    * \brief Read value and unit fields from a JSON record with a multiple mappings (eg one for mass and one for volume)
+    *        and convert to canonical units
+    *
+    *        We assume that the requested fields exist and are of the correct type (double and string respectively)
+    *        because this should have been enforced already by JSON schema validation.
+    *
+    * \param fieldDefinition
+    * \param recordData
+    * \return The value, converted to canonical scale, or \c std::nullopt if there was an error
+    */
+   std::optional<Measurement::Amount> readOneOfMeasurementsWithUnits(
+      JsonRecordDefinition::FieldDefinition const & fieldDefinition,
+      boost::json::value const * recordData
+   ) {
+      // It's a coding error to supply a null pointer for recordData
+      Q_ASSERT(recordData);
+
+      // It's a coding error if the list of JsonMeasureableUnitsMapping objects has less than two elements.  (For
+      // one element you should use JsonRecordDefinition::FieldType::MeasurementWithUnits instead of
+      // JsonRecordDefinition::FieldType::OneOfMeasurementsWithUnits.)
+      Q_ASSERT(std::get<ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder)->size() > 1);
+
+      // Per the comment in json/JsonRecordDefinition.h, we assume that unitField and valueField are the same for each
+      // JsonMeasureableUnitsMapping in the list, so we just use the first entry here.
+      JsonXPath const & unitField  =
+         std::get<ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder)->at(0)->unitField;
+      JsonXPath const & valueField =
+         std::get<ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder)->at(0)->valueField;
+
+      double value{0};
+      std::string_view unitName{""};
+      if (!readValueAndUnit(fieldDefinition.type,
+                            fieldDefinition.xPath,
+                            unitField,
+                            valueField,
+                            recordData,
+                            value,
+                            unitName)) {
+         return std::nullopt;
+      }
+
+      Measurement::Unit const * unit = nullptr;
+      for (auto const unitsMapping :
+           *std::get<ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder)) {
+         // As above, we need to be case insensitive here and this should not create ambiguity
+         if (unitsMapping->containsUnit(unitName, JsonMeasureableUnitsMapping::MatchType::CaseInsensitive)) {
+            unit = unitsMapping->findUnit(unitName, JsonMeasureableUnitsMapping::MatchType::CaseInsensitive);
+            break;
+         }
+      }
+
+      // The schema validation should have ensured that the unit name is constrained to one of the values we are
+      // expecting, so it's almost certainly a coding error if it doesn't.
+      if (!unit) {
+         qCritical() <<
+            Q_FUNC_INFO << "Unexpected unit name:" << std::string(unitName).c_str() << "for field" <<
+            fieldDefinition.xPath << "(" << fieldDefinition.type << ")";
+         // Stop here on debug build
+         Q_ASSERT(false);
+         return std::nullopt;
+      }
+
+      Measurement::Amount canonicalValue = unit->toCanonical(value);
+
+      qDebug() <<
+         Q_FUNC_INFO << "Converted" << value << " " << std::string(unitName).c_str() << "to" << canonicalValue;
+
+      return canonicalValue;
+   }
+
+   /**
+    * \brief Read value and unit fields where the units are expected to always be the same (eg "%")
+    *
+    *        We assume that the requested fields exist and are of the correct type (double and string respectively)
+    *        because this should have been enforced already by JSON schema validation.
+    *
+    * \param fieldDefinition
+    * \param recordData
+    * \return The value, or \c std::nullopt if there was an error
+    */
+   std::optional<double> readSingleUnitValue(JsonRecordDefinition::FieldDefinition const & fieldDefinition,
+                                             boost::json::value const * recordData) {
+      // It's a coding error to supply a null pointer for recordData
+      Q_ASSERT(recordData);
+
+      double value{0};
+      std::string_view unitName{""};
+      if (!readValueAndUnit(fieldDefinition.type,
+                            fieldDefinition.xPath,
+                            std::get<JsonSingleUnitSpecifier const *>(fieldDefinition.valueDecoder)->unitField,
+                            std::get<JsonSingleUnitSpecifier const *>(fieldDefinition.valueDecoder)->valueField,
+                            recordData,
+                            value,
+                            unitName)) {
+         return std::nullopt;
+      }
+
+      // The schema validation should have ensured that the unit name is what we're expecting, so it's almost certainly
+      // a coding error if it doesn't.
+      if (!std::get<JsonSingleUnitSpecifier const *>(fieldDefinition.valueDecoder)->validUnits.contains(unitName)) {
+         qCritical() <<
+            Q_FUNC_INFO << "Unit name" << std::string(unitName).c_str() << "does not match expected (" <<
+            std::get<JsonSingleUnitSpecifier const *>(fieldDefinition.valueDecoder)->validUnits.first().data() <<
+            "etc)";
+         // Stop here on debug build
+         Q_ASSERT(false);
+         return std::nullopt;
+      }
+      return value;
+   }
+
+   /**
+    * \brief If supplied value is not a number (NaN) or infinity, log a warning and return false.  This is intended to
+    *        be used to stop such numbers being written to JSON.
+    *
+    *        JSON has no representation for NaN or infinity.  Boost.JSON writes NaN as null and infinity as 1e99999,
+    *        neither of which is valid in a dotBeer or BeerJSON file.  Some calculated values can legitimately be NaN
+    *        (eg BrewLog::computedAlcoholByVolume_pct before both gravities have been measured) or come out infinite (eg
+    *        after a division by a zero volume), so rather than write an invalid file, we skip such values.
+    *
+    * \param recordDefinition Used for logging.
+    * \param key    The JSON key we would be writing. Used for logging.
+    * \param value  The value (or the floating point part of a compound value) we would be writing.  (Caller is expected
+    *               to have already removed any optional wrappers.)
+    *
+    * \return \c true if it's OK to write out for this key, \c false if it should be skipped
+    */
+   bool okToWrite(SerializationRecordDefinition const & recordDefinition, std::string_view const & key, double const value) {
+      bool const valueIsFinite = std::isfinite(value);
+      if (!valueIsFinite) {
+         qWarning() <<
+            Q_FUNC_INFO << "Not writing" << std::string(key).c_str() << "for" <<
+            *recordDefinition.m_namedEntityClassName << "as value" << value << "is not finite";
+      }
+      return valueIsFinite;
+   }
+
+
+}
+
+JsonRecord::JsonRecord(JsonRecordDefinition::LocalIdToDbId * localIdToDbId,
+                       JsonCoding const & jsonCoding,
+                       boost::json::value & recordData,
+                       JsonRecordDefinition const & recordDefinition) :
+   SerializationRecord{jsonCoding, recordDefinition},
+   m_recordData{recordData},
+   m_localId{},
+   m_localIdToDbId{localIdToDbId} {
+   return;
+}
+
+JsonRecord::~JsonRecord() = default;
+
+SerializationRecordDefinition const & JsonRecord::recordDefinition() const {
+   return this->m_recordDefinition;
+}
+
+[[nodiscard]] bool JsonRecord::load(QString const & targetFolderPath,
+                                    JsonRecord const * containingRecord,
+                                    QTextStream & userMessage,
+                                    ImportRecordCount & stats) {
+   Q_ASSERT(this->m_recordData.is_object());
+   qDebug() <<
+      Q_FUNC_INFO << "Loading" << this->m_recordDefinition.m_recordName << "record containing" <<
+      this->m_recordData.as_object().size() << "elements";
+
+   //
+   // If we know this record contains only outline/base info (see comments in model/OutlineableNamedEntity.h) then we
+   // record that now so that the right things happen when we are doing duplicate matching later (in
+   // JsonRecord::normaliseAndStoreInDb).
+   //
+   if (this->m_recordDefinition.isOutlineRecord) {
+      this->m_namedParameterBundle.insert(PropertyNames::OutlineableNamedEntity::outline, QVariant{true});
+   }
+
+   //
+   // Loop through all the fields that we know/care about.  Anything else is intentionally ignored.  (We won't know
+   // what to do with it, and, if it weren't allowed to be there, it would have generated an error at schema parsing.)
+   //
+   // Note that it's a coding error if there are no fields in the record definition.  (This usually means a template
+   // specialisation was omitted in serialization/json/BeerJson.cpp.)
+   //
+   qDebug() <<
+      Q_FUNC_INFO << "Examining" << this->m_recordDefinition.fieldDefinitions.size() << "field definitions for" <<
+      this->m_recordDefinition.m_recordName;
+   Q_ASSERT(this->m_recordDefinition.fieldDefinitions.size() > 0);
+   for (auto & fieldDefinition : this->m_recordDefinition.fieldDefinitions) {
+      //
+      // NB: As with XML processing in XmlRecord::load, if we don't find a node, there's nothing for us to do.  The
+      // schema validation should already flagged up an error if there are missing _required_ fields.  Equally,
+      // although we only look for nodes we know about, some of these we won't use for one reason or another (eg "write
+      // only" fields such as IBU on Recipe).
+      //
+      std::error_code errorCode;
+      boost::json::value * container = fieldDefinition.xPath.followPathFrom(&this->m_recordData, errorCode);
+      if (!container) {
+         // As noted above this is usually not an error, but _sometimes_ useful to log for debugging.  Usually leave
+         // this logging commented out though as otherwise it fills up the log files
+//         qDebug() <<
+//            Q_FUNC_INFO << fieldDefinition.xPath << " (" << fieldDefinition.type << ") not present (error code " <<
+//            errorCode.value() << ":" << errorCode.message().c_str() << ")";
+      } else {
+         // Again, it can be useful to uncomment this logging statement for debugging, but usually we don't want it
+         // taking up space in the log files.
+//         qDebug() <<
+//            Q_FUNC_INFO << "Found" << fieldDefinition.xPath << " (" << fieldDefinition.type << "/" <<
+//            container->kind() << ")";
+
+
+         //
+         // We used to parse everything and then decide whether we needed to store it.  The problem with doing this
+         // is when we have non-trivial bits of structure that we don't currently support (eg a record or an enum) then
+         // we won't have the expected contents of fieldDefinition.valueDecoder.  So it's safer to bail out here.
+         //
+         // Note that we have to check fieldDefinition.valueDecoder too because, eg, top-level lists of items (Hops,
+         // Recipes, etc) don't have property paths!
+         //
+         if (fieldDefinition.propertyPath.isNull() &&
+             JsonRecordDefinition::FieldType::LocalId != fieldDefinition.type &&
+             std::holds_alternative<std::monostate>(fieldDefinition.valueDecoder)) {
+            qInfo() <<
+               Q_FUNC_INFO << "Ignoring unsupported field at" << fieldDefinition.xPath << " (" <<
+               fieldDefinition.type << "/" << container->kind() << ")";
+            continue;
+
+         } else if (JsonRecordDefinition::FieldType::Record        == fieldDefinition.type ||
+                    JsonRecordDefinition::FieldType::ListOfRecords == fieldDefinition.type) {
+            Q_ASSERT(std::holds_alternative<JsonRecordDefinition const *>(fieldDefinition.valueDecoder));
+            Q_ASSERT(std::get              <JsonRecordDefinition const *>(fieldDefinition.valueDecoder));
+            JsonRecordDefinition const & childRecordDefinition{
+               *std::get<JsonRecordDefinition const *>(fieldDefinition.valueDecoder)
+            };
+            if (JsonRecordDefinition::FieldType::Record == fieldDefinition.type) {
+               //
+               // Note that the call to JsonXPath::followPathFrom does the "right thing" in the event that we are
+               // handling the special "Base Record" case described in serialization/json/JsonRecordDefinition.h (that
+               // being the only case in which fieldDefinition.xPath should be empty).
+               //
+               if (!this->loadChildRecord(targetFolderPath,
+                                          fieldDefinition,
+                                          childRecordDefinition,
+                                          *container,
+                                          userMessage,
+                                          stats)) {
+                  return false;
+               }
+            } else {
+               // JsonRecordDefinition::FieldType::ListOfRecords
+
+               //
+               // One difference between XML and JSON when it comes to arrays is that the latter has one less layer of
+               // tags.  In XML (eg BeerXML), we have "<HOPS><HOP>...</HOP><HOP>...</HOP>...</HOPS>".  In JSON (eg
+               // BeerJSON) we have hop_varieties: [{...},{...},...].
+               //
+               // Schema should have already enforced that this field is an array, so we assert that here
+               //
+               Q_ASSERT(container->is_array());
+               boost::json::array & childRecordsData = container->get_array();
+
+               // Note that there are some arrays that we don't treat as lists-of-things because we use Named Array Item Id
+               // part of a JsonXPath to access a specific "named" member of the array.  Those are not handled in this code
+               // branch.
+               if (!this->loadChildRecords(targetFolderPath,
+                                           fieldDefinition,
+                                           childRecordDefinition,
+                                           childRecordsData,
+                                           userMessage,
+                                           stats)) {
+                  return false;
+               }
+            }
+         } else {
+            //
+            // If it's not an array then it's fields on the object we're currently populating
+            //
+            bool parsedValueOk = false;
+            QVariant parsedValue;
+
+            //
+            // As per the equivalent point in XmlRecord, we're going to need to know whether this field is "optional" in
+            // our internal data model.  If it is, then, for whatever underlying type T it is, we need the parsedValue
+            // QVariant to hold std::optional<T> instead of just T.
+            //
+            // NB: propertyPath is not actually a property path when fieldType is RequiredConstant.
+            //
+            bool const propertyIsOptional {
+               (fieldDefinition.type == JsonRecordDefinition::FieldType::RequiredConstant ||
+                fieldDefinition.propertyPath.isNull()) ?
+                  false :
+                  fieldDefinition.propertyPath.getTypeInfo(*this->m_recordDefinition.m_typeLookup).isOptional()
+            };
+
+            //
+            // JSON Schema validation should have ensured this field really is what we're expecting, so it's a coding
+            // error if it's not, which is what most of the asserts below are saying.
+            //
+            // HOWEVER, note that we need to take care with numeric types.  JSON only has one base numeric type
+            // (number).  Boost.JSON handles this correctly but also offers access to the underlying type it has used to
+            // store the number (std::int64_t, std::uint64_t or double).  So, eg, you can first call
+            // container->is_double() to check whether the underlying storage is double and then, if that returns true,
+            // call container->get_double() to get the value.  This seems like an attractive short-cut (which it is when
+            // you have full control over the JSON input) but in can catch you out.  Eg if a field that usually has a
+            // decimal point happens to be an integer and was stored (validly) without the decimal point in the JSON
+            // file, then Boost.JSON will put it in eg std::int64_t rather than double, and get_double() will barf an
+            // assertion failure.
+            //
+            // The correct thing to do for general purpose handling is to assert is_number() and use the templated
+            // to_number() function to get back the type WE want rather than Boost.JSON's internal storage type.
+            //
+            // Of course, having extracted std::int64_t or std::uint64_t, we then just cast them to int and unsigned
+            // int.  This should be OK for the foreseeable future on the platforms we target and for the likely ranges
+            // of values that we're reading in.
+            //
+            switch (fieldDefinition.type) {
+
+               case JsonRecordDefinition::FieldType::Bool:
+                  Q_ASSERT(container->is_bool());
+                  {
+                     auto rawValue = container->get_bool();
+                     parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                     parsedValueOk = true;
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::Int:
+                  Q_ASSERT(container->is_number());
+                  {
+                     int rawValue = container->to_number<std::int64_t>();
+                     parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                     parsedValueOk = true;
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::UInt:
+                  Q_ASSERT(container->is_number());
+                  {
+                     unsigned int rawValue = container->to_number<std::uint64_t>();
+                     parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                     parsedValueOk = true;
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::Double:
+                  Q_ASSERT(container->is_number());
+                  {
+                     auto rawValue = container->to_number<double>();
+                     parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                     parsedValueOk = true;
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::String:
+                  Q_ASSERT(container->is_string());
+                  {
+                     QString rawValue{container->get_string().c_str()};
+                     parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                     parsedValueOk = true;
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::Enum:
+                  // It's definitely a coding error if there is no stringToEnum mapping for a field declared as Enum!
+                  Q_ASSERT(std::holds_alternative<EnumStringMapping const *>(fieldDefinition.valueDecoder));
+                  Q_ASSERT(std::get              <EnumStringMapping const *>(fieldDefinition.valueDecoder));
+                  {
+                     Q_ASSERT(container->is_string());
+                     QString value{container->get_string().c_str()};
+
+                     auto match =
+                        std::get<EnumStringMapping const *>(fieldDefinition.valueDecoder)->stringToEnumAsInt(value);
+                     if (!match) {
+                        // This is probably a coding error as the JSON Schema should already have verified that the
+                        // value is one of the expected ones.
+                        qWarning() <<
+                           Q_FUNC_INFO << "Ignoring " << this->m_recordDefinition.m_namedEntityClassName << " node " <<
+                           fieldDefinition.xPath << "=" << value << " as value not recognised";
+                     } else {
+                        auto rawValue = match.value();
+                        parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                        parsedValueOk = true;
+                     }
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::Record:
+               case JsonRecordDefinition::FieldType::ListOfRecords:
+                  // This should be unreachable as we dealt with these cases separately above, but having case
+                  // statements for them eliminates a compiler warning whilst still retaining the useful warning if we
+                  // have ever omitted processing for another field type.
+                  Q_UNREACHABLE();
+                  break;
+
+               case JsonRecordDefinition::FieldType::MeasurementWithUnits:
+                  // It's definitely a coding error if there is no unit decoder mapping for a field declared to require
+                  // one
+                  Q_ASSERT(std::holds_alternative<JsonMeasureableUnitsMapping const *>(fieldDefinition.valueDecoder));
+                  Q_ASSERT(std::get              <JsonMeasureableUnitsMapping const *>(fieldDefinition.valueDecoder));
+                  // JSON schema validation should have ensured that the field is actually one with subfields for value
+                  // and unit
+                  Q_ASSERT(container->is_object());
+                  {
+                     std::optional<Measurement::Amount> canonicalValue = readMeasurementWithUnits(fieldDefinition,
+                                                                                                  container);
+                     if (canonicalValue) {
+                        auto rawValue = canonicalValue->quantity;
+                        parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                        parsedValueOk = true;
+                     }
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::OneOfMeasurementsWithUnits:
+                  // It's definitely a coding error if there is no list of unit decoder mappings for a field declared to
+                  // require such
+                  Q_ASSERT(std::holds_alternative<ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder));
+                  Q_ASSERT(std::get              <ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder));
+                  // JSON schema validation should have ensured that the field is actually one with subfields for value
+                  // and unit
+                  Q_ASSERT(container->is_object());
+                  {
+                     // Logic similar to that for MeasurementWithUnits.  See comment in utils/MetaTypes.h for why we use
+                     // Measurement::Amount rather than MassOrVolumeAmt.
+                     std::optional<Measurement::Amount> canonicalValue = readOneOfMeasurementsWithUnits(fieldDefinition,
+                                                                                                        container);
+                     if (canonicalValue) {
+                        auto rawValue = canonicalValue.value();
+                        parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                        parsedValueOk = true;
+                     }
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::SingleUnitValue:
+                  // It's definitely a coding error if there is no unit specifier for a field declared to require one
+                  Q_ASSERT(std::holds_alternative<JsonSingleUnitSpecifier const *>(fieldDefinition.valueDecoder));
+                  Q_ASSERT(std::get              <JsonSingleUnitSpecifier const *>(fieldDefinition.valueDecoder));
+                  // JSON schema validation should have ensured that the field is actually one with subfields for value
+                  // and unit
+                  Q_ASSERT(container->is_object());
+                  {
+                     std::optional<double> value = readSingleUnitValue(fieldDefinition, container);
+                     qDebug() <<
+                        Q_FUNC_INFO << "Read:" << value << "for" << fieldDefinition.xPath << "/" <<
+                        fieldDefinition.propertyPath;
+                     if (value) {
+                        auto rawValue = *value;
+                        parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                        parsedValueOk = true;
+                     }
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::DateTimeOffset:
+                  Q_ASSERT(container->is_string());
+                  {
+                     QString value{container->get_string().c_str()};
+                     QDateTime rawValue = QDateTime::fromString(value, Qt::ISODate);
+                     parsedValueOk = rawValue.isValid();
+                     if (parsedValueOk) {
+                        parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                     } else {
+                        // The JSON schema validation doesn't guarantee the date is valid, just that it's the right
+                        // digit groupings.  So, we do need to handle cases such as 2022-13-13 which are the right
+                        // format but not valid dates.
+                        qWarning() <<
+                           Q_FUNC_INFO << "Ignoring " << this->m_recordDefinition.m_namedEntityClassName << " node " <<
+                           fieldDefinition.xPath << "=" << value << " as could not be parsed as ISO 8601 date";
+                     }
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::Date:
+               case JsonRecordDefinition::FieldType::DateOrDateTimeLocal:
+                  // In BeerJSON, DateType is a string matching this regexp:
+                  //   "\\d{4}-\\d{2}-\\d{2}|\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
+                  // This is One True Date Format™ (aka ISO 8601), which makes our life somewhat easier
+                  Q_ASSERT(container->is_string());
+                  {
+                     QString value{container->get_string().c_str()};
+                     QDate rawValue = QDate::fromString(value, Qt::ISODate);
+                     parsedValueOk = rawValue.isValid();
+                     if (parsedValueOk) {
+                        parsedValue = Optional::variantFromRaw(rawValue, propertyIsOptional);
+                     } else {
+                        // The JSON schema validation doesn't guarantee the date is valid, just that it's the right
+                        // digit groupings.  So, we do need to handle cases such as 2022-13-13 which are the right
+                        // format but not valid dates.
+                        qWarning() <<
+                           Q_FUNC_INFO << "Ignoring " << this->m_recordDefinition.m_namedEntityClassName << " node " <<
+                           fieldDefinition.xPath << "=" << value << " as could not be parsed as ISO 8601 date";
+                     }
+                  }
+                  break;
+
+               case JsonRecordDefinition::FieldType::RequiredConstant:
+                  //
+                  // This is a field that is required to be in the JSON, but whose value we don't need (and for which
+                  // we always write a constant value on output).  At the moment it's only needed for the VERSION tag
+                  // in BeerJSON.
+                  //
+                  // Note that, because we abuse the propertyName field to hold the default value (ie what we write
+                  // out), we can't carry on to normal processing below.  So jump straight to processing the next
+                  // node in the loop (via continue).
+                  //
+                  qDebug() <<
+                     Q_FUNC_INFO << "Skipping " << this->m_recordDefinition.m_namedEntityClassName << " node " <<
+                     fieldDefinition.xPath << "=" << *container << "(" << fieldDefinition.propertyPath.asXPath() <<
+                     ") as not useful";
+                  continue; // NB: _NOT_break here.  We want to jump straight to the next run through the for loop.
+
+               case JsonRecordDefinition::FieldType::FolderPath:
+                  Q_ASSERT(container->is_string());
+                  //
+                  // We don't put the folder path in the NamedParameterBundle, because it is relative to the folder we
+                  // are importing into, and that gets applied when we store the object in the database.  See comments
+                  // on SerializationRecord::m_folderSubPath and NamedEntityRecordBase::doSetFolderPath.
+                  //
+                  this->m_folderSubPath = QString{container->get_string().c_str()};
+                  // NB: _NOT_break here.  We already stored the value and we want to jump straight to the next run
+                  //     through the for loop.
+                  continue;
+
+               case JsonRecordDefinition::FieldType::LocalId:
+                  Q_ASSERT(container->is_string());
+                  {
+                     QString const value{container->get_string().c_str()};
+                     //
+                     // We shouldn't really ever have a blank local ID, and the dotBeer JSON schema forbids it.
+                     //
+                     // In cases where it is valid for there to be no local ID (eg no Style ID on a Recipe that has no
+                     // associated style), a program should simply not write the field at all.
+                     //
+                     // This constraint allows the schema to enforce which "foreign key" fields are mandatory (eg Hop
+                     // ID on a Hop addition to a Recipe) vs optional (eg Style ID on a Recipe).
+                     //
+                     // (In other cases, we will write a local ID even when it might not be required -- eg in a JSON
+                     // file containing Hop records, those records only _need_ a local ID if they are referred to
+                     // elsewhere in the same file -- eg in a Recipe record.  However, we always write the local ID for
+                     // them, as it keeps things simple, and the "unused" local IDs do not impede the file being read.)
+                     //
+                     // In any case, since the the schema should have enforced no blank local IDs, it's a programming
+                     // error if we somehow have an empty field here.
+                     //
+                     if (value.isEmpty()) {
+                        QString const errorMessage{
+                           QString{"Field %1, node %2 refers to empty Local ID"}.arg(
+                              *this->m_recordDefinition.m_namedEntityClassName
+                           ).arg(
+                              fieldDefinition.xPath.asXPath_c_str()
+                           )
+                        };
+                        qWarning() << Q_FUNC_INFO << errorMessage;
+                        userMessage << errorMessage;
+                        return false;
+                     }
+
+                     //
+                     // Per comments in JsonRecordDefinition.h, if there is no property path then this field is the
+                     // Local ID of the current object...
+                     //
+                     if (fieldDefinition.propertyPath.isNull()) {
+                        this->m_localId = value;
+                        // NB: _NOT_break here.  We already stored the value and we want to jump straight to the next
+                        //     run through the for loop.
+                        continue;
+                     }
+
+                     //
+                     // ...Otherwise, it should be the ID of something we've already read from the file.  (This is
+                     // another reason why it's important to read things in the right order -- eg Styles before Recipes.)
+                     //
+                     if (!this->m_localIdToDbId->contains(value)) {
+                        QString const errorMessage{
+                           QString{"Field %1, node %2 refers to unrecognised ID \"%3\""}.arg(
+                              *this->m_recordDefinition.m_namedEntityClassName
+                           ).arg(
+                              fieldDefinition.xPath.asXPath_c_str()
+                           ).arg(
+                              value
+                           )
+                        };
+                        qWarning() << Q_FUNC_INFO << errorMessage;
+                        userMessage << errorMessage;
+                        qDebug() << Q_FUNC_INFO << "Known Local IDs:" << this->m_localIdToDbId->keys();
+                        return false;
+                     }
+
+                     // It's a coding error if we didn't specify the class of the "foreign key" this field holds
+                     Q_ASSERT(std::holds_alternative<QMetaObject const *>(fieldDefinition.valueDecoder));
+                     QMetaObject const * const metaObject = std::get<QMetaObject const *>(fieldDefinition.valueDecoder);
+                     Q_ASSERT(metaObject);
+
+                     //
+                     // We never want, eg, to put a Hop ID in a Recipe::styleId field, so we have an extra sanity
+                     // check here.
+                     //
+                     JsonRecordDefinition::DbId const dbId = this->m_localIdToDbId->value(value);
+                     if (dbId.namedEntityClassName != metaObject->className() &&
+                         0 != std::strcmp(dbId.namedEntityClassName, metaObject->className())) {
+                        QString const errorMessage{
+                           QString{"Field %1, node %2: Local ID \"%3\" refers to %4 (#%5).  Expected ID of a %6"}.arg(
+                              *this->m_recordDefinition.m_namedEntityClassName
+                           ).arg(
+                              fieldDefinition.xPath.asXPath_c_str()
+                           ).arg(
+                              value
+                           ).arg(
+                              dbId.namedEntityClassName
+                           ).arg(
+                              dbId.id
+                           ).arg(
+                              metaObject->className()
+                           )
+                        };
+                        qWarning() << Q_FUNC_INFO << errorMessage;
+                        userMessage << errorMessage;
+                        return false;
+                     }
+
+                     parsedValue = dbId.id;
+                     parsedValueOk = true;
+                  }
+                  break;
+
+               // Don't need a default case.  Compiler should warn us if we didn't have a case for one of the
+               // JsonRecordDefinition::FieldType values.  This is one of the benefits of strongly-typed enums
+            }
+
+            //
+            // What we do if we couldn't parse the value depends.  If it was a value that we didn't need to set on
+            // the supplied Hop/Yeast/Recipe/Etc object, then we can just ignore the problem and carry on processing.
+            // But, if this was a field we were expecting to use, then it's a problem that we couldn't parse it and
+            // we should bail.
+            //
+            if (!parsedValueOk && !fieldDefinition.propertyPath.isNull()) {
+               userMessage <<
+                  "Could not parse " << this->m_recordDefinition.m_namedEntityClassName << " node " <<
+                  fieldDefinition.xPath << "=" << *container << " into " << fieldDefinition.propertyPath.asXPath();
+               return false;
+            }
+
+            //
+            // So we've either parsed the value OK or we don't need it (or both)
+            //
+            // If we do need it, we now store the value
+            //
+            if (!fieldDefinition.propertyPath.isNull()) {
+               // See comment in serialization/NullSentinel.h
+               if (Serialization::applyNullSentinelOnRead(fieldDefinition.nullSentinel,
+                                                          propertyIsOptional,
+                                                          parsedValue)) {
+                  qInfo() <<
+                     Q_FUNC_INFO << "Treating" << this->m_recordDefinition.m_namedEntityClassName << "node" <<
+                     fieldDefinition.xPath << "value" << parsedValue << "as \"not set\"";
+               }
+               this->m_namedParameterBundle.insert(fieldDefinition.propertyPath, parsedValue);
+            }
+         }
+      }
+   }
+
+   //
+   // For everything but the root record, we now construct a suitable object (Hop, Recipe, etc) from the
+   // NamedParameterBundle (which will be empty for the root record).
+   //
+   if (!this->m_namedParameterBundle.isEmpty()) {
+      this->constructNamedEntity();
+   }
+
+   //
+   // Per comment in SerializationRecord.h, we want to call the recursive function normaliseAndStoreInDb if and only if
+   // this is a top-level record -- so that Mashes are stored before Recipes, but MashSteps are stored after Mashes.
+   //
+   // We can't use the existence "containing entity" as a test because that will always be null here.  Eg MashSteps are
+   // always read in before we have constructed the containing Mash -- it's just that we want to store the Mash in the
+   // DB before we store the MashSteps in the DB.  Instead, we look at the containing record's NamedParameterBundle, as
+   // this will be empty for the root record and, courtesy of one assumption, non-empty for anything else.  The
+   // assumption is that a child record is never the first field, which is reasonable in practice because the first
+   // few fields of any top-level record are things such as name, type, folder path etc.
+   //
+   // Of course, we can only look at the containing record if there is one, which there won't be for the root record
+   // itself!
+   //
+   if (containingRecord && containingRecord->m_namedParameterBundle.isEmpty()) {
+      // At the top level, Succeeded and FoundDuplicate are both OK return values.  It's only Failed that indicates an
+      // error (rather than an info) message for the user in userMessage.
+      if (JsonRecord::ProcessingResult::Failed == this->normaliseAndStoreInDb(targetFolderPath,
+                                                                              nullptr, // == containing entity
+                                                                              userMessage,
+                                                                              stats)) {
+         return false;
+      }
+   }
+
+   return true;
+}
+
+[[nodiscard]] JsonRecord::ProcessingResult JsonRecord::normaliseAndStoreInDb(
+   QString const & targetFolderPath,
+   std::shared_ptr<NamedEntity> containingEntity,
+   QTextStream & userMessage,
+   ImportRecordCount & stats
+) {
+   //
+   // If this is a Recipe, we need to turn its calculations off until we have stored and linked all its child objects
+   // (ingredient additions, mash, boil, etc).  Otherwise, when storing the Recipe in the database reads its calculated
+   // properties (OG, IBU, etc), they get calculated -- and cached -- for a recipe with no ingredients.  (See comment
+   // in model/RecipeUtils.h.  This is the same as we do for BeerXML in XmlRecipeRecord::normaliseAndStoreInDb.)
+   //
+   std::optional<RecipeUtils::SuspendRecipeCalcs> suspendRecipeCalcs;
+   if (auto recipe = std::dynamic_pointer_cast<Recipe>(this->m_namedEntity); recipe) {
+      suspendRecipeCalcs.emplace(recipe);
+   }
+
+   // Most of the work is done in the base class
+   auto const processingResult = this->SerializationRecord::normaliseAndStoreInDb(targetFolderPath,
+                                                                                  containingEntity,
+                                                                                  userMessage,
+                                                                                  stats);
+
+   //
+   // If we read in and stored an outline Fermentable/Hop/etc object (because we could not find any existing
+   // object for which it is a match) then the newly-read in object is no longer an outline.
+   //
+   if (JsonRecord::ProcessingResult::Succeeded == processingResult &&
+      this->m_recordDefinition.isOutlineRecord) {
+      // It would be slightly more robust to set the property via Qt properties, but OTOH it's a coding error if
+      // we can't cast the newly created object to OutlineableNamedEntity.
+      auto createdFromOutline = static_pointer_cast<OutlineableNamedEntity>(this->m_namedEntity);
+      createdFromOutline->setOutline(false);
+   }
+
+   //
+   // For a recipe, we can't rely on the steps of ingredient additions in a file making sense (eg a JSON schema can't
+   // check that an addition to mash step 3 is in a recipe whose mash has at least 3 steps).  So, now the Recipe and all
+   // its contents are stored, we correct any that don't.  (Recipe::correctAdditionSteps logs a warning for each one.)
+   //
+   // (Since suspendRecipeCalcs is only set above for recipes, we use it to check here whether we are reading a recipe.)
+   //
+   if (JsonRecord::ProcessingResult::Succeeded == processingResult && suspendRecipeCalcs) {
+      std::static_pointer_cast<Recipe>(this->m_namedEntity)->correctAdditionSteps();
+   }
+
+   //
+   // If we read in something with a local ID then, now that we have stored it in the database, we can make a note of
+   // what DB ID the local ID maps to -- in case a subsequent record in the file has a reference to this local ID.
+   //
+   if (this->m_namedEntity && !this->m_localId.isEmpty()) {
+      if (this->m_localIdToDbId->contains(this->m_localId)) {
+         qWarning() <<
+            Q_FUNC_INFO << "Bad file structure.  Field" << this->m_recordDefinition.m_namedEntityClassName <<
+            "has Local ID" << this->m_localId << "which was already used in this file.  Second instance will be "
+            "ignored.";
+      } else {
+         JsonRecordDefinition::DbId const dbId{
+            *this->m_recordDefinition.m_namedEntityClassName,
+            this->m_namedEntity->key()
+         };
+         qDebug() << Q_FUNC_INFO << "Storing" << this->m_localId << "->" << dbId.namedEntityClassName << "#" << dbId.id;
+         this->m_localIdToDbId->insert(this->m_localId, dbId);
+      }
+   }
+
+   return processingResult;
+}
+
+[[nodiscard]] bool JsonRecord::loadChildRecord(QString const & targetFolderPath,
+                                               JsonRecordDefinition::FieldDefinition const & parentFieldDefinition,
+                                               JsonRecordDefinition const & childRecordDefinition,
+                                               boost::json::value & childRecordData,
+                                               QTextStream & userMessage,
+                                               ImportRecordCount & stats) {
+   qDebug() << Q_FUNC_INFO;
+   // TODO: We could move these 3 lines to the caller to save duplication with loadChildRecords
+   auto constructorWrapper = childRecordDefinition.jsonRecordConstructorWrapper;
+   this->m_childRecordSets.push_back(JsonRecord::ChildRecordSet{&parentFieldDefinition, {}});
+   JsonRecord::ChildRecordSet & childRecordSet = this->m_childRecordSets.back();
+
+   Q_ASSERT(childRecordData.is_object());
+   std::unique_ptr<JsonRecord> childRecord{
+      constructorWrapper(this->m_localIdToDbId, this->m_coding, childRecordData, childRecordDefinition)
+   };
+   if (!childRecord->load(targetFolderPath, this, userMessage, stats)) {
+      return false;
+   }
+   childRecordSet.records.push_back(std::move(childRecord));
+   return true;
+}
+
+[[nodiscard]] bool JsonRecord::loadChildRecords(QString const & targetFolderPath,
+                                                JsonRecordDefinition::FieldDefinition const & parentFieldDefinition,
+                                                JsonRecordDefinition const & childRecordDefinition,
+                                                boost::json::array & childRecordsData,
+                                                QTextStream & userMessage,
+                                                ImportRecordCount & stats) {
+   qDebug() << Q_FUNC_INFO;
+   //
+   // This is where we have a list of one or more substantive records of a particular type, which may be either at top
+   // level (eg hop_varieties) or inside another record that we are in the process of reading (eg hop_additions inside a
+   // recipe).  Either way, we need to loop though these "child" records and read each one in with an JsonRecord object
+   // of the relevant type.
+   //
+   auto constructorWrapper = childRecordDefinition.jsonRecordConstructorWrapper;
+   this->m_childRecordSets.push_back(JsonRecord::ChildRecordSet{&parentFieldDefinition, {}});
+   JsonRecord::ChildRecordSet & childRecordSet = this->m_childRecordSets.back();
+   for (auto & recordData : childRecordsData) {
+      // Iterating through an array gives us boost::json::value objects
+      // We assert that these are boost::json::object key:value containers (because we don't use arrays of other types)
+      Q_ASSERT(recordData.is_object());
+      std::unique_ptr<JsonRecord> childRecord{
+         constructorWrapper(this->m_localIdToDbId, this->m_coding, recordData, childRecordDefinition)
+      };
+      if (!childRecord->load(targetFolderPath, this, userMessage, stats)) {
+         return false;
+      }
+      childRecordSet.records.push_back(std::move(childRecord));
+   }
+
+   return true;
+}
+
+void JsonRecord::insertValue(QString const & baseFolderPath,
+                             JsonRecordDefinition::FieldDefinition const & fieldDefinition,
+                             boost::json::object & recordDataAsObject,
+                             std::string_view const & key,
+                             QVariant & value) {
+   qDebug() <<
+      Q_FUNC_INFO << "Writing" << std::string(key).c_str() << "=" << value << "(type" << fieldDefinition.type <<
+      ") for xPath" << fieldDefinition.xPath << ", path" << fieldDefinition.propertyPath;
+
+   //
+   // If the Qt property is an optional value, we need to unwrap it from std::optional and then, if it's null, skip
+   // writing it out.  Strong typing of std::optional makes this a bit more work here (but it helps us in other ways
+   // elsewhere).
+   //
+   // NB: propertyPath is not actually a property path when fieldType is RequiredConstant
+   //
+   //     propertyPath will be BtString::NULL_STR for a Local ID definition (but not for a Local ID reference).  In
+   //     practice, the fields on our objects associated with a Local ID are never optional because we already use -1
+   //     as a special value for "not set".
+   //
+   bool const propertyIsOptional {
+      (fieldDefinition.type == JsonRecordDefinition::FieldType::RequiredConstant ||
+       fieldDefinition.type == JsonRecordDefinition::FieldType::LocalId) ?
+         false : fieldDefinition.propertyPath.getTypeInfo(*this->m_recordDefinition.m_typeLookup).isOptional()
+   };
+
+   //
+   // For fields that are required in the JSON but optional in our model, if the property is not set, we write the
+   // null sentinel instead.  (See comment in serialization/NullSentinel.h.)  The simplest way to do this is to
+   // substitute it here, so the code below writes it out in the normal way.
+   //
+   if (fieldDefinition.nullSentinel && propertyIsOptional) {
+      bool valueReplaced = false;
+      switch (fieldDefinition.type) {
+         case JsonRecordDefinition::FieldType::Int :
+            valueReplaced = fieldDefinition.nullSentinel->replaceNullWithSentinel<int>(value);
+            break;
+         case JsonRecordDefinition::FieldType::UInt:
+            valueReplaced = fieldDefinition.nullSentinel->replaceNullWithSentinel<unsigned int>(value);
+            break;
+         case JsonRecordDefinition::FieldType::Double:
+         case JsonRecordDefinition::FieldType::MeasurementWithUnits:
+         case JsonRecordDefinition::FieldType::SingleUnitValue:
+            valueReplaced = fieldDefinition.nullSentinel->replaceNullWithSentinel<double>(value);
+            break;
+         default:
+            // It's a coding error to have a nullSentinel for other field types -- see JsonRecordDefinition.cpp
+            break;
+      }
+      if (valueReplaced) {
+         qInfo() << Q_FUNC_INFO << "Writing" << value << "for unset" << std::string(key).c_str();
+      }
+   }
+
+   switch(fieldDefinition.type) {
+      case JsonRecordDefinition::FieldType::Bool:
+         if (Optional::removeOptionalWrapperIfPresent<bool>(value, propertyIsOptional)) {
+            recordDataAsObject.emplace(key, value.toBool());
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::Int:
+         if (Optional::removeOptionalWrapperIfPresent<int>(value, propertyIsOptional)) {
+            recordDataAsObject.emplace(key, value.toInt());
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::UInt:
+         if (Optional::removeOptionalWrapperIfPresent<unsigned int>(value, propertyIsOptional)) {
+            recordDataAsObject.emplace(key, value.toUInt());
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::Double:
+         if (Optional::removeOptionalWrapperIfPresent<double>(value, propertyIsOptional) &&
+             okToWrite(this->m_recordDefinition, key, value.toDouble())) {
+            recordDataAsObject.emplace(key, value.toDouble());
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::String:
+         // We mostly don't bother making string fields optional because empty string will suffice for a string value
+         // that is not specified.  But we keep the logic consistent here anyway.
+         if (Optional::removeOptionalWrapperIfPresent<QString>(value, propertyIsOptional)) {
+
+            //
+            // You might think there's no benefit in writing out a field for which we don't have a value.  However, some
+            // string fields are required in the BeerJSON schema, which means a file won't validate if they are not
+            // present.  So, this is the default behaviour.  However, we sometimes need to override this (where an empty
+            // field should not be present) or do other validation.
+            //
+            // Note that valueDecoder is usually not set for String fields, but, if it is set, it's a coding error for
+            // it to be anything other than JsonRecordDefinition::StringOutputValidator.
+            //
+            std::optional<QString> valueAsQString = value.toString().trimmed();
+            if (!std::holds_alternative<std::monostate>(fieldDefinition.valueDecoder)) {
+               Q_ASSERT(std::holds_alternative<JsonRecordDefinition::StringOutputValidator>(fieldDefinition.valueDecoder));
+               auto const stringOutputValidator = std::get<JsonRecordDefinition::StringOutputValidator>(fieldDefinition.valueDecoder);
+               valueAsQString = stringOutputValidator(*valueAsQString);
+            }
+
+            if (valueAsQString) {
+               std::string valueAsStdString = valueAsQString->toStdString();
+               recordDataAsObject.emplace(key, valueAsStdString);
+            }
+
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::Enum:
+         // It's definitely a coding error if there is no stringToEnum mapping for a field declared as Enum!
+         Q_ASSERT(nullptr != std::get<EnumStringMapping const *>(fieldDefinition.valueDecoder));
+         // A non-optional enum should always be convertible to an int; and we always ensure that an optional one is
+         // returned as std::optional<int> when accessed via the Qt property system.
+         if (Optional::removeOptionalWrapperIfPresent<int>(value, propertyIsOptional)) {
+            auto const match =
+               std::get<EnumStringMapping const *>(fieldDefinition.valueDecoder)->enumAsIntToValue(value.toInt());
+            // It's a coding error if we couldn't find a string representation for the enum
+            Q_ASSERT(match);
+            recordDataAsObject.emplace(key, match->toStdString());
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::Record:
+      case JsonRecordDefinition::FieldType::ListOfRecords:
+         // This should be unreachable as JsonRecord::toJson dealt with these cases separately before calling this
+         // function, but having an case statement for it eliminates a compiler warning whilst still retaining the
+         // useful warning if we have ever omitted processing for another field type.
+         Q_UNREACHABLE();
+         break;
+
+      case JsonRecordDefinition::FieldType::MeasurementWithUnits:
+         //
+         // Ideally, value would be something we could convert to Measurement::Amount, which would give us units.
+         //
+         // In practice, it's usually the case that the NamedEntity property will just be a double and the rest of
+         // the code "knows" the corresponding Measurement::PhysicalQuantity and therefore the canonical
+         // Measurement::Unit that the measurement is in.  Eg if something is a Measurement::PhysicalQuantity::Mass,
+         // we always store it in Measurement::Units::kilograms.
+         //
+         // One day, maybe, we might perhaps change all "measurement" double properties to Measurement::Amount, but,
+         // in the meantime, we can get what we need here another way.  We have a list of possible units that could
+         // be used in BeerJSON to measure the amount we're looking at.  So we grab the first Measurement::Unit in
+         // the list, and, from that, we can trivially get the corresponding canonical Measurement::Unit which will,
+         // by the above-mentioned convention, be the right one for the NamedEntity property.
+         //
+         if (Optional::removeOptionalWrapperIfPresent<double>(value, propertyIsOptional) &&
+             okToWrite(this->m_recordDefinition, key, value.toDouble())) {
+            // It's definitely a coding error if there is no unit decoder mapping for a field declared to require
+            // one
+            Q_ASSERT(std::holds_alternative<JsonMeasureableUnitsMapping const *>(fieldDefinition.valueDecoder));
+            JsonMeasureableUnitsMapping const * const unitsMapping =
+               std::get<JsonMeasureableUnitsMapping const *>(fieldDefinition.valueDecoder);
+            Q_ASSERT(unitsMapping);
+            qDebug() << Q_FUNC_INFO << *unitsMapping;
+            Measurement::Unit const * const aUnit = unitsMapping->defaultUnit();
+            Measurement::Unit const & canonicalUnit = aUnit->getCanonical();
+            //
+            // A number of non-optional gravity properties (eg BrewLog::measuredOriginalGravity_sg, Style::ogMin) use
+            // 0.0 to mean "not set".  Since a specific gravity of 0 is physically meaningless (and is rejected by the
+            // dotBeer and BeerJSON schemas), we don't write it out.
+            //
+            if (canonicalUnit.getPhysicalQuantity() == Measurement::PhysicalQuantity::Gravity &&
+                value.toDouble() <= 0.0) {
+               qDebug() << Q_FUNC_INFO << "Not writing" << key.data() << "as gravity value" << value.toDouble() << "means unset";
+               break;
+            }
+            qDebug() << Q_FUNC_INFO << canonicalUnit;
+
+            // Now we found canonical units, we need to find the right string to represent them
+            auto unitName = unitsMapping->getNameForUnit(canonicalUnit);
+            qDebug() << Q_FUNC_INFO << std::string(unitName).c_str();
+            recordDataAsObject[key].emplace_object();
+            auto & measurementWithUnits = recordDataAsObject[key].as_object();
+            measurementWithUnits.emplace(unitsMapping->unitField.asKey(),  unitName);
+            measurementWithUnits.emplace(unitsMapping->valueField.asKey(), value.toDouble());
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::OneOfMeasurementsWithUnits:
+         // See comment in utils/MetaTypes.h for why we use Measurement::Amount rather than MassOrVolumeAmt.
+         if (Optional::removeOptionalWrapperIfPresent<Measurement::Amount>(value, propertyIsOptional)) {
+            // It's definitely a coding error if there is no list of unit decoder mappings for a field declared to
+            // require such
+            Q_ASSERT(
+               nullptr != std::get<ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder)
+            );
+
+            if (Measurement::Amount const amount = value.value<Measurement::Amount>();
+                okToWrite(this->m_recordDefinition, key, amount.quantity)) {
+               //
+               // Logic is similar to MeasurementWithUnits above, except we already have the canonical units
+               //
+               for (auto const unitsMapping :
+                    *std::get<ListOfJsonMeasureableUnitsMappings const *>(fieldDefinition.valueDecoder)) {
+                  //
+                  // Each JsonMeasureableUnitsMapping in the ListOfJsonMeasureableUnitsMappings holds units for a single
+                  // PhysicalQuantity -- ie we have a list of units for mass and another list of units for volume.
+                  //
+                  // So the first thing to do is to find the right JsonMeasureableUnitsMapping
+                  //
+                  if (unitsMapping->getPhysicalQuantity() == amount.unit->getPhysicalQuantity()) {
+                     // Now we have the right PhysicalQuantity, we just need the entry for our Units
+                     auto unitName = unitsMapping->getNameForUnit(*amount.unit);
+                     qDebug() << Q_FUNC_INFO << std::string(unitName).c_str();
+                     recordDataAsObject[key].emplace_object();
+                     auto & measurementWithUnits = recordDataAsObject[key].as_object();
+                     measurementWithUnits.emplace(unitsMapping->unitField.asKey(),  unitName);
+                     measurementWithUnits.emplace(unitsMapping->valueField.asKey(), amount.quantity);
+                     break;
+                  }
+               }
+            }
+
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::SingleUnitValue:
+         if (Optional::removeOptionalWrapperIfPresent<double>(value, propertyIsOptional) &&
+             okToWrite(this->m_recordDefinition, key, value.toDouble())) {
+            // It's definitely a coding error if there is no unit specifier for a field declared to require one
+            JsonSingleUnitSpecifier const * const jsonSingleUnitSpecifier =
+               std::get<JsonSingleUnitSpecifier const *>(fieldDefinition.valueDecoder);
+            Q_ASSERT(jsonSingleUnitSpecifier);
+            // There can be multiple valid (and equivalent) unit names, but we always use the first one for
+            // writing.  See json/JsonSingleUnitSpecifier.h for more detail.
+            recordDataAsObject[key].emplace_object();
+            auto & measurementWithUnits = recordDataAsObject[key].as_object();
+            measurementWithUnits.emplace(jsonSingleUnitSpecifier->unitField.asKey(),  jsonSingleUnitSpecifier->validUnits[0]);
+            measurementWithUnits.emplace(jsonSingleUnitSpecifier->valueField.asKey(), value.toDouble());
+         }
+         break;
+
+         if (Optional::removeOptionalWrapperIfPresent<QDate>(value, propertyIsOptional)) {
+            std::string formattedDate = value.toDate().toString(Qt::ISODate).toStdString();
+            recordDataAsObject.emplace(key, formattedDate);
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::DateTimeOffset:
+         // An invalid (ie unset) QDateTime would be written as an empty string, which is not a valid date-time, so we
+         // omit the field instead.
+         if (Optional::removeOptionalWrapperIfPresent<QDateTime>(value, propertyIsOptional) &&
+             value.toDateTime().isValid()) {
+            std::string formattedDate = value.toDateTime().toString(Qt::ISODate).toStdString();
+            recordDataAsObject.emplace(key, formattedDate);
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::Date:
+      case JsonRecordDefinition::FieldType::DateOrDateTimeLocal:
+         // Some non-optional date properties (eg BrewLog::fermentDate) use an invalid (null) QDate to mean "not
+         // set".  This would be written as an empty string, which is not a valid date, so we omit the field instead.
+         if (Optional::removeOptionalWrapperIfPresent<QDate>(value, propertyIsOptional) &&
+             value.toDate().isValid()) {
+            //
+            // DateOrDateTimeLocal corresponds to BeerJSON, DateType, which is a string matching this regexp:
+            //   "\\d{4}-\\d{2}-\\d{2}|\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
+            // This allows date or date plus time (but not timezone) in One True Date Format™ (aka ISO 8601).  For most
+            // fields (date recipe created, date brewed), we only want a date, not a timestamp, so we just write that.
+            //
+            std::string formattedDate = value.toDate().toString(Qt::ISODate).toStdString();
+            recordDataAsObject.emplace(key, formattedDate);
+         }
+         break;
+
+      case JsonRecordDefinition::FieldType::RequiredConstant:
+         //
+         // This is a field that is required to be in the JSON, but whose value we don't need, and for which we
+         // always write a constant value on output.  At the moment it's only needed for the VERSION tag in
+         // BeerJSON.
+         //
+         // Because it's such an edge case, we abuse the propertyPath field to hold the default value (ie what we
+         // write out).  This saves having an extra almost-never-used field on
+         // JsonRecordDefinition::FieldDefinition.
+         //
+         recordDataAsObject.emplace(key, fieldDefinition.propertyPath.asXPath().toStdString());
+         break;
+
+      case JsonRecordDefinition::FieldType::FolderPath:
+         // As with FieldType::String, we mostly don't bother making folder paths optional because empty string will
+         // suffice for an unspecified value.  But we keep the logic consistent here anyway.
+         if (Optional::removeOptionalWrapperIfPresent<QString>(value, propertyIsOptional)) {
+            //
+            // We need to remove baseFolderPath if it is a prefix of the folder path.  If the user right clicked on,
+            // say, folder /foo/bar and clicked "Export", then an element with folder path "/foo/bar" should be written
+            // with path "" (or "/") and an element with folder path "/foo/bar/hum/bug" should be written with path
+            // "hum/bug" (or "/hum/bug").
+            //
+            QString const fullFolderPath = value.toString().trimmed();
+            QString const subFolderPath = FolderCommon::subPath(baseFolderPath, fullFolderPath);
+            std::string const valueAsStdString = subFolderPath.toStdString();
+            recordDataAsObject.emplace(key, valueAsStdString);
+         }
+
+         break;
+
+      case JsonRecordDefinition::FieldType::LocalId:
+         //
+         // When we are _writing_ to a file, We construct a local ID as <Classname> + '_' + <Database ID>
+         //
+         // Per comments in JsonRecordDefinition.h, if there is no property path then <Database ID> is the ID of the
+         // current object, and <Classname> is its classname.  Eg, if we are writing a Style record, with database ID
+         // 123 then we create local ID "Style_123" for it.
+         //
+         // Otherwise, <Database ID> is the property value, and <Classname> comes from Value Decoder.  Eg, if we are
+         // writing the PropertyNames::Recipe::styleId field, then Value Decoder should be &Style::staticMetaObject.
+         // However, if value is negative, it means there is nothing to write -- eg if a Recipe does not have a style
+         // set then its styleId field will be -1.
+         //
+         // In both cases, JsonRecord::toJson() will already have put the correct <Database ID> in `value`, so we only
+         // have to handle the <Classname> bit here.
+         //
+         // There should be no circumstances where value is optional!
+         //
+         int const dbId {value.toInt()};
+         if (dbId >= 0) {
+            QString const className{
+               fieldDefinition.propertyPath.isNull() ?
+                  *this->m_recordDefinition.m_namedEntityClassName :
+                  std::get<QMetaObject const *>(fieldDefinition.valueDecoder)->className()
+            };
+
+            QString const localId = QString{"%1_%2"}.arg(className).arg(dbId);
+            std::string const localIdAsStdString = localId.toStdString();
+            recordDataAsObject.emplace(key, localIdAsStdString);
+         }
+         break;
+
+      // Don't need a default case as we want the compiler to warn us if we didn't cover everything explicitly above
+   }
+
+   return;
+}
+
+bool JsonRecord::listToJson(QString const & baseFolderPath,
+                            QList< std::shared_ptr<NamedEntity> > const & objectsToWrite,
+                            boost::json::array & outputArray,
+                            JsonCoding const & coding,
+                            JsonRecordDefinition const & recordDefinition) {
+
+   for (auto obj : objectsToWrite) {
+      // We need the containing entity to be a value of type object.  See comments on JsonRecord constructor in
+      // json/JsonRecord.h for why we have to take care about object vs value.
+      boost::json::value neJson(boost::json::object_kind); // Can't use braces on this constructor until Boost 1.81!
+
+      //
+      // When we're reading in a file, each JsonRecord needs a pointer to the same JsonRecordDefinition::LocalIdToDbId
+      // lookup (which is owned by JsonCoding::validateLoadAndStoreInDb()).  But when we're writing a file, this is not
+      // used (because we use a deterministic way of generating local IDs from database IDs), so we pass nullptr
+      // instead.
+      //
+      std::unique_ptr<JsonRecord> jsonRecord{
+         recordDefinition.makeRecord(nullptr, coding, neJson)
+      };
+      if (!jsonRecord->toJson(baseFolderPath, *obj)) {
+         return false;
+      }
+
+      // boost::json::array::push_back() appends a copy of its argument to the array, so we don't have to worry
+      // that neJson and jsonRecord are about to go out of scope
+      outputArray.push_back(neJson);
+   }
+   return true;
+}
+
+bool JsonRecord::toJson(QString const & baseFolderPath,
+                        NamedEntity const & namedEntityToExport) {
+   Q_ASSERT(this->m_recordData.is_object());
+   qDebug() <<
+      Q_FUNC_INFO << "Exporting JSON for" << namedEntityToExport.metaObject()->className() << "#" <<
+      namedEntityToExport.key();
+
+//   boost::json::object & recordDataAsObject = this->recordData.get_object();
+
+   // BeerJSON doesn't care about field order, so we don't either (though it would be relatively small additional work
+   // to control field order precisely).
+   //
+   // Note that it's a coding error if there are no fields in the record definition.  (This usually means a template
+   // specialisation was omitted in serialization/json/BeerJson.cpp.)
+   //
+   qDebug() <<
+      Q_FUNC_INFO << "Examining" << this->m_recordDefinition.fieldDefinitions.size() << "field definitions for" <<
+      this->m_recordDefinition.m_recordName;
+   Q_ASSERT(this->m_recordDefinition.fieldDefinitions.size() > 0);
+
+   for (auto & fieldDefinition : this->m_recordDefinition.fieldDefinitions) {
+      qDebug() << Q_FUNC_INFO <<
+         "fieldDefinition.xPath:" << fieldDefinition.xPath << ", fieldDefinition.propertyPath:" <<
+         fieldDefinition.propertyPath;
+      // With the exception of a defining local ID (where we need to construct a local ID as `<Classname>_<DB ID>`), if
+      // there isn't a property name that means this is not a field we support so there's nothing to write out.
+      if (JsonRecordDefinition::FieldType::LocalId != fieldDefinition.type &&
+         fieldDefinition.propertyPath.isNull()) {
+         // At the moment at least, we support all sub-record fields, so it's a coding error if one of them does not
+         // have a property name.
+         Q_ASSERT(JsonRecordDefinition::FieldType::ListOfRecords != fieldDefinition.type);
+         continue;
+      }
+
+      QVariant value;
+      if (JsonRecordDefinition::FieldType::RequiredConstant == fieldDefinition.type) {
+         // This is the case where we (ab)use the propertyPath field to hold the value of a required constant.
+         value = fieldDefinition.propertyPath.asXPath();
+      } else if (JsonRecordDefinition::FieldType::LocalId == fieldDefinition.type &&
+                 fieldDefinition.propertyPath.isNull()) {
+         // This is the case where we are writing a Local ID definition, so we need the primary key of the current
+         // object rather than a property value, hence why propertyPath is not set.  (At first glance, you might wonder
+         // why we don't just set propertyPath to PropertyNames::NamedEntity::key.  However, although this would work
+         // for writing files, we'd still need special case code for reading files.  It feels more consistent to handle
+         // Local ID definition as a special case on both read and write.)
+         value = namedEntityToExport.key();
+      } else {
+         value = fieldDefinition.propertyPath.getValue(namedEntityToExport);
+      }
+      Q_ASSERT(value.isValid());
+
+      //
+      // Normally, for each field, we are creating a key:value pair to insert in the current JSON object, where the key
+      // comes from fieldDefinition.xPath and the value comes from reading fieldDefinition.propertyPath.  However, there
+      // is special case where we are doing something different.
+      //
+      // If the current field has an empty XPath then it should be a JsonRecordDefinition::FieldType::Record that we are
+      // treating differently.  Instead of inserting the subrecord against a key, we insert all the fields (ie all the
+      // key:value pairs) of the subrecord into the current object.
+      //
+      // This is to handle cases such as hop_additions in BeerJSON, where each element of the hop_additions array
+      // contains fields both from a RecipeAdditionHop and from a Hop "contained" in that RecipeAdditionHop.
+      //
+      // See also comment on JsonRecordDefinition::FieldType::Record in serialization/json/JsonRecordDefinition.h
+      //
+      if (fieldDefinition.xPath.isEmpty()) {
+         // It's a coding error if we're trying to give something other than a Record an empty XPath
+         Q_ASSERT(JsonRecordDefinition::FieldType::Record == fieldDefinition.type);
+
+         qDebug() <<
+            Q_FUNC_INFO << "Empty XPath for property path" << fieldDefinition.propertyPath << "means put its fields in "
+            "this record";
+      }
+
+      //
+      // If we have a non-trivial XPath then we'll need to traverse through any sub-objects and sub-arrays (creating
+      // any that are not present) before arriving at the leaf object where we can set the value.
+      // JsonXPath::makePointerToLeaf() does all the heaving lifting here -- including correctly handling the case of an
+      // empty XPath (where it will just return empty string and leave valuePointer unmodified).  The only problem is
+      // when we have made a leaf object and end up not setting the value (eg because it is optional and unset).
+      // Having an empty leaf object in the document would give validation problems when we read in.  We solve this in
+      // JsonUtils::serialize() by skipping over the output of empty objects.
+      //
+      // Note that, although we start and end with a boost::json::object, we need to pass in the containing
+      // boost::json::value.  (If you have a boost::json::value, you can trivially get to its contained
+      // boost::json::object, but you can't do the reverse.  So passing the boost::json::value makes things easier in
+      // the function we're calling.)
+      //
+      boost::json::value * valuePointer = &this->m_recordData;
+//      qDebug() <<
+//         Q_FUNC_INFO << "valuePointer (" << valuePointer->kind() << ") pre move:" << *valuePointer;
+      auto key = fieldDefinition.xPath.makePointerToLeaf(&valuePointer);
+
+      // valuePointer should now be pointing at an object in which we can insert a key:value pair
+//      qDebug() <<
+//         Q_FUNC_INFO << "valuePointer (" << valuePointer->kind() << ") post move:" << *valuePointer;
+      Q_ASSERT(valuePointer->is_object());
+
+      if (JsonRecordDefinition::FieldType::Record        == fieldDefinition.type ||
+          JsonRecordDefinition::FieldType::ListOfRecords == fieldDefinition.type) {
+         // Comments from the relevant part of JsonRecord::load apply equally here
+         Q_ASSERT(std::holds_alternative<JsonRecordDefinition const *>(fieldDefinition.valueDecoder));
+         Q_ASSERT(std::get              <JsonRecordDefinition const *>(fieldDefinition.valueDecoder));
+         JsonRecordDefinition const & childRecordDefinition{
+            *std::get<JsonRecordDefinition const *>(fieldDefinition.valueDecoder)
+         };
+
+         if (JsonRecordDefinition::FieldType::Record == fieldDefinition.type) {
+            //
+            // Things get a bit tricky here because we want a pointer to the child entity (call it of class ChildEntity
+            // for the sake of argument) and moreover we need to be able to cast that pointer to a pointer to
+            // NamedEntity.  However, the pointer we get back could be any of the following forms:
+            //    ChildEntity *                               -- eg Equipment *
+            //    std::shared_ptr<ChildEntity>                -- eg std::shared_ptr<Mash>
+            //    std::optional<std::shared_ptr<ChildEntity>> -- eg std::optional<std::shared_ptr<Boil>>
+            //
+            // So we need to handle each possibility.
+            //
+            // First we assert that they type is _some_ sort of pointer, otherwise it's a coding error.
+            //
+            auto const & typeInfo = fieldDefinition.propertyPath.getTypeInfo(*this->m_recordDefinition.m_typeLookup);
+            Q_ASSERT(typeInfo.pointerType != TypeInfo::PointerType::NotPointer);
+            QVariant childNamedEntityVariant = fieldDefinition.propertyPath.getValue(namedEntityToExport);
+
+            // Normally leave this log statement commented out to avoid cluttering the logs
+            qDebug() <<
+               Q_FUNC_INFO << "childNamedEntityVariant:" << childNamedEntityVariant << ", childRecordDefinition:" <<
+               childRecordDefinition;
+
+            std::shared_ptr<NamedEntity> childNamedEntitySp{};
+            NamedEntity * childNamedEntity{};
+            if (typeInfo.pointerType == TypeInfo::PointerType::RawPointer) {
+               // For a raw pointer, the cast is simple as it can happen during the extraction from QVariant
+               childNamedEntity = childNamedEntityVariant.value<NamedEntity *>();
+            } else {
+               // Should be the only possibility left
+               Q_ASSERT(typeInfo.pointerType == TypeInfo::PointerType::SharedPointer);
+               // For a shared pointer it's a bit more tricky as we can't directly extract the uncast pointer from the
+               // QVariant, so we need a little help to apply std::static_pointer_cast.
+               Q_ASSERT(childRecordDefinition.m_upAndDownCasters.m_pointerDowncaster);
+               childNamedEntitySp =
+                  childRecordDefinition.m_upAndDownCasters.m_pointerDowncaster(childNamedEntityVariant);
+               childNamedEntity = childNamedEntitySp.get();
+            }
+
+            if (childNamedEntity) {
+               //
+               // We can share more code with the "empty XPath" case if we get any JSON object creation and insertion
+               // done first.
+               //
+               if (!fieldDefinition.xPath.isEmpty()) {
+                  boost::json::value newObject(boost::json::object_kind); // Can't use braces on this constructor until Boost 1.81!
+                  // boost::json::object::emplace copies the object being inserted, and returns a std::pair where first
+                  // is an iterator to the existing or inserted element, and second is true if the insertion took place
+                  // or false otherwise.
+                  auto emplaceResult = valuePointer->get_object().emplace(key, newObject);
+                  if (!emplaceResult.second) {
+                     // In the general case, we would expect failure to occur if the key is already present.  Here, it's
+                     // probably a coding error but, for now at least, we'll allow for the possibility that there was a
+                     // run-time error.
+                     qCritical() << Q_FUNC_INFO << "Error inserting new JSON object at key" << key.c_str();
+                     return false;
+                  }
+
+                  valuePointer = &emplaceResult.first->value();
+               }
+
+               //
+               // If we made a new sub-object in the JSON document (non-empty XPath), valuePointer is now pointing to
+               // it.
+               //
+               // Otherwise (empty XPath), valuePointer is still pointing to the "current" object.
+               //
+               qDebug() << Q_FUNC_INFO << "Creating JsonRecord for" << fieldDefinition.propertyPath;
+               std::unique_ptr<JsonRecord> subRecord{
+                  childRecordDefinition.makeRecord(this->m_localIdToDbId, this->m_coding, *valuePointer)
+               };
+               if (!subRecord->toJson(baseFolderPath, *childNamedEntity)) {
+                  return false;
+               }
+
+            } else {
+               qDebug() <<
+                  Q_FUNC_INFO << "No child NamedEntity for xPath" << fieldDefinition.xPath << "/ propertyPath:" <<
+                  fieldDefinition.propertyPath;
+            }
+         } else {
+            // JsonRecordDefinition::FieldType::ListOfRecords
+            boost::json::array outputArray;
+
+            //
+            // We have to be careful about how we get the list of objects we want to write out.  Accessing lists of
+            // objects via the Qt Property system, we'd get a bunch of different things inside the returned QVariant
+            // (QList<std::shared_ptr<BrewLog>>, QList<std::shared_ptr<RecipeAdditionHop>> etc) that have no common
+            // base class.  So we would not normally be able to easily extract from the QVariant in generic code here.
+            // However, we have a pointer to the relevant instantiation of NamedEntity::downcastListFromVariant, which
+            // will correctly convert the QVariant to QList<std::shared_ptr<NamedEntity>>.
+            //
+            qDebug() << Q_FUNC_INFO << "value: " << value;
+            Q_ASSERT(childRecordDefinition.m_upAndDownCasters.m_listDowncaster);
+            QList< std::shared_ptr<NamedEntity> > objectsToWrite =
+               childRecordDefinition.m_upAndDownCasters.m_listDowncaster(value);
+            qDebug() << Q_FUNC_INFO << "value (" << value << ") gives" << objectsToWrite.size() << "objects";
+
+            //
+            // In theory we could add some logic here to decide whether to write the array out if it is of zero length.
+            // However, we would need to know whether the field is optional or required in the JSON schema and we do not
+            // currently record this.  For now, we write out all arrays, even if they are empty, as some of them are
+            // required fields (eg recipe/ingredients/fermentable_additions in BeerJSON).
+            //
+            JsonRecord::listToJson(baseFolderPath, objectsToWrite, outputArray, this->m_coding, childRecordDefinition);
+            valuePointer->get_object().emplace(key, outputArray);
+         }
+
+      } else {
+         this->insertValue(baseFolderPath,
+                           fieldDefinition,
+                           valuePointer->get_object(),
+                           key,
+                           value);
+      }
+   }
+
+   return true;
+}

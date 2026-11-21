@@ -1,0 +1,180 @@
+#-----------------------------------------------------------------------------------------------------------------------
+# packaging/linux/flatpakManifest.in.yml is part of Brewtarget, and is copyright the following authors 2025-2026:
+#   • Matt Young <mfsy@yahoo.com>
+#
+# Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with this program.  If not, see
+# <http://www.gnu.org/licenses/>.
+#-----------------------------------------------------------------------------------------------------------------------
+
+#
+# This file is used by meson.build to export build system config into mbuild/flatpakManifest.yaml for `./bt flatpak` to
+# use
+#
+# Manifest files can be in either JSON or YAML format.  We use the latter as it's slightly more concise and shares
+# similar "meaningful indentation" rules to Python.
+#
+id:  @CONFIG_APPLICATION_ID@
+runtime: org.kde.Platform   # Using KDE here gives us Qt libraries
+runtime-version: "6.11"     # Should match runtimeVersion in scripts/btContainerApps.py
+sdk: org.kde.Sdk            # SDK needs to correspond with runtime
+command: @CONFIG_APPLICATION_NAME_LC@     # This is just the executable called to run the application -- in our case the
+                                          # application itself
+desktop-file-name-suffix: "@CONFIG_VERSION_STRING@"  # Optional, but useful, to show version number
+modules:
+   #
+   # In theory, we should install libxml2 here, but it seems like it's always already installed.
+   #
+   # We also don't install Blaze here, as it's included as a Git Submodule of our own code.  It suffices to compile and
+   # install it as an initial step of our build.  (See below.)
+   #
+   # TBD: We could probably take the same approach for LibBacktrace, rather than install it here.
+   #
+
+   - name: LibBacktrace
+     sources:
+       - type: git
+         url: https://github.com/ianlancetaylor/libbacktrace/
+         commit: 0b9b49cf4a2c9229fc052d6716e1528b2f23e91a  # 2026-09-03
+
+   - name: Boost
+     buildsystem: simple
+     # You can build Boost with CMake, but, for the moment at least, they still recommend using the B2 build system
+     # (see https://www.boost.org/doc/user-guide/getting-started.html#from-source).  Note that we minimise build time
+     # by only specifying the actual Boost libraries we want to build and install.
+     build-commands:
+       - ./bootstrap.sh --prefix=${FLATPAK_DEST} --with-python=python3 --with-libraries=container,json,stacktrace
+       #
+       # Note that we need to specify library-path so that libboost_stacktrace_backtrace can link against the
+       # LibBacktrace mentioned above.
+       #
+       # The '-d0' flag here is to "Suppress all informational messages" (per
+       # https://www.boost.org/latest/tools/build/doc/html/index.html#b2.overview.invocation.options).  If we don't do
+       # this, the default build several thousand lines of info, which can make it hard to scroll through GitHub Action
+       # output to get to any subsequent error.
+       #
+       - ./b2 -d0 --with-container --with-json --with-stacktrace boost.stacktrace.backtrace=on -j$FLATPAK_BUILDER_N_JOBS library-path=/app/lib install
+     sources:
+       - type: archive
+         url: https://archives.boost.io/release/1.89.0/source/boost_1_89_0.tar.gz
+         sha256: 9de758db755e8330a01d995b0a24d09798048400ac25c03fc5ea9be364b13c93
+         x-checker-data:
+           type: anitya
+           # Project ID comes from https://release-monitoring.org/project/6845/
+           project-id: 6845
+           stable-only: true
+           url-template: https://archives.boost.io/release/$version/source/boost_${major}_${minor}_${patch}.tar.gz
+     cleanup:
+       - /lib/cmake
+
+   - name: pandoc
+     buildsystem: simple
+     build-commands:
+       - cp -R . /app/
+     sources:
+       - type: archive
+         url: https://github.com/jgm/pandoc/releases/download/3.8.3/pandoc-3.8.3-linux-amd64.tar.gz
+         sha256: c224fab89f827d3623380ecb7c1078c163c769c849a14ac27e8d3bfbb914c9b4
+         only-arches:
+           - x86_64
+         x-checker-data:
+           type: json
+           url: https://api.github.com/repos/jgm/pandoc/releases/latest
+           version-query: .tag_name
+           url-query: .assets[] | select(.name=="pandoc-" + $version + "-linux-amd64.tar.gz") | .browser_download_url
+       # TODO: Need to do similar elsewhere to support building on ARM -- eg for Raspberry Pi
+       - type: archive
+         url: https://github.com/jgm/pandoc/releases/download/3.8.3/pandoc-3.8.3-linux-arm64.tar.gz
+         sha256: 166a5a37387eb10bd4c4f242a8109beef755ac1e8d4eb039c6b5ebd1d918d8d7
+         only-arches:
+           - aarch64
+         x-checker-data:
+           type: json
+           url: https://api.github.com/repos/jgm/pandoc/releases/latest
+           version-query: .tag_name
+           url-query: .assets[] | select(.name=="pandoc-" + $version + "-linux-arm64.tar.gz") | .browser_download_url
+
+#
+# To get the packaging working, we want to be able to tweak things, including build-related stuff such as
+# CMakeLists.txt and meson.build.  Using the dir option (see
+# https://docs.flatpak.org/en/latest/module-sources.html#directory-source) allows us to build from local
+# sources.  However, note that "when submitting an application to software stores like Flathub, dir should be
+# avoided altogether".  TODO: We probably need to add an option to build from latest (or specified) GitHub
+# release.
+#
+   - name: @CONFIG_APPLICATION_NAME_LC@
+     sources:
+       - type: dir
+         path: copyOfSource
+     #
+     # Although we're using meson, we can't put  `buildsystem: meson`  here, as we need to do a couple of extra steps.
+     # Those extra steps are done by the `bt` and related scripts in our main builds.
+     #
+     # For Blaze, as in `btDependencies.py`, we install both to a subdirectory (./third-party/blaze/build/dist) and
+     # system-wide.  For the latter, we need to provide the Flatpak system-wide install location (/app), as the CMake
+     # scripts won't be able to deduce it.  TBD: We could probably skip the subdirectory install and rely only on the
+     # system-wide one.
+     #
+     buildsystem: simple
+     build-commands:
+       - rm -rf ./third-party/blaze/build
+       - cmake -S ./third-party/blaze -B ./third-party/blaze/build -DCMAKE_BUILD_TYPE:STRING=Release -DBLAZE_TESTS:BOOL=ON -DBLAZE_BENCHMARK:BOOL=OFF -DBLAZE_CONTRIB:BOOL=ON -DBLAZE_DOCS:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_COMPILE_WARNING_AS_ERROR:BOOL=OFF -DBLAZE_TEST:BOOL=OFF
+       - cmake --build ./third-party/blaze/build --config Release --parallel 4
+       - cmake --install ./third-party/blaze/build --prefix ./third-party/blaze/build/dist --config Release --verbose --component sourcemeta_core
+       - cmake --install ./third-party/blaze/build --prefix ./third-party/blaze/build/dist --config Release --verbose --component sourcemeta_core_dev
+       - cmake --install ./third-party/blaze/build --prefix ./third-party/blaze/build/dist --config Release --verbose --component sourcemeta_blaze
+       - cmake --install ./third-party/blaze/build --prefix ./third-party/blaze/build/dist --config Release --verbose --component sourcemeta_blaze_dev
+       - cmake --install ./third-party/blaze/build --prefix /app --config Release --verbose --component sourcemeta_core
+       - cmake --install ./third-party/blaze/build --prefix /app --config Release --verbose --component sourcemeta_core_dev
+       - cmake --install ./third-party/blaze/build --prefix /app --config Release --verbose --component sourcemeta_blaze
+       - cmake --install ./third-party/blaze/build --prefix /app --config Release --verbose --component sourcemeta_blaze_dev
+       - mkdir mbuild
+       - meson setup --includedir /app/include --libdir /app/lib:/app/lib64 mbuild .
+       - meson compile -C mbuild --verbose
+       - meson install -C mbuild --destdir /app
+       # Telling Meson to install to /app gives us a tree of files under /app/usr/local that we now need to relocate
+       # (and in some cases rename) to the places flatpak expects them to be.  See
+       # https://docs.flatpak.org/en/latest/conventions.html for details of what is expected.
+       #
+       # Normally to do the tree merge here (ie moving the contents of /app/usr/local/ to /app/ without clobbering
+       # anything), we'd use rsync, but that's not available inside the flatpak environment, so we do it in two steps
+       # with cp and rm instead.
+       - cp -p --recursive --update=none --verbose /app/usr/local/. /app/.
+       - rm -r /app/usr/local/
+     builddir: true
+     build-options:
+       env:
+         CMAKE_INCLUDE_PATH: /app/include
+         BOOST_INCLUDEDIR:   /app/include
+         BOOST_LIBRARYDIR: /app/lib
+         BOOST_ROOT:       /app
+         LIBRARY_PATH:     /app/lib:/app/lib64
+         LD_LIBRARY_PATH:  /app/lib:/app/lib64
+         PKG_CONFIG_PATH:  /app/lib/pkgconfig:/app/lib64/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+
+#
+# This section defines what permissions the containerised environment for our app will have.
+#
+# TBD: We start by copying some example ones, but these could doubtless be fine-tuned at some point.
+#
+finish-args:
+   # X11 + XShm access
+   - --share=ipc
+   - --socket=fallback-x11
+   # Wayland access
+   - --socket=wayland
+   # GPU acceleration if needed
+   - --device=dri
+   # Needs to talk to the network:
+   - --share=network
+   # Needs to save files locally
+   - --filesystem=xdg-documents
+   # Prevent a (harmless) warning (Gtk-Message: Failed to load module "xapp-gtk3-module")
+   - --unset-env=GTK_MODULES

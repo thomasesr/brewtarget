@@ -1,0 +1,418 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * tools/TimerMainDialog.cpp is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Aidan Roberts <aidanr67@gmail.com>
+ *   • Brian Rower <brian.rower@gmail.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
+#include "tools/TimerMainDialog.h"
+
+#include <QEvent>
+#include <QMessageBox>
+#include <QToolTip>
+
+#include "BoilTimer.h"
+#include "MainWindow.h"
+#include "measurement/Unit.h"
+#include "measurement/Measurement.h"
+#include "model/Boil.h"
+#include "model/RecipeAdditionHop.h"
+#include "TimerListDialog.h"
+#include "TimerWidget.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_TimerMainDialog.cpp"
+#endif
+
+TimerMainDialog::TimerMainDialog(MainWindow* parent) :
+   QDialog{parent},
+   m_mainWindow{parent},
+   m_timers{new QList<TimerWidget*>()},
+   m_stopped{false},
+   m_limitAlarmRing{false},
+   m_alarmLimit{5} {
+   this->setupUi(this);
+
+   this->m_boilTimer = new BoilTimer(this);
+   this->m_boilTimer->setBoilTime(setBoilTimeBox->value() * 60); //default 60mins
+   this->m_timerWindow = new TimerListDialog(this, m_timers);
+   this->updateTime();
+
+   //Connections
+   connect(m_boilTimer, &BoilTimer::BoilTimeChanged, this, &TimerMainDialog::decrementTimer);
+   connect(m_boilTimer, &BoilTimer::timesUp, this, &TimerMainDialog::timesUp);
+
+   this->retranslateUi(this);
+   return;
+}
+
+TimerMainDialog::~TimerMainDialog() = default;
+
+void TimerMainDialog::on_addTimerButton_clicked() {
+   this->createTimer();
+   return;
+}
+
+TimerWidget* TimerMainDialog::createNewTimer() {
+   TimerWidget* newTimer = new TimerWidget(this, m_boilTimer);
+   m_timers->append(newTimer);
+   newTimer->setAlarmLimits(m_limitAlarmRing, m_alarmLimit);
+   return newTimer;
+}
+
+void TimerMainDialog::createTimer() {
+   TimerWidget* newTimer = createNewTimer();
+   sortTimers();
+   showTimers();
+   m_timerWindow->setTimerVisible(newTimer);
+   return;
+}
+
+void TimerMainDialog::createTimer(QString n) {
+   TimerWidget* newTimer = createNewTimer();
+   newTimer->setNote(n);
+   sortTimers();
+   showTimers();
+   m_timerWindow->setTimerVisible(newTimer);
+   return;
+}
+
+void TimerMainDialog::createTimer(QString n, int t) {
+   TimerWidget* newTimer = createNewTimer();
+   newTimer->setNote(n);
+   newTimer->setTime(t);
+   sortTimers();
+   showTimers();
+   m_timerWindow->setTimerVisible(newTimer);
+   return;
+}
+
+void TimerMainDialog::showTimers() {
+   if (m_timers->isEmpty()) {
+      if (!m_timerWindow->isHidden()) {
+         m_timerWindow->hide();
+      }
+   } else {
+      int x = m_timerWindow->x();
+      int y = m_timerWindow->y();
+      this->m_timerWindow->setAttribute(Qt::WA_DeleteOnClose);
+      this->m_timerWindow->close();
+
+      this->m_timerWindow = new TimerListDialog(this, m_timers);
+      this->m_timerWindow->move(x, y);
+      this->m_timerWindow->show();
+   }
+   return;
+}
+
+void TimerMainDialog::on_startButton_clicked() {
+   if (!this->m_boilTimer->isStarted()) {
+      this->m_boilTimer->startTimer();
+   }
+   return;
+}
+
+void TimerMainDialog::on_stopButton_clicked() {
+   if (this->m_boilTimer->isStarted()) {
+      this->m_boilTimer->stopTimer();
+   }
+   return;
+}
+
+void TimerMainDialog::on_resetButton_clicked() {
+   this->resetTimers();
+   return;
+}
+
+void TimerMainDialog::resetTimers() {
+   // Reset boil time to defined boil time
+   this->m_boilTimer->setBoilTime(setBoilTimeBox->value() * 60);
+   this->updateTime();
+   // Reset all children timers
+   if (!this->m_timers->isEmpty()) {
+      for (TimerWidget* t : *this->m_timers) {
+         t->reset();
+      }
+   }
+   return;
+}
+
+void TimerMainDialog::on_setBoilTimeBox_valueChanged(int t) {
+   this->m_boilTimer->setBoilTime(t * 60);
+   this->resetTimers();
+   this->m_stopped = false;
+   return;
+}
+
+void TimerMainDialog::decrementTimer() {
+   // Main timer uses boilTimer which decrements then triggers this function, so there is nothing to do here but show
+   // the change.
+   this->updateTime();
+   return;
+}
+
+void TimerMainDialog::updateTime() {
+   unsigned int time = m_boilTimer->getTime();
+   this->timeLCD->display(timeToString(time));
+   return;
+}
+
+QString TimerMainDialog::timeToString(int const t) {
+   if (t == 0) {
+      return "00:00:00";
+   }
+
+   unsigned int seconds = t;
+   unsigned int minutes = 0;
+   unsigned int hours = 0;
+   if (t > 59) {
+      seconds = t%60;
+      minutes = t/60;
+      if (minutes > 59) {
+         hours = minutes/60;
+         minutes = minutes%60;
+      }
+   }
+   QString secStr, minStr, hourStr;
+   if (seconds < 10) {
+       secStr = "0" + QString::number(seconds);
+   } else {
+       secStr = QString::number(seconds);
+   }
+   if (minutes <10) {
+       minStr = "0" + QString::number(minutes);
+   } else {
+       minStr = QString::number(minutes);
+   }
+   if (hours < 10) {
+       hourStr = "0" + QString::number(hours);
+   } else {
+       hourStr = QString::number(hours);
+   }
+   return hourStr + ":" + minStr + ":" + secStr;
+}
+
+
+void TimerMainDialog::on_hideButton_clicked() {
+   this->hideTimers();
+   return;
+}
+
+void TimerMainDialog::hideTimers() {
+   if (!this->m_timerWindow->isHidden()) {
+      this->m_timerWindow->hide();
+   }
+   return;
+}
+
+void TimerMainDialog::on_showButton_clicked() {
+   if (!this->m_timers->isEmpty()) {
+      if (this->m_timerWindow->isHidden()) {
+         this->m_timerWindow->show();
+      }
+   } else {
+      QMessageBox::warning(this, tr("No Timers"), tr("There are currently no timers to show."));
+   }
+   return;
+}
+
+void TimerMainDialog::timesUp() {
+   // If there are no knockout timers generate a timer for this
+   if (!this->m_stopped) {
+      bool isKnockOutTimer = false;
+      QString const note = tr("KNOCKOUT");
+      for (TimerWidget* t : *this->m_timers) {
+         if (t->getTime() == 0) {
+            isKnockOutTimer = true;
+            t->setNote(note); //update existing timers note
+         }
+      }
+      if (!isKnockOutTimer) {
+         this->createTimer(note);
+      }
+      m_stopped = true;
+   }
+   return;
+}
+
+void TimerMainDialog::on_loadRecipesButton_clicked() {
+   // Load current recipes
+   if (!this->m_timers->isEmpty()) {
+      QMessageBox mb;
+      mb.setText(tr("Active Timers"));
+      mb.setInformativeText(tr("You currently have active timers, would you like to replace them or add to them?"));
+      QAbstractButton *replace =  mb.addButton(tr("Replace"), QMessageBox::YesRole);
+      QAbstractButton *add = mb.addButton(tr("Add"), QMessageBox::NoRole);
+      add->setFocus();
+      mb.setIcon(QMessageBox::Question);
+      mb.exec();
+      if (mb.clickedButton() == replace) {
+         removeAllTimers();
+      }
+   }
+   Recipe * recipe = m_mainWindow->currentRecipe();
+   this->setBoilTimeBox->setValue(recipe->boil() ? recipe->boil()->boilTime_mins() : 0.0);
+   bool timerFound = false;
+   int duplicates = 0;
+   int timersGenerated = 0;
+   for (auto hopAddition : recipe->hopAdditions()) {
+      //
+      // Timers count down to the end of the boil, so they only make sense for additions during the boil proper.  First
+      // wort hops are added before the boil starts, and post-boil (eg whirlpool) additions are made after it ends --
+      // and, for the latter, addAtTime_mins is time before the end of the post-boil step, not time before the end of
+      // the boil.  See https://github.com/Brewtarget/brewtarget/issues/1167
+      //
+      if (hopAddition->stage() == RecipeAddition::Stage::Boil && !hopAddition->isFirstWort()) {
+         auto const timing = recipe->boilAdditionTiming(*hopAddition);
+         if (timing.postBoil) {
+            continue;
+         }
+         QString note = tr("%1 of %2").arg(Measurement::displayAmount(hopAddition->amount())).arg(hopAddition->hop()->name());
+         int const addAtTime_seconds = timing.boilProper_mins * 60;
+         for (TimerWidget * td : *this->m_timers) {
+            if (td->getTime() == addAtTime_seconds) {
+               if (!td->getNote().contains(note, Qt::CaseInsensitive)) {
+                  td->setNote(note); // append note to existing timer
+               } else {
+                  ++duplicates;
+               }
+               timerFound = true;
+            }
+         }
+         if (!timerFound) {
+            createTimer(note, addAtTime_seconds);
+            ++timersGenerated;
+         }
+         timerFound = false;
+      }
+   }
+
+   if (duplicates > 0) {
+      QString timerText;
+      if (duplicates == 1) {
+         timerText = tr("%1 hop addition is already timed and has been ignored.").arg(duplicates);
+      } else {
+         timerText = tr("%1 hop additions are already timed and have been ignored.").arg(duplicates);
+      }
+
+      QMessageBox::warning(this, tr("Duplicate Timers Ignored"), timerText, QMessageBox::Ok);
+   }
+   if (timersGenerated == 0 && duplicates == 0) {
+      QMessageBox::warning(this,
+                           tr("No Addition Timers"),
+                           tr("There are no boil addition, no timers generated."),
+                           QMessageBox::Ok);
+   }
+   return;
+}
+
+void TimerMainDialog::on_cancelButton_clicked() {
+   this->removeAllTimers();
+   return;
+}
+
+void TimerMainDialog::removeAllTimers() {
+   qDeleteAll(*this->m_timers);
+   this->m_timers->clear();
+   this->m_timerWindow->close();
+   return;
+}
+
+void TimerMainDialog::removeTimer(TimerWidget *t) {
+   for (int i = 0; i < this->m_timers->count(); i++) {
+      if (this->m_timers->at(i) == t) {
+         delete(this->m_timers->at(i));
+         this->m_timers->removeAt(i);
+      }
+   }
+   this->showTimers();
+   return;
+}
+
+void TimerMainDialog::reject() {
+   // Escape resets MainTimer if timer has completed
+   if (m_boilTimer->isCompleted()) {
+      m_boilTimer->stopTimer();
+      removeAllTimers();
+      resetTimers();
+      this->hide();
+   } else {
+      this->hide();
+   }
+   return;
+}
+
+void TimerMainDialog::on_limitRingTimeCheckBox_clicked() {
+   if (limitRingTimeCheckBox->isChecked()) {
+      m_limitAlarmRing = true;
+      limitRingTimeSpinBox->setEnabled(true);
+   }
+   if (!limitRingTimeCheckBox->isChecked()) {
+      m_limitAlarmRing = false;
+      limitRingTimeSpinBox->setEnabled(false);
+   }
+   this->setRingLimits();
+   return;
+}
+
+void TimerMainDialog::on_limitRingTimeSpinBox_valueChanged(int const limit) {
+   this->m_alarmLimit = limit;
+   this->setRingLimits();
+   return;
+}
+
+void TimerMainDialog::setRingLimits() {
+   for (TimerWidget * tt : *this->m_timers) {
+      tt->setAlarmLimits(m_limitAlarmRing, m_alarmLimit);
+   }
+   return;
+}
+
+unsigned int TimerMainDialog::getAlarmLimit() {
+   return m_alarmLimit;
+}
+
+void TimerMainDialog::setTimerVisible(TimerWidget *t) {
+   m_timerWindow->setTimerVisible(t);
+   return;
+}
+
+void TimerMainDialog::sortTimers() {
+   if (!this->m_timers->isEmpty()) {
+      QList<TimerWidget*>* sortedTimers = new QList<TimerWidget*>;
+      TimerWidget* biggest = this->m_timers->front();
+      while (!this->m_timers->isEmpty()) {
+         for (TimerWidget* t : *this->m_timers) {
+            if (t->getTime() > biggest->getTime()) {
+               biggest = t;
+            }
+         }
+         sortedTimers->append(biggest);
+         this->m_timers->removeOne(biggest);
+         if (!this->m_timers->isEmpty()) {
+            biggest = this->m_timers->front();
+         }
+      }
+      this->m_timers = sortedTimers;
+   }
+   return;
+}
+
+void TimerMainDialog::changeEvent(QEvent * event) {
+   if (event->type() == QEvent::LanguageChange) {
+      this->retranslateUi(this);
+   }
+   this->QDialog::changeEvent(event);
+   return;
+}

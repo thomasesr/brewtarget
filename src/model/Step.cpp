@@ -1,0 +1,114 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * model/Step.cpp is part of Brewtarget, and is copyright the following authors 2023-2025:
+ *   • Matt Young <mfsy@yahoo.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌*/
+#include "model/Step.h"
+
+#include "measurement/PhysicalConstants.h"
+#include "model/NamedParameterBundle.h"
+#include "utils/AutoCompare.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_Step.cpp"
+#endif
+
+QString Step::localisedName() { return tr("Step"); }
+QString Step::localisedName_description    () { return tr("Description"    ); }
+QString Step::localisedName_endAcidity_pH  () { return tr("End Acidity"    ); }
+QString Step::localisedName_endTemp_c      () { return tr("End Temperature"); }
+QString Step::localisedName_startAcidity_pH() { return tr("Start Acidity"  ); }
+
+bool Step::compareWith(NamedEntity const & other, QList<BtStringConst const *> * propertiesThatDiffer) const {
+   // Base class (NamedEntity) will have ensured this cast is valid
+   Step const & rhs = static_cast<Step const &>(other);
+   // Base class will already have ensured names are equal
+   return (
+      AUTO_PROPERTY_COMPARE(this, rhs, m_endTemp_c      , PropertyNames::Step::endTemp_c      , propertiesThatDiffer) &&
+      AUTO_PROPERTY_COMPARE(this, rhs, m_description    , PropertyNames::Step::description    , propertiesThatDiffer) &&
+      AUTO_PROPERTY_COMPARE(this, rhs, m_startAcidity_pH, PropertyNames::Step::startAcidity_pH, propertiesThatDiffer) &&
+      AUTO_PROPERTY_COMPARE(this, rhs, m_endAcidity_pH  , PropertyNames::Step::endAcidity_pH  , propertiesThatDiffer)
+   );
+}
+
+TypeLookup const Step::typeLookup {
+   "Step",
+   {
+      PROPERTY_TYPE_LOOKUP_ENTRY(Step,   endTemp_c    , m_endTemp_c      , Measurement::PhysicalQuantity::Temperature, DisplayInfo::Precision{1}),
+      // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+      PROPERTY_TYPE_LOOKUP_ENTRY(Step, description    , m_description    ,           NonPhysicalQuantity::String     ),
+      PROPERTY_TYPE_LOOKUP_ENTRY(Step, startAcidity_pH, m_startAcidity_pH, Measurement::PhysicalQuantity::Acidity    , DisplayInfo::Precision{1}),
+      PROPERTY_TYPE_LOOKUP_ENTRY(Step,   endAcidity_pH, m_endAcidity_pH  , Measurement::PhysicalQuantity::Acidity    , DisplayInfo::Precision{1}),
+
+   },
+   // Parent class lookup
+   {&NamedEntity::typeLookup}
+};
+
+//==================================================== CONSTRUCTORS ====================================================
+Step::Step(QString name) :
+   NamedEntity      {name},
+   m_endTemp_c      {std::nullopt},
+   // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+   m_description    {""          },
+   m_startAcidity_pH{std::nullopt},
+   m_endAcidity_pH  {std::nullopt} {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Step::Step(NamedParameterBundle const & namedParameterBundle) :
+   NamedEntity      (namedParameterBundle),
+   SET_REGULAR_FROM_NPB (m_endTemp_c      , namedParameterBundle, PropertyNames::Step::  endTemp_c    , std::nullopt),
+   // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+   SET_REGULAR_FROM_NPB (m_description    , namedParameterBundle, PropertyNames::Step::description    , ""),
+   SET_REGULAR_FROM_NPB (m_startAcidity_pH, namedParameterBundle, PropertyNames::Step::startAcidity_pH, std::nullopt),
+   SET_REGULAR_FROM_NPB (m_endAcidity_pH  , namedParameterBundle, PropertyNames::Step::  endAcidity_pH, std::nullopt) {
+
+   // Note that we cannot call this->setStepTime_mins() or this->setStepTime_days() here, as these are virtual functions
+   // which are not callable until our child class constructor is run.  Therefore handling of
+   // PropertyNames::Step::stepTime_mins and PropertyNames::Step::stepTime_days is done in StepBase
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Step::Step(Step const & other) :
+   NamedEntity      {other},
+   m_endTemp_c      {other.m_endTemp_c      },
+   // ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+   m_description    {other.m_description    },
+   m_startAcidity_pH{other.m_startAcidity_pH},
+   m_endAcidity_pH  {other.m_endAcidity_pH  } {
+
+   CONSTRUCTOR_END
+   return;
+}
+
+Step::~Step() = default;
+
+//============================================= "GETTER" MEMBER FUNCTIONS ==============================================
+std::optional<double> Step::endTemp_c      () const { return this->m_endTemp_c      ; }
+// ⮜⮜⮜ All below added for BeerJSON support ⮞⮞⮞
+QString               Step::description    () const { return this->m_description    ; }
+std::optional<double> Step::startAcidity_pH() const { return this->m_startAcidity_pH; }
+std::optional<double> Step::endAcidity_pH  () const { return this->m_endAcidity_pH  ; }
+
+//============================================= "SETTER" MEMBER FUNCTIONS ==============================================
+void Step::setEndTemp_c      (std::optional<double> const   val) { SET_AND_NOTIFY(PropertyNames::Step::endTemp_c      , this->m_endTemp_c      , this->enforceMin(val, "end temp" , PhysicalConstants::absoluteZero)); return; }
+// ⮜⮜⮜ All below added for Besupport ⮞⮞⮞
+void Step::setDescription    (QString               const & val) { SET_AND_NOTIFY(PropertyNames::Step::description    , this->m_description    , val); return; }
+void Step::setStartAcidity_pH(std::optional<double> const   val) { SET_AND_NOTIFY(PropertyNames::Step::startAcidity_pH, this->m_startAcidity_pH, val); return; }
+void Step::setEndAcidity_pH  (std::optional<double> const   val) { SET_AND_NOTIFY(PropertyNames::Step::endAcidity_pH  , this->m_endAcidity_pH  , val); return; }

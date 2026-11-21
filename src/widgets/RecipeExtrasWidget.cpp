@@ -1,0 +1,299 @@
+/*╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ * widgets/RecipeExtrasWidget.cpp is part of Brewtarget, and is copyright the following authors 2009-2026:
+ *   • Brian Rower <brian.rower@gmail.com>
+ *   • Matt Young <mfsy@yahoo.com>
+ *   • Mik Firestone <mikfire@gmail.com>
+ *   • Peter Buelow <goballstate@gmail.com>
+ *   • Philip Greggory Lee <rocketman768@gmail.com>
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Brewtarget is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ =====================================================================================================================*/
+#include "widgets/RecipeExtrasWidget.h"
+
+#include <QDate>
+#include <QEvent>
+#include <QWidget>
+#include <QDebug>
+
+#include "measurement/Measurement.h"
+#include "measurement/Unit.h"
+#include "model/Recipe.h"
+#include "undoRedo/Undoable.h"
+#include "utils/OptionalHelpers.h"
+
+#ifdef MANUALLY_INCLUDE_MOC
+   // Explicitly doing this include reduces potential problems with AUTOMOC when compiling with CMake
+   #include "moc_RecipeExtrasWidget.cpp"
+#endif
+
+RecipeExtrasWidget::RecipeExtrasWidget(QWidget* parent) :
+   QWidget(parent),
+   m_recipeObs(nullptr),
+   ratingChanged{false} {
+
+   this->setupUi(this);
+
+   // Note that label_age is QLabel, not SmartLabel, as we're "forcing" the measurement to be in days rather than
+   // allowing the usual units of PhysicalQuantity::Time
+   SMART_FIELD_INIT(RecipeExtrasWidget, label_brewer     , lineEdit_brewer     , Recipe, PropertyNames::Recipe::brewer              );
+   SMART_FIELD_INIT(RecipeExtrasWidget, label_assistantBrewer , lineEdit_assistantBrewer , Recipe, PropertyNames::Recipe::assistantBrewer          );
+   SMART_FIELD_INIT(RecipeExtrasWidget, label_age        , lineEdit_age        , Recipe, PropertyNames::Recipe::age_days         , 0);
+   SMART_FIELD_INIT(RecipeExtrasWidget, label_ageTemp    , lineEdit_ageTemp    , Recipe, PropertyNames::Recipe::ageTemp_c        , 1);
+   SMART_FIELD_INIT(RecipeExtrasWidget, label_carbVols   , lineEdit_carbVols   , Recipe, PropertyNames::Recipe::carbonation_vols    );
+   SMART_FIELD_INIT(RecipeExtrasWidget, label_acidity    , lineEdit_acidity    , Recipe, PropertyNames::Recipe::beerAcidity_pH         , 1);
+   SMART_FIELD_INIT(RecipeExtrasWidget, label_attenuation, lineEdit_attenuation, Recipe, PropertyNames::Recipe::apparentAttenuation_pct, 1);
+
+   BT_COMBO_BOX_INIT_EXT(MainWindow, comboBox_wortClarity, Measurement::Qualitative::wortClarity, Recipe, wortClarity);
+
+   // See comment in model/Recipe.cpp about things we measure in days.  If we switched them from Dimensionless to Time,
+   // we would need something like this
+   // this->lineEdit_age       ->getSmartField().setForcedRelativeScale(Measurement::UnitSystem::RelativeScale::Large);
+   connect(this->comboBox_wortClarity    , QOverload<int>::of(&QComboBox::activated)  , this, &RecipeExtrasWidget::updateRecipeWortClarity);
+   connect(this->lineEdit_age            , &SmartLineEdit::textModified               , this, &RecipeExtrasWidget::updateAge          );
+   connect(this->lineEdit_ageTemp        , &SmartLineEdit::textModified               , this, &RecipeExtrasWidget::updateAgeTemp      );
+   connect(this->lineEdit_assistantBrewer, &SmartLineEdit::textModified               , this, &RecipeExtrasWidget::updateBrewerAsst   );
+   connect(this->lineEdit_brewer         , &SmartLineEdit::textModified               , this, &RecipeExtrasWidget::updateBrewer       );
+   connect(this->lineEdit_carbVols       , &SmartLineEdit::textModified               , this, &RecipeExtrasWidget::updateCarbonation  );
+   connect(this->spinBox_tasteRating     , QOverload<int>::of(&QSpinBox::valueChanged), this, &RecipeExtrasWidget::changeRatings      );
+   connect(this->spinBox_tasteRating     , &QAbstractSpinBox::editingFinished         , this, &RecipeExtrasWidget::updateTasteRating  );
+   connect(this->dateEdit_date           , &BtOptionalDateEdit::optionalDateChanged   , this, &RecipeExtrasWidget::updateDate         );
+   connect(this->btTextEdit_notes        , &BtTextEdit::textModified                  , this, &RecipeExtrasWidget::updateNotes        );
+   connect(this->btTextEdit_tasteNotes   , &BtTextEdit::textModified                  , this, &RecipeExtrasWidget::updateTasteNotes   );
+   connect(this->lineEdit_acidity        , &SmartLineEdit::textModified               , this, &RecipeExtrasWidget::updateAcidity      );
+   connect(this->lineEdit_attenuation    , &SmartLineEdit::textModified               , this, &RecipeExtrasWidget::updateAttenuation  );
+
+   return;
+}
+
+RecipeExtrasWidget::~RecipeExtrasWidget() = default;
+
+void RecipeExtrasWidget::setRecipe(Recipe* rec) {
+   if (this->m_recipeObs) {
+      disconnect(this->m_recipeObs, nullptr, this, nullptr);
+   }
+
+   if (rec) {
+      this->m_recipeObs = rec;
+      connect(this->m_recipeObs, &NamedEntity::changed, this, &RecipeExtrasWidget::changed);
+      this->showChanges();
+   }
+   return;
+}
+
+void RecipeExtrasWidget::updateBrewer() {
+   if (!this->m_recipeObs) { return; }
+   Undoable::doOrRedoUpdate(*m_recipeObs, TYPE_INFO(Recipe, brewer), lineEdit_brewer->text(), tr("Change Brewer"));
+   return;
+}
+
+void RecipeExtrasWidget::updateBrewerAsst() {
+   if (!this->m_recipeObs) { return; }
+   if ( lineEdit_assistantBrewer->isModified() ) {
+      Undoable::doOrRedoUpdate(*m_recipeObs, TYPE_INFO(Recipe, assistantBrewer), lineEdit_assistantBrewer->text(), tr("Change Assistant Brewer"));
+   }
+   return;
+}
+
+void RecipeExtrasWidget::updateRecipeWortClarity() {
+   if (!this->m_recipeObs) {
+      return;
+   }
+
+   Undoable::doOrRedoUpdate(*this->m_recipeObs,
+                            TYPE_INFO(Recipe, wortClarity),
+                            this->comboBox_wortClarity->getAsVariant(),
+                            tr("Change Expected Wort Clarity"));
+   return;
+}
+
+void RecipeExtrasWidget::changeRatings([[maybe_unused]] int rating) { ratingChanged = true; }
+
+void RecipeExtrasWidget::updateTasteRating() {
+   if (!this->m_recipeObs) { return; }
+   if ( ratingChanged )
+   {
+      Undoable::doOrRedoUpdate(*m_recipeObs, TYPE_INFO(Recipe, tasteRating), spinBox_tasteRating->value(), tr("Change Taste Rating"));
+      ratingChanged = false;
+   }
+   return;
+}
+
+void RecipeExtrasWidget::updateAge() {
+   if (!this->m_recipeObs) { return; }
+   Undoable::doOrRedoUpdate(*m_recipeObs, TYPE_INFO(Recipe, age_days), lineEdit_age->getNonOptValue<double>(), tr("Change Age"));
+}
+
+void RecipeExtrasWidget::updateAgeTemp() {
+   if (!this->m_recipeObs) { return; }
+   Undoable::doOrRedoUpdate(*m_recipeObs, TYPE_INFO(Recipe, ageTemp_c), lineEdit_ageTemp->getNonOptCanonicalQty(), tr("Change Age Temp"));
+}
+
+void RecipeExtrasWidget::updateDate(std::optional<QDate> const date) {
+   if (!this->m_recipeObs) { return; }
+
+   qDebug() << Q_FUNC_INFO;
+   if (date) {
+      qDebug() << Q_FUNC_INFO << "date" << *date;
+   }
+   auto dateFromWidget = this->dateEdit_date->optionalDate();
+   if (dateFromWidget) {
+      qDebug() << Q_FUNC_INFO << "dateFromWidget" << *dateFromWidget;
+   }
+
+   // We have to be careful to avoid going round in circles here.  When we call
+   // this->dateEdit_date->setOptionalDate(this->recipe->date()) to show the Recipe date in the UI, that will generate a
+   // signal that ends up calling this function to say the date on the Recipe has changed, which it hasn't.
+   if (date != this->m_recipeObs->date()) {
+      qDebug() << Q_FUNC_INFO;
+      Undoable::doOrRedoUpdate(*m_recipeObs, TYPE_INFO(Recipe, date), date, tr("Change Date"));
+   }
+   return;
+}
+
+void RecipeExtrasWidget::updateCarbonation() {
+   if (!this->m_recipeObs) { return; }
+
+   Undoable::doOrRedoUpdate(*m_recipeObs,
+                            TYPE_INFO(Recipe, carbonation_vols),
+                            lineEdit_carbVols->getOptCanonicalQty(),
+                            tr("Change Carbonation"));
+   return;
+}
+
+void RecipeExtrasWidget::updateTasteNotes() {
+   if (!this->m_recipeObs) { return; }
+
+   Undoable::doOrRedoUpdate(*m_recipeObs,
+                                         TYPE_INFO(Recipe, tasteNotes),
+                                         btTextEdit_tasteNotes->toPlainText(),
+                                         tr("Edit Taste Notes"));
+}
+
+void RecipeExtrasWidget::updateNotes() {
+   if (!this->m_recipeObs) { return; }
+
+   Undoable::doOrRedoUpdate(*m_recipeObs,
+                                         TYPE_INFO(Recipe, notes),
+                                         btTextEdit_notes->toPlainText(),
+                                         tr("Edit Notes"));
+}
+
+void RecipeExtrasWidget::updateAcidity() {
+   if (!this->m_recipeObs) { return; }
+
+   Undoable::doOrRedoUpdate(*m_recipeObs,
+                                         TYPE_INFO(Recipe, beerAcidity_pH),
+                                         lineEdit_acidity->getOptCanonicalQty(),
+                                         tr("Change pH"));
+}
+
+void RecipeExtrasWidget::updateAttenuation() {
+   if (!this->m_recipeObs) { return; }
+
+   Undoable::doOrRedoUpdate(*m_recipeObs,
+                                         TYPE_INFO(Recipe, apparentAttenuation_pct),
+                                         lineEdit_attenuation->getOptValue<double>(),
+                                         tr("Change Apparent Attenuation"));
+}
+
+void RecipeExtrasWidget::changed(QMetaProperty prop, QVariant /*val*/) {
+   if (sender() != this->m_recipeObs) {
+      return;
+   }
+
+   this->showChanges(&prop);
+   return;
+}
+
+void RecipeExtrasWidget::saveAll() {
+   //recObs->disableNotification();
+
+   this->updateBrewer();
+   this->updateBrewerAsst();
+   this->updateTasteRating();
+   this->updateAge();
+   this->updateAgeTemp();
+   this->updateDate(dateEdit_date->optionalDate());
+   this->updateCarbonation();
+   this->updateTasteNotes();
+   this->updateNotes();
+   this->updateAcidity();
+   this->updateAttenuation();
+
+   //recObs->reenableNotification();
+   //recObs->forceNotify();
+
+   this->hide();
+   return;
+}
+
+void RecipeExtrasWidget::showChanges(QMetaProperty* prop) {
+   if (!this->m_recipeObs) { return; }
+
+   bool updateAll = true;
+   QString propName;
+   if (prop) {
+      updateAll = false;
+      propName = prop->name();
+   }
+
+   // I think we may be going circular here? LineEdit says "change is made",
+   // which signals the widget which changes the db, which signals "change is
+   // made" which signals the widget, which changes the LineEdit, which says
+   // "change is made" ... rinse, lather, repeat
+   // Unlike other editors, this one needs to read from recipe when it gets an
+   // updateAll
+   if (updateAll || propName == PropertyNames::Recipe::age_days        ) { this->lineEdit_age         ->setQuantity (m_recipeObs->age_days        ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::ageTemp_c       ) { this->lineEdit_ageTemp     ->setQuantity (m_recipeObs->ageTemp_c       ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::assistantBrewer ) { this->lineEdit_assistantBrewer->setText  (m_recipeObs->assistantBrewer ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::brewer          ) { this->lineEdit_brewer      ->setText     (m_recipeObs->brewer          ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::carbonation_vols) { this->lineEdit_carbVols    ->setQuantity (m_recipeObs->carbonation_vols()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::wortClarity     ) { this->comboBox_wortClarity ->setValue    (m_recipeObs->wortClarity     ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::tasteRating     ) { this->spinBox_tasteRating  ->setValue       (m_recipeObs->tasteRating  ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::date            ) { this->dateEdit_date        ->setOptionalDate(m_recipeObs->date         ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::notes           ) { this->btTextEdit_notes     ->setPlainText(m_recipeObs->notes           ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::tasteNotes      ) { this->btTextEdit_tasteNotes->setPlainText(m_recipeObs->tasteNotes      ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::beerAcidity_pH  ) { this->lineEdit_acidity     ->setQuantity (m_recipeObs->beerAcidity_pH  ()); if (!updateAll) { return; } }
+   if (updateAll || propName == PropertyNames::Recipe::apparentAttenuation_pct) { this->lineEdit_attenuation->setQuantity (m_recipeObs->apparentAttenuation_pct()); if (!updateAll) { return; } }
+
+   this->updateCalories();
+
+   return;
+}
+
+void RecipeExtrasWidget::updateCalories() {
+   bool const volumesAreMetric{
+      Measurement::getDisplayUnitSystem(Measurement::PhysicalQuantity::Volume) == Measurement::UnitSystems::volume_Metric
+   };
+   this->label_caloriesPer->setText(
+   volumesAreMetric ? tr("Calories/33cl") : tr("Calories/12oz")
+   );
+   this->label_calories->setText(
+      QString("%1").arg(volumesAreMetric ? this->m_recipeObs->caloriesPer33cl() : this->m_recipeObs->caloriesPerUs12oz(),
+                        0,
+                        'f',
+                        0)
+   );
+   return;
+}
+
+void RecipeExtrasWidget::changeEvent(QEvent * event) {
+   if (event->type() == QEvent::LanguageChange) {
+      this->retranslateUi(this);
+      // The generated retranslateUi resets the calories labels to their .ui file text
+      if (this->m_recipeObs) {
+         this->updateCalories();
+      }
+   }
+   this->QWidget::changeEvent(event);
+   return;
+}
