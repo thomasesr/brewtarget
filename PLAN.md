@@ -374,8 +374,14 @@ content.
   `TABLE_FOLDER_DEFN` macro, and emits 39 tables / 530 columns / 55 foreign keys at
   schema version 23. Output is byte-reproducible; CI diffs a fresh run against the
   committed file.
-- [ ] **Phase 1 step 2** — the Rust DDL renderer in `bt-schema`, driven by
-  `schema/v23.json`.
+- [x] **Phase 1 step 2** — the Rust DDL renderer in `bt-schema`, driven by
+  `schema/v23.json`. Reproduces the C++ output format exactly (including its `", \n"`
+  field separator), renders all three dialects, and takes the target namespace as a
+  parameter per §3.3. Verified by executing the generated DDL against in-memory
+  SQLite: 39 tables with exactly the expected columns, and all 55 foreign keys
+  resolving to their targets. A PostgreSQL equivalent runs inside a rolled-back
+  transaction when `BT_TEST_POSTGRES_URL` is set.
+- [ ] **Phase 2** — port migrations 1 → 23.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only

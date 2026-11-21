@@ -21,3 +21,11 @@
 //! See `PLAN.md` for the phase this crate belongs to.
 
 #![forbid(unsafe_code)]
+
+pub mod ddl;
+pub mod dialect;
+pub mod model;
+
+pub use ddl::{DdlError, add_foreign_keys, create_all, create_table};
+pub use dialect::{Dialect, InvalidNamespace, Namespace};
+pub use model::{Column, ForeignKey, PrimaryKey, Schema, Table, schema};
