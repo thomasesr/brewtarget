@@ -35,7 +35,7 @@ import re
 import sys
 
 # Python puts this script's directory on sys.path, so this resolves to tools/cpputil.py.
-from cpputil import match_balanced, split_top_level, strip_comments
+from cpputil import match_balanced, scan, split_top_level, strip_comments, strip_preprocessor_conditionals
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SRC = REPO / "src" / "database" / "DatabaseSchemaHelper.cpp"
@@ -50,6 +50,10 @@ NATIVE_TYPE_MARKERS = {
     "bool": "{{type:bool}}",
     "QDate": "{{type:date}}",
 }
+# `getSqlToAddColumnAsForeignKey` returns a template with its own %1..%4, so its arguments travel
+# with the marker rather than being substituted here.
+TEMPLATE_MARKERS = {"{{add_foreign_key}}"}
+
 CALL_MARKERS = {
     "getDbNativePrimaryKeyDeclaration": "{{primary_key}}",
     "getSqlToAddColumnAsForeignKey": "{{add_foreign_key}}",
@@ -92,34 +96,34 @@ def qstring_arg(template: str, values: list[str]) -> str:
 
 def split_arguments(text: str) -> list[str]:
     """Split a call's argument list on top-level commas."""
-    args, depth, current = [], 0, ""
-    for char in text:
-        if char in "([{<":
+    args, depth, cuts = [], 0, []
+    for index, char in scan(text):
+        if char in "([{":
             depth += 1
-        elif char in ")]}>":
+        elif char in ")]}":
             depth -= 1
-        if char == "," and depth == 0:
-            args.append(current)
-            current = ""
-        else:
-            current += char
-    if current.strip():
-        args.append(current)
-    return [a.strip() for a in args]
+        elif char == "," and depth == 0:
+            cuts.append(index)
+    previous = 0
+    for cut in cuts:
+        args.append(text[previous:cut])
+        previous = cut + 1
+    args.append(text[previous:])
+    return [a.strip() for a in args if a.strip()]
 
 
 def evaluate(expr: str, bindings: dict[str, str]) -> str:
     """Evaluate a C++ expression that yields a SQL string."""
     expr = expr.strip()
 
-    native = re.fullmatch(r"db\.getDbNativeTypeName<\s*([\w ]+?)\s*>\(\)", expr)
+    native = re.fullmatch(r"db\.getDbNativeTypeName<\s*([\w ]+?)\s*>\s*\(\)", expr)
     if native:
         key = native.group(1)
         if key not in NATIVE_TYPE_MARKERS:
             raise Unsupported(f"unknown native type {key!r}")
         return NATIVE_TYPE_MARKERS[key]
 
-    call = re.fullmatch(r"db\.(\w+)\(\)", expr)
+    call = re.fullmatch(r"db\.(\w+)\s*\(\)", expr)
     if call:
         if call.group(1) not in CALL_MARKERS:
             raise Unsupported(f"unknown Database call {call.group(1)}")
@@ -137,9 +141,21 @@ def evaluate(expr: str, bindings: dict[str, str]) -> str:
                 raise Unsupported(f"trailing {rest!r}")
             args_open, args_close = match_balanced(rest, len(".arg") - 1, "(", ")")
             values = [evaluate(a, bindings) for a in split_arguments(rest[args_open + 1 : args_close - 1])]
-            result = qstring_arg(result, values)
+            if result in TEMPLATE_MARKERS:
+                result = f"{result[:-2]}:{'|'.join(values)}}}}}"
+            else:
+                result = qstring_arg(result, values)
             rest = rest[args_close:].strip()
         return result
+
+    ternary = split_ternary(expr)
+    if ternary:
+        condition, when_true, when_false = ternary
+        return evaluate(when_true if test(condition, bindings) else when_false, bindings)
+
+    unwrapped = re.fullmatch(r"QString\{(.*)\}", expr, re.S)
+    if unwrapped:
+        return evaluate(unwrapped.group(1), bindings)
 
     literal = string_literals(expr)
     if literal is not None:
@@ -148,10 +164,37 @@ def evaluate(expr: str, bindings: dict[str, str]) -> str:
     raise Unsupported(f"cannot evaluate {expr!r}")
 
 
+def split_ternary(expr: str) -> tuple[str, str, str] | None:
+    """Split `cond ? a : b` on its top-level operators, ignoring any inside string literals."""
+    depth, question, colon = 0, None, None
+    for index, char in scan(expr):
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif depth == 0 and char == "?" and question is None:
+            question = index
+        elif depth == 0 and char == ":" and question is not None and not expr.startswith("::", index):
+            colon = index
+            break
+    if question is None or colon is None:
+        return None
+    return expr[:question], expr[question + 1 : colon], expr[colon + 1 :]
+
+
+def test(condition: str, bindings: dict[str, str]) -> bool:
+    """Evaluate an equality comparison between two string expressions."""
+    for operator, outcome in (("==", True), ("!=", False)):
+        left, found, right = condition.partition(operator)
+        if found:
+            return (evaluate(left.strip(), bindings) == evaluate(right.strip(), bindings)) == outcome
+    raise Unsupported(f"condition {condition!r}")
+
+
 def evaluate_bind(expr: str, bindings: dict[str, str]):
     """Evaluate a `QVariant(...)` bind value to JSON."""
     expr = expr.strip()
-    inner = re.fullmatch(r"QVariant\((.*)\)", expr, re.S)
+    inner = re.fullmatch(r"QVariant[({](.*)[)}]", expr, re.S)
     if not inner:
         raise Unsupported(f"bind value {expr!r}")
     value = inner.group(1).strip()
@@ -163,6 +206,8 @@ def evaluate_bind(expr: str, bindings: dict[str, str]):
         return float(value)
     if value == "DatabaseSchemaHelper::latestVersion":
         return {"$ref": "latest_version"}
+    if value == "QDate::currentDate()":
+        return {"$ref": "current_date"}
     return evaluate(value, bindings)
 
 
@@ -185,54 +230,239 @@ def parse_entry(entry: str, bindings: dict[str, str]) -> dict:
 
 # ── Function body walking ─────────────────────────────────────────────────────────────────────
 
-VECTOR_DECL_RE = re.compile(r"QVector<QueryAndParameters>\s*(?:const\s+)?(\w+)\s*(?=\{)")
-FOREACH_RE = re.compile(r"\s*(?:char const \*|auto)\s*(?:const\s+)?(\w+)\s*:\s*\{(.*)\}\s*$", re.S)
+VECTOR_DECL_RE = re.compile(r"^QVector<QueryAndParameters>\s*(?:const\s+)?(\w+)\s*(?=[{]|$)")
+STRING_DECL_RE = re.compile(r"^QString\s*(?:const\s+)?(\w+)\s*(?:=\s*(.*)|\{(.*)\})?$", re.S)
+STREAM_DECL_RE = re.compile(r"^QTextStream\s+(\w+)\s*\(\s*&(\w+)\s*\)$", re.S)
+LIST_DECL_RE = re.compile(r"^std::vector<char const \*>\s*(?:const\s+)?(\w+)\s*\{(.*)\}$", re.S)
+FOREACH_RE = re.compile(r"\s*(?:char const \*|auto)\s*(?:const\s+)?(\w+)\s*:\s*(.*?)\s*$", re.S)
+
+IGNORED_STATEMENT_RE = re.compile(r"^(qDebug|qInfo|qWarning|qCritical)\b")
 
 
-def collect(text: str, bindings: dict[str, str], vector: str) -> list[dict]:
-    """Walk statements, gathering the queries they append."""
-    statements, i = [], 0
-    while i < len(text):
-        remainder = text[i:]
-        i += len(remainder) - len(remainder.lstrip())
-        if i >= len(text):
-            break
-
-        if text.startswith(f"{vector}.append(", i):
-            start, end = match_balanced(text, i, "(", ")")
-            statements.append(parse_entry(text[start + 1 : end - 1].strip(), bindings))
-            i = text.index(";", end) + 1
-        elif re.match(r"for\s*\(", text[i:]):
-            header_start, header_end = match_balanced(text, i, "(", ")")
-            header = FOREACH_RE.fullmatch(text[header_start + 1 : header_end - 1])
-            if not header:
-                raise Unsupported(f"loop {text[header_start:header_end]!r}")
-            variable = header.group(1)
-            items = [string_literals(item) for item in split_arguments(header.group(2))]
-            if any(item is None for item in items):
-                raise Unsupported("loop over non-literals")
+def top_level_pieces(text: str):
+    """Yield each top-level statement, and each `for (...) {...}` as a (header, body) pair."""
+    depth, start, consumed = 0, 0, -1
+    for index, char in scan(text):
+        if index < consumed:
+            continue
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif char == ";" and depth == 0:
+            piece = text[start:index].strip()
+            if piece:
+                yield ("statement", piece)
+            start = index + 1
+        elif depth == 0 and char == "f" and re.match(r"for\s*\(", text[index:]):
+            before = text[start:index].strip()
+            if before:
+                yield ("statement", before)
+            header_start, header_end = match_balanced(text, index, "(", ")")
             body_start, body_end = match_balanced(text, header_end)
-            for item in items:
-                statements += collect(text[body_start + 1 : body_end - 1], {**bindings, variable: item}, vector)
-            i = body_end
-        elif text.startswith("return", i):
-            break
+            yield ("loop", (text[header_start + 1 : header_end - 1], text[body_start + 1 : body_end - 1]))
+            start = consumed = body_end
+    tail = text[start:].strip()
+    if tail:
+        yield ("statement", tail)
+
+
+class Walker:
+    """Interprets the handful of C++ constructs the `migrate_to_*` functions are written in."""
+
+    def __init__(self) -> None:
+        self.values: dict[str, str] = {}  # QString locals
+        self.lists: dict[str, list[str]] = {}  # std::vector<char const *> locals
+        self.streams: dict[str, str] = {}  # QTextStream name -> the QString it writes into
+        self.vector: str | None = None  # the QVector<QueryAndParameters> being built
+        self.statements: list[dict] = []
+
+    def env(self, bindings: dict[str, str]) -> dict[str, str]:
+        return {**self.values, **bindings}
+
+    def run(self, text: str, bindings: dict[str, str]) -> None:
+        for kind, piece in top_level_pieces(text):
+            if kind == "loop":
+                self.loop(*piece, bindings)
+            else:
+                self.statement(piece, bindings)
+
+    def loop(self, header: str, body: str, bindings: dict[str, str]) -> None:
+        match = FOREACH_RE.fullmatch(header)
+        if not match:
+            raise Unsupported(f"loop header {header!r}")
+        variable, source = match.group(1), match.group(2).strip()
+        if source in self.lists:
+            items = self.lists[source]
+        elif source.startswith("{"):
+            items = [string_literals(item) for item in split_arguments(source[1:-1])]
         else:
-            raise Unsupported(f"statement {text[i : i + 70]!r}")
-    return statements
+            raise Unsupported(f"loop over {source!r}")
+        if any(item is None for item in items):
+            raise Unsupported("loop over non-literals")
+        for item in items:
+            self.run(body, {**bindings, variable: item})
+
+    def statement(self, text: str, bindings: dict[str, str]) -> None:
+        if text.startswith("return") or IGNORED_STATEMENT_RE.match(text):
+            return
+
+        vector = VECTOR_DECL_RE.match(text)
+        if vector:
+            self.vector = vector.group(1)
+            if vector.end() >= len(text.rstrip()):
+                return  # declared empty; the queries are appended below
+            start, end = match_balanced(text, vector.end())
+            self.statements += [parse_entry(e, self.env(bindings)) for e in split_top_level(text[start + 1 : end - 1])]
+            return
+
+        if self.vector and text.startswith(f"{self.vector}.append("):
+            start, end = match_balanced(text, len(self.vector) + len(".append") - 1, "(", ")")
+            self.statements.append(parse_entry(text[start + 1 : end - 1].strip(), self.env(bindings)))
+            return
+
+        stream = STREAM_DECL_RE.match(text)
+        if stream:
+            self.streams[stream.group(1)] = stream.group(2)
+            return
+
+        if "<<" in text and text.split("<<", 1)[0].strip() in self.streams:
+            name, _, rest = text.partition("<<")
+            target = self.streams[name.strip()]
+            self.values[target] = self.values.get(target, "") + "".join(
+                evaluate(part, self.env(bindings)) for part in split_shifts(rest)
+            )
+            return
+
+        table = LIST_DECL_RE.match(text)
+        if table:
+            items = [string_literals(item) for item in split_arguments(table.group(2))]
+            if any(item is None for item in items):
+                raise Unsupported(f"non-literal entry in {table.group(1)}")
+            self.lists[table.group(1)] = items
+            return
+
+        string = STRING_DECL_RE.match(text)
+        if string:
+            initialiser = string.group(2) or string.group(3)
+            self.values[string.group(1)] = evaluate(initialiser, self.env(bindings)) if initialiser else ""
+            return
+
+        raise Unsupported(f"statement {text[:70]!r}")
+
+
+def split_shifts(text: str) -> list[str]:
+    """Split the right-hand side of a `QTextStream <<` chain on its top-level `<<` operators."""
+    depth, cuts, skip = 0, [], -1
+    for index, char in scan(text):
+        if index == skip:
+            continue
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif char == "<" and depth == 0 and text.startswith("<<", index):
+            cuts.append(index)
+            skip = index + 1
+    parts, previous = [], 0
+    for cut in cuts:
+        parts.append(text[previous:cut])
+        previous = cut + 2
+    parts.append(text[previous:])
+    return [p.strip() for p in parts if p.strip()]
 
 
 def extract_function(body: str) -> list[dict]:
     """Extract the statements one `migrate_to_*` function runs."""
-    declaration = VECTOR_DECL_RE.search(body)
-    if not declaration:
+    walker = Walker()
+    walker.run(body, {})
+    if walker.vector is None and not walker.statements:
         if re.search(r"return\s+true\s*;", body) and "executeSqlQueries" not in body:
             return []  # a deliberate no-op migration
         raise Unsupported("no QVector<QueryAndParameters> declaration")
-    vector = declaration.group(1)
-    start, end = match_balanced(body, declaration.end())
-    statements = [parse_entry(entry, {}) for entry in split_top_level(body[start + 1 : end - 1])]
+    return walker.statements
 
-    tail = body[body.index(";", end) + 1 :]
-    statements += collect(tail, {}, vector)
-    return statements
+
+# ── Entry point ───────────────────────────────────────────────────────────────────────────────
+
+FUNCTION_RE = re.compile(r"^\s*bool (migrate_to_\w+)\(", re.M)
+
+# `migrateNext` maps each starting schema version onto the function that advances it by one.  The
+# first two are named after application versions rather than schema versions, hence the lookup.
+DISPATCH_RE = re.compile(r"case\s+(\d+):\s*ret\s*&=\s*(migrate_to_\w+)\s*\(")
+
+
+def function_bodies(text: str) -> dict[str, str]:
+    """Carve `DatabaseSchemaHelper.cpp` into its `migrate_to_*` function bodies."""
+    bodies, matches = {}, list(FUNCTION_RE.finditer(text))
+    for index, match in enumerate(matches):
+        limit = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        # match.end() is just past the opening parenthesis, so step back onto it.
+        _, end = match_balanced(text, match.end() - 1, "(", ")")
+        body_start, body_end = match_balanced(text, end)
+        if body_end > limit:
+            raise Unsupported(f"{match.group(1)} body runs past the next function")
+        bodies[match.group(1)] = text[body_start + 1 : body_end - 1]
+    return bodies
+
+
+def build() -> dict:
+    raw = SRC.read_text(encoding="utf-8")
+    text = strip_preprocessor_conditionals(strip_comments(raw))
+    bodies = function_bodies(text)
+    dispatch = [(int(version), name) for version, name in DISPATCH_RE.findall(text)]
+    if not dispatch:
+        raise Unsupported("could not find the migrateNext dispatch table")
+
+    latest = int(re.search(r"DatabaseSchemaHelper::latestVersion\s*=\s*(\d+)", raw).group(1))
+    migrations, unsupported = [], []
+    for from_version, function in sorted(dispatch):
+        entry = {"from_version": from_version, "to_version": from_version + 1, "cpp_function": function}
+        try:
+            entry["statements"] = extract_function(bodies[function])
+        except (Unsupported, KeyError, ValueError) as error:
+            entry["unsupported_reason"] = str(error)
+            unsupported.append(f"{function} (v{from_version} -> v{from_version + 1}): {error}")
+        migrations.append(entry)
+
+    return {
+        "latest_version": latest,
+        "generated_by": "tools/extract-migrations.py",
+        "source_files": [str(SRC.relative_to(REPO))],
+        "migrations": migrations,
+        "hand_ported": [m["cpp_function"] for m in migrations if "statements" not in m],
+    }, unsupported
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--out", type=pathlib.Path, help="write JSON here instead of stdout")
+    parser.add_argument("--summary", action="store_true", help="print a human-readable summary")
+    args = parser.parse_args()
+
+    document, unsupported = build()
+    if args.summary:
+        for migration in document["migrations"]:
+            count = len(migration.get("statements", []))
+            state = f"{count:>3} statements" if "statements" in migration else "HAND PORT"
+            print(f"v{migration['from_version']:>2} -> v{migration['to_version']:<3} {migration['cpp_function']:<16} {state}")
+        if unsupported:
+            print("\nmust be hand-ported in Rust:")
+            for line in unsupported:
+                print(f"  {line}")
+        return 0
+
+    text = json.dumps(document, indent=2) + "\n"
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(text, encoding="utf-8")
+        total = sum(len(m.get("statements", [])) for m in document["migrations"])
+        print(f"wrote {args.out} ({len(document['migrations'])} migrations, {total} statements, "
+              f"{len(document['hand_ported'])} to hand-port)")
+    else:
+        sys.stdout.write(text)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

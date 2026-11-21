@@ -51,3 +51,7 @@ jobs:
         run: |
           python3 tools/extract-schema.py --out /tmp/v23.json
           diff -u schema/v23.json /tmp/v23.json
+      - name: Migration extraction is reproducible
+        run: |
+          python3 tools/extract-migrations.py --out /tmp/migrations.json
+          diff -u schema/migrations.json /tmp/migrations.json

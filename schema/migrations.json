@@ -1,0 +1,2497 @@
+{
+  "latest_version": 23,
+  "generated_by": "tools/extract-migrations.py",
+  "source_files": [
+    "src/database/DatabaseSchemaHelper.cpp"
+  ],
+  "migrations": [
+    {
+      "from_version": 1,
+      "to_version": 2,
+      "cpp_function": "migrate_to_202",
+      "unsupported_reason": "statement 'bool ret = true'"
+    },
+    {
+      "from_version": 2,
+      "to_version": 3,
+      "cpp_function": "migrate_to_210",
+      "statements": [
+        {
+          "sql": "ALTER TABLE equipment   ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE hop         ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE misc        ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE style       ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast       ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE water       ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE mash        ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE recipe      ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE brewnote    ADD COLUMN folder {{type:string}}"
+        },
+        {
+          "sql": "UPDATE recipe   SET folder='/brewtarget' WHERE name LIKE 'Bt:%'"
+        },
+        {
+          "sql": "UPDATE settings SET version='2.1.0' WHERE id=1"
+        },
+        {
+          "sql": "ALTER TABLE settings ADD COLUMN repopulatechildrenonnextstart {{type:int}}"
+        },
+        {
+          "sql": "UPDATE settings SET repopulatechildrenonnextstart = 1"
+        },
+        {
+          "sql": "DROP TABLE equipment_children"
+        },
+        {
+          "sql": "CREATE TABLE equipment_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES equipment(id), FOREIGN KEY(parent_id) REFERENCES equipment(id));"
+        },
+        {
+          "sql": "DROP TABLE fermentable_children"
+        },
+        {
+          "sql": "CREATE TABLE fermentable_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES fermentable(id), FOREIGN KEY(parent_id) REFERENCES fermentable(id));"
+        },
+        {
+          "sql": "DROP TABLE hop_children"
+        },
+        {
+          "sql": "CREATE TABLE hop_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES hop(id), FOREIGN KEY(parent_id) REFERENCES hop(id));"
+        },
+        {
+          "sql": "DROP TABLE misc_children"
+        },
+        {
+          "sql": "CREATE TABLE misc_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES misc(id), FOREIGN KEY(parent_id) REFERENCES misc(id));"
+        },
+        {
+          "sql": "DROP TABLE recipe_children"
+        },
+        {
+          "sql": "CREATE TABLE recipe_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES recipe(id), FOREIGN KEY(parent_id) REFERENCES recipe(id));"
+        },
+        {
+          "sql": "DROP TABLE style_children"
+        },
+        {
+          "sql": "CREATE TABLE style_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES style(id), FOREIGN KEY(parent_id) REFERENCES style(id));"
+        },
+        {
+          "sql": "DROP TABLE water_children"
+        },
+        {
+          "sql": "CREATE TABLE water_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES water(id), FOREIGN KEY(parent_id) REFERENCES water(id));"
+        },
+        {
+          "sql": "DROP TABLE yeast_children"
+        },
+        {
+          "sql": "CREATE TABLE yeast_children (id {{primary_key}}, child_id {{type:int}}, parent_id {{type:int}}, FOREIGN KEY(child_id) REFERENCES yeast(id), FOREIGN KEY(parent_id) REFERENCES yeast(id));"
+        },
+        {
+          "sql": "DROP TABLE fermentable_in_inventory;"
+        },
+        {
+          "sql": "CREATE TABLE fermentable_in_inventory (id {{primary_key}}, fermentable_id {{type:int}}, amount {{type:double}})"
+        },
+        {
+          "sql": "DROP TABLE hop_in_inventory;"
+        },
+        {
+          "sql": "CREATE TABLE hop_in_inventory (id {{primary_key}}, hop_id {{type:int}}, amount {{type:double}})"
+        },
+        {
+          "sql": "DROP TABLE misc_in_inventory;"
+        },
+        {
+          "sql": "CREATE TABLE misc_in_inventory (id {{primary_key}}, misc_id {{type:int}}, amount {{type:double}})"
+        },
+        {
+          "sql": "DROP TABLE   yeast_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE yeast_in_inventory (id {{primary_key}}, yeast_id {{type:int}}, quanta {{type:double}})"
+        }
+      ]
+    },
+    {
+      "from_version": 3,
+      "to_version": 4,
+      "cpp_function": "migrate_to_4",
+      "statements": [
+        {
+          "sql": "ALTER TABLE settings RENAME TO oldsettings"
+        },
+        {
+          "sql": "CREATE TABLE settings (id {{primary_key}}, repopulatechildrenonnextstart {{type:int}}, version {{type:int}});"
+        },
+        {
+          "sql": "INSERT INTO settings (id, version, repopulatechildrenonnextstart) SELECT 1, 4, repopulatechildrenonnextstart FROM oldsettings"
+        },
+        {
+          "sql": "DROP TABLE oldsettings"
+        }
+      ]
+    },
+    {
+      "from_version": 4,
+      "to_version": 5,
+      "cpp_function": "migrate_to_5",
+      "statements": [
+        {
+          "sql": "DROP TRIGGER dec_ins_num"
+        },
+        {
+          "sql": "CREATE TRIGGER dec_ins_num AFTER DELETE ON instruction_in_recipe BEGIN UPDATE instruction_in_recipe SET instruction_number = instruction_number - 1 WHERE recipe_id = OLD.recipe_id AND instruction_number > OLD.instruction_number; END"
+        }
+      ]
+    },
+    {
+      "from_version": 5,
+      "to_version": 6,
+      "cpp_function": "migrate_to_6",
+      "statements": []
+    },
+    {
+      "from_version": 6,
+      "to_version": 7,
+      "cpp_function": "migrate_to_7",
+      "statements": [
+        {
+          "sql": "ALTER TABLE brewnote ADD COLUMN attenuation {{type:double}}"
+        }
+      ]
+    },
+    {
+      "from_version": 7,
+      "to_version": 8,
+      "cpp_function": "migrate_to_8",
+      "statements": [
+        {
+          "sql": "CREATE TABLE tmpbrewnote (id                      {{primary_key}}, abv                     {{type:double}}, attenuation             {{type:double}}, boil_off                {{type:double}}, brewdate                {{type:date}}, brewhouse_eff           {{type:double}}, deleted                 {{type:bool}}, display                 {{type:bool}}, eff_into_bk             {{type:double}}, fermentdate             {{type:date}}, fg                      {{type:double}}, final_volume            {{type:double}}, folder                  {{type:string}}, mash_final_temp         {{type:double}}, notes                   {{type:string}}, og                      {{type:double}}, pitch_temp              {{type:double}}, post_boil_volume        {{type:double}}, projected_abv           {{type:double}}, projected_atten         {{type:double}}, projected_boil_grav     {{type:double}}, projected_eff           {{type:double}}, projected_ferm_points   {{type:double}}, projected_fg            {{type:double}}, projected_mash_fin_temp {{type:double}}, projected_og            {{type:double}}, projected_points        {{type:double}}, projected_strike_temp   {{type:double}}, projected_vol_into_bk   {{type:double}}, projected_vol_into_ferm {{type:double}}, sg                      {{type:double}}, strike_temp             {{type:double}}, volume_into_bk          {{type:double}}, volume_into_fermenter   {{type:double}}, recipe_id               {{type:int}}, FOREIGN KEY(recipe_id) REFERENCES recipe(id));"
+        },
+        {
+          "sql": "SELECT id FROM brewnote"
+        },
+        {
+          "sql": "INSERT INTO tmpbrewnote (id, abv, attenuation, boil_off, brewdate, brewhouse_eff, deleted, display, eff_into_bk, fermentdate, fg, final_volume, folder, mash_final_temp, notes, og, pitch_temp, post_boil_volume, projected_abv, projected_atten, projected_boil_grav, projected_eff, projected_ferm_points, projected_fg, projected_mash_fin_temp, projected_og, projected_points, projected_strike_temp, projected_vol_into_bk, projected_vol_into_ferm, sg, strike_temp, volume_into_bk, volume_into_fermenter, recipe_id) SELECT id, abv, attenuation, boil_off, brewdate, brewhouse_eff, deleted, display, eff_into_bk, fermentdate, fg, final_volume, folder, mash_final_temp, notes, og, pitch_temp, post_boil_volume, projected_abv, projected_atten, projected_boil_grav, projected_eff, projected_ferm_points, projected_fg, projected_mash_fin_temp, projected_og, projected_points, projected_strike_temp, projected_vol_into_bk, projected_vol_into_ferm, sg, strike_temp, volume_into_bk, volume_into_fermenter, recipe_id FROM brewnote",
+          "only_if_prior_had_results": true
+        },
+        {
+          "sql": "drop table brewnote"
+        },
+        {
+          "sql": "ALTER TABLE tmpbrewnote RENAME TO brewnote"
+        },
+        {
+          "sql": "{{add_foreign_key:fermentable|inventory_id|fermentable_in_inventory|id}}"
+        },
+        {
+          "sql": "DELETE FROM fermentable_in_inventory WHERE fermentable_in_inventory.id in ( SELECT fermentable_in_inventory.id FROM fermentable_in_inventory, fermentable_children, fermentable WHERE fermentable.id = fermentable_children.child_id AND fermentable_in_inventory.fermentable_id = fermentable.id )"
+        },
+        {
+          "sql": "SELECT id FROM fermentable WHERE NOT EXISTS ( SELECT fermentable_children.id FROM fermentable_children WHERE fermentable_children.child_id = fermentable.id ) AND NOT EXISTS ( SELECT fermentable_in_inventory.id FROM fermentable_in_inventory WHERE fermentable_in_inventory.fermentable_id = fermentable.id)"
+        },
+        {
+          "sql": "INSERT INTO fermentable_in_inventory (fermentable_id) SELECT id FROM fermentable WHERE NOT EXISTS ( SELECT fermentable_children.id FROM fermentable_children WHERE fermentable_children.child_id = fermentable.id ) AND NOT EXISTS ( SELECT fermentable_in_inventory.id FROM fermentable_in_inventory WHERE fermentable_in_inventory.fermentable_id = fermentable.id)",
+          "only_if_prior_had_results": true
+        },
+        {
+          "sql": "UPDATE fermentable SET inventory_id = (SELECT fermentable_in_inventory.id FROM fermentable_in_inventory WHERE fermentable.id = fermentable_in_inventory.fermentable_id)"
+        },
+        {
+          "sql": "UPDATE fermentable SET inventory_id = ( SELECT tmp.inventory_id FROM fermentable tmp, fermentable_children WHERE fermentable.id = fermentable_children.child_id AND tmp.id = fermentable_children.parent_id) WHERE inventory_id IS NULL"
+        },
+        {
+          "sql": "{{add_foreign_key:hop|inventory_id|hop_in_inventory|id}}"
+        },
+        {
+          "sql": "DELETE FROM hop_in_inventory WHERE hop_in_inventory.id in ( SELECT hop_in_inventory.id FROM hop_in_inventory, hop_children, hop WHERE hop.id = hop_children.child_id AND hop_in_inventory.hop_id = hop.id )"
+        },
+        {
+          "sql": "SELECT id FROM hop WHERE NOT EXISTS ( SELECT hop_children.id FROM hop_children WHERE hop_children.child_id = hop.id ) AND NOT EXISTS ( SELECT hop_in_inventory.id FROM hop_in_inventory WHERE hop_in_inventory.hop_id = hop.id)"
+        },
+        {
+          "sql": "INSERT INTO hop_in_inventory (hop_id) SELECT id FROM hop WHERE NOT EXISTS ( SELECT hop_children.id FROM hop_children WHERE hop_children.child_id = hop.id ) AND NOT EXISTS ( SELECT hop_in_inventory.id FROM hop_in_inventory WHERE hop_in_inventory.hop_id = hop.id)",
+          "only_if_prior_had_results": true
+        },
+        {
+          "sql": "UPDATE hop SET inventory_id = (SELECT hop_in_inventory.id FROM hop_in_inventory WHERE hop.id = hop_in_inventory.hop_id)"
+        },
+        {
+          "sql": "UPDATE hop SET inventory_id = ( SELECT tmp.inventory_id FROM hop tmp, hop_children WHERE hop.id = hop_children.child_id AND tmp.id = hop_children.parent_id) WHERE inventory_id IS NULL"
+        },
+        {
+          "sql": "{{add_foreign_key:misc|inventory_id|misc_in_inventory|id}}"
+        },
+        {
+          "sql": "DELETE FROM misc_in_inventory WHERE misc_in_inventory.id in ( SELECT misc_in_inventory.id FROM misc_in_inventory, misc_children, misc WHERE misc.id = misc_children.child_id AND misc_in_inventory.misc_id = misc.id )"
+        },
+        {
+          "sql": "SELECT id FROM misc WHERE NOT EXISTS ( SELECT misc_children.id FROM misc_children WHERE misc_children.child_id = misc.id ) AND NOT EXISTS ( SELECT misc_in_inventory.id FROM misc_in_inventory WHERE misc_in_inventory.misc_id = misc.id)"
+        },
+        {
+          "sql": "INSERT INTO misc_in_inventory (misc_id) SELECT id FROM misc WHERE NOT EXISTS ( SELECT misc_children.id FROM misc_children WHERE misc_children.child_id = misc.id ) AND NOT EXISTS ( SELECT misc_in_inventory.id FROM misc_in_inventory WHERE misc_in_inventory.misc_id = misc.id)",
+          "only_if_prior_had_results": true
+        },
+        {
+          "sql": "UPDATE misc SET inventory_id = (SELECT misc_in_inventory.id FROM misc_in_inventory WHERE misc.id = misc_in_inventory.misc_id)"
+        },
+        {
+          "sql": "UPDATE misc SET inventory_id = ( SELECT tmp.inventory_id FROM misc tmp, misc_children WHERE misc.id = misc_children.child_id AND tmp.id = misc_children.parent_id) WHERE inventory_id IS NULL"
+        },
+        {
+          "sql": "{{add_foreign_key:yeast|inventory_id|yeast_in_inventory|id}}"
+        },
+        {
+          "sql": "DELETE FROM yeast_in_inventory WHERE yeast_in_inventory.id in ( SELECT yeast_in_inventory.id FROM yeast_in_inventory, yeast_children, yeast WHERE yeast.id = yeast_children.child_id AND yeast_in_inventory.yeast_id = yeast.id )"
+        },
+        {
+          "sql": "SELECT id FROM yeast WHERE NOT EXISTS ( SELECT yeast_children.id FROM yeast_children WHERE yeast_children.child_id = yeast.id ) AND NOT EXISTS ( SELECT yeast_in_inventory.id FROM yeast_in_inventory WHERE yeast_in_inventory.yeast_id = yeast.id)"
+        },
+        {
+          "sql": "INSERT INTO yeast_in_inventory (yeast_id) SELECT id FROM yeast WHERE NOT EXISTS ( SELECT yeast_children.id FROM yeast_children WHERE yeast_children.child_id = yeast.id ) AND NOT EXISTS ( SELECT yeast_in_inventory.id FROM yeast_in_inventory WHERE yeast_in_inventory.yeast_id = yeast.id)",
+          "only_if_prior_had_results": true
+        },
+        {
+          "sql": "UPDATE yeast SET inventory_id = (SELECT yeast_in_inventory.id FROM yeast_in_inventory WHERE yeast.id = yeast_in_inventory.yeast_id)"
+        },
+        {
+          "sql": "UPDATE yeast SET inventory_id = ( SELECT tmp.inventory_id FROM yeast tmp, yeast_children WHERE yeast.id = yeast_children.child_id AND tmp.id = yeast_children.parent_id) WHERE inventory_id IS NULL"
+        },
+        {
+          "sql": "CREATE TABLE tmpfermentable_in_inventory (id {{primary_key}}, amount {{type:double}});"
+        },
+        {
+          "sql": "INSERT INTO tmpfermentable_in_inventory (id, amount) SELECT id, amount FROM fermentable_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE fermentable_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmpfermentable_in_inventory RENAME TO fermentable_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE tmphop_in_inventory (id {{primary_key}}, amount {{type:double}});"
+        },
+        {
+          "sql": "INSERT INTO tmphop_in_inventory (id, amount) SELECT id, amount FROM hop_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE hop_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmphop_in_inventory RENAME TO hop_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE tmpmisc_in_inventory (id {{primary_key}}, amount {{type:double}});"
+        },
+        {
+          "sql": "INSERT INTO tmpmisc_in_inventory (id, amount) SELECT id, amount FROM misc_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE misc_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmpmisc_in_inventory RENAME TO misc_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE tmpyeast_in_inventory (id {{primary_key}}, quanta {{type:double}});"
+        },
+        {
+          "sql": "INSERT INTO tmpyeast_in_inventory (id, quanta) SELECT id, quanta FROM yeast_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE yeast_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmpyeast_in_inventory RENAME TO yeast_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE IF EXISTS bt_alltables"
+        }
+      ]
+    },
+    {
+      "from_version": 8,
+      "to_version": 9,
+      "cpp_function": "migrate_to_9",
+      "statements": [
+        {
+          "sql": "ALTER TABLE water ADD COLUMN wtype      {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN alkalinity {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN as_hco3    {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN sparge_ro  {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN mash_ro    {{type:double}}"
+        },
+        {
+          "sql": "CREATE TABLE salt ( id               {{primary_key}}, addTo            {{type:int}}         , amount           {{type:double}}         , amount_is_weight {{type:bool}}         , deleted          {{type:bool}}         , display          {{type:bool}}         , folder           {{type:string}}         , is_acid          {{type:bool}}         , name             {{type:string}} not null, percent_acid     {{type:double}}         , stype            {{type:int}}         , misc_id          {{type:int}}, FOREIGN KEY(misc_id) REFERENCES misc(id));"
+        },
+        {
+          "sql": "CREATE TABLE salt_in_recipe ( id        {{primary_key}}, recipe_id {{type:int}}, salt_id   {{type:int}}, FOREIGN KEY(recipe_id) REFERENCES recipe(id), FOREIGN KEY(salt_id)   REFERENCES salt(id));"
+        }
+      ]
+    },
+    {
+      "from_version": 9,
+      "to_version": 10,
+      "cpp_function": "migrate_to_10",
+      "statements": [
+        {
+          "sql": "{{add_foreign_key:recipe|ancestor_id|recipe|id}}"
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN locked {{type:bool}}"
+        },
+        {
+          "sql": "UPDATE recipe SET locked = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE recipe SET ancestor_id = id WHERE display = ? and ancestor_id IS NULL",
+          "binds": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "from_version": 10,
+      "to_version": 11,
+      "cpp_function": "migrate_to_11",
+      "statements": [
+        {
+          "sql": "UPDATE hop         SET inventory_id = CAST(inventory_id AS int) WHERE inventory_id IS NOT null"
+        },
+        {
+          "sql": "UPDATE fermentable SET inventory_id = CAST(inventory_id AS int) WHERE inventory_id IS NOT null"
+        },
+        {
+          "sql": "UPDATE misc        SET inventory_id = CAST(inventory_id AS int) WHERE inventory_id IS NOT null"
+        },
+        {
+          "sql": "UPDATE yeast       SET inventory_id = CAST(inventory_id AS int) WHERE inventory_id IS NOT null"
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS bt_hop_hop_id                       "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS hop_children_parent_id              "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS hop_in_recipe_recipe_id             "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS hop_in_recipe_hop_id                "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS instruction_in_recipe_recipe_id     "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS instruction_in_recipe_instruction_id"
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS equipment_children_parent_id        "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS misc_inventory_id                   "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS misc_children_parent_id             "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS misc_in_recipe_recipe_id            "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS misc_in_recipe_misc_id              "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS brewnote_recipe_id                  "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS bt_equipment_equipment_id           "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS bt_fermentable_fermentable_id       "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS bt_misc_misc_id                     "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS bt_style_style_id                   "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS bt_water_water_id                   "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS bt_yeast_yeast_id                   "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS fermentable_inventory_id            "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS fermentable_children_parent_id      "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS fermentable_in_recipe_recipe_id     "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS fermentable_in_recipe_fermentable_id"
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS hop_inventory_id                    "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS mashstep_mash_id                    "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS recipe_equipment_id                 "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS recipe_mash_id                      "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS recipe_style_id                     "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS recipe_ancestor_id                  "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS recipe_children_parent_id           "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS salt_misc_id                        "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS salt_in_recipe_salt_id              "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS salt_in_recipe_recipe_id            "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS style_children_parent_id            "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS water_children_parent_id            "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS water_in_recipe_recipe_id           "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS water_in_recipe_water_id            "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS yeast_inventory_id                  "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS yeast_children_parent_id            "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS yeast_in_recipe_recipe_id           "
+        },
+        {
+          "sql": "DROP INDEX IF EXISTS yeast_in_recipe_yeast_id            "
+        },
+        {
+          "sql": "ALTER TABLE salt RENAME COLUMN stype TO numeric_type"
+        },
+        {
+          "sql": "ALTER TABLE salt    ADD COLUMN stype {{type:string}}"
+        },
+        {
+          "sql": "UPDATE salt SET stype = CASE WHEN numeric_type = 1 THEN 'CaCl2'          WHEN numeric_type = 2 THEN 'CaCO3'          WHEN numeric_type = 3 THEN 'CaSO4'          WHEN numeric_type = 4 THEN 'MgSO4'          WHEN numeric_type = 5 THEN 'NaCl'           WHEN numeric_type = 6 THEN 'NaHCO3'         WHEN numeric_type = 7 THEN 'LacticAcid'     WHEN numeric_type = 8 THEN 'H3PO4'          WHEN numeric_type = 9 THEN 'AcidulatedMalt' END"
+        },
+        {
+          "sql": "ALTER TABLE salt DROP COLUMN numeric_type"
+        },
+        {
+          "sql": "UPDATE hop SET htype = 'aroma'           WHERE htype = 'Aroma'"
+        },
+        {
+          "sql": "UPDATE hop SET htype = 'bittering'       WHERE htype = 'Bittering'"
+        },
+        {
+          "sql": "UPDATE hop SET htype = 'aroma/bittering' WHERE htype = 'Both'"
+        },
+        {
+          "sql": "UPDATE hop SET form = 'pellet' WHERE form = 'Pellet'"
+        },
+        {
+          "sql": "UPDATE hop SET form = 'plug'   WHERE form = 'Plug'"
+        },
+        {
+          "sql": "UPDATE hop SET form = 'leaf'   WHERE form = 'Leaf'"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN producer              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN product_id            {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN year                  {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN total_oil_ml_per_100g {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN farnesene_pct         {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN geraniol_pct          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN b_pinene_pct          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN linalool_pct          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN limonene_pct          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN nerol_pct             {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN pinene_pct            {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN polyphenols_pct       {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN xanthohumol_pct       {{type:double}}"
+        },
+        {
+          "sql": "     UPDATE fermentable SET ftype = 'grain'       WHERE ftype = 'Grain'"
+        },
+        {
+          "sql": "     UPDATE fermentable SET ftype = 'sugar'       WHERE ftype = 'Sugar'"
+        },
+        {
+          "sql": "     UPDATE fermentable SET ftype = 'extract'     WHERE ftype = 'Extract'"
+        },
+        {
+          "sql": "     UPDATE fermentable SET ftype = 'dry extract' WHERE ftype = 'Dry Extract'"
+        },
+        {
+          "sql": "     UPDATE fermentable SET ftype = 'other'       WHERE ftype = 'Adjunct'"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN grain_group                    {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN producer                       {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN product_id                     {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable RENAME COLUMN yield TO fine_grind_yield_pct"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN coarse_grind_yield_pct         {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN potential_yield_sg             {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN alpha_amylase_dext_units       {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN kolbach_index_pct              {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN hardness_prp_glassy_pct        {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN hardness_prp_half_pct          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN hardness_prp_mealy_pct         {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN kernel_size_prp_plump_pct      {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN kernel_size_prp_thin_pct       {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN friability_pct                 {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN di_ph                          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN viscosity_cp                   {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN dmsp_ppm                       {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN fan_ppm                        {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN fermentability_pct             {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN beta_glucan_ppm                {{type:double}}"
+        },
+        {
+          "sql": "     UPDATE fermentable SET diastatic_power = NULL where diastatic_power = 0.0"
+        },
+        {
+          "sql": "     UPDATE misc SET mtype = 'spice'       WHERE mtype = 'Spice'      "
+        },
+        {
+          "sql": "     UPDATE misc SET mtype = 'fining'      WHERE mtype = 'Fining'     "
+        },
+        {
+          "sql": "     UPDATE misc SET mtype = 'water agent' WHERE mtype = 'Water Agent'"
+        },
+        {
+          "sql": "     UPDATE misc SET mtype = 'herb'        WHERE mtype = 'Herb'       "
+        },
+        {
+          "sql": "     UPDATE misc SET mtype = 'flavor'      WHERE mtype = 'Flavor'     "
+        },
+        {
+          "sql": "     UPDATE misc SET mtype = 'other'       WHERE mtype = 'Other'      "
+        },
+        {
+          "sql": "ALTER TABLE misc ADD COLUMN producer   {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE misc ADD COLUMN product_id {{type:string}}"
+        },
+        {
+          "sql": "     UPDATE yeast SET ytype = 'ale'       WHERE ytype = 'Ale'      "
+        },
+        {
+          "sql": "     UPDATE yeast SET ytype = 'lager'     WHERE ytype = 'Lager'    "
+        },
+        {
+          "sql": "     UPDATE yeast SET ytype = 'other'     WHERE ytype = 'Wheat'    "
+        },
+        {
+          "sql": "     UPDATE yeast SET ytype = 'wine'      WHERE ytype = 'Wine'     "
+        },
+        {
+          "sql": "     UPDATE yeast SET ytype = 'champagne' WHERE ytype = 'Champagne'"
+        },
+        {
+          "sql": "     UPDATE yeast SET form = 'liquid'  WHERE form = 'Liquid' "
+        },
+        {
+          "sql": "     UPDATE yeast SET form = 'dry'     WHERE form = 'Dry'    "
+        },
+        {
+          "sql": "     UPDATE yeast SET form = 'slant'   WHERE form = 'Slant'  "
+        },
+        {
+          "sql": "     UPDATE yeast SET form = 'culture' WHERE form = 'Culture'"
+        },
+        {
+          "sql": "     UPDATE yeast SET flocculation = 'low'       WHERE flocculation = 'Low'      "
+        },
+        {
+          "sql": "     UPDATE yeast SET flocculation = 'medium'    WHERE flocculation = 'Medium'   "
+        },
+        {
+          "sql": "     UPDATE yeast SET flocculation = 'high'      WHERE flocculation = 'High'     "
+        },
+        {
+          "sql": "     UPDATE yeast SET flocculation = 'very high' WHERE flocculation = 'Very High'"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN alcohol_tolerance_pct        {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN attenuation_min_pct          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN attenuation_max_pct          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN phenolic_off_flavor_positive {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN glucoamylase_positive        {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN killer_producing_k1_toxin    {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN killer_producing_k2_toxin    {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN killer_producing_k28_toxin   {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN killer_producing_klus_toxin  {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast ADD COLUMN killer_neutral               {{type:bool}}"
+        },
+        {
+          "sql": "     UPDATE yeast SET attenuation_min_pct = attenuation WHERE attenuation != 0"
+        },
+        {
+          "sql": "     UPDATE yeast SET attenuation_max_pct = attenuation WHERE attenuation != 0"
+        },
+        {
+          "sql": "ALTER TABLE style RENAME COLUMN s_type TO stype"
+        },
+        {
+          "sql": "     UPDATE style SET stype = 'beer'  WHERE stype = 'Lager'"
+        },
+        {
+          "sql": "     UPDATE style SET stype = 'beer'  WHERE stype = 'Ale'  "
+        },
+        {
+          "sql": "     UPDATE style SET stype = 'beer'  WHERE stype = 'Wheat'"
+        },
+        {
+          "sql": "     UPDATE style SET stype = 'cider' WHERE stype = 'Cider'"
+        },
+        {
+          "sql": "     UPDATE style SET stype = 'mead'  WHERE stype = 'Mead' "
+        },
+        {
+          "sql": "     UPDATE style SET stype = 'other' WHERE stype = 'Mixed'"
+        },
+        {
+          "sql": "ALTER TABLE style RENAME COLUMN profile TO flavor"
+        },
+        {
+          "sql": "ALTER TABLE style ADD COLUMN aroma              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE style ADD COLUMN appearance         {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE style ADD COLUMN mouthfeel          {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE style ADD COLUMN overall_impression {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN carbonate_ppm {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN potassium_ppm {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN iron_ppm      {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN nitrate_ppm   {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN nitrite_ppm   {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE water ADD COLUMN flouride_ppm  {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN notes             TO kettle_notes                 "
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN real_evap_rate    TO kettle_evaporation_per_hour_l"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN boil_size         TO kettle_boil_size_l           "
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN tun_specific_heat TO mash_tun_specific_heat_calgc "
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN tun_volume        TO mash_tun_volume_l            "
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN tun_weight        TO mash_tun_weight_kg           "
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN absorption        TO mash_tun_grain_absorption_lkg"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN batch_size        TO fermenter_batch_size_l       "
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN trub_chiller_loss TO kettle_trub_chiller_loss_l   "
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN lauter_deadspace  TO lauter_tun_deadspace_loss_l  "
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN hlt_type                       {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN mash_tun_type                  {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN lauter_tun_type                {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN kettle_type                    {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN fermenter_type                 {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN agingvessel_type               {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN packaging_vessel_type          {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN hlt_volume_l                   {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN lauter_tun_volume_l            {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN aging_vessel_volume_l          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN packaging_vessel_volume_l      {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN hlt_loss_l                     {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN mash_tun_loss_l                {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN fermenter_loss_l               {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN aging_vessel_loss_l            {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN packaging_vessel_loss_l        {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN kettle_outflow_per_minute_l    {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN hlt_weight_kg                  {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN lauter_tun_weight_kg           {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN kettle_weight_kg               {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN hlt_specific_heat_calgc        {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN lauter_tun_specific_heat_calgc {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN kettle_specific_heat_calgc     {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN hlt_notes                      {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN mash_tun_notes                 {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN lauter_tun_notes               {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN fermenter_notes                {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN aging_vessel_notes             {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN packaging_vessel_notes         {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE mashstep RENAME TO mash_step"
+        },
+        {
+          "sql": "     UPDATE mash_step SET mstype = 'infusion'       WHERE mstype = 'Infusion'   "
+        },
+        {
+          "sql": "     UPDATE mash_step SET mstype = 'temperature'    WHERE mstype = 'Temperature'"
+        },
+        {
+          "sql": "     UPDATE mash_step SET mstype = 'decoction'      WHERE mstype = 'Decoction'  "
+        },
+        {
+          "sql": "     UPDATE mash_step SET mstype = 'sparge'         WHERE mstype = 'FlySparge'  "
+        },
+        {
+          "sql": "     UPDATE mash_step SET mstype = 'drain mash tun' WHERE mstype = 'BatchSparge'"
+        },
+        {
+          "sql": "ALTER TABLE mash_step RENAME COLUMN infuse_amount TO amount_l"
+        },
+        {
+          "sql": "     UPDATE mash_step SET amount_l = decoction_amount WHERE mstype = 'Decoction'"
+        },
+        {
+          "sql": "ALTER TABLE mash_step DROP COLUMN decoction_amount"
+        },
+        {
+          "sql": "ALTER TABLE mash_step RENAME COLUMN ramp_time TO ramp_time_mins"
+        },
+        {
+          "sql": "ALTER TABLE mash_step ADD COLUMN description               {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE mash_step ADD COLUMN liquor_to_grist_ratio_lkg {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE mash_step ADD COLUMN start_acidity_ph          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE mash_step ADD COLUMN end_acidity_ph            {{type:double}}"
+        },
+        {
+          "sql": "     UPDATE mash_step SET end_temp = NULL WHERE end_temp = 0"
+        },
+        {
+          "sql": "ALTER TABLE mash_step RENAME COLUMN    end_temp TO    end_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE mash_step RENAME COLUMN infuse_temp TO infuse_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE mash_step RENAME COLUMN   step_temp TO   step_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE mash_step RENAME COLUMN   step_time TO   step_time_mins"
+        },
+        {
+          "sql": "     UPDATE recipe SET type = 'extract'      WHERE type = 'Extract'     "
+        },
+        {
+          "sql": "     UPDATE recipe SET type = 'partial mash' WHERE type = 'Partial Mash'"
+        },
+        {
+          "sql": "     UPDATE recipe SET type = 'all grain'    WHERE type = 'All Grain'   "
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN boil_id         {{type:int}} REFERENCES boil         (id)"
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN fermentation_id {{type:int}} REFERENCES fermentation (id)"
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN beer_acidity_ph          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN apparent_attenuation_pct {{type:double}}"
+        },
+        {
+          "sql": "CREATE TABLE boil (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, display {{type:bool}}, folder {{type:string}}, description {{type:string}}, notes {{type:string}}, pre_boil_size_l {{type:double}}, boil_time_mins {{type:double}}, temp_recipe_id {{type:int}});"
+        },
+        {
+          "sql": "CREATE TABLE boil_step (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, display {{type:bool}}, step_time_mins {{type:double}}, end_temp_c {{type:double}}, ramp_time_mins {{type:double}}, step_number {{type:int}}, boil_id {{type:int}}, description {{type:string}}, start_acidity_ph {{type:double}}, end_acidity_ph {{type:double}}, start_temp_c {{type:double}}, start_gravity_sg {{type:double}}, end_gravity_sg {{type:double}}, chilling_type {{type:string}}, FOREIGN KEY(boil_id) REFERENCES boil(id));"
+        },
+        {
+          "sql": "CREATE TABLE fermentation (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, display {{type:bool}}, folder {{type:string}}, description {{type:string}}, notes {{type:string}}, temp_recipe_id {{type:int}});"
+        },
+        {
+          "sql": "CREATE TABLE fermentation_step (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, display {{type:bool}}, step_time_mins {{type:double}}, end_temp_c {{type:double}}, step_number {{type:int}}, fermentation_id {{type:int}}, description {{type:string}}, start_acidity_ph {{type:double}}, end_acidity_ph {{type:double}}, start_temp_c {{type:double}}, start_gravity_sg {{type:double}}, end_gravity_sg {{type:double}}, free_rise {{type:bool}}, vessel {{type:string}}, FOREIGN KEY(fermentation_id) REFERENCES fermentation(id));"
+        },
+        {
+          "sql": "INSERT INTO boil (name           , deleted        , display        , folder         , description    , notes          , pre_boil_size_l, boil_time_mins , temp_recipe_id   ) SELECT 'Boil for ' || name, ?, ?, '', '', '', boil_size, boil_time, id AS recipe_id FROM recipe",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "INSERT INTO fermentation (name           , deleted        , display        , folder         , description    , notes          , temp_recipe_id   ) SELECT 'Fermentation for ' || name, ?, ?, '', '', '', id AS recipe_id FROM recipe",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "UPDATE recipe SET boil_id = b.id FROM (SELECT id, temp_recipe_id FROM boil) AS b WHERE recipe.id = b.temp_recipe_id"
+        },
+        {
+          "sql": "UPDATE recipe SET fermentation_id = f.id FROM (SELECT id, temp_recipe_id FROM fermentation) AS f WHERE recipe.id = f.temp_recipe_id"
+        },
+        {
+          "sql": "ALTER TABLE boil         DROP COLUMN temp_recipe_id"
+        },
+        {
+          "sql": "ALTER TABLE fermentation DROP COLUMN temp_recipe_id"
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN boil_size"
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN boil_time"
+        },
+        {
+          "sql": "INSERT INTO boil_step (name            , deleted         , display         , step_time_mins  , end_temp_c      , ramp_time_mins  , step_number     , boil_id         , description     , start_acidity_ph, end_acidity_ph  , start_temp_c    , start_gravity_sg, end_gravity_sg  , chilling_type     ) SELECT 'Pre-boil for ' || recipe.name, ?, ?, NULL, 100.0, NULL, 1, recipe.boil_id, 'Automatically-generated pre-boil step for ' || recipe.name, NULL, NULL, last_mash_step.temperature, NULL, NULL, NULL FROM recipe, (SELECT mash_id, step_temp_c, end_temp_c, step_number, IIF(step_temp_c < end_temp_c, step_temp_c, end_temp_c) AS temperature, ROW_NUMBER() OVER (PARTITION BY mash_id ORDER BY step_number DESC) reversed_step_number FROM mash_step ) AS last_mash_step WHERE reversed_step_number = 1 AND recipe.mash_id = last_mash_step.mash_id",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "INSERT INTO boil_step (name            , deleted         , display         , step_time_mins  , end_temp_c      , ramp_time_mins  , step_number     , boil_id         , description     , start_acidity_ph, end_acidity_ph  , start_temp_c    , start_gravity_sg, end_gravity_sg  , chilling_type     ) SELECT 'Pre-boil for ' || recipe.name, ?, ?, NULL, 100.0, NULL, 1, recipe.boil_id, 'Automatically-generated pre-boil step for ' || recipe.name, NULL, NULL, 15, NULL, NULL, NULL FROM recipe WHERE recipe.boil_id in ( SELECT boil_id FROM boil WHERE boil_id NOT IN ( SELECT boil_id FROM boil_step WHERE step_number = 1 ))",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "INSERT INTO boil_step (name            , deleted         , display         , step_time_mins  , end_temp_c      , ramp_time_mins  , step_number     , boil_id         , description     , start_acidity_ph, end_acidity_ph  , start_temp_c    , start_gravity_sg, end_gravity_sg  , chilling_type     ) SELECT 'Boil proper for ' || recipe.name, ?, ?, NULL, 100.0, NULL, 2, recipe.boil_id, 'Automatically-generated boil proper step for ' || recipe.name, NULL, NULL, 100.0, NULL, NULL, NULL FROM recipe",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "INSERT INTO boil_step (name            , deleted         , display         , step_time_mins  , end_temp_c      , ramp_time_mins  , step_number     , boil_id         , description     , start_acidity_ph, end_acidity_ph  , start_temp_c    , start_gravity_sg, end_gravity_sg  , chilling_type     ) SELECT 'Wort cooling for ' || recipe.name, ?, ?, NULL, IIF(recipe.primary_temp > 0.0, recipe.primary_temp, 30.0), NULL, 3, recipe.boil_id, 'Automatically-generated post-boil step for ' || recipe.name, NULL, NULL, 100.0, NULL, NULL, NULL FROM recipe",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "INSERT INTO fermentation_step (name            , deleted         , display         , step_time_mins  , end_temp_c      , step_number     , fermentation_id , description     , start_acidity_ph, end_acidity_ph  , start_temp_c    , start_gravity_sg, end_gravity_sg  , free_rise       , vessel            ) SELECT 'Primary fermentation for ' || recipe.name, ?,    ?,    recipe.primary_age * 60 * 24, recipe.primary_temp   , 1,    recipe.fermentation_id, 'Automatically-generated primary fermentation step for ' || recipe.name, NULL, NULL, recipe.primary_temp   , NULL, NULL, NULL, ''    FROM recipe ",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "INSERT INTO fermentation_step (name            , deleted         , display         , step_time_mins  , end_temp_c      , step_number     , fermentation_id , description     , start_acidity_ph, end_acidity_ph  , start_temp_c    , start_gravity_sg, end_gravity_sg  , free_rise       , vessel            ) SELECT 'Secondary fermentation for ' || recipe.name, ?,    ?,    recipe.secondary_age * 60 * 24,recipe.secondary_temp , 2,    recipe.fermentation_id, 'Automatically-generated secondary fermentation step for ' || recipe.name, NULL, NULL, recipe.secondary_temp , NULL, NULL, NULL, ''    FROM recipe WHERE recipe.secondary_age > 0 ",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "INSERT INTO fermentation_step (name            , deleted         , display         , step_time_mins  , end_temp_c      , step_number     , fermentation_id , description     , start_acidity_ph, end_acidity_ph  , start_temp_c    , start_gravity_sg, end_gravity_sg  , free_rise       , vessel            ) SELECT 'Tertiary fermentation for ' || recipe.name, ?,    ?,    recipe.tertiary_age * 60 * 24,recipe.tertiary_temp , 3,    recipe.fermentation_id, 'Automatically-generated tertiary fermentation step for ' || recipe.name, NULL, NULL, recipe.tertiary_temp , NULL, NULL, NULL, ''    FROM recipe WHERE recipe.tertiary_age  > 0 AND   recipe.secondary_age > 0 ",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN primary_age   "
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN primary_temp  "
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN secondary_age "
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN secondary_temp"
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN tertiary_age  "
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN tertiary_temp "
+        },
+        {
+          "sql": "ALTER TABLE recipe DROP COLUMN fermentation_stages"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN name              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN display           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN deleted           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN quantity          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN unit              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN stage             {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN step              {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN add_at_time_mins  {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN add_at_gravity_sg {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN add_at_acidity_ph {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe ADD COLUMN duration_mins     {{type:double}}"
+        },
+        {
+          "sql": "     UPDATE hop_in_recipe SET display = ?",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "     UPDATE hop_in_recipe SET deleted = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN name              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN display           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN deleted           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN quantity          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN unit              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN stage             {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN step              {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN add_at_time_mins  {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN add_at_gravity_sg {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN add_at_acidity_ph {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe ADD COLUMN duration_mins     {{type:double}}"
+        },
+        {
+          "sql": "     UPDATE fermentable_in_recipe SET display = ?",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "     UPDATE fermentable_in_recipe SET deleted = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN name              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN display           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN deleted           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN quantity          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN unit              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN stage             {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN step              {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN add_at_time_mins  {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN add_at_gravity_sg {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN add_at_acidity_ph {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe ADD COLUMN duration_mins     {{type:double}}"
+        },
+        {
+          "sql": "     UPDATE misc_in_recipe SET display = ?",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "     UPDATE misc_in_recipe SET deleted = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN name                {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN display             {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN deleted             {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN quantity            {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN unit                {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN stage               {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN step                {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN add_at_time_mins    {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN add_at_gravity_sg   {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN add_at_acidity_ph   {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN duration_mins       {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN attenuation_pct     {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN times_cultured      {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN cell_count_billions {{type:int}}"
+        },
+        {
+          "sql": "     UPDATE yeast_in_recipe SET display = ?",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "     UPDATE yeast_in_recipe SET deleted = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE salt_in_recipe ADD COLUMN name              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE salt_in_recipe ADD COLUMN display           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE salt_in_recipe ADD COLUMN deleted           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE salt_in_recipe ADD COLUMN quantity          {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE salt_in_recipe ADD COLUMN unit              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE salt_in_recipe ADD COLUMN when_to_add       {{type:string}}"
+        },
+        {
+          "sql": "     UPDATE salt_in_recipe SET display = ?",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "     UPDATE salt_in_recipe SET deleted = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE water_in_recipe ADD COLUMN name              {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE water_in_recipe ADD COLUMN display           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE water_in_recipe ADD COLUMN deleted           {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE water_in_recipe ADD COLUMN volume_l          {{type:double}}"
+        },
+        {
+          "sql": "     UPDATE water_in_recipe SET display = ?",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "     UPDATE water_in_recipe SET deleted = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET quantity = h.amount, unit = 'kilograms', name = 'Addition of ' || h.name FROM (SELECT id, name, amount FROM hop) AS h WHERE hop_in_recipe.hop_id = h.id"
+        },
+        {
+          "sql": "UPDATE fermentable_in_recipe SET quantity = f.amount, unit = 'kilograms', name = 'Addition of ' || f.name FROM (SELECT id, name, amount FROM fermentable) AS f WHERE fermentable_in_recipe.fermentable_id = f.id"
+        },
+        {
+          "sql": "UPDATE misc_in_recipe SET quantity = m.amount, unit = m.unit, name = 'Addition of ' || m.name FROM (SELECT id, name, amount, CASE WHEN amount_is_weight THEN 'kilograms' ELSE 'liters' END AS unit FROM misc) AS m WHERE misc_in_recipe.misc_id = m.id"
+        },
+        {
+          "sql": "UPDATE yeast_in_recipe SET quantity = y.amount, unit = y.unit, name = 'Addition of ' || y.name, times_cultured = y.times_cultured FROM (SELECT id, name, amount, CASE WHEN amount_is_weight THEN 'kilograms' ELSE 'liters' END AS unit, times_cultured FROM yeast) AS y WHERE yeast_in_recipe.yeast_id = y.id"
+        },
+        {
+          "sql": "UPDATE salt_in_recipe SET quantity    = s.amount, unit        = s.unit, name = 'Addition of ' || s.name, when_to_add = s.when_to_add FROM (SELECT id, name, amount, addTo, CASE WHEN amount_is_weight THEN 'kilograms' ELSE 'liters' END AS unit, CASE WHEN addTo = 1 THEN 'Mash'   WHEN addTo = 2 THEN 'Sparge' WHEN addTo = 3 THEN 'Ratio'  WHEN addTo = 4 THEN 'Equal'  END AS when_to_add FROM salt) AS s WHERE salt_in_recipe.salt_id = s.id AND s.addTo != 0"
+        },
+        {
+          "sql": "UPDATE salt_in_recipe SET quantity    = s.amount, unit        = s.unit, name = 'Deleted addition of \"Never add\" ' || s.name, display = ?, deleted = ?, when_to_add = 'Equal' FROM (SELECT id, name, amount, addTo, CASE WHEN amount_is_weight THEN 'kilograms' ELSE 'liters' END AS unit FROM salt) AS s WHERE salt_in_recipe.salt_id = s.id AND s.addTo == 0",
+          "binds": [
+            false,
+            true
+          ]
+        },
+        {
+          "sql": "UPDATE water_in_recipe SET volume_l = w.amount, name = 'Use of ' || w.name FROM (SELECT id, name, amount FROM water) AS w WHERE water_in_recipe.water_id = w.id"
+        },
+        {
+          "sql": "ALTER TABLE hop         DROP COLUMN amount"
+        },
+        {
+          "sql": "ALTER TABLE fermentable DROP COLUMN amount"
+        },
+        {
+          "sql": "ALTER TABLE misc        DROP COLUMN amount"
+        },
+        {
+          "sql": "ALTER TABLE salt        DROP COLUMN amount"
+        },
+        {
+          "sql": "ALTER TABLE yeast       DROP COLUMN amount"
+        },
+        {
+          "sql": "ALTER TABLE water       DROP COLUMN amount"
+        },
+        {
+          "sql": "ALTER TABLE yeast       DROP COLUMN times_cultured"
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET add_at_time_mins = h.time FROM (SELECT id, time FROM hop) AS h WHERE hop_in_recipe.hop_id = h.id"
+        },
+        {
+          "sql": "UPDATE misc_in_recipe SET add_at_time_mins = m.time FROM (SELECT id, time FROM misc) AS m WHERE misc_in_recipe.misc_id = m.id"
+        },
+        {
+          "sql": "UPDATE fermentable_in_recipe SET add_at_time_mins = 0.0 "
+        },
+        {
+          "sql": "UPDATE yeast_in_recipe SET add_at_time_mins = 0.0 "
+        },
+        {
+          "sql": "ALTER TABLE hop  DROP COLUMN time"
+        },
+        {
+          "sql": "ALTER TABLE misc DROP COLUMN time"
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET stage = 'add_to_mash' WHERE hop_id IN (SELECT id FROM hop WHERE lower(hop.use) = 'mash')"
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET stage = 'add_to_boil', step  = 1 WHERE hop_id IN (SELECT id FROM hop WHERE lower(hop.use) = 'first wort')"
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET stage = 'add_to_boil', step  = 2 WHERE hop_id IN (SELECT id FROM hop WHERE lower(hop.use) = 'boil')"
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET stage = 'add_to_boil', step  = 3 WHERE hop_id IN (SELECT id FROM hop WHERE lower(hop.use) = 'aroma')"
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET stage = 'add_to_fermentation' WHERE hop_id IN (SELECT id FROM hop WHERE lower(hop.use) = 'dry hop')"
+        },
+        {
+          "sql": "UPDATE misc_in_recipe SET stage = 'add_to_mash' WHERE misc_id IN (SELECT id FROM misc WHERE lower(misc.use) = 'mash')"
+        },
+        {
+          "sql": "UPDATE misc_in_recipe SET stage = 'add_to_boil', step  = 2 WHERE misc_id IN (SELECT id FROM misc WHERE lower(misc.use) = 'boil')"
+        },
+        {
+          "sql": "UPDATE misc_in_recipe SET stage = 'add_to_fermentation' WHERE misc_id IN (SELECT id FROM misc WHERE lower(misc.use) = 'primary' OR lower(misc.use) = 'secondary' )"
+        },
+        {
+          "sql": "UPDATE misc_in_recipe SET stage = 'add_to_package' WHERE misc_id IN (SELECT id FROM misc WHERE lower(misc.use) = 'bottling')"
+        },
+        {
+          "sql": "ALTER TABLE hop  DROP COLUMN use"
+        },
+        {
+          "sql": "ALTER TABLE misc DROP COLUMN use"
+        },
+        {
+          "sql": "UPDATE fermentable_in_recipe SET stage = 'add_to_mash' "
+        },
+        {
+          "sql": "UPDATE fermentable_in_recipe SET stage = 'add_to_boil', step  = 1 WHERE fermentable_id IN (SELECT id FROM fermentable WHERE is_mashed = ? AND add_after_boil = ?)",
+          "binds": [
+            false,
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE fermentable_in_recipe SET stage = 'add_to_boil', step  = 3 WHERE fermentable_id IN (SELECT id FROM fermentable WHERE add_after_boil = ?)",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "ALTER TABLE fermentable DROP COLUMN is_mashed"
+        },
+        {
+          "sql": "ALTER TABLE fermentable DROP COLUMN add_after_boil"
+        },
+        {
+          "sql": "UPDATE yeast_in_recipe SET stage = 'add_to_fermentation', step = 1 "
+        },
+        {
+          "sql": "UPDATE yeast_in_recipe SET stage = 'add_to_fermentation', step = 2 WHERE yeast_id IN (SELECT id FROM yeast WHERE add_to_secondary = ?)",
+          "binds": [
+            true
+          ]
+        },
+        {
+          "sql": "ALTER TABLE yeast DROP COLUMN add_to_secondary"
+        },
+        {
+          "sql": "UPDATE yeast_in_recipe SET attenuation_pct = y.attenuation FROM (SELECT id, attenuation FROM yeast) AS y WHERE yeast_in_recipe.yeast_id = y.id"
+        },
+        {
+          "sql": "ALTER TABLE yeast DROP COLUMN attenuation"
+        },
+        {
+          "sql": "UPDATE hop_in_recipe SET hop_id = hc.parent_id FROM (SELECT parent_id, child_id FROM hop_children) AS hc WHERE hop_in_recipe.hop_id = hc.child_id"
+        },
+        {
+          "sql": "UPDATE fermentable_in_recipe SET fermentable_id = fc.parent_id FROM (SELECT parent_id, child_id FROM fermentable_children) AS fc WHERE fermentable_in_recipe.fermentable_id = fc.child_id"
+        },
+        {
+          "sql": "UPDATE misc_in_recipe SET misc_id = mc.parent_id FROM (SELECT parent_id, child_id FROM misc_children) AS mc WHERE misc_in_recipe.misc_id = mc.child_id"
+        },
+        {
+          "sql": "UPDATE yeast_in_recipe SET yeast_id = yc.parent_id FROM (SELECT parent_id, child_id FROM yeast_children) AS yc WHERE yeast_in_recipe.yeast_id = yc.child_id"
+        },
+        {
+          "sql": "UPDATE water_in_recipe SET water_id = wc.parent_id FROM (SELECT parent_id, child_id FROM water_children) AS wc WHERE water_in_recipe.water_id = wc.child_id"
+        },
+        {
+          "sql": "UPDATE hop SET deleted = ?, display = ? WHERE hop.id IN (SELECT child_id FROM hop_children)",
+          "binds": [
+            true,
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE fermentable SET deleted = ?, display = ? WHERE fermentable.id IN (SELECT child_id FROM fermentable_children)",
+          "binds": [
+            true,
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE misc SET deleted = ?, display = ? WHERE misc.id IN (SELECT child_id FROM misc_children)",
+          "binds": [
+            true,
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE yeast SET deleted = ?, display = ? WHERE yeast.id IN (SELECT child_id FROM yeast_children)",
+          "binds": [
+            true,
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE water SET deleted = ?, display = ? WHERE water.id IN (SELECT child_id FROM water_children)",
+          "binds": [
+            true,
+            false
+          ]
+        },
+        {
+          "sql": "DROP TABLE         hop_children"
+        },
+        {
+          "sql": "DROP TABLE fermentable_children"
+        },
+        {
+          "sql": "DROP TABLE        misc_children"
+        },
+        {
+          "sql": "DROP TABLE       yeast_children"
+        },
+        {
+          "sql": "DROP TABLE       water_children"
+        },
+        {
+          "sql": "ALTER TABLE hop         DROP COLUMN display_unit"
+        },
+        {
+          "sql": "ALTER TABLE hop         DROP COLUMN display_scale"
+        },
+        {
+          "sql": "ALTER TABLE fermentable DROP COLUMN display_unit"
+        },
+        {
+          "sql": "ALTER TABLE fermentable DROP COLUMN display_scale"
+        },
+        {
+          "sql": "ALTER TABLE mash_step   DROP COLUMN display_unit"
+        },
+        {
+          "sql": "ALTER TABLE mash_step   DROP COLUMN display_scale"
+        },
+        {
+          "sql": "ALTER TABLE mash_step   DROP COLUMN display_temp_unit"
+        },
+        {
+          "sql": "ALTER TABLE misc        DROP COLUMN display_unit"
+        },
+        {
+          "sql": "ALTER TABLE misc        DROP COLUMN display_scale"
+        },
+        {
+          "sql": "ALTER TABLE yeast       DROP COLUMN display_unit"
+        },
+        {
+          "sql": "ALTER TABLE yeast       DROP COLUMN display_scale"
+        },
+        {
+          "sql": "ALTER TABLE         hop_in_inventory RENAME COLUMN amount TO quantity"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_inventory RENAME COLUMN amount TO quantity"
+        },
+        {
+          "sql": "ALTER TABLE        misc_in_inventory RENAME COLUMN amount TO quantity"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_in_inventory RENAME COLUMN quanta TO quantity"
+        },
+        {
+          "sql": "ALTER TABLE         hop_in_inventory ADD COLUMN         hop_id {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_inventory ADD COLUMN fermentable_id {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_in_inventory ADD COLUMN        misc_id {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_in_inventory ADD COLUMN       yeast_id {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_in_inventory ADD COLUMN unit   {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_inventory ADD COLUMN unit   {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_in_inventory ADD COLUMN unit   {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_in_inventory ADD COLUMN unit   {{type:string}}"
+        },
+        {
+          "sql": "DELETE FROM         hop_in_inventory WHERE id NOT IN (SELECT inventory_id FROM         hop WHERE inventory_id IS NOT NULL)"
+        },
+        {
+          "sql": "DELETE FROM fermentable_in_inventory WHERE id NOT IN (SELECT inventory_id FROM fermentable WHERE inventory_id IS NOT NULL)"
+        },
+        {
+          "sql": "DELETE FROM        misc_in_inventory WHERE id NOT IN (SELECT inventory_id FROM        misc WHERE inventory_id IS NOT NULL)"
+        },
+        {
+          "sql": "DELETE FROM       yeast_in_inventory WHERE id NOT IN (SELECT inventory_id FROM       yeast WHERE inventory_id IS NOT NULL)"
+        },
+        {
+          "sql": "UPDATE hop_in_inventory SET hop_id = h.id, unit = 'kilograms' FROM (SELECT id, inventory_id FROM hop ORDER BY NOT deleted, display, id DESC ) AS h WHERE hop_in_inventory.id = h.inventory_id"
+        },
+        {
+          "sql": "UPDATE fermentable_in_inventory SET fermentable_id = f.id, unit = 'kilograms' FROM (SELECT id, inventory_id FROM fermentable ORDER BY NOT deleted, display, id DESC ) AS f WHERE fermentable_in_inventory.id = f.inventory_id "
+        },
+        {
+          "sql": "UPDATE misc_in_inventory SET misc_id = m.id, unit = m.unit FROM (SELECT id, inventory_id, CASE WHEN amount_is_weight THEN 'kilograms' ELSE 'liters' END AS unit FROM misc ORDER BY NOT deleted, display, id DESC ) AS m WHERE misc_in_inventory.id = m.inventory_id"
+        },
+        {
+          "sql": "UPDATE yeast_in_inventory SET yeast_id = y.id, unit = 'number_of' FROM (SELECT id, inventory_id FROM yeast ORDER BY NOT deleted, display, id DESC ) AS y WHERE yeast_in_inventory.id = y.inventory_id"
+        },
+        {
+          "sql": "ALTER TABLE hop         DROP COLUMN inventory_id"
+        },
+        {
+          "sql": "ALTER TABLE fermentable DROP COLUMN inventory_id"
+        },
+        {
+          "sql": "ALTER TABLE misc        DROP COLUMN inventory_id"
+        },
+        {
+          "sql": "ALTER TABLE yeast       DROP COLUMN inventory_id"
+        },
+        {
+          "sql": "ALTER TABLE misc        DROP COLUMN amount_is_weight"
+        },
+        {
+          "sql": "ALTER TABLE yeast       DROP COLUMN amount_is_weight"
+        },
+        {
+          "sql": "CREATE TABLE tmp_hop_in_inventory ( id        {{primary_key}}, hop_id    {{type:int}}, quantity  {{type:double}}, unit      {{type:string}}, FOREIGN KEY(hop_id)   REFERENCES hop(id));"
+        },
+        {
+          "sql": "INSERT INTO tmp_hop_in_inventory (id, hop_id, quantity, unit) SELECT id, hop_id, quantity, unit FROM hop_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE hop_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmp_hop_in_inventory RENAME TO hop_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE tmp_fermentable_in_inventory ( id             {{primary_key}}, fermentable_id {{type:int}}, quantity       {{type:double}}, unit           {{type:string}}, FOREIGN KEY(fermentable_id)   REFERENCES fermentable(id));"
+        },
+        {
+          "sql": "INSERT INTO tmp_fermentable_in_inventory (id, fermentable_id, quantity, unit) SELECT id, fermentable_id, quantity, unit FROM fermentable_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE fermentable_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmp_fermentable_in_inventory RENAME TO fermentable_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE tmp_misc_in_inventory ( id             {{primary_key}}, misc_id {{type:int}}, quantity       {{type:double}}, unit           {{type:string}}, FOREIGN KEY(misc_id)   REFERENCES misc(id));"
+        },
+        {
+          "sql": "INSERT INTO tmp_misc_in_inventory (id, misc_id, quantity, unit) SELECT id, misc_id, quantity, unit FROM misc_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE misc_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmp_misc_in_inventory RENAME TO misc_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE tmp_yeast_in_inventory ( id             {{primary_key}}, yeast_id {{type:int}}, quantity       {{type:double}}, unit           {{type:string}}, FOREIGN KEY(yeast_id)   REFERENCES yeast(id));"
+        },
+        {
+          "sql": "INSERT INTO tmp_yeast_in_inventory (id, yeast_id, quantity, unit) SELECT id, yeast_id, quantity, unit FROM yeast_in_inventory"
+        },
+        {
+          "sql": "DROP TABLE yeast_in_inventory"
+        },
+        {
+          "sql": "ALTER TABLE tmp_yeast_in_inventory RENAME TO yeast_in_inventory"
+        },
+        {
+          "sql": "CREATE TABLE salt_in_inventory ( id        {{primary_key}}, salt_id   {{type:int}}, quantity  {{type:double}}, unit      {{type:string}}, FOREIGN KEY(salt_id)   REFERENCES salt(id));"
+        },
+        {
+          "sql": "ALTER TABLE brewnote DROP COLUMN folder"
+        },
+        {
+          "sql": "DROP TABLE bt_equipment"
+        },
+        {
+          "sql": "DROP TABLE bt_fermentable"
+        },
+        {
+          "sql": "DROP TABLE bt_hop"
+        },
+        {
+          "sql": "DROP TABLE bt_misc"
+        },
+        {
+          "sql": "DROP TABLE bt_style"
+        },
+        {
+          "sql": "DROP TABLE bt_water"
+        },
+        {
+          "sql": "DROP TABLE bt_yeast"
+        },
+        {
+          "sql": "DROP TABLE recipe_children"
+        },
+        {
+          "sql": "ALTER TABLE settings DROP COLUMN repopulatechildrenonnextstart"
+        },
+        {
+          "sql": "ALTER TABLE settings  ADD COLUMN default_content_version {{type:uint}}"
+        },
+        {
+          "sql": "UPDATE settings SET default_content_version = 0"
+        }
+      ]
+    },
+    {
+      "from_version": 11,
+      "to_version": 12,
+      "cpp_function": "migrate_to_12",
+      "statements": [
+        {
+          "sql": "UPDATE hop SET htype = 'aroma/bittering' WHERE lower(htype) = 'both'"
+        },
+        {
+          "sql": "UPDATE fermentable SET ftype = 'dry extract' WHERE lower(ftype) = 'dry extract'"
+        },
+        {
+          "sql": "UPDATE fermentable SET ftype = 'dry extract' WHERE lower(ftype) = 'dryextract'"
+        },
+        {
+          "sql": "UPDATE fermentable SET ftype = 'other'       WHERE lower(ftype) = 'adjunct'"
+        },
+        {
+          "sql": "UPDATE misc SET mtype = 'water agent' WHERE lower(mtype) = 'water agent'"
+        },
+        {
+          "sql": "UPDATE misc SET mtype = 'water agent' WHERE lower(mtype) = 'wateragent'"
+        },
+        {
+          "sql": "UPDATE yeast SET ytype = 'other'     WHERE lower(ytype) = 'wheat'    "
+        },
+        {
+          "sql": "UPDATE yeast SET flocculation = 'very high' WHERE lower(flocculation) = 'very high'"
+        },
+        {
+          "sql": "UPDATE yeast SET flocculation = 'very high' WHERE lower(flocculation) = 'veryhigh'"
+        },
+        {
+          "sql": "UPDATE style SET stype = 'beer'  WHERE lower(stype) = 'lager'"
+        },
+        {
+          "sql": "UPDATE style SET stype = 'beer'  WHERE lower(stype) = 'ale'  "
+        },
+        {
+          "sql": "UPDATE style SET stype = 'beer'  WHERE lower(stype) = 'wheat'"
+        },
+        {
+          "sql": "UPDATE style SET stype = 'other' WHERE lower(stype) = 'mixed'"
+        },
+        {
+          "sql": "UPDATE mash_step SET mstype = 'sparge'         WHERE lower(mstype) = 'flysparge'  "
+        },
+        {
+          "sql": "UPDATE mash_step SET mstype = 'sparge'         WHERE lower(mstype) = 'fly sparge'  "
+        },
+        {
+          "sql": "UPDATE mash_step SET mstype = 'drain mash tun' WHERE lower(mstype) = 'batchsparge'"
+        },
+        {
+          "sql": "UPDATE mash_step SET mstype = 'drain mash tun' WHERE lower(mstype) = 'batch sparge'"
+        },
+        {
+          "sql": "UPDATE recipe SET type = 'partial mash' WHERE lower(type) = 'partial mash'"
+        },
+        {
+          "sql": "UPDATE recipe SET type = 'partial mash' WHERE lower(type) = 'partialmash'"
+        },
+        {
+          "sql": "UPDATE recipe SET type = 'all grain'    WHERE lower(type) = 'all grain'   "
+        },
+        {
+          "sql": "UPDATE recipe SET type = 'all grain'    WHERE lower(type) = 'allgrain'   "
+        }
+      ]
+    },
+    {
+      "from_version": 12,
+      "to_version": 13,
+      "cpp_function": "migrate_to_13",
+      "statements": [
+        {
+          "sql": "ALTER TABLE equipment  ADD COLUMN kettleInternalDiameter_cm {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE equipment  ADD COLUMN kettleOpeningDiameter_cm  {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE salt DROP COLUMN is_acid"
+        },
+        {
+          "sql": "ALTER TABLE salt DROP COLUMN addTo"
+        },
+        {
+          "sql": "ALTER TABLE salt DROP COLUMN amount_is_weight"
+        },
+        {
+          "sql": "UPDATE boil_step SET step_time_mins = b.boil_time_mins FROM (SELECT id, boil_time_mins FROM boil) AS b WHERE boil_step.step_time_mins IS NULL AND boil_step.start_temp_c >= 81.0 AND boil_step.end_temp_c >= 81.0 AND boil_step.boil_id = b.id "
+        },
+        {
+          "sql": "ALTER TABLE boil DROP COLUMN boil_time_mins"
+        }
+      ]
+    },
+    {
+      "from_version": 13,
+      "to_version": 14,
+      "cpp_function": "migrate_to_14",
+      "statements": [
+        {
+          "sql": "ALTER TABLE water RENAME COLUMN flouride_ppm TO fluoride_ppm"
+        },
+        {
+          "sql": "CREATE TABLE new_instruction (id {{primary_key}}, name {{type:string}}, display {{type:bool}}, deleted {{type:bool}}, recipe_id {{type:int}}, step_number {{type:int}}, directions {{type:string}}, has_timer {{type:bool}}, timer_value {{type:string}}, completed {{type:bool}}, interval_mins {{type:double}}, FOREIGN KEY(recipe_id) REFERENCES recipe(id) );"
+        },
+        {
+          "sql": "INSERT INTO new_instruction ( name       , display    , deleted    , recipe_id  , step_number, directions , has_timer  , timer_value, completed  , interval_mins ) SELECT ii.name              , ii.display           , ii.deleted           , jj.recipe_id         , jj.instruction_number, ii.directions        , ii.hasTimer          , ii.timerValue        , ii.completed         , ii.interval FROM instruction AS ii, instruction_in_recipe AS jj WHERE jj.instruction_id = ii.id"
+        },
+        {
+          "sql": "DROP TABLE instruction_in_recipe"
+        },
+        {
+          "sql": "DROP TABLE instruction"
+        },
+        {
+          "sql": "ALTER TABLE new_instruction RENAME TO instruction"
+        }
+      ]
+    },
+    {
+      "from_version": 14,
+      "to_version": 15,
+      "cpp_function": "migrate_to_15",
+      "statements": [
+        {
+          "sql": "INSERT INTO salt ( name        ,deleted     ,display     ,folder      ,percent_acid,stype       ) VALUES (?, ?, ?, '', NULL, ?),(?, ?, ?, '', NULL, ?),(?, ?, ?, '', NULL, ?),(?, ?, ?, '', NULL, ?),(?, ?, ?, '', NULL, ?),(?, ?, ?, '', NULL, ?),(?, ?, ?, '', 80.0, ?),(?, ?, ?, '', 75.0, ?),(?, ?, ?, '', 10.0, ?)",
+          "binds": [
+            "CaCl2 (Calcium chloride)",
+            false,
+            true,
+            "CaCl2",
+            "CaCO3 (Calcium carbonate)",
+            false,
+            true,
+            "CaCO3",
+            "CaSO4 (Calcium sulfate)",
+            false,
+            true,
+            "CaSO4",
+            "MgSO4 (Magnesium sulfate)",
+            false,
+            true,
+            "MgSO4",
+            "NaCl (Sodium chloride)",
+            false,
+            true,
+            "NaCl",
+            "NaHCO3 (Sodium bicarbonate)",
+            false,
+            true,
+            "NaHCO3",
+            "Lactic Acid (C3H6O3) 80%",
+            false,
+            true,
+            "LacticAcid",
+            "H3PO4 (Phosphoric acid) 75%",
+            false,
+            true,
+            "H3PO4",
+            "H3PO4 (Phosphoric acid) 10%",
+            false,
+            true,
+            "H3PO4"
+          ]
+        }
+      ]
+    },
+    {
+      "from_version": 15,
+      "to_version": 16,
+      "cpp_function": "migrate_to_16",
+      "statements": [
+        {
+          "sql": "UPDATE recipe SET equipment_id = ecj.parent_id FROM (SELECT equipment_children.parent_id,               equipment_children.child_id          FROM equipment_children,                         equipment AS eqp,                           equipment AS eqc                       WHERE equipment_children.parent_id = eqp.id AND   equipment_children.child_id  = eqc.id AND   eqp.name                           = eqc.name                           AND   eqp.fermenter_batch_size_l         = eqc.fermenter_batch_size_l         AND   eqp.boiling_point                  = eqc.boiling_point                  AND   eqp.kettle_boil_size_l             = eqc.kettle_boil_size_l             AND   eqp.boil_time                      = eqc.boil_time                      AND   eqp.calc_boil_volume               = eqc.calc_boil_volume               AND   eqp.kettle_evaporation_per_hour_l  = eqc.kettle_evaporation_per_hour_l  AND   eqp.evap_rate                      = eqc.evap_rate                      AND   eqp.mash_tun_grain_absorption_lkg  = eqc.mash_tun_grain_absorption_lkg  AND   eqp.hop_utilization                = eqc.hop_utilization                AND   eqp.lauter_tun_deadspace_loss_l    = eqc.lauter_tun_deadspace_loss_l    AND   eqp.kettle_notes                   = eqc.kettle_notes                   AND   eqp.top_up_kettle                  = eqc.top_up_kettle                  AND   eqp.top_up_water                   = eqc.top_up_water                   AND   eqp.kettle_trub_chiller_loss_l     = eqc.kettle_trub_chiller_loss_l     AND   eqp.mash_tun_specific_heat_calgc   = eqc.mash_tun_specific_heat_calgc   AND   eqp.mash_tun_volume_l              = eqc.mash_tun_volume_l              AND   eqp.mash_tun_weight_kg             = eqc.mash_tun_weight_kg             AND   eqp.kettleInternalDiameter_cm      = eqc.kettleInternalDiameter_cm      AND   eqp.kettleOpeningDiameter_cm       = eqc.kettleOpeningDiameter_cm       AND   eqp.hlt_type                       = eqc.hlt_type                       AND   eqp.mash_tun_type                  = eqc.mash_tun_type                  AND   eqp.lauter_tun_type                = eqc.lauter_tun_type                AND   eqp.kettle_type                    = eqc.kettle_type                    AND   eqp.fermenter_type                 = eqc.fermenter_type                 AND   eqp.agingvessel_type               = eqc.agingvessel_type               AND   eqp.packaging_vessel_type          = eqc.packaging_vessel_type          AND   eqp.hlt_volume_l                   = eqc.hlt_volume_l                   AND   eqp.lauter_tun_volume_l            = eqc.lauter_tun_volume_l            AND   eqp.aging_vessel_volume_l          = eqc.aging_vessel_volume_l          AND   eqp.packaging_vessel_volume_l      = eqc.packaging_vessel_volume_l      AND   eqp.hlt_loss_l                     = eqc.hlt_loss_l                     AND   eqp.mash_tun_loss_l                = eqc.mash_tun_loss_l                AND   eqp.fermenter_loss_l               = eqc.fermenter_loss_l               AND   eqp.aging_vessel_loss_l            = eqc.aging_vessel_loss_l            AND   eqp.packaging_vessel_loss_l        = eqc.packaging_vessel_loss_l        AND   eqp.kettle_outflow_per_minute_l    = eqc.kettle_outflow_per_minute_l    AND   eqp.hlt_weight_kg                  = eqc.hlt_weight_kg                  AND   eqp.lauter_tun_weight_kg           = eqc.lauter_tun_weight_kg           AND   eqp.kettle_weight_kg               = eqc.kettle_weight_kg               AND   eqp.hlt_specific_heat_calgc        = eqc.hlt_specific_heat_calgc        AND   eqp.lauter_tun_specific_heat_calgc = eqc.lauter_tun_specific_heat_calgc AND   eqp.kettle_specific_heat_calgc     = eqc.kettle_specific_heat_calgc     AND   eqp.hlt_notes                      = eqc.hlt_notes                      AND   eqp.mash_tun_notes                 = eqc.mash_tun_notes                 AND   eqp.lauter_tun_notes               = eqc.lauter_tun_notes               AND   eqp.fermenter_notes                = eqc.fermenter_notes                AND   eqp.aging_vessel_notes             = eqc.aging_vessel_notes             AND   eqp.packaging_vessel_notes         = eqc.packaging_vessel_notes         ) AS ecj WHERE recipe.equipment_id = ecj.child_id"
+        },
+        {
+          "sql": "DELETE FROM equipment WHERE id IN (SELECT ecj.child_id  FROM (SELECT equipment_children.parent_id,               equipment_children.child_id          FROM equipment_children,                         equipment AS eqp,                           equipment AS eqc                       WHERE equipment_children.parent_id = eqp.id AND   equipment_children.child_id  = eqc.id AND   eqp.name                           = eqc.name                           AND   eqp.fermenter_batch_size_l         = eqc.fermenter_batch_size_l         AND   eqp.boiling_point                  = eqc.boiling_point                  AND   eqp.kettle_boil_size_l             = eqc.kettle_boil_size_l             AND   eqp.boil_time                      = eqc.boil_time                      AND   eqp.calc_boil_volume               = eqc.calc_boil_volume               AND   eqp.kettle_evaporation_per_hour_l  = eqc.kettle_evaporation_per_hour_l  AND   eqp.evap_rate                      = eqc.evap_rate                      AND   eqp.mash_tun_grain_absorption_lkg  = eqc.mash_tun_grain_absorption_lkg  AND   eqp.hop_utilization                = eqc.hop_utilization                AND   eqp.lauter_tun_deadspace_loss_l    = eqc.lauter_tun_deadspace_loss_l    AND   eqp.kettle_notes                   = eqc.kettle_notes                   AND   eqp.top_up_kettle                  = eqc.top_up_kettle                  AND   eqp.top_up_water                   = eqc.top_up_water                   AND   eqp.kettle_trub_chiller_loss_l     = eqc.kettle_trub_chiller_loss_l     AND   eqp.mash_tun_specific_heat_calgc   = eqc.mash_tun_specific_heat_calgc   AND   eqp.mash_tun_volume_l              = eqc.mash_tun_volume_l              AND   eqp.mash_tun_weight_kg             = eqc.mash_tun_weight_kg             AND   eqp.kettleInternalDiameter_cm      = eqc.kettleInternalDiameter_cm      AND   eqp.kettleOpeningDiameter_cm       = eqc.kettleOpeningDiameter_cm       AND   eqp.hlt_type                       = eqc.hlt_type                       AND   eqp.mash_tun_type                  = eqc.mash_tun_type                  AND   eqp.lauter_tun_type                = eqc.lauter_tun_type                AND   eqp.kettle_type                    = eqc.kettle_type                    AND   eqp.fermenter_type                 = eqc.fermenter_type                 AND   eqp.agingvessel_type               = eqc.agingvessel_type               AND   eqp.packaging_vessel_type          = eqc.packaging_vessel_type          AND   eqp.hlt_volume_l                   = eqc.hlt_volume_l                   AND   eqp.lauter_tun_volume_l            = eqc.lauter_tun_volume_l            AND   eqp.aging_vessel_volume_l          = eqc.aging_vessel_volume_l          AND   eqp.packaging_vessel_volume_l      = eqc.packaging_vessel_volume_l      AND   eqp.hlt_loss_l                     = eqc.hlt_loss_l                     AND   eqp.mash_tun_loss_l                = eqc.mash_tun_loss_l                AND   eqp.fermenter_loss_l               = eqc.fermenter_loss_l               AND   eqp.aging_vessel_loss_l            = eqc.aging_vessel_loss_l            AND   eqp.packaging_vessel_loss_l        = eqc.packaging_vessel_loss_l        AND   eqp.kettle_outflow_per_minute_l    = eqc.kettle_outflow_per_minute_l    AND   eqp.hlt_weight_kg                  = eqc.hlt_weight_kg                  AND   eqp.lauter_tun_weight_kg           = eqc.lauter_tun_weight_kg           AND   eqp.kettle_weight_kg               = eqc.kettle_weight_kg               AND   eqp.hlt_specific_heat_calgc        = eqc.hlt_specific_heat_calgc        AND   eqp.lauter_tun_specific_heat_calgc = eqc.lauter_tun_specific_heat_calgc AND   eqp.kettle_specific_heat_calgc     = eqc.kettle_specific_heat_calgc     AND   eqp.hlt_notes                      = eqc.hlt_notes                      AND   eqp.mash_tun_notes                 = eqc.mash_tun_notes                 AND   eqp.lauter_tun_notes               = eqc.lauter_tun_notes               AND   eqp.fermenter_notes                = eqc.fermenter_notes                AND   eqp.aging_vessel_notes             = eqc.aging_vessel_notes             AND   eqp.packaging_vessel_notes         = eqc.packaging_vessel_notes         ) AS ecj)"
+        },
+        {
+          "sql": "UPDATE recipe SET style_id = stj.parent_id FROM (SELECT style_children.parent_id,       style_children.child_id  FROM style_children,                 style AS stp,                   style AS stc               WHERE style_children.parent_id = stp.id AND   style_children.child_id  = stc.id AND   stp.name               = stc.name               AND   stp.abv_max            = stc.abv_max            AND   stp.abv_min            = stc.abv_min            AND   stp.carb_max           = stc.carb_max           AND   stp.carb_min           = stc.carb_min           AND   stp.category           = stc.category           AND   stp.category_number    = stc.category_number    AND   stp.color_max          = stc.color_max          AND   stp.color_min          = stc.color_min          AND   stp.examples           = stc.examples           AND   stp.fg_max             = stc.fg_max             AND   stp.fg_min             = stc.fg_min             AND   stp.ibu_max            = stc.ibu_max            AND   stp.ibu_min            = stc.ibu_min            AND   stp.ingredients        = stc.ingredients        AND   stp.notes              = stc.notes              AND   stp.og_max             = stc.og_max             AND   stp.og_min             = stc.og_min             AND   stp.style_guide        = stc.style_guide        AND   stp.style_letter       = stc.style_letter       AND   stp.stype              = stc.stype              AND   stp.aroma              = stc.aroma              AND   stp.appearance         = stc.appearance         AND   stp.flavor             = stc.flavor             AND   stp.mouthfeel          = stc.mouthfeel          AND   stp.overall_impression = stc.overall_impression ) AS stj WHERE recipe.style_id = stj.child_id"
+        },
+        {
+          "sql": "DELETE FROM style WHERE id IN (SELECT stj.child_id  FROM (SELECT style_children.parent_id,       style_children.child_id  FROM style_children,                 style AS stp,                   style AS stc               WHERE style_children.parent_id = stp.id AND   style_children.child_id  = stc.id AND   stp.name               = stc.name               AND   stp.abv_max            = stc.abv_max            AND   stp.abv_min            = stc.abv_min            AND   stp.carb_max           = stc.carb_max           AND   stp.carb_min           = stc.carb_min           AND   stp.category           = stc.category           AND   stp.category_number    = stc.category_number    AND   stp.color_max          = stc.color_max          AND   stp.color_min          = stc.color_min          AND   stp.examples           = stc.examples           AND   stp.fg_max             = stc.fg_max             AND   stp.fg_min             = stc.fg_min             AND   stp.ibu_max            = stc.ibu_max            AND   stp.ibu_min            = stc.ibu_min            AND   stp.ingredients        = stc.ingredients        AND   stp.notes              = stc.notes              AND   stp.og_max             = stc.og_max             AND   stp.og_min             = stc.og_min             AND   stp.style_guide        = stc.style_guide        AND   stp.style_letter       = stc.style_letter       AND   stp.stype              = stc.stype              AND   stp.aroma              = stc.aroma              AND   stp.appearance         = stc.appearance         AND   stp.flavor             = stc.flavor             AND   stp.mouthfeel          = stc.mouthfeel          AND   stp.overall_impression = stc.overall_impression ) AS stj)"
+        },
+        {
+          "sql": "DROP TABLE equipment_children"
+        },
+        {
+          "sql": "DROP TABLE     style_children"
+        },
+        {
+          "sql": "ALTER TABLE boil                  DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE boil_step             DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE brewnote              DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE equipment             DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE fermentable           DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_recipe DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE fermentation          DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE fermentation_step     DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE hop                   DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE hop_in_recipe         DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE instruction           DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE mash                  DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE mash_step             DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE misc                  DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE misc_in_recipe        DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE recipe                DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE salt                  DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE salt_in_recipe        DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE style                 DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE water                 DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE water_in_recipe       DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE yeast                 DROP COLUMN display"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe       DROP COLUMN display"
+        }
+      ]
+    },
+    {
+      "from_version": 16,
+      "to_version": 17,
+      "cpp_function": "migrate_to_17",
+      "statements": [
+        {
+          "sql": "UPDATE mash SET name = mj.name FROM ( SELECT 'Mash for ' || recipe.name AS name, mash.id AS id FROM mash, recipe WHERE mash.name = '' AND recipe.mash_id = mash.id GROUP BY mash.id, recipe.name HAVING COUNT(*) = 1) as mj WHERE mash.id = mj.id"
+        },
+        {
+          "sql": "UPDATE mash SET name = 'Mash number ' || CAST(id AS text) WHERE mash.name = '' OR mash.name IS NULL"
+        }
+      ]
+    },
+    {
+      "from_version": 17,
+      "to_version": 18,
+      "cpp_function": "migrate_to_18",
+      "statements": [
+        {
+          "sql": "ALTER TABLE fermentable RENAME COLUMN color TO color_lovibond"
+        }
+      ]
+    },
+    {
+      "from_version": 18,
+      "to_version": 19,
+      "cpp_function": "migrate_to_19",
+      "statements": [
+        {
+          "sql": "ALTER TABLE brewnote ADD COLUMN name {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE water_in_recipe RENAME COLUMN volume_l TO quantity"
+        },
+        {
+          "sql": "ALTER TABLE water_in_recipe ADD COLUMN unit {{type:string}}"
+        },
+        {
+          "sql": "UPDATE      water_in_recipe SET unit = 'liters'"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_in_inventory RENAME TO fermentable_stock_purchase"
+        },
+        {
+          "sql": "ALTER TABLE         hop_in_inventory RENAME TO         hop_stock_purchase"
+        },
+        {
+          "sql": "ALTER TABLE        misc_in_inventory RENAME TO        misc_stock_purchase"
+        },
+        {
+          "sql": "ALTER TABLE        salt_in_inventory RENAME TO        salt_stock_purchase"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_in_inventory RENAME TO       yeast_stock_purchase"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN name {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN name {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN name {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN name {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN name {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN deleted {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN deleted {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN deleted {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN deleted {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN deleted {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN quantity_ordered {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN quantity_ordered {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN quantity_ordered {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN quantity_ordered {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN quantity_ordered {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN date_received {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN date_received {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN date_received {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN date_received {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN date_received {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN date_ordered {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN date_ordered {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN date_ordered {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN date_ordered {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN date_ordered {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN date_best_before {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN date_best_before {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN date_best_before {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN date_best_before {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN date_best_before {{type:date}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN supplier {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN supplier {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN supplier {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN supplier {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN supplier {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN note {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN note {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN note {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN note {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN note {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN purchase_price_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN purchase_price_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN purchase_price_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN purchase_price_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN purchase_price_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN purchase_price {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN purchase_price {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN purchase_price {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN purchase_price {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN purchase_price {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN purchase_tax_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN purchase_tax_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN purchase_tax_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN purchase_tax_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN purchase_tax_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN purchase_tax {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN purchase_tax {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN purchase_tax {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN purchase_tax {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN purchase_tax {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN shipping_cost_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN shipping_cost_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN shipping_cost_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN shipping_cost_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN shipping_cost_currency {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN shipping_cost {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN shipping_cost {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE        misc_stock_purchase ADD COLUMN shipping_cost {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE        salt_stock_purchase ADD COLUMN shipping_cost {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE       yeast_stock_purchase ADD COLUMN shipping_cost {{type:int}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentable_stock_purchase ADD COLUMN color_lovibond {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN alpha_pct      {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN form           {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE         hop_stock_purchase ADD COLUMN year           {{type:string}}"
+        },
+        {
+          "sql": "UPDATE fermentable_stock_purchase SET supplier = 'Migrated inventory entry', date_received = ?",
+          "binds": [
+            {
+              "$ref": "current_date"
+            }
+          ]
+        },
+        {
+          "sql": "UPDATE         hop_stock_purchase SET supplier = 'Migrated inventory entry', date_received = ?",
+          "binds": [
+            {
+              "$ref": "current_date"
+            }
+          ]
+        },
+        {
+          "sql": "UPDATE        misc_stock_purchase SET supplier = 'Migrated inventory entry', date_received = ?",
+          "binds": [
+            {
+              "$ref": "current_date"
+            }
+          ]
+        },
+        {
+          "sql": "UPDATE        salt_stock_purchase SET supplier = 'Migrated inventory entry', date_received = ?",
+          "binds": [
+            {
+              "$ref": "current_date"
+            }
+          ]
+        },
+        {
+          "sql": "UPDATE       yeast_stock_purchase SET supplier = 'Migrated inventory entry', date_received = ?",
+          "binds": [
+            {
+              "$ref": "current_date"
+            }
+          ]
+        },
+        {
+          "sql": "UPDATE fermentable_stock_purchase SET deleted = (quantity <= 0)"
+        },
+        {
+          "sql": "UPDATE         hop_stock_purchase SET deleted = (quantity <= 0)"
+        },
+        {
+          "sql": "UPDATE        misc_stock_purchase SET deleted = (quantity <= 0)"
+        },
+        {
+          "sql": "UPDATE        salt_stock_purchase SET deleted = (quantity <= 0)"
+        },
+        {
+          "sql": "UPDATE       yeast_stock_purchase SET deleted = (quantity <= 0)"
+        },
+        {
+          "sql": "CREATE TABLE fermentable_stock_use (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, fermentable_purchase_id {{type:int}}, sequence_number {{type:int}}, date {{type:date}}, reason {{type:string}}, comment {{type:string}}, quantity_used {{type:double}}, brewnote_id {{type:int}}, FOREIGN KEY(fermentable_purchase_id) REFERENCES fermentable_stock_purchase(id), FOREIGN KEY(brewnote_id) REFERENCES brewnote(id) );"
+        },
+        {
+          "sql": "CREATE TABLE hop_stock_use (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, hop_purchase_id {{type:int}}, sequence_number {{type:int}}, date {{type:date}}, reason {{type:string}}, comment {{type:string}}, quantity_used {{type:double}}, brewnote_id {{type:int}}, FOREIGN KEY(hop_purchase_id) REFERENCES hop_stock_purchase(id), FOREIGN KEY(brewnote_id) REFERENCES brewnote(id) );"
+        },
+        {
+          "sql": "CREATE TABLE misc_stock_use (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, misc_purchase_id {{type:int}}, sequence_number {{type:int}}, date {{type:date}}, reason {{type:string}}, comment {{type:string}}, quantity_used {{type:double}}, brewnote_id {{type:int}}, FOREIGN KEY(misc_purchase_id) REFERENCES misc_stock_purchase(id), FOREIGN KEY(brewnote_id) REFERENCES brewnote(id) );"
+        },
+        {
+          "sql": "CREATE TABLE salt_stock_use (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, salt_purchase_id {{type:int}}, sequence_number {{type:int}}, date {{type:date}}, reason {{type:string}}, comment {{type:string}}, quantity_used {{type:double}}, brewnote_id {{type:int}}, FOREIGN KEY(salt_purchase_id) REFERENCES salt_stock_purchase(id), FOREIGN KEY(brewnote_id) REFERENCES brewnote(id) );"
+        },
+        {
+          "sql": "CREATE TABLE yeast_stock_use (id {{primary_key}}, name {{type:string}}, deleted {{type:bool}}, yeast_purchase_id {{type:int}}, sequence_number {{type:int}}, date {{type:date}}, reason {{type:string}}, comment {{type:string}}, quantity_used {{type:double}}, brewnote_id {{type:int}}, FOREIGN KEY(yeast_purchase_id) REFERENCES yeast_stock_purchase(id), FOREIGN KEY(brewnote_id) REFERENCES brewnote(id) );"
+        }
+      ]
+    },
+    {
+      "from_version": 19,
+      "to_version": 20,
+      "cpp_function": "migrate_to_20",
+      "unsupported_reason": "statement 'if (!executeSqlQueries(q, migrationQueries)) {\\n         return false;\\n'"
+    },
+    {
+      "from_version": 20,
+      "to_version": 21,
+      "cpp_function": "migrate_to_21",
+      "unsupported_reason": "statement 'QSqlRecord const equipmentColumns = q.driver()->record(\"equipment\")'"
+    },
+    {
+      "from_version": 21,
+      "to_version": 22,
+      "cpp_function": "migrate_to_22",
+      "unsupported_reason": "statement 'QSqlRecord const brewLogColumns = q.driver()->record(\"brew_log\")'"
+    },
+    {
+      "from_version": 22,
+      "to_version": 23,
+      "cpp_function": "migrate_to_23",
+      "statements": [
+        {
+          "sql": "ALTER TABLE mash         ADD COLUMN locked            {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE mash         ADD COLUMN auto_adjust       {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE boil         ADD COLUMN locked            {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentation ADD COLUMN locked            {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE mash_step    ADD COLUMN amount_fixed      {{type:bool}}"
+        },
+        {
+          "sql": "ALTER TABLE mash_step    ADD COLUMN infuse_temp_fixed {{type:bool}}"
+        },
+        {
+          "sql": "UPDATE mash         SET locked = ?, auto_adjust = ?",
+          "binds": [
+            false,
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE boil         SET locked = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE fermentation SET locked = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE mash_step    SET amount_fixed = ?, infuse_temp_fixed = ?",
+          "binds": [
+            false,
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN target_mash_ph     {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN water_kept_in_sync {{type:bool}}"
+        },
+        {
+          "sql": "UPDATE recipe SET water_kept_in_sync = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN fg_calc_uses_mash  {{type:bool}}"
+        },
+        {
+          "sql": "UPDATE recipe SET fg_calc_uses_mash = ?",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "ALTER TABLE recipe       ADD COLUMN wort_clarity          {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE brew_log     ADD COLUMN measured_wort_clarity {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE fermentation ADD COLUMN krausen_handling      {{type:string}}"
+        }
+      ]
+    }
+  ],
+  "hand_ported": [
+    "migrate_to_202",
+    "migrate_to_20",
+    "migrate_to_21",
+    "migrate_to_22"
+  ]
+}

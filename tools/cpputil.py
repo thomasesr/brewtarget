@@ -39,18 +39,37 @@ def strip_comments(text: str) -> str:
     return "".join(out)
 
 
+def scan(text: str):
+    """Yield `(index, character)` for every character outside a string or character literal.
+
+    The SQL in `src/database/` is full of parentheses and braces inside string literals, so any
+    depth counting that does not skip literals will go badly wrong.
+    """
+    i, n = 0, len(text)
+    while i < n:
+        char = text[i]
+        if char in "\"'":
+            quote, i = char, i + 1
+            while i < n and not (text[i] == quote and text[i - 1] != "\\"):
+                i += 1
+            i += 1
+            continue
+        yield i, char
+        i += 1
+
+
 def match_balanced(text: str, start: int, opener: str = "{", closer: str = "}") -> tuple[int, int]:
     """Return (start, end) of the balanced group whose opener is at or after `start`."""
-    i = text.index(opener, start)
-    depth, j = 0, i
-    while j < len(text):
-        if text[j] == opener:
+    begin, depth = None, 0
+    for index, char in scan(text[start:]):
+        if char == opener:
+            if begin is None:
+                begin = start + index
             depth += 1
-        elif text[j] == closer:
+        elif char == closer and begin is not None:
             depth -= 1
             if depth == 0:
-                return i, j + 1
-        j += 1
+                return begin, start + index + 1
     raise ValueError(f"unbalanced {opener!r} from offset {start}")
 
 
@@ -64,3 +83,30 @@ def split_top_level(body: str) -> list[str]:
             return groups
         groups.append(body[s:e])
         i = e
+
+
+def strip_preprocessor_conditionals(text: str) -> str:
+    """Keep the first branch of every `#if`/`#elif`/`#else`/`#endif` group, blanking the rest.
+
+    `DatabaseSchemaHelper.cpp` guards a Qt 6.4 API behind `#if`, with the two branches opening a
+    loop body that only one of them closes.  Taken literally the braces do not balance, so pick a
+    branch before trying to walk them.  Lines are blanked rather than removed so that line numbers
+    still line up with the original file.
+    """
+    kept, stack = [], []
+    for line in text.split("\n"):
+        directive = line.lstrip()
+        if directive.startswith(("#if", "#ifdef", "#ifndef")):
+            stack.append(True)
+            kept.append("")
+        elif directive.startswith(("#else", "#elif")):
+            if stack:
+                stack[-1] = False
+            kept.append("")
+        elif directive.startswith("#endif"):
+            if stack:
+                stack.pop()
+            kept.append("")
+        else:
+            kept.append(line if all(stack) else "")
+    return "\n".join(kept)
