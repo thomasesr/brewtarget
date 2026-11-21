@@ -244,6 +244,11 @@ three backends.
 
 **Done when:** every file in `testData/` imports, and re-export round-trips.
 
+Reading is done for all three formats, with the record definitions extracted rather
+than transcribed — adding BeerJSON needed nothing but the list of collection names.
+Still outstanding: writing BeerXML and BeerJSON files (only `.beer` writing is done),
+and loading the default content, which is Phase 4's last piece.
+
 ### Phase 7 — `bt-api` + `bt-server`
 
 - axum, one resource group per entity type, plus:

@@ -148,6 +148,57 @@ pub fn read_beerjson(document: &Value) -> Result<Document, MappingError> {
     read("beerJson", document, "beerjson", &BEERJSON_COLLECTIONS, "recipes")
 }
 
+/// The sections a BeerXML file may contain, as the wrapper element and the record inside it.
+///
+/// BeerXML nests one level deeper than the JSON formats: a list of hops is `<HOPS>` containing
+/// any number of `<HOP>`, where BeerJSON simply has an array.
+const BEERXML_SECTIONS: [(&str, &str); 8] = [
+    ("FERMENTABLES", "FERMENTABLE"),
+    ("HOPS", "HOP"),
+    ("MISCS", "MISC"),
+    ("YEASTS", "YEAST"),
+    ("WATERS", "WATER"),
+    ("STYLES", "STYLE"),
+    ("EQUIPMENTS", "EQUIPMENT"),
+    ("MASHS", "MASH"),
+];
+
+/// Read a whole BeerXML document, which must already have been given its synthetic root.
+pub fn read_beerxml(document: &Value) -> Result<Document, MappingError> {
+    let format = format_data().format("beerXml").ok_or_else(|| MappingError::UnknownFormat("beerXml".to_owned()))?;
+    let Some(root_node) = document.get(crate::xml::SYNTHETIC_ROOT) else {
+        return Ok(Document::default());
+    };
+
+    let mut result = Document::default();
+    for (wrapper, record_name) in BEERXML_SECTIONS {
+        let Some(definition) = format.record_named(record_name) else { continue };
+        let Some(nodes) = records_in(root_node, wrapper, record_name) else { continue };
+        let records: Result<Vec<Owned>, MappingError> =
+            nodes.iter().map(|node| read_owned(format, definition, node)).collect();
+        result.collections.push((wrapper.to_owned(), records?));
+    }
+
+    if let Some(definition) = format.record_named("RECIPE")
+        && let Some(nodes) = records_in(root_node, "RECIPES", "RECIPE")
+    {
+        result.recipes = nodes.iter().map(|node| read_owned(format, definition, node)).collect::<Result<_, _>>()?;
+    }
+    Ok(result)
+}
+
+/// The records inside a BeerXML wrapper element.
+///
+/// A wrapper holding exactly one record has no array around it, since nothing in XML says whether
+/// one or many was expected.
+fn records_in<'a>(root: &'a Value, wrapper: &str, record_name: &str) -> Option<Vec<&'a Value>> {
+    let inner = root.get(wrapper)?.get(record_name)?;
+    Some(match inner {
+        Value::Array(array) => array.iter().collect(),
+        single => vec![single],
+    })
+}
+
 /// Read a document of any of the formats.
 pub fn read(
     format_name: &str,

@@ -93,6 +93,25 @@ fn single_unit_is_dimensionless(format: &Format, mapping_name: &str) -> bool {
     matches!(format.unit_mappings.get(mapping_name), Some(UnitMapping::SingleUnit { .. }))
 }
 
+/// Read a boolean, accepting the capitalised spellings BeerXML uses.
+fn as_bool(raw: &Value) -> Option<bool> {
+    raw.as_bool().or_else(|| match raw.as_str()?.trim() {
+        "true" | "TRUE" | "True" | "1" => Some(true),
+        "false" | "FALSE" | "False" | "0" => Some(false),
+        _ => None,
+    })
+}
+
+/// Read a whole number, from a JSON number or from text.
+fn as_i64(raw: &Value) -> Option<i64> {
+    raw.as_i64().or_else(|| raw.as_str()?.trim().parse().ok()).or_else(|| as_f64(raw).map(|value| value as i64))
+}
+
+/// Read a number, from a JSON number or from text.
+fn as_f64(raw: &Value) -> Option<f64> {
+    raw.as_f64().or_else(|| raw.as_str()?.trim().parse().ok())
+}
+
 /// Read a `{"unit": …, "value": …}` pair, resolving the unit through the field's table.
 fn measurement(format: &Format, field: &Field, raw: &Value) -> Result<(f64, bt_measure::Unit), MappingError> {
     let bad = |message: String| MappingError::BadValue { path: field.path.clone(), message };
@@ -122,6 +141,11 @@ fn read_field(format: &Format, record: &Value, field: &Field) -> Result<Option<V
             Value::String(raw.as_str().ok_or_else(|| bad("expected a string"))?.to_owned())
         }
 
+        // A unit column holds the unit's own name.  BeerXML has no such field in the standard --
+        // amounts there are implicitly in kilograms or litres -- so Brewtarget writes one of its
+        // own to keep the unit the user chose.
+        "Unit" => Value::String(raw.as_str().ok_or_else(|| bad("expected a unit name"))?.to_owned()),
+
         // The database keeps dates as dates.  A file may give a full timestamp -- a brew started
         // at half past two in the afternoon -- and storing that into a DATE column keeps the day
         // and drops the rest, which is what the C++ does when it puts a QDateTime into a QDate.
@@ -130,14 +154,25 @@ fn read_field(format: &Format, record: &Value, field: &Field) -> Result<Option<V
             let text = raw.as_str().ok_or_else(|| bad("expected a date"))?;
             Value::String(text.split('T').next().unwrap_or(text).to_owned())
         }
-        "Bool" => Value::Bool(raw.as_bool().ok_or_else(|| bad("expected true or false"))?),
-        "Int" | "UInt" => Value::from(raw.as_i64().ok_or_else(|| bad("expected a whole number"))?),
-        "Double" => Value::from(raw.as_f64().ok_or_else(|| bad("expected a number"))?),
+        // XML carries no types, so every value arrives as text and has to be coerced.  BeerXML
+        // writes booleans as TRUE and FALSE in capitals, which the standard specifies and XML
+        // does not allow, so both spellings are accepted.
+        "Bool" => Value::Bool(as_bool(raw).ok_or_else(|| bad("expected true or false"))?),
+        "Int" | "UInt" => Value::from(as_i64(raw).ok_or_else(|| bad("expected a whole number"))?),
+        "Double" => Value::from(as_f64(raw).ok_or_else(|| bad("expected a number"))?),
 
-        // An enum arrives as the string the format uses for it.  Those strings are the ones the
-        // database stores too, so they go straight through; it is the schema's job to have
-        // rejected any the mapping does not know.
-        "Enum" => Value::String(raw.as_str().ok_or_else(|| bad("expected a string"))?.to_owned()),
+        // An enum arrives as whatever string the format uses.  For `.beer` and BeerJSON that is
+        // the string the database stores too, deliberately; BeerXML uses its own, so the value
+        // is translated through the enum member both mappings agree on.
+        "Enum" => {
+            let text = raw.as_str().ok_or_else(|| bad("expected a string"))?;
+            let translated = match field.decoder.as_deref() {
+                Some(mapping) => crate::enums::to_database_owned(mapping, text)
+                    .ok_or_else(|| bad(&format!("{text:?} is not a value {mapping} knows")))?,
+                None => text.to_owned(),
+            };
+            Value::String(translated)
+        }
 
         // A measurement is a value and a unit together.  Most columns hold one number, so the
         // value is converted to the canonical unit -- five US gallons becomes 18.927 litres,
@@ -150,11 +185,8 @@ fn read_field(format: &Format, record: &Value, field: &Field) -> Result<Option<V
 
         // A single-unit field is always in the one unit, so only the number is interesting.
         "SingleUnitValue" => {
-            let quantity = raw
-                .get("value")
-                .and_then(Value::as_f64)
-                .or_else(|| raw.as_f64())
-                .ok_or_else(|| bad("expected a value"))?;
+            let quantity =
+                raw.get("value").and_then(as_f64).or_else(|| as_f64(raw)).ok_or_else(|| bad("expected a value"))?;
             if let Some(mapping) = field.decoder.as_deref()
                 && !single_unit_is_dimensionless(format, mapping)
                 && let Some(unit_name) = raw.get("unit").and_then(Value::as_str)
