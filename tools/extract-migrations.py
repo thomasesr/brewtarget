@@ -234,7 +234,10 @@ VECTOR_DECL_RE = re.compile(r"^QVector<QueryAndParameters>\s*(?:const\s+)?(\w+)\
 STRING_DECL_RE = re.compile(r"^QString\s*(?:const\s+)?(\w+)\s*(?:=\s*(.*)|\{(.*)\})?$", re.S)
 STREAM_DECL_RE = re.compile(r"^QTextStream\s+(\w+)\s*\(\s*&(\w+)\s*\)$", re.S)
 LIST_DECL_RE = re.compile(r"^std::vector<char const \*>\s*(?:const\s+)?(\w+)\s*\{(.*)\}$", re.S)
-FOREACH_RE = re.compile(r"\s*(?:char const \*|auto)\s*(?:const\s+)?(\w+)\s*:\s*(.*?)\s*$", re.S)
+FOREACH_RE = re.compile(r"\s*(?:char const \*|auto)\s*(?:const\s*&?\s*|\*\s*const\s+)?(\w+)\s*:\s*(.*?)\s*$", re.S)
+DESTRUCTURING_RE = re.compile(r"\s*auto\s+const\s*&?\s*\[([\w\s,]+)\]\s*:\s*\{(.*)\}\s*$", re.S)
+RECORD_DECL_RE = re.compile(r"^QSqlRecord\s*(?:const\s+)?(\w+)\s*=\s*q\.driver\(\)->record\(\s*\"(\w+)\"\s*\)$", re.S)
+CONTAINS_RE = re.compile(r"^(\w+)\.contains\((.*)\)$", re.S)
 
 IGNORED_STATEMENT_RE = re.compile(r"^(qDebug|qInfo|qWarning|qCritical)\b")
 
@@ -254,13 +257,14 @@ def top_level_pieces(text: str):
             if piece:
                 yield ("statement", piece)
             start = index + 1
-        elif depth == 0 and char == "f" and re.match(r"for\s*\(", text[index:]):
+        elif depth == 0 and char in "fi" and re.match(r"(for|if)\s*\(", text[index:]):
+            keyword = "loop" if text[index] == "f" else "conditional"
             before = text[start:index].strip()
             if before:
                 yield ("statement", before)
             header_start, header_end = match_balanced(text, index, "(", ")")
             body_start, body_end = match_balanced(text, header_end)
-            yield ("loop", (text[header_start + 1 : header_end - 1], text[body_start + 1 : body_end - 1]))
+            yield (keyword, (text[header_start + 1 : header_end - 1], text[body_start + 1 : body_end - 1]))
             start = consumed = body_end
     tail = text[start:].strip()
     if tail:
@@ -274,6 +278,8 @@ class Walker:
         self.values: dict[str, str] = {}  # QString locals
         self.lists: dict[str, list[str]] = {}  # std::vector<char const *> locals
         self.streams: dict[str, str] = {}  # QTextStream name -> the QString it writes into
+        self.records: dict[str, str] = {}  # QSqlRecord local -> the table it describes
+        self.condition: dict | None = None  # guard applied to statements appended inside an `if`
         self.vector: str | None = None  # the QVector<QueryAndParameters> being built
         self.statements: list[dict] = []
 
@@ -284,10 +290,43 @@ class Walker:
         for kind, piece in top_level_pieces(text):
             if kind == "loop":
                 self.loop(*piece, bindings)
+            elif kind == "conditional":
+                self.conditional(*piece, bindings)
             else:
                 self.statement(piece, bindings)
 
+    def conditional(self, header: str, body: str, bindings: dict[str, str]) -> None:
+        """Handle `if (record.contains(column)) { ... }`.
+
+        Several migrations rename or drop a column that only exists in databases upgraded from an
+        older schema -- one created fresh at that version never had it, and SQLite has no
+        `DROP COLUMN IF EXISTS`.  The guard travels with the statement so the runner can apply it.
+        """
+        contains = CONTAINS_RE.fullmatch(header.strip())
+        if not contains or contains.group(1) not in self.records:
+            raise Unsupported(f"condition {header.strip()!r}")
+        table = self.records[contains.group(1)]
+        column = evaluate(contains.group(2), self.env(bindings))
+        if self.condition is not None:
+            raise Unsupported("nested conditionals")
+        self.condition = {"column_exists": [table, column]}
+        try:
+            self.run(body, bindings)
+        finally:
+            self.condition = None
+
     def loop(self, header: str, body: str, bindings: dict[str, str]) -> None:
+        destructuring = DESTRUCTURING_RE.fullmatch(header)
+        if destructuring:
+            names = [name.strip() for name in destructuring.group(1).split(",")]
+            for item in split_arguments(destructuring.group(2)):
+                values = split_arguments(re.sub(r"^std::pair\s*\{(.*)\}$", r"\1", item.strip(), flags=re.S))
+                if len(values) != len(names):
+                    raise Unsupported(f"destructuring {item!r} into {names}")
+                extra = {name: evaluate(value, self.env(bindings)) for name, value in zip(names, values)}
+                self.run(body, {**bindings, **extra})
+            return
+
         match = FOREACH_RE.fullmatch(header)
         if not match:
             raise Unsupported(f"loop header {header!r}")
@@ -318,7 +357,15 @@ class Walker:
 
         if self.vector and text.startswith(f"{self.vector}.append("):
             start, end = match_balanced(text, len(self.vector) + len(".append") - 1, "(", ")")
-            self.statements.append(parse_entry(text[start + 1 : end - 1].strip(), self.env(bindings)))
+            entry = parse_entry(text[start + 1 : end - 1].strip(), self.env(bindings))
+            if self.condition is not None:
+                entry["condition"] = self.condition
+            self.statements.append(entry)
+            return
+
+        record = RECORD_DECL_RE.match(text)
+        if record:
+            self.records[record.group(1)] = record.group(2)
             return
 
         stream = STREAM_DECL_RE.match(text)

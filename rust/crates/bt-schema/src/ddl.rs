@@ -88,6 +88,27 @@ pub fn add_foreign_keys(table: &Table, dialect: Dialect, namespace: &Namespace) 
         .collect())
 }
 
+/// Render the `settings` table.
+///
+/// `DatabaseSchemaHelper::create` makes this one by hand rather than from the `ObjectStore`
+/// definitions, because only the schema helper and the default content loader ever touch it.  It
+/// therefore does not appear in `schema/v23.json`, but a usable database still needs it -- it is
+/// where the schema version lives.
+pub fn settings_table(dialect: Dialect, namespace: &Namespace) -> Result<String, DdlError> {
+    let schema = schema();
+    let quote = lookup(&schema.identifier_quote, dialect, "identifier_quote")?;
+    let primary_key = lookup(&schema.primary_key_declaration, dialect, "primary_key_declaration")?;
+    let integer = lookup(
+        schema.native_types.get("int").ok_or_else(|| DdlError::UnknownBaseType("int".into()))?,
+        dialect,
+        "native_types",
+    )?;
+    Ok(format!(
+        "CREATE TABLE {} (id {primary_key}, version {integer}, default_content_version {integer})",
+        namespace.qualify("settings", quote)
+    ))
+}
+
 /// Render the whole schema: every `CREATE TABLE`, then every foreign key.
 pub fn create_all(dialect: Dialect, namespace: &Namespace) -> Result<Vec<String>, DdlError> {
     let tables = &schema().tables;
@@ -98,5 +119,6 @@ pub fn create_all(dialect: Dialect, namespace: &Namespace) -> Result<Vec<String>
     for table in tables {
         statements.extend(add_foreign_keys(table, dialect, namespace)?);
     }
+    statements.push(settings_table(dialect, namespace)?);
     Ok(statements)
 }

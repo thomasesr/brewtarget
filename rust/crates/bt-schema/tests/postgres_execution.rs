@@ -62,7 +62,9 @@ async fn generated_postgres_ddl_builds_the_expected_schema() {
             .into_iter()
             .map(|row| row.get::<String, _>("table_name"))
             .collect();
-    assert_eq!(created, schema().tables.iter().map(|t| t.name.clone()).collect::<BTreeSet<_>>());
+    let mut expected: BTreeSet<String> = schema().tables.iter().map(|t| t.name.clone()).collect();
+    expected.insert("settings".to_owned()); // created by hand, see bt_schema::settings_table
+    assert_eq!(created, expected);
 
     for table in &schema().tables {
         let actual: BTreeSet<String> = sqlx::query(

@@ -22,10 +22,14 @@
 
 #![forbid(unsafe_code)]
 
+pub mod create;
 pub mod ddl;
 pub mod dialect;
+pub mod migrations;
 pub mod model;
 
-pub use ddl::{DdlError, add_foreign_keys, create_all, create_table};
+pub use create::create_database;
+pub use ddl::{DdlError, add_foreign_keys, create_all, create_table, settings_table};
 pub use dialect::{Dialect, InvalidNamespace, Namespace};
+pub use migrations::{MigrationError, migrate, migrate_to_latest, migrations, schema_version};
 pub use model::{Column, ForeignKey, PrimaryKey, Schema, Table, schema};

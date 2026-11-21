@@ -2392,19 +2392,360 @@
       "from_version": 19,
       "to_version": 20,
       "cpp_function": "migrate_to_20",
-      "unsupported_reason": "statement 'if (!executeSqlQueries(q, migrationQueries)) {\\n         return false;\\n'"
+      "unsupported_reason": "condition '!executeSqlQueries(q, migrationQueries)'"
     },
     {
       "from_version": 20,
       "to_version": 21,
       "cpp_function": "migrate_to_21",
-      "unsupported_reason": "statement 'QSqlRecord const equipmentColumns = q.driver()->record(\"equipment\")'"
+      "statements": [
+        {
+          "sql": "UPDATE salt SET stype = 'calcium chloride anhydrous' WHERE stype = 'CaCl2'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'calcium carbonate' WHERE stype = 'CaCO3'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'calcium sulfate dihydrate' WHERE stype = 'CaSO4'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'magnesium sulfate heptahydrate' WHERE stype = 'MgSO4'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'sodium chloride' WHERE stype = 'NaCl'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'sodium bicarbonate' WHERE stype = 'NaHCO3'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'lactic acid' WHERE stype = 'LacticAcid'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'phosphoric acid' WHERE stype = 'H3PO4'"
+        },
+        {
+          "sql": "UPDATE salt SET stype = 'other' WHERE stype = 'AcidulatedMalt'"
+        },
+        {
+          "sql": "ALTER TABLE misc ADD COLUMN water_agent_type {{type:string}}"
+        },
+        {
+          "sql": "ALTER TABLE misc ADD COLUMN water_agent_percent_acid {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE misc ADD COLUMN old_salt_id {{type:int}}"
+        },
+        {
+          "sql": "INSERT INTO misc (old_salt_id, name, deleted, mtype, water_agent_type, water_agent_percent_acid) SELECT id, COALESCE(name, '') || ' (migrated from salts)' AS name, deleted, 'water agent', stype, percent_acid FROM salt"
+        },
+        {
+          "sql": "INSERT INTO misc_in_recipe (name, deleted, quantity, unit, stage, recipe_id, misc_id) SELECT sir.name || ' (' || sir.when_to_add || ')' AS name, sir.deleted, sir.quantity, sir.unit, 'add_to_mash' AS stage,sir.recipe_id, misc.id AS misc_id FROM salt_in_recipe AS sir, misc WHERE sir.salt_id = misc.old_salt_id"
+        },
+        {
+          "sql": "ALTER TABLE misc_stock_purchase ADD COLUMN old_salt_purchase_id {{type:int}}"
+        },
+        {
+          "sql": "INSERT INTO misc_stock_purchase (old_salt_purchase_id, name, deleted, misc_id, quantity, unit, quantity_ordered, date_received, date_ordered, date_best_before, supplier, note, purchase_price_currency, purchase_price, purchase_tax_currency, purchase_tax, shipping_cost_currency, shipping_cost) SELECT spr.id, spr.name, spr.deleted, misc.id, spr.quantity, spr.unit, spr.quantity_ordered, spr.date_received, spr.date_ordered, spr.date_best_before,spr.supplier, spr.note, spr.purchase_price_currency, spr.purchase_price, spr.purchase_tax_currency, spr.purchase_tax, spr.shipping_cost_currency, spr.shipping_cost FROM salt_stock_purchase AS spr, misc WHERE spr.salt_id = misc.old_salt_id"
+        },
+        {
+          "sql": "INSERT INTO misc_stock_use (name, deleted, misc_purchase_id, sequence_number, date, reason, comment, quantity_used, brew_log_id) SELECT ssu.name, ssu.deleted, msp.id AS misc_purchase_id, ssu.sequence_number, ssu.date, ssu.reason, ssu.comment, ssu.quantity_used, ssu.brew_log_id FROM salt_stock_use AS ssu, misc_stock_purchase AS msp WHERE ssu.salt_purchase_id = msp.old_salt_purchase_id"
+        },
+        {
+          "sql": "ALTER TABLE misc DROP COLUMN old_salt_id"
+        },
+        {
+          "sql": "ALTER TABLE misc_stock_purchase DROP COLUMN old_salt_purchase_id"
+        },
+        {
+          "sql": "DROP TABLE salt_stock_use"
+        },
+        {
+          "sql": "DROP TABLE salt_stock_purchase"
+        },
+        {
+          "sql": "DROP TABLE salt_in_recipe"
+        },
+        {
+          "sql": "DROP TABLE folder_for_salt {{cascade}}"
+        },
+        {
+          "sql": "DROP TABLE salt"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN lactic_acid_by_weight_pct {{type:double}}"
+        },
+        {
+          "sql": "{{add_foreign_key:recipe|water_base|water|id}}"
+        },
+        {
+          "sql": "{{add_foreign_key:recipe|water_target|water|id}}"
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN ro_water_mash_pct   {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE recipe ADD COLUMN ro_water_sparge_pct {{type:double}}"
+        },
+        {
+          "sql": "UPDATE recipe SET water_base = (SELECT wir.water_id FROM water_in_recipe AS wir, water AS w WHERE wir.recipe_id = recipe.id AND wir.water_id = w.id AND w.wtype = 0 AND wir.deleted = ? ORDER BY wir.id DESC LIMIT 1)",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE recipe SET water_target = (SELECT wir.water_id FROM water_in_recipe AS wir, water AS w WHERE wir.recipe_id = recipe.id AND wir.water_id = w.id AND w.wtype = 1 AND wir.deleted = ? ORDER BY wir.id DESC LIMIT 1)",
+          "binds": [
+            false
+          ]
+        },
+        {
+          "sql": "UPDATE recipe SET ro_water_mash_pct = (SELECT 100.0 * w.mash_ro FROM water AS w WHERE w.id = recipe.water_base) WHERE water_base IS NOT NULL"
+        },
+        {
+          "sql": "UPDATE recipe SET ro_water_sparge_pct = (SELECT 100.0 * w.sparge_ro FROM water AS w WHERE w.id = recipe.water_base) WHERE water_base IS NOT NULL"
+        },
+        {
+          "sql": "ALTER TABLE water DROP COLUMN mash_ro"
+        },
+        {
+          "sql": "ALTER TABLE water DROP COLUMN sparge_ro"
+        },
+        {
+          "sql": "ALTER TABLE water DROP COLUMN wtype"
+        },
+        {
+          "sql": "DROP TABLE water_in_recipe"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN brewdate                TO brew_date"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN fermentdate             TO ferment_date"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_boil_grav     TO expected_pre_boil_gravity_sg"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN sg                      TO measured_pre_boil_gravity_sg"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_vol_into_bk   TO expected_pre_boil_volume_l"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN volume_into_bk          TO measured_pre_boil_volume_l"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_strike_temp   TO expected_strike_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN strike_temp             TO measured_strike_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_mash_fin_temp TO expected_mash_final_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN mash_final_temp         TO measured_mash_final_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_og            TO expected_original_gravity_sg"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN og                      TO measured_original_gravity_sg"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN post_boil_volume        TO measured_post_boil_volume_l"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_vol_into_ferm TO expected_volume_into_fermentor_l"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN volume_into_fermenter   TO measured_volume_into_fermentor_l"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN pitch_temp              TO measured_pitch_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_fg            TO expected_final_gravity_sg"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN fg                      TO measured_final_gravity_sg"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN final_volume            TO measured_final_volume"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_abv           TO expected_alcohol_by_volume_pct"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN abv                     TO computed_alcohol_by_volume_pct"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_atten         TO expected_attenuation_pct"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN attenuation             TO computed_attenuation_pct"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN projected_eff           TO expected_efficiency_pct"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN brewhouse_eff           TO computed_efficiency_pct"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN eff_into_bk             TO computed_pre_boil_efficiency_pct"
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN boil_off                TO expected_boil_off_l"
+        },
+        {
+          "sql": "ALTER TABLE brew_log DROP COLUMN projected_points"
+        },
+        {
+          "sql": "ALTER TABLE brew_log DROP COLUMN projected_ferm_points"
+        },
+        {
+          "sql": "ALTER TABLE brew_log ADD COLUMN forecast_original_gravity_sg {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN alpha_min_pct {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN alpha_max_pct {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN  beta_min_pct {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop ADD COLUMN  beta_max_pct {{type:double}}"
+        },
+        {
+          "sql": "ALTER TABLE hop RENAME COLUMN          alpha TO          alpha_pct"
+        },
+        {
+          "sql": "ALTER TABLE hop RENAME COLUMN           beta TO           beta_pct"
+        },
+        {
+          "sql": "ALTER TABLE hop RENAME COLUMN  caryophyllene TO  caryophyllene_pct"
+        },
+        {
+          "sql": "ALTER TABLE hop RENAME COLUMN     cohumulone TO     cohumulone_pct"
+        },
+        {
+          "sql": "ALTER TABLE hop RENAME COLUMN       humulene TO       humulene_pct"
+        },
+        {
+          "sql": "ALTER TABLE hop RENAME COLUMN        myrcene TO        myrcene_pct"
+        },
+        {
+          "sql": "ALTER TABLE hop RENAME COLUMN hsi TO sixMonthAlphaLoss_pct"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN fermenter_batch_size_l TO fv_batch_size_l"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN fermenter_type         TO fv_type"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN fermenter_loss_l       TO fv_loss_l"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN fermenter_notes        TO fv_notes"
+        },
+        {
+          "sql": "ALTER TABLE fermentable ADD COLUMN fermentable_fraction_pct {{type:double}}"
+        },
+        {
+          "sql": "UPDATE fermentable SET fermentable_fraction_pct = 0 WHERE LOWER(name) LIKE '%lactose%'"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN foundation_volume_l {{type:double}}"
+        },
+        {
+          "sql": "UPDATE equipment SET foundation_volume_l = 0"
+        },
+        {
+          "sql": "ALTER TABLE equipment RENAME COLUMN mash_tun_grain_absorption_lkg TO grain_absorption_lkg"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN kettle_volume_l {{type:double}}"
+        },
+        {
+          "sql": "UPDATE equipment SET kettle_volume_l = kettle_boil_size_l"
+        },
+        {
+          "sql": "ALTER TABLE equipment ADD COLUMN fv_volume_l {{type:double}}"
+        },
+        {
+          "sql": "UPDATE equipment SET fv_volume_l = fv_batch_size_l"
+        },
+        {
+          "sql": "UPDATE mash SET tun_temp = NULL WHERE tun_temp = 0"
+        },
+        {
+          "sql": "ALTER TABLE mash RENAME COLUMN tun_temp          TO initial_tun_temp_c"
+        },
+        {
+          "sql": "ALTER TABLE mash RENAME COLUMN tun_weight        TO tun_weight_kg"
+        },
+        {
+          "sql": "ALTER TABLE mash RENAME COLUMN tun_specific_heat TO tun_specific_heat_calgc"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe ADD COLUMN cell_count_billions_tmp {{type:double}}"
+        },
+        {
+          "sql": "UPDATE yeast_in_recipe SET cell_count_billions_tmp = cell_count_billions"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe DROP COLUMN cell_count_billions"
+        },
+        {
+          "sql": "ALTER TABLE yeast_in_recipe RENAME COLUMN cell_count_billions_tmp TO cell_count_billions"
+        },
+        {
+          "sql": "ALTER TABLE equipment DROP COLUMN boil_time",
+          "condition": {
+            "column_exists": [
+              "equipment",
+              "boil_time"
+            ]
+          }
+        },
+        {
+          "sql": "ALTER TABLE equipment DROP COLUMN calc_boil_volume",
+          "condition": {
+            "column_exists": [
+              "equipment",
+              "calc_boil_volume"
+            ]
+          }
+        }
+      ]
     },
     {
       "from_version": 21,
       "to_version": 22,
       "cpp_function": "migrate_to_22",
-      "unsupported_reason": "statement 'QSqlRecord const brewLogColumns = q.driver()->record(\"brew_log\")'"
+      "statements": [
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN expected_volume_into_fermentor_l TO expected_volume_into_fv_l",
+          "condition": {
+            "column_exists": [
+              "brew_log",
+              "expected_volume_into_fermentor_l"
+            ]
+          }
+        },
+        {
+          "sql": "ALTER TABLE brew_log RENAME COLUMN measured_volume_into_fermentor_l TO measured_volume_into_fv_l",
+          "condition": {
+            "column_exists": [
+              "brew_log",
+              "measured_volume_into_fermentor_l"
+            ]
+          }
+        }
+      ]
     },
     {
       "from_version": 22,
@@ -2490,8 +2831,6 @@
   ],
   "hand_ported": [
     "migrate_to_202",
-    "migrate_to_20",
-    "migrate_to_21",
-    "migrate_to_22"
+    "migrate_to_20"
   ]
 }

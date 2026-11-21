@@ -41,7 +41,7 @@ serde_json = "1"
 
 # Persistence.  All three backends are compiled in; the active one is chosen at runtime.
 sqlx = { version = "0.8", default-features = false, features = [
-   "runtime-tokio-rustls", "sqlite", "postgres", "mysql", "chrono", "macros",
+   "runtime-tokio-rustls", "any", "sqlite", "postgres", "mysql", "chrono", "macros",
 ] }
 
 # Async runtime and HTTP

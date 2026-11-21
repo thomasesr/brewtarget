@@ -172,9 +172,14 @@ order normalisation) to the C++-produced schema for all 28 tables.
 - Schema version lives in the `settings` table, as today — read from whichever store
   is being opened, so Stage 2 gets per-tenant versioning for free.
 
-**Done when:** `testData/Brewtarget_2.3.1_default_database.sqlite` and
-`data/default_db.sqlite` both migrate to v23 and the resulting schema matches
-Phase 1's reference, with row counts preserved per table.
+**Done when:** `testData/Brewtarget_2.3.1_default_database.sqlite` (v3) and
+`data/default_db.sqlite` (v13) both migrate to v23, the resulting schema matches
+Phase 1's, and row counts are preserved per table. ✅
+
+Note on verification: a freshly created v23 database and a migrated one are compared
+against each other. The schema definitions and the migration chain are written
+independently in the C++, and extracted independently here, so their agreeing is
+meaningful evidence for both — and needs no Qt.
 
 ### Phase 3 — `bt-measure`
 
@@ -381,7 +386,11 @@ content.
   SQLite: 39 tables with exactly the expected columns, and all 55 foreign keys
   resolving to their targets. A PostgreSQL equivalent runs inside a rolled-back
   transaction when `BT_TEST_POSTGRES_URL` is set.
-- [ ] **Phase 2** — port migrations 1 → 23.
+- [x] **Phase 2** — migrations 1 → 23. 814 statements lifted into
+  `schema/migrations.json`; `migrate_to_202` and `migrate_to_20` hand-ported in
+  `bt-schema`. Both checked-in databases migrate to v23 with their data intact, and a
+  database created from the schema definitions has exactly the same shape as one
+  brought up by migration — a check the C++ never makes.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only

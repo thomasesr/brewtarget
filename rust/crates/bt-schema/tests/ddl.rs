@@ -66,7 +66,8 @@ fn foreign_keys_are_never_ordinary_columns() {
 
 #[test]
 fn every_dialect_renders_every_statement() {
-    let expected = schema().tables.len() + schema().tables.iter().map(|t| t.foreign_keys.len()).sum::<usize>();
+    // Every table, every foreign key, and the hand-made `settings` table.
+    let expected = schema().tables.len() + schema().tables.iter().map(|t| t.foreign_keys.len()).sum::<usize>() + 1;
     for dialect in Dialect::ALL {
         let statements = create_all(dialect, &Namespace::Default).unwrap();
         assert_eq!(statements.len(), expected, "{dialect}");

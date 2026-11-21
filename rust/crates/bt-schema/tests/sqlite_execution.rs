@@ -37,7 +37,8 @@ async fn generated_sqlite_ddl_builds_the_expected_database() {
         .into_iter()
         .map(|row| row.get::<String, _>("name"))
         .collect();
-    let expected: BTreeSet<String> = schema().tables.iter().map(|t| t.name.clone()).collect();
+    let mut expected: BTreeSet<String> = schema().tables.iter().map(|t| t.name.clone()).collect();
+    expected.insert("settings".to_owned()); // created by hand, see bt_schema::settings_table
     assert_eq!(created, expected);
 
     for table in &schema().tables {
