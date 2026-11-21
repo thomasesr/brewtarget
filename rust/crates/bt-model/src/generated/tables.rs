@@ -22,8 +22,11 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
+// `sqlx::FromRow` reads a row straight into one of these.  Fields whose Rust spelling
+// differs from the column name carry an explicit rename, so the two cannot drift.
+
 /// A row of `boil`, which stores `Boil`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct BoilRow {
     /// `id`
     pub id: i64,
@@ -45,10 +48,14 @@ pub struct BoilRow {
 
 impl BoilRow {
     pub const TABLE: &'static str = "boil";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 8] =
+        ["id", "locked", "description", "notes", "pre_boil_size_l", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `boil_step`, which stores `BoilStep`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct BoilStepRow {
     /// `id`
     pub id: i64,
@@ -84,10 +91,29 @@ pub struct BoilStepRow {
 
 impl BoilStepRow {
     pub const TABLE: &'static str = "boil_step";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 15] = [
+        "id",
+        "step_time_mins",
+        "start_temp_c",
+        "end_temp_c",
+        "ramp_time_mins",
+        "step_number",
+        "description",
+        "start_acidity_ph",
+        "end_acidity_ph",
+        "start_gravity_sg",
+        "end_gravity_sg",
+        "chilling_type",
+        "name",
+        "deleted",
+        "boil_id",
+    ];
 }
 
 /// A row of `brew_log`, which stores `BrewLog`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct BrewLogRow {
     /// `id`
     pub id: i64,
@@ -161,10 +187,48 @@ pub struct BrewLogRow {
 
 impl BrewLogRow {
     pub const TABLE: &'static str = "brew_log";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 34] = [
+        "id",
+        "brew_date",
+        "ferment_date",
+        "notes",
+        "expected_pre_boil_gravity_sg",
+        "measured_pre_boil_gravity_sg",
+        "expected_pre_boil_volume_l",
+        "measured_pre_boil_volume_l",
+        "expected_strike_temp_c",
+        "measured_strike_temp_c",
+        "expected_mash_final_temp_c",
+        "measured_mash_final_temp_c",
+        "expected_original_gravity_sg",
+        "forecast_original_gravity_sg",
+        "measured_original_gravity_sg",
+        "measured_post_boil_volume_l",
+        "expected_volume_into_fv_l",
+        "measured_volume_into_fv_l",
+        "measured_pitch_temp_c",
+        "expected_final_gravity_sg",
+        "measured_final_gravity_sg",
+        "measured_final_volume",
+        "expected_alcohol_by_volume_pct",
+        "computed_alcohol_by_volume_pct",
+        "expected_attenuation_pct",
+        "measured_wort_clarity",
+        "computed_attenuation_pct",
+        "expected_efficiency_pct",
+        "computed_efficiency_pct",
+        "computed_pre_boil_efficiency_pct",
+        "expected_boil_off_l",
+        "name",
+        "deleted",
+        "recipe_id",
+    ];
 }
 
 /// A row of `equipment`, which stores `Equipment`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct EquipmentRow {
     /// `id`
     pub id: i64,
@@ -199,8 +263,12 @@ pub struct EquipmentRow {
     /// `mash_tun_weight_kg` (Double).
     pub mash_tun_weight_kg: Option<f64>,
     /// `kettleInternalDiameter_cm` (Double).
+    #[sqlx(rename = "kettleInternalDiameter_cm")]
+    #[serde(rename = "kettleInternalDiameter_cm")]
     pub kettle_internal_diameter_cm: Option<f64>,
     /// `kettleOpeningDiameter_cm` (Double).
+    #[sqlx(rename = "kettleOpeningDiameter_cm")]
+    #[serde(rename = "kettleOpeningDiameter_cm")]
     pub kettle_opening_diameter_cm: Option<f64>,
     /// `hlt_type` (String).
     pub hlt_type: Option<String>,
@@ -276,10 +344,67 @@ pub struct EquipmentRow {
 
 impl EquipmentRow {
     pub const TABLE: &'static str = "equipment";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 53] = [
+        "id",
+        "fv_batch_size_l",
+        "boiling_point",
+        "kettle_boil_size_l",
+        "kettle_evaporation_per_hour_l",
+        "evap_rate",
+        "grain_absorption_lkg",
+        "hop_utilization",
+        "lauter_tun_deadspace_loss_l",
+        "kettle_notes",
+        "top_up_kettle",
+        "top_up_water",
+        "kettle_trub_chiller_loss_l",
+        "mash_tun_specific_heat_calgc",
+        "mash_tun_volume_l",
+        "mash_tun_weight_kg",
+        "kettleInternalDiameter_cm",
+        "kettleOpeningDiameter_cm",
+        "hlt_type",
+        "mash_tun_type",
+        "lauter_tun_type",
+        "kettle_type",
+        "fv_type",
+        "agingvessel_type",
+        "packaging_vessel_type",
+        "hlt_volume_l",
+        "kettle_volume_l",
+        "lauter_tun_volume_l",
+        "fv_volume_l",
+        "aging_vessel_volume_l",
+        "packaging_vessel_volume_l",
+        "hlt_loss_l",
+        "mash_tun_loss_l",
+        "foundation_volume_l",
+        "fv_loss_l",
+        "aging_vessel_loss_l",
+        "packaging_vessel_loss_l",
+        "kettle_outflow_per_minute_l",
+        "hlt_weight_kg",
+        "lauter_tun_weight_kg",
+        "kettle_weight_kg",
+        "hlt_specific_heat_calgc",
+        "lauter_tun_specific_heat_calgc",
+        "kettle_specific_heat_calgc",
+        "hlt_notes",
+        "mash_tun_notes",
+        "lauter_tun_notes",
+        "fv_notes",
+        "aging_vessel_notes",
+        "packaging_vessel_notes",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `fermentable`, which stores `Fermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableRow {
     /// `id`
     pub id: i64,
@@ -361,10 +486,52 @@ pub struct FermentableRow {
 
 impl FermentableRow {
     pub const TABLE: &'static str = "fermentable";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 38] = [
+        "id",
+        "coarse_fine_diff",
+        "color_lovibond",
+        "diastatic_power",
+        "ftype",
+        "ibu_gal_per_lb",
+        "max_in_batch",
+        "moisture",
+        "notes",
+        "origin",
+        "supplier",
+        "protein",
+        "recommend_mash",
+        "grain_group",
+        "producer",
+        "product_id",
+        "fine_grind_yield_pct",
+        "coarse_grind_yield_pct",
+        "potential_yield_sg",
+        "alpha_amylase_dext_units",
+        "kolbach_index_pct",
+        "hardness_prp_glassy_pct",
+        "hardness_prp_half_pct",
+        "hardness_prp_mealy_pct",
+        "kernel_size_prp_plump_pct",
+        "kernel_size_prp_thin_pct",
+        "friability_pct",
+        "di_ph",
+        "viscosity_cp",
+        "dmsp_ppm",
+        "fan_ppm",
+        "fermentability_pct",
+        "beta_glucan_ppm",
+        "lactic_acid_by_weight_pct",
+        "fermentable_fraction_pct",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `fermentable_in_recipe`, which stores `RecipeAdditionFermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableInRecipeRow {
     /// `id`
     pub id: i64,
@@ -396,10 +563,27 @@ pub struct FermentableInRecipeRow {
 
 impl FermentableInRecipeRow {
     pub const TABLE: &'static str = "fermentable_in_recipe";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 13] = [
+        "id",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "stage",
+        "step",
+        "add_at_time_mins",
+        "add_at_gravity_sg",
+        "add_at_acidity_ph",
+        "duration_mins",
+        "recipe_id",
+        "fermentable_id",
+    ];
 }
 
 /// A row of `fermentable_stock_purchase`, which stores `StockPurchaseFermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableStockPurchaseRow {
     /// `id`
     pub id: i64,
@@ -443,10 +627,33 @@ pub struct FermentableStockPurchaseRow {
 
 impl FermentableStockPurchaseRow {
     pub const TABLE: &'static str = "fermentable_stock_purchase";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 19] = [
+        "id",
+        "color_lovibond",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "quantity_ordered",
+        "date_received",
+        "date_ordered",
+        "date_best_before",
+        "supplier",
+        "note",
+        "purchase_price_currency",
+        "purchase_price",
+        "purchase_tax_currency",
+        "purchase_tax",
+        "shipping_cost_currency",
+        "shipping_cost",
+        "fermentable_id",
+    ];
 }
 
 /// A row of `fermentable_stock_use`, which stores `StockUseFermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableStockUseRow {
     /// `id`
     pub id: i64,
@@ -472,10 +679,24 @@ pub struct FermentableStockUseRow {
 
 impl FermentableStockUseRow {
     pub const TABLE: &'static str = "fermentable_stock_use";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 10] = [
+        "id",
+        "name",
+        "deleted",
+        "sequence_number",
+        "date",
+        "reason",
+        "comment",
+        "quantity_used",
+        "fermentable_purchase_id",
+        "brew_log_id",
+    ];
 }
 
 /// A row of `fermentation`, which stores `Fermentation`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentationRow {
     /// `id`
     pub id: i64,
@@ -497,10 +718,14 @@ pub struct FermentationRow {
 
 impl FermentationRow {
     pub const TABLE: &'static str = "fermentation";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 8] =
+        ["id", "locked", "description", "notes", "krausen_handling", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `fermentation_step`, which stores `FermentationStep`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentationStepRow {
     /// `id`
     pub id: i64,
@@ -536,10 +761,29 @@ pub struct FermentationStepRow {
 
 impl FermentationStepRow {
     pub const TABLE: &'static str = "fermentation_step";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 15] = [
+        "id",
+        "step_time_mins",
+        "start_temp_c",
+        "end_temp_c",
+        "step_number",
+        "description",
+        "start_acidity_ph",
+        "end_acidity_ph",
+        "start_gravity_sg",
+        "end_gravity_sg",
+        "free_rise",
+        "vessel",
+        "name",
+        "deleted",
+        "fermentation_id",
+    ];
 }
 
 /// A row of `folder_for_boil`, which stores `Folder<Boil>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForBoilRow {
     /// `id`
     pub id: i64,
@@ -553,10 +797,13 @@ pub struct FolderForBoilRow {
 
 impl FolderForBoilRow {
     pub const TABLE: &'static str = "folder_for_boil";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_equipment`, which stores `Folder<Equipment>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForEquipmentRow {
     /// `id`
     pub id: i64,
@@ -570,10 +817,13 @@ pub struct FolderForEquipmentRow {
 
 impl FolderForEquipmentRow {
     pub const TABLE: &'static str = "folder_for_equipment";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_fermentable`, which stores `Folder<Fermentable>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForFermentableRow {
     /// `id`
     pub id: i64,
@@ -587,10 +837,13 @@ pub struct FolderForFermentableRow {
 
 impl FolderForFermentableRow {
     pub const TABLE: &'static str = "folder_for_fermentable";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_fermentation`, which stores `Folder<Fermentation>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForFermentationRow {
     /// `id`
     pub id: i64,
@@ -604,10 +857,13 @@ pub struct FolderForFermentationRow {
 
 impl FolderForFermentationRow {
     pub const TABLE: &'static str = "folder_for_fermentation";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_hop`, which stores `Folder<Hop>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForHopRow {
     /// `id`
     pub id: i64,
@@ -621,10 +877,13 @@ pub struct FolderForHopRow {
 
 impl FolderForHopRow {
     pub const TABLE: &'static str = "folder_for_hop";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_mash`, which stores `Folder<Mash>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForMashRow {
     /// `id`
     pub id: i64,
@@ -638,10 +897,13 @@ pub struct FolderForMashRow {
 
 impl FolderForMashRow {
     pub const TABLE: &'static str = "folder_for_mash";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_misc`, which stores `Folder<Misc>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForMiscRow {
     /// `id`
     pub id: i64,
@@ -655,10 +917,13 @@ pub struct FolderForMiscRow {
 
 impl FolderForMiscRow {
     pub const TABLE: &'static str = "folder_for_misc";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_recipe`, which stores `Folder<Recipe>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForRecipeRow {
     /// `id`
     pub id: i64,
@@ -672,10 +937,13 @@ pub struct FolderForRecipeRow {
 
 impl FolderForRecipeRow {
     pub const TABLE: &'static str = "folder_for_recipe";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_style`, which stores `Folder<Style>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForStyleRow {
     /// `id`
     pub id: i64,
@@ -689,10 +957,13 @@ pub struct FolderForStyleRow {
 
 impl FolderForStyleRow {
     pub const TABLE: &'static str = "folder_for_style";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_water`, which stores `Folder<Water>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForWaterRow {
     /// `id`
     pub id: i64,
@@ -706,10 +977,13 @@ pub struct FolderForWaterRow {
 
 impl FolderForWaterRow {
     pub const TABLE: &'static str = "folder_for_water";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `folder_for_yeast`, which stores `Folder<Yeast>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForYeastRow {
     /// `id`
     pub id: i64,
@@ -723,10 +997,13 @@ pub struct FolderForYeastRow {
 
 impl FolderForYeastRow {
     pub const TABLE: &'static str = "folder_for_yeast";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 }
 
 /// A row of `hop`, which stores `Hop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopRow {
     /// `id`
     pub id: i64,
@@ -749,6 +1026,8 @@ pub struct HopRow {
     /// `form` (Enum). Stored via `Hop::formStringMapping`.
     pub form: Option<String>,
     /// `sixMonthAlphaLoss_pct` (Double).
+    #[sqlx(rename = "sixMonthAlphaLoss_pct")]
+    #[serde(rename = "sixMonthAlphaLoss_pct")]
     pub six_month_alpha_loss_pct: Option<f64>,
     /// `humulene_pct` (Double).
     pub humulene_pct: Option<f64>,
@@ -798,10 +1077,47 @@ pub struct HopRow {
 
 impl HopRow {
     pub const TABLE: &'static str = "hop";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 33] = [
+        "id",
+        "alpha_pct",
+        "alpha_min_pct",
+        "alpha_max_pct",
+        "beta_pct",
+        "beta_min_pct",
+        "beta_max_pct",
+        "caryophyllene_pct",
+        "cohumulone_pct",
+        "form",
+        "sixMonthAlphaLoss_pct",
+        "humulene_pct",
+        "myrcene_pct",
+        "notes",
+        "origin",
+        "substitutes",
+        "htype",
+        "producer",
+        "product_id",
+        "year",
+        "total_oil_ml_per_100g",
+        "farnesene_pct",
+        "geraniol_pct",
+        "b_pinene_pct",
+        "linalool_pct",
+        "limonene_pct",
+        "nerol_pct",
+        "pinene_pct",
+        "polyphenols_pct",
+        "xanthohumol_pct",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `hop_in_recipe`, which stores `RecipeAdditionHop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopInRecipeRow {
     /// `id`
     pub id: i64,
@@ -833,10 +1149,27 @@ pub struct HopInRecipeRow {
 
 impl HopInRecipeRow {
     pub const TABLE: &'static str = "hop_in_recipe";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 13] = [
+        "id",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "stage",
+        "step",
+        "add_at_time_mins",
+        "add_at_gravity_sg",
+        "add_at_acidity_ph",
+        "duration_mins",
+        "recipe_id",
+        "hop_id",
+    ];
 }
 
 /// A row of `hop_stock_purchase`, which stores `StockPurchaseHop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopStockPurchaseRow {
     /// `id`
     pub id: i64,
@@ -884,10 +1217,35 @@ pub struct HopStockPurchaseRow {
 
 impl HopStockPurchaseRow {
     pub const TABLE: &'static str = "hop_stock_purchase";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 21] = [
+        "id",
+        "alpha_pct",
+        "form",
+        "year",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "quantity_ordered",
+        "date_received",
+        "date_ordered",
+        "date_best_before",
+        "supplier",
+        "note",
+        "purchase_price_currency",
+        "purchase_price",
+        "purchase_tax_currency",
+        "purchase_tax",
+        "shipping_cost_currency",
+        "shipping_cost",
+        "hop_id",
+    ];
 }
 
 /// A row of `hop_stock_use`, which stores `StockUseHop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopStockUseRow {
     /// `id`
     pub id: i64,
@@ -913,10 +1271,24 @@ pub struct HopStockUseRow {
 
 impl HopStockUseRow {
     pub const TABLE: &'static str = "hop_stock_use";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 10] = [
+        "id",
+        "name",
+        "deleted",
+        "sequence_number",
+        "date",
+        "reason",
+        "comment",
+        "quantity_used",
+        "hop_purchase_id",
+        "brew_log_id",
+    ];
 }
 
 /// A row of `instruction`, which stores `Instruction`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct InstructionRow {
     /// `id`
     pub id: i64,
@@ -942,10 +1314,24 @@ pub struct InstructionRow {
 
 impl InstructionRow {
     pub const TABLE: &'static str = "instruction";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 10] = [
+        "id",
+        "step_number",
+        "directions",
+        "has_timer",
+        "timer_value",
+        "completed",
+        "interval_mins",
+        "name",
+        "deleted",
+        "recipe_id",
+    ];
 }
 
 /// A row of `mash`, which stores `Mash`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MashRow {
     /// `id`
     pub id: i64,
@@ -979,10 +1365,28 @@ pub struct MashRow {
 
 impl MashRow {
     pub const TABLE: &'static str = "mash";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 14] = [
+        "id",
+        "locked",
+        "auto_adjust",
+        "equip_adjust",
+        "grain_temp",
+        "notes",
+        "ph",
+        "sparge_temp",
+        "tun_specific_heat_calgc",
+        "initial_tun_temp_c",
+        "tun_weight_kg",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `mash_step`, which stores `MashStep`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MashStepRow {
     /// `id`
     pub id: i64,
@@ -1024,10 +1428,32 @@ pub struct MashStepRow {
 
 impl MashStepRow {
     pub const TABLE: &'static str = "mash_step";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 18] = [
+        "id",
+        "end_temp_c",
+        "infuse_temp_c",
+        "mstype",
+        "ramp_time_mins",
+        "step_number",
+        "step_temp_c",
+        "step_time_mins",
+        "amount_l",
+        "description",
+        "liquor_to_grist_ratio_lkg",
+        "start_acidity_ph",
+        "end_acidity_ph",
+        "amount_fixed",
+        "infuse_temp_fixed",
+        "name",
+        "deleted",
+        "mash_id",
+    ];
 }
 
 /// A row of `misc`, which stores `Misc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscRow {
     /// `id`
     pub id: i64,
@@ -1055,10 +1481,25 @@ pub struct MiscRow {
 
 impl MiscRow {
     pub const TABLE: &'static str = "misc";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 11] = [
+        "id",
+        "mtype",
+        "use_for",
+        "notes",
+        "producer",
+        "product_id",
+        "water_agent_type",
+        "water_agent_percent_acid",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `misc_in_recipe`, which stores `RecipeAdditionMisc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscInRecipeRow {
     /// `id`
     pub id: i64,
@@ -1090,10 +1531,27 @@ pub struct MiscInRecipeRow {
 
 impl MiscInRecipeRow {
     pub const TABLE: &'static str = "misc_in_recipe";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 13] = [
+        "id",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "stage",
+        "step",
+        "add_at_time_mins",
+        "add_at_gravity_sg",
+        "add_at_acidity_ph",
+        "duration_mins",
+        "recipe_id",
+        "misc_id",
+    ];
 }
 
 /// A row of `misc_stock_purchase`, which stores `StockPurchaseMisc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscStockPurchaseRow {
     /// `id`
     pub id: i64,
@@ -1135,10 +1593,32 @@ pub struct MiscStockPurchaseRow {
 
 impl MiscStockPurchaseRow {
     pub const TABLE: &'static str = "misc_stock_purchase";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 18] = [
+        "id",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "quantity_ordered",
+        "date_received",
+        "date_ordered",
+        "date_best_before",
+        "supplier",
+        "note",
+        "purchase_price_currency",
+        "purchase_price",
+        "purchase_tax_currency",
+        "purchase_tax",
+        "shipping_cost_currency",
+        "shipping_cost",
+        "misc_id",
+    ];
 }
 
 /// A row of `misc_stock_use`, which stores `StockUseMisc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscStockUseRow {
     /// `id`
     pub id: i64,
@@ -1164,10 +1644,24 @@ pub struct MiscStockUseRow {
 
 impl MiscStockUseRow {
     pub const TABLE: &'static str = "misc_stock_use";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 10] = [
+        "id",
+        "name",
+        "deleted",
+        "sequence_number",
+        "date",
+        "reason",
+        "comment",
+        "quantity_used",
+        "misc_purchase_id",
+        "brew_log_id",
+    ];
 }
 
 /// A row of `recipe`, which stores `Recipe`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct RecipeRow {
     /// `id`
     pub id: i64,
@@ -1253,10 +1747,54 @@ pub struct RecipeRow {
 
 impl RecipeRow {
     pub const TABLE: &'static str = "recipe";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 40] = [
+        "id",
+        "age",
+        "age_temp",
+        "assistant_brewer",
+        "batch_size",
+        "brewer",
+        "carb_volume",
+        "carbonationtemp_c",
+        "date",
+        "efficiency",
+        "fg",
+        "forced_carb",
+        "keg_priming_factor",
+        "notes",
+        "og",
+        "priming_sugar_equiv",
+        "priming_sugar_name",
+        "taste_notes",
+        "taste_rating",
+        "type",
+        "locked",
+        "beer_acidity_ph",
+        "apparent_attenuation_pct",
+        "ro_water_mash_pct",
+        "ro_water_sparge_pct",
+        "target_mash_ph",
+        "water_kept_in_sync",
+        "fg_calc_uses_mash",
+        "wort_clarity",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+        "equipment_id",
+        "mash_id",
+        "style_id",
+        "ancestor_id",
+        "boil_id",
+        "fermentation_id",
+        "water_base",
+        "water_target",
+    ];
 }
 
 /// A row of `style`, which stores `Style`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct StyleRow {
     /// `id`
     pub id: i64,
@@ -1320,10 +1858,43 @@ pub struct StyleRow {
 
 impl StyleRow {
     pub const TABLE: &'static str = "style";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 29] = [
+        "id",
+        "abv_max",
+        "abv_min",
+        "carb_max",
+        "carb_min",
+        "category",
+        "category_number",
+        "color_max",
+        "color_min",
+        "examples",
+        "fg_max",
+        "fg_min",
+        "ibu_max",
+        "ibu_min",
+        "ingredients",
+        "notes",
+        "og_max",
+        "og_min",
+        "style_guide",
+        "style_letter",
+        "stype",
+        "aroma",
+        "appearance",
+        "flavor",
+        "mouthfeel",
+        "overall_impression",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `water`, which stores `Water`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct WaterRow {
     /// `id`
     pub id: i64,
@@ -1369,10 +1940,34 @@ pub struct WaterRow {
 
 impl WaterRow {
     pub const TABLE: &'static str = "water";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 20] = [
+        "id",
+        "notes",
+        "calcium",
+        "bicarbonate",
+        "sulfate",
+        "sodium",
+        "chloride",
+        "magnesium",
+        "ph",
+        "alkalinity",
+        "as_hco3",
+        "carbonate_ppm",
+        "potassium_ppm",
+        "iron_ppm",
+        "nitrate_ppm",
+        "nitrite_ppm",
+        "fluoride_ppm",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `yeast`, which stores `Yeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastRow {
     /// `id`
     pub id: i64,
@@ -1426,10 +2021,38 @@ pub struct YeastRow {
 
 impl YeastRow {
     pub const TABLE: &'static str = "yeast";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 24] = [
+        "id",
+        "max_temperature",
+        "min_temperature",
+        "flocculation",
+        "form",
+        "ytype",
+        "max_reuse",
+        "best_for",
+        "laboratory",
+        "notes",
+        "product_id",
+        "alcohol_tolerance_pct",
+        "attenuation_min_pct",
+        "attenuation_max_pct",
+        "phenolic_off_flavor_positive",
+        "glucoamylase_positive",
+        "killer_producing_k1_toxin",
+        "killer_producing_k2_toxin",
+        "killer_producing_k28_toxin",
+        "killer_producing_klus_toxin",
+        "killer_neutral",
+        "name",
+        "deleted",
+        "contained_in_folder_id",
+    ];
 }
 
 /// A row of `yeast_in_recipe`, which stores `RecipeAdditionYeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastInRecipeRow {
     /// `id`
     pub id: i64,
@@ -1467,10 +2090,30 @@ pub struct YeastInRecipeRow {
 
 impl YeastInRecipeRow {
     pub const TABLE: &'static str = "yeast_in_recipe";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 16] = [
+        "id",
+        "attenuation_pct",
+        "times_cultured",
+        "cell_count_billions",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "stage",
+        "step",
+        "add_at_time_mins",
+        "add_at_gravity_sg",
+        "add_at_acidity_ph",
+        "duration_mins",
+        "recipe_id",
+        "yeast_id",
+    ];
 }
 
 /// A row of `yeast_stock_purchase`, which stores `StockPurchaseYeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastStockPurchaseRow {
     /// `id`
     pub id: i64,
@@ -1512,10 +2155,32 @@ pub struct YeastStockPurchaseRow {
 
 impl YeastStockPurchaseRow {
     pub const TABLE: &'static str = "yeast_stock_purchase";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 18] = [
+        "id",
+        "name",
+        "deleted",
+        "quantity",
+        "unit",
+        "quantity_ordered",
+        "date_received",
+        "date_ordered",
+        "date_best_before",
+        "supplier",
+        "note",
+        "purchase_price_currency",
+        "purchase_price",
+        "purchase_tax_currency",
+        "purchase_tax",
+        "shipping_cost_currency",
+        "shipping_cost",
+        "yeast_id",
+    ];
 }
 
 /// A row of `yeast_stock_use`, which stores `StockUseYeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastStockUseRow {
     /// `id`
     pub id: i64,
@@ -1541,6 +2206,20 @@ pub struct YeastStockUseRow {
 
 impl YeastStockUseRow {
     pub const TABLE: &'static str = "yeast_stock_use";
+    pub const PRIMARY_KEY: &'static str = "id";
+    /// Every column, primary key first, then the ordinary columns, then the foreign keys.
+    pub const COLUMNS: [&'static str; 10] = [
+        "id",
+        "name",
+        "deleted",
+        "sequence_number",
+        "date",
+        "reason",
+        "comment",
+        "quantity_used",
+        "yeast_purchase_id",
+        "brew_log_id",
+    ];
 }
 
 /// Every table in the schema, in the order `schema/v23.json` lists them.

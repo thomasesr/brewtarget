@@ -21,3 +21,9 @@
 //! See `PLAN.md` for the phase this crate belongs to.
 
 #![forbid(unsafe_code)]
+
+pub mod generated;
+pub mod store;
+
+pub use generated::tables;
+pub use store::{Backend, Store, StoreError};

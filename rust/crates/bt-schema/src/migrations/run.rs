@@ -235,3 +235,11 @@ fn enable_foreign_keys(dialect: Dialect) -> &'static [&'static str] {
         Dialect::Mariadb => &["SET FOREIGN_KEY_CHECKS = 1"],
     }
 }
+
+/// Whether this database has no Brewtarget tables yet.
+///
+/// Mirrors the check `Database::load` makes before deciding to create rather than migrate: the
+/// `settings` table is the one every version has, under that name, since schema version 2.
+pub async fn is_empty(connection: &mut AnyConnection) -> Result<bool, MigrationError> {
+    Ok(sqlx::query("SELECT 1 FROM settings WHERE id = 1").fetch_optional(&mut *connection).await.is_err())
+}

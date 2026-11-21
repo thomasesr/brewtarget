@@ -22,4 +22,4 @@ pub mod run;
 
 pub use model::{Bind, Condition, Migration, Migrations, Reference, Statement, migrations};
 pub use render::{RenderError, render};
-pub use run::{MigrationError, column_exists, migrate, migrate_to_latest, schema_version};
+pub use run::{MigrationError, column_exists, is_empty, migrate, migrate_to_latest, schema_version};

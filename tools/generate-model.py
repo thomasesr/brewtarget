@@ -150,6 +150,12 @@ def generate_enums(enums: dict) -> str:
     return "\n".join(out)
 
 
+def rename_attribute(column: str) -> list[str]:
+    """Tell sqlx and serde the column name when the Rust field is spelled differently."""
+    name = field_name(column).removeprefix("r#")
+    return [] if name == column else [f'    #[sqlx(rename = "{column}")]', f'    #[serde(rename = "{column}")]']
+
+
 def generate_tables(schema: dict) -> str:
     """One Rust struct per table, mirroring its columns exactly."""
     out = [
@@ -168,15 +174,19 @@ def generate_tables(schema: dict) -> str:
         "use chrono::NaiveDate;",
         "use serde::{Deserialize, Serialize};",
         "",
+        "// `sqlx::FromRow` reads a row straight into one of these.  Fields whose Rust spelling",
+        "// differs from the column name carry an explicit rename, so the two cannot drift.",
+        "",
     ]
 
     for table in schema["tables"]:
         struct = pascal_case(table["name"]) + "Row"
         out += [
             f"/// A row of `{table['name']}`, which stores `{table['cpp_type']}`.",
-            "#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]",
+            "#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]",
             f"pub struct {struct} {{",
             f"    /// `{table['primary_key']['name']}`",
+            *rename_attribute(table["primary_key"]["name"]),
             f"    pub {field_name(table['primary_key']['name'])}: i64,",
         ]
         for column in table["columns"]:
@@ -184,11 +194,28 @@ def generate_tables(schema: dict) -> str:
             note = f" Stored via `{column['string_mapping']}`." if column["string_mapping"] else ""
             inherited = f" Inherited from `{column['from_common_set']}`." if column["from_common_set"] else ""
             out.append(f"    /// `{column['name']}` ({column['field_type']}).{note}{inherited}")
+            out += rename_attribute(column["name"])
             out.append(f"    pub {field_name(column['name'])}: Option<{rust_type}>,")
         for key in table["foreign_keys"]:
             out.append(f"    /// `{key['column']}` referencing `{key['references_table']}.{key['references_column']}`.")
+            out += rename_attribute(key["column"])
             out.append(f"    pub {field_name(key['column'])}: Option<i64>,")
-        out += ["}", "", f"impl {struct} {{", f'    pub const TABLE: &\'static str = "{table["name"]}";', "}", ""]
+        columns = (
+            [table["primary_key"]["name"]]
+            + [column["name"] for column in table["columns"]]
+            + [key["column"] for key in table["foreign_keys"]]
+        )
+        out += [
+            "}",
+            "",
+            f"impl {struct} {{",
+            f'    pub const TABLE: &\'static str = "{table["name"]}";',
+            f'    pub const PRIMARY_KEY: &\'static str = "{table["primary_key"]["name"]}";',
+            "    /// Every column, primary key first, then the ordinary columns, then the foreign keys.",
+            f"    pub const COLUMNS: [&'static str; {len(columns)}] = [",
+        ]
+        out += [f'        "{column}",' for column in columns]
+        out += ["    ];", "}", ""]
 
     out += [
         "/// Every table in the schema, in the order `schema/v23.json` lists them.",
@@ -200,9 +227,123 @@ def generate_tables(schema: dict) -> str:
     return "\n".join(out)
 
 
+def generate_store(schema: dict) -> str:
+    """One module per table: insert, get, list, update, delete, and a soft delete."""
+    out = [
+        HEADER.format(file="tables.rs", sources="schema/v23.json"),
+        "",
+        "//! A repository per table.",
+        "//!",
+        "//! Replaces `ObjectStoreTyped` from `src/database/`.  Every function takes the [`Store`]",
+        "//! it should act on; there is no global pool and no ambient current database.",
+        "//!",
+        "//! `INSERT ... RETURNING id` is used to read back the generated key.  SQLite has supported",
+        "//! it since 3.35, PostgreSQL always has, and MariaDB since 10.5 -- which is why MariaDB is",
+        "//! the supported MySQL-family backend rather than MySQL itself.",
+        "#![allow(clippy::needless_question_mark)]",
+        "// Columns are bound uniformly as `&row.field`.  For the Copy types among them clippy would",
+        "// rather see the value, but varying the generated code per column type buys nothing.",
+        "#![allow(clippy::needless_borrows_for_generic_args)]",
+        "",
+        "use bt_model::tables::*;",
+        "",
+        "use crate::{Store, StoreError, dispatch};",
+        "",
+    ]
+
+    for table in schema["tables"]:
+        struct = pascal_case(table["name"]) + "Row"
+        module = table["name"]
+        primary_key = table["primary_key"]["name"]
+        writable = [column["name"] for column in table["columns"]] + [k["column"] for k in table["foreign_keys"]]
+        placeholders = ", ".join("?" for _ in writable)
+        assignments = ", ".join(f"{column} = ?" for column in writable)
+        column_list = ", ".join(writable)
+
+        out += [
+            f"/// Rows of `{table['name']}`.",
+            f"pub mod {module} {{",
+            "    use super::*;",
+            "",
+            f"    const INSERT: &str = \"INSERT INTO {table['name']} ({column_list}) VALUES ({placeholders}) RETURNING {primary_key}\";",
+            f"    const UPDATE: &str = \"UPDATE {table['name']} SET {assignments} WHERE {primary_key} = ?\";",
+            f"    const SELECT_ONE: &str = \"SELECT * FROM {table['name']} WHERE {primary_key} = ?\";",
+            f"    const SELECT_ALL: &str = \"SELECT * FROM {table['name']}\";",
+            f"    const DELETE: &str = \"DELETE FROM {table['name']} WHERE {primary_key} = ?\";",
+            "",
+            "    /// Insert a row and return the key the database generated for it.",
+            f"    pub async fn insert(store: &Store, row: &{struct}) -> Result<i64, StoreError> {{",
+            "        let sql = store.placeholders(INSERT);",
+            "        dispatch!(store, |pool| {",
+            "            Ok(sqlx::query_scalar(&sql)",
+        ]
+        out += [f"                .bind(&row.{field_name(column)})" for column in writable]
+        out += [
+            "                .fetch_one(pool)",
+            "                .await?)",
+            "        })",
+            "    }",
+            "",
+            "    /// Overwrite every column of an existing row.",
+            f"    pub async fn update(store: &Store, row: &{struct}) -> Result<(), StoreError> {{",
+            "        let sql = store.placeholders(UPDATE);",
+            "        dispatch!(store, |pool| {",
+            "            sqlx::query(&sql)",
+        ]
+        out += [f"                .bind(&row.{field_name(column)})" for column in writable]
+        out += [
+            f"                .bind(row.{field_name(primary_key)})",
+            "                .execute(pool)",
+            "                .await?;",
+            "            Ok(())",
+            "        })",
+            "    }",
+            "",
+            "    /// Read one row by its primary key.",
+            f"    pub async fn get(store: &Store, id: i64) -> Result<Option<{struct}>, StoreError> {{",
+            "        let sql = store.placeholders(SELECT_ONE);",
+            "        dispatch!(store, |pool| {",
+            f"            Ok(sqlx::query_as::<_, {struct}>(&sql).bind(id).fetch_optional(pool).await?)",
+            "        })",
+            "    }",
+            "",
+            "    /// Read every row, including ones marked deleted.",
+            f"    pub async fn list(store: &Store) -> Result<Vec<{struct}>, StoreError> {{",
+            "        dispatch!(store, |pool| {",
+            f"            Ok(sqlx::query_as::<_, {struct}>(SELECT_ALL).fetch_all(pool).await?)",
+            "        })",
+            "    }",
+            "",
+            "    /// Remove a row outright.  Most callers want the soft delete the model uses instead.",
+            "    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {",
+            "        let sql = store.placeholders(DELETE);",
+            "        dispatch!(store, |pool| {",
+            "            sqlx::query(&sql).bind(id).execute(pool).await?;",
+            "            Ok(())",
+            "        })",
+            "    }",
+        ]
+        if any(column["name"] == "deleted" for column in table["columns"]):
+            out += [
+                "",
+                "    /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to",
+                "    /// them still resolve, and are simply hidden from the lists.",
+                "    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {",
+                f"        let sql = store.placeholders(\"UPDATE {table['name']} SET deleted = ? WHERE {primary_key} = ?\");",
+                "        dispatch!(store, |pool| {",
+                "            sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;",
+                "            Ok(())",
+                "        })",
+                "    }",
+            ]
+        out += ["}", ""]
+    return "\n".join(out)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--out", type=pathlib.Path, required=True, help="directory to write the Rust files into")
+    parser.add_argument("--out", type=pathlib.Path, required=True, help="directory for the bt-model files")
+    parser.add_argument("--store-out", type=pathlib.Path, help="directory for the bt-store repository files")
     args = parser.parse_args()
 
     schema = json.loads((REPO / "schema" / "v23.json").read_text(encoding="utf-8"))
@@ -214,12 +355,27 @@ def main() -> int:
         HEADER.format(file="mod.rs", sources="schema/v23.json and schema/enums.json")
         + "\n//! Generated model code.  See `tools/generate-model.py`.\n\npub mod enums;\npub mod tables;\n"
     )
+    targets = [(args.out, files)]
+    if args.store_out:
+        args.store_out.mkdir(parents=True, exist_ok=True)
+        targets.append(
+            (
+                args.store_out,
+                {
+                    "tables.rs": generate_store(schema),
+                    "mod.rs": HEADER.format(file="mod.rs", sources="schema/v23.json")
+                    + "\n//! Generated repositories.  See `tools/generate-model.py`.\n\npub mod tables;\n",
+                },
+            )
+        )
+
     written = []
-    for name, content in files.items():
-        path = args.out / name
-        path.write_text(content.rstrip("\n") + "\n", encoding="utf-8")
-        written.append(path)
-        print(f"wrote {path}")
+    for directory, group in targets:
+        for name, content in group.items():
+            path = directory / name
+            path.write_text(content.rstrip("\n") + "\n", encoding="utf-8")
+            written.append(path)
+            print(f"wrote {path}")
 
     # Format what was generated, so that the committed files are byte-identical to a fresh run and
     # `cargo fmt --check` has nothing to say about them.

@@ -68,8 +68,9 @@ jobs:
           diff -u schema/enums.json /tmp/enums.json
       - name: Generated model code is reproducible
         run: |
-          python3 tools/generate-model.py --out /tmp/generated
+          python3 tools/generate-model.py --out /tmp/generated --store-out /tmp/generated-store
           diff -ru rust/crates/bt-model/src/generated /tmp/generated
+          diff -ru rust/crates/bt-store/src/generated /tmp/generated-store
       - name: Expected test values are reproducible
         run: |
           python3 tools/extract-test-data.py --out /tmp/expected
