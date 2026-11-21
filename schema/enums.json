@@ -1,0 +1,1439 @@
+{
+  "generated_by": "tools/extract-enums.py",
+  "source_dirs": [
+    "src/model",
+    "src/measurement"
+  ],
+  "mappings": {
+    "BoilStep::chillingTypeStringMapping": {
+      "owner": "BoilStep",
+      "name": "chillingTypeStringMapping",
+      "enum": "BoilStep::ChillingType",
+      "source_file": "src/model/BoilStep.cpp",
+      "values": [
+        {
+          "member": "Batch",
+          "string": "batch"
+        },
+        {
+          "member": "Inline",
+          "string": "inline"
+        }
+      ]
+    },
+    "Fermentable::grainGroupStringMapping": {
+      "owner": "Fermentable",
+      "name": "grainGroupStringMapping",
+      "enum": "Fermentable::GrainGroup",
+      "source_file": "src/model/Fermentable.cpp",
+      "values": [
+        {
+          "member": "Base",
+          "string": "base"
+        },
+        {
+          "member": "Caramel",
+          "string": "caramel"
+        },
+        {
+          "member": "Flaked",
+          "string": "flaked"
+        },
+        {
+          "member": "Roasted",
+          "string": "roasted"
+        },
+        {
+          "member": "Specialty",
+          "string": "specialty"
+        },
+        {
+          "member": "Smoked",
+          "string": "smoked"
+        },
+        {
+          "member": "Adjunct",
+          "string": "adjunct"
+        }
+      ]
+    },
+    "Fermentable::typeStringMapping": {
+      "owner": "Fermentable",
+      "name": "typeStringMapping",
+      "enum": "Fermentable::Type",
+      "source_file": "src/model/Fermentable.cpp",
+      "values": [
+        {
+          "member": "Grain",
+          "string": "grain"
+        },
+        {
+          "member": "Sugar",
+          "string": "sugar"
+        },
+        {
+          "member": "Extract",
+          "string": "extract"
+        },
+        {
+          "member": "Dry_Extract",
+          "string": "dry extract"
+        },
+        {
+          "member": "Other_Adjunct",
+          "string": "other"
+        },
+        {
+          "member": "Fruit",
+          "string": "fruit"
+        },
+        {
+          "member": "Juice",
+          "string": "juice"
+        },
+        {
+          "member": "Honey",
+          "string": "honey"
+        }
+      ]
+    },
+    "Fermentation::krausenHandlingStringMapping": {
+      "owner": "Fermentation",
+      "name": "krausenHandlingStringMapping",
+      "enum": "Fermentation::KrausenHandling",
+      "source_file": "src/model/Fermentation.cpp",
+      "values": [
+        {
+          "member": "MixedIn",
+          "string": "mixed in"
+        },
+        {
+          "member": "MinorDeposits",
+          "string": "minor deposits"
+        },
+        {
+          "member": "MediumDeposits",
+          "string": "medium deposits"
+        },
+        {
+          "member": "HeavyDeposits",
+          "string": "heavy deposits"
+        },
+        {
+          "member": "VeryHeavyDeposits",
+          "string": "very heavy deposits"
+        },
+        {
+          "member": "BlownOffSlowFermentation",
+          "string": "blown off, slow fermentation"
+        },
+        {
+          "member": "BlownOffNormalFermentation",
+          "string": "blown off, normal fermentation"
+        },
+        {
+          "member": "BlownOffVigorousFermentation",
+          "string": "blown off, vigorous fermentation"
+        }
+      ]
+    },
+    "Hop::formStringMapping": {
+      "owner": "Hop",
+      "name": "formStringMapping",
+      "enum": "Hop::Form",
+      "source_file": "src/model/Hop.cpp",
+      "values": [
+        {
+          "member": "Leaf",
+          "string": "leaf"
+        },
+        {
+          "member": "Pellet",
+          "string": "pellet"
+        },
+        {
+          "member": "Plug",
+          "string": "plug"
+        },
+        {
+          "member": "Extract",
+          "string": "extract"
+        },
+        {
+          "member": "WetLeaf",
+          "string": "leaf (wet)"
+        },
+        {
+          "member": "Powder",
+          "string": "powder"
+        }
+      ]
+    },
+    "Hop::typeStringMapping": {
+      "owner": "Hop",
+      "name": "typeStringMapping",
+      "enum": "Hop::Type",
+      "source_file": "src/model/Hop.cpp",
+      "values": [
+        {
+          "member": "Bittering",
+          "string": "bittering"
+        },
+        {
+          "member": "Aroma",
+          "string": "aroma"
+        },
+        {
+          "member": "AromaAndBittering",
+          "string": "aroma/bittering"
+        },
+        {
+          "member": "Flavor",
+          "string": "flavor"
+        },
+        {
+          "member": "BitteringAndFlavor",
+          "string": "bittering/flavor"
+        },
+        {
+          "member": "AromaAndFlavor",
+          "string": "aroma/flavor"
+        },
+        {
+          "member": "AromaBitteringAndFlavor",
+          "string": "aroma/bittering/flavor"
+        }
+      ]
+    },
+    "MashStep::typeStringMapping": {
+      "owner": "MashStep",
+      "name": "typeStringMapping",
+      "enum": "MashStep::Type",
+      "source_file": "src/model/MashStep.cpp",
+      "values": [
+        {
+          "member": "Infusion",
+          "string": "infusion"
+        },
+        {
+          "member": "Temperature",
+          "string": "temperature"
+        },
+        {
+          "member": "Decoction",
+          "string": "decoction"
+        },
+        {
+          "member": "FlySparge",
+          "string": "sparge"
+        },
+        {
+          "member": "BatchSparge",
+          "string": "drain mash tun"
+        },
+        {
+          "member": "SouringMash",
+          "string": "souring mash"
+        },
+        {
+          "member": "SouringWort",
+          "string": "souring wort"
+        }
+      ]
+    },
+    "Measurement::Qualitative::wortClarityStringMapping": {
+      "owner": "Measurement::Qualitative",
+      "name": "wortClarityStringMapping",
+      "enum": "WortClarity",
+      "source_file": "src/measurement/Qualitative.cpp",
+      "values": [
+        {
+          "member": "VeryClear",
+          "string": "very clear"
+        },
+        {
+          "member": "Clear",
+          "string": "clear"
+        },
+        {
+          "member": "SomewhatClear",
+          "string": "somewhat clear"
+        },
+        {
+          "member": "Average",
+          "string": "average"
+        },
+        {
+          "member": "SomewhatCloudy",
+          "string": "somewhat cloudy"
+        },
+        {
+          "member": "Cloudy",
+          "string": "cloudy"
+        },
+        {
+          "member": "VeryCloudy",
+          "string": "very cloudy"
+        },
+        {
+          "member": "ExtremelyCloudy",
+          "string": "extremely cloudy"
+        }
+      ]
+    },
+    "Measurement::Units::unitStringMapping": {
+      "owner": "Measurement::Units",
+      "name": "unitStringMapping",
+      "enum": "Unit",
+      "source_file": "src/measurement/Unit.cpp",
+      "by_object_address": true,
+      "values": [
+        {
+          "member": "kilograms",
+          "string": "kilograms"
+        },
+        {
+          "member": "grams",
+          "string": "grams"
+        },
+        {
+          "member": "milligrams",
+          "string": "milligrams"
+        },
+        {
+          "member": "pounds",
+          "string": "pounds"
+        },
+        {
+          "member": "ounces",
+          "string": "ounces"
+        },
+        {
+          "member": "imperial_pounds",
+          "string": "imperial_pounds"
+        },
+        {
+          "member": "imperial_ounces",
+          "string": "imperial_ounces"
+        },
+        {
+          "member": "liters",
+          "string": "liters"
+        },
+        {
+          "member": "milliliters",
+          "string": "milliliters"
+        },
+        {
+          "member": "us_barrels",
+          "string": "us_barrels"
+        },
+        {
+          "member": "us_gallons",
+          "string": "us_gallons"
+        },
+        {
+          "member": "us_quarts",
+          "string": "us_quarts"
+        },
+        {
+          "member": "us_pints",
+          "string": "us_pints"
+        },
+        {
+          "member": "us_cups",
+          "string": "us_cups"
+        },
+        {
+          "member": "us_fluidOunces",
+          "string": "us_fluid_ounces"
+        },
+        {
+          "member": "us_tablespoons",
+          "string": "us_tablespoons"
+        },
+        {
+          "member": "us_teaspoons",
+          "string": "us_teaspoons"
+        },
+        {
+          "member": "imperial_barrels",
+          "string": "imperial_barrels"
+        },
+        {
+          "member": "imperial_gallons",
+          "string": "imperial_gallons"
+        },
+        {
+          "member": "imperial_quarts",
+          "string": "imperial_quarts"
+        },
+        {
+          "member": "imperial_pints",
+          "string": "imperial_pints"
+        },
+        {
+          "member": "imperial_cups",
+          "string": "imperial_cups"
+        },
+        {
+          "member": "imperial_fluidOunces",
+          "string": "imperial_fluid_ounces"
+        },
+        {
+          "member": "imperial_tablespoons",
+          "string": "imperial_tablespoons"
+        },
+        {
+          "member": "imperial_teaspoons",
+          "string": "imperial_teaspoons"
+        },
+        {
+          "member": "centimeters",
+          "string": "centimeters"
+        },
+        {
+          "member": "millimeters",
+          "string": "millimeters"
+        },
+        {
+          "member": "meters",
+          "string": "meters"
+        },
+        {
+          "member": "inches",
+          "string": "inches"
+        },
+        {
+          "member": "feet",
+          "string": "feet"
+        },
+        {
+          "member": "numberOf",
+          "string": "number_of"
+        },
+        {
+          "member": "celsius",
+          "string": "celsius"
+        },
+        {
+          "member": "fahrenheit",
+          "string": "fahrenheit"
+        },
+        {
+          "member": "minutes",
+          "string": "minutes"
+        },
+        {
+          "member": "weeks",
+          "string": "weeks"
+        },
+        {
+          "member": "days",
+          "string": "days"
+        },
+        {
+          "member": "hours",
+          "string": "hours"
+        },
+        {
+          "member": "seconds",
+          "string": "seconds"
+        },
+        {
+          "member": "srm",
+          "string": "srm"
+        },
+        {
+          "member": "ebc",
+          "string": "ebc"
+        },
+        {
+          "member": "lovibond",
+          "string": "lovibond"
+        },
+        {
+          "member": "specificGravity",
+          "string": "specific_gravity"
+        },
+        {
+          "member": "plato",
+          "string": "plato"
+        },
+        {
+          "member": "brix",
+          "string": "brix"
+        },
+        {
+          "member": "lintner",
+          "string": "lintner"
+        },
+        {
+          "member": "wk",
+          "string": "wk"
+        },
+        {
+          "member": "pH",
+          "string": "ph"
+        },
+        {
+          "member": "ibu",
+          "string": "ibu"
+        },
+        {
+          "member": "carbonationVolumes",
+          "string": "carbonation_volumes"
+        },
+        {
+          "member": "carbonationGramsPerLiter",
+          "string": "carbonation_grams_per_liter"
+        },
+        {
+          "member": "partsPerMillionMass",
+          "string": "parts_per_million_mass"
+        },
+        {
+          "member": "partsPerBillionMass",
+          "string": "parts_per_billion_mass"
+        },
+        {
+          "member": "milligramsPerLiter",
+          "string": "milligrams_per_liter"
+        },
+        {
+          "member": "centipoise",
+          "string": "centipoise"
+        },
+        {
+          "member": "millipascalSecond",
+          "string": "millipascal_second"
+        },
+        {
+          "member": "caloriesPerCelsiusPerGram",
+          "string": "calories_per_celsius_per_gram"
+        },
+        {
+          "member": "joulesPerKelvinPerKg",
+          "string": "joules_per_kelvin_per_kg"
+        },
+        {
+          "member": "btuPerFahrenheitPerPound",
+          "string": "btu_per_fahrenheit_per_pound"
+        },
+        {
+          "member": "litresPerKilogram",
+          "string": "litres_per_kilogram"
+        },
+        {
+          "member": "litresPerGram",
+          "string": "litres_per_gram"
+        },
+        {
+          "member": "cubicMetersPerKilogram",
+          "string": "cubic_meters_per_kilogram"
+        },
+        {
+          "member": "us_quartsPerPound",
+          "string": "us_quarts_per_pound"
+        },
+        {
+          "member": "us_gallonsPerPound",
+          "string": "us_gallons_per_pound"
+        },
+        {
+          "member": "us_gallonsPerOunce",
+          "string": "us_gallons_per_ounce"
+        },
+        {
+          "member": "us_fluidOuncesPerOunce",
+          "string": "us_fluid_ounces_per_ounce"
+        },
+        {
+          "member": "cubicFeetPerPound",
+          "string": "cubic_feet_per_pound"
+        }
+      ]
+    },
+    "Measurement::choiceOfPhysicalQuantityStringMapping": {
+      "owner": "Measurement",
+      "name": "choiceOfPhysicalQuantityStringMapping",
+      "enum": "Measurement::ChoiceOfPhysicalQuantity",
+      "source_file": "src/measurement/PhysicalQuantity.cpp",
+      "values": [
+        {
+          "member": "Mass_Volume",
+          "string": "Mass_Volume"
+        },
+        {
+          "member": "Mass_Volume_Count",
+          "string": "Mass_Volume_Count"
+        }
+      ]
+    },
+    "Measurement::physicalQuantityStringMapping": {
+      "owner": "Measurement",
+      "name": "physicalQuantityStringMapping",
+      "enum": "Measurement::PhysicalQuantity",
+      "source_file": "src/measurement/PhysicalQuantity.cpp",
+      "values": [
+        {
+          "member": "Mass",
+          "string": "Mass"
+        },
+        {
+          "member": "Volume",
+          "string": "Volume"
+        },
+        {
+          "member": "Length",
+          "string": "Length"
+        },
+        {
+          "member": "Count",
+          "string": "Count"
+        },
+        {
+          "member": "Temperature",
+          "string": "Temperature"
+        },
+        {
+          "member": "Time",
+          "string": "Time"
+        },
+        {
+          "member": "Color",
+          "string": "Color"
+        },
+        {
+          "member": "Gravity",
+          "string": "Density"
+        },
+        {
+          "member": "DiastaticPower",
+          "string": "DiastaticPower"
+        },
+        {
+          "member": "Acidity",
+          "string": "Acidity"
+        },
+        {
+          "member": "Bitterness",
+          "string": "Bitterness"
+        },
+        {
+          "member": "Carbonation",
+          "string": "Carbonation"
+        },
+        {
+          "member": "MassFractionOrConcentration",
+          "string": "MassFractionOrConc"
+        },
+        {
+          "member": "Viscosity",
+          "string": "Viscosity"
+        },
+        {
+          "member": "SpecificHeatCapacity",
+          "string": "SpecificHeatCapacity"
+        },
+        {
+          "member": "HeatCapacity",
+          "string": "HeatCapacity"
+        },
+        {
+          "member": "VolumePerMass",
+          "string": "VolumePerMass"
+        },
+        {
+          "member": "EnergyPerVolume",
+          "string": "EnergyPerVolume"
+        }
+      ]
+    },
+    "Misc::typeStringMapping": {
+      "owner": "Misc",
+      "name": "typeStringMapping",
+      "enum": "Misc::Type",
+      "source_file": "src/model/Misc.cpp",
+      "values": [
+        {
+          "member": "Spice",
+          "string": "spice"
+        },
+        {
+          "member": "Fining",
+          "string": "fining"
+        },
+        {
+          "member": "WaterAgent",
+          "string": "water agent"
+        },
+        {
+          "member": "Herb",
+          "string": "herb"
+        },
+        {
+          "member": "Flavor",
+          "string": "flavor"
+        },
+        {
+          "member": "Other",
+          "string": "other"
+        },
+        {
+          "member": "Wood",
+          "string": "wood"
+        }
+      ]
+    },
+    "Misc::waterAgentTypeStringMapping": {
+      "owner": "Misc",
+      "name": "waterAgentTypeStringMapping",
+      "enum": "Misc::WaterAgentType",
+      "source_file": "src/model/Misc.cpp",
+      "values": [
+        {
+          "member": "CalciumChloride_Anhydrous",
+          "string": "calcium chloride anhydrous"
+        },
+        {
+          "member": "CalciumChloride_Dihydrate",
+          "string": "calcium chloride dihydrate"
+        },
+        {
+          "member": "CalciumCarbonate",
+          "string": "calcium carbonate"
+        },
+        {
+          "member": "CalciumSulfate_Dihydrate",
+          "string": "calcium sulfate dihydrate"
+        },
+        {
+          "member": "CalciumHydroxide",
+          "string": "calcium hydroxide"
+        },
+        {
+          "member": "MagnesiumSulfate_Heptahydrate",
+          "string": "magnesium sulfate heptahydrate"
+        },
+        {
+          "member": "MagnesiumChloride_Hexahydrate",
+          "string": "magnesium chloride hexahydrate"
+        },
+        {
+          "member": "SodiumChloride",
+          "string": "sodium chloride"
+        },
+        {
+          "member": "SodiumBicarbonate",
+          "string": "sodium bicarbonate"
+        },
+        {
+          "member": "LacticAcid",
+          "string": "lactic acid"
+        },
+        {
+          "member": "PhosphoricAcid",
+          "string": "phosphoric acid"
+        },
+        {
+          "member": "SulfuricAcid",
+          "string": "sulfuric acid"
+        },
+        {
+          "member": "HydrochloricAcid",
+          "string": "hydrochloric acid"
+        },
+        {
+          "member": "Other",
+          "string": "other"
+        }
+      ]
+    },
+    "Recipe::typeStringMapping": {
+      "owner": "Recipe",
+      "name": "typeStringMapping",
+      "enum": "Recipe::Type",
+      "source_file": "src/model/Recipe.cpp",
+      "values": [
+        {
+          "member": "Extract",
+          "string": "extract"
+        },
+        {
+          "member": "PartialMash",
+          "string": "partial mash"
+        },
+        {
+          "member": "AllGrain",
+          "string": "all grain"
+        },
+        {
+          "member": "Cider",
+          "string": "cider"
+        },
+        {
+          "member": "Kombucha",
+          "string": "kombucha"
+        },
+        {
+          "member": "Soda",
+          "string": "soda"
+        },
+        {
+          "member": "Other",
+          "string": "other"
+        },
+        {
+          "member": "Mead",
+          "string": "mead"
+        },
+        {
+          "member": "Wine",
+          "string": "wine"
+        }
+      ]
+    },
+    "RecipeAddition::stageStringMapping": {
+      "owner": "RecipeAddition",
+      "name": "stageStringMapping",
+      "enum": "RecipeAddition::Stage",
+      "source_file": "src/model/RecipeAddition.cpp",
+      "values": [
+        {
+          "member": "Mash",
+          "string": "add_to_mash"
+        },
+        {
+          "member": "Boil",
+          "string": "add_to_boil"
+        },
+        {
+          "member": "Fermentation",
+          "string": "add_to_fermentation"
+        },
+        {
+          "member": "Packaging",
+          "string": "add_to_package"
+        }
+      ]
+    },
+    "RecipeAdditionHop::useStringMapping": {
+      "owner": "RecipeAdditionHop",
+      "name": "useStringMapping",
+      "enum": "RecipeAdditionHop::Use",
+      "source_file": "src/model/RecipeAdditionHop.cpp",
+      "values": [
+        {
+          "member": "Mash",
+          "string": "Mash"
+        },
+        {
+          "member": "First_Wort",
+          "string": "First Wort"
+        },
+        {
+          "member": "Boil",
+          "string": "Boil"
+        },
+        {
+          "member": "Aroma",
+          "string": "Aroma"
+        },
+        {
+          "member": "Dry_Hop",
+          "string": "Dry Hop"
+        }
+      ]
+    },
+    "RecipeAdditionMisc::useStringMapping": {
+      "owner": "RecipeAdditionMisc",
+      "name": "useStringMapping",
+      "enum": "RecipeAdditionMisc::Use",
+      "source_file": "src/model/RecipeAdditionMisc.cpp",
+      "values": [
+        {
+          "member": "Mash",
+          "string": "Mash"
+        },
+        {
+          "member": "Boil",
+          "string": "Boil"
+        },
+        {
+          "member": "Primary",
+          "string": "Primary"
+        },
+        {
+          "member": "Secondary",
+          "string": "Secondary"
+        },
+        {
+          "member": "Bottling",
+          "string": "Bottling"
+        }
+      ]
+    },
+    "StockUse::reasonStringMapping": {
+      "owner": "StockUse",
+      "name": "reasonStringMapping",
+      "enum": "StockUse::Reason",
+      "source_file": "src/model/StockUse.cpp",
+      "values": [
+        {
+          "member": "Used",
+          "string": "used"
+        },
+        {
+          "member": "Lost",
+          "string": "lost"
+        },
+        {
+          "member": "Disposed",
+          "string": "disposed"
+        }
+      ]
+    },
+    "Style::typeStringMapping": {
+      "owner": "Style",
+      "name": "typeStringMapping",
+      "enum": "Style::Type",
+      "source_file": "src/model/Style.cpp",
+      "values": [
+        {
+          "member": "Beer",
+          "string": "beer"
+        },
+        {
+          "member": "Cider",
+          "string": "cider"
+        },
+        {
+          "member": "Mead",
+          "string": "mead"
+        },
+        {
+          "member": "Kombucha",
+          "string": "kombucha"
+        },
+        {
+          "member": "Soda",
+          "string": "soda"
+        },
+        {
+          "member": "Wine",
+          "string": "wine"
+        },
+        {
+          "member": "Other",
+          "string": "other"
+        }
+      ]
+    },
+    "Water::ionStringMapping": {
+      "owner": "Water",
+      "name": "ionStringMapping",
+      "enum": "Water::MineralIon",
+      "source_file": "src/model/Water.cpp",
+      "values": [
+        {
+          "member": "Bicarbonate",
+          "string": "bicarbonate"
+        },
+        {
+          "member": "Calcium",
+          "string": "calcium"
+        },
+        {
+          "member": "Carbonate",
+          "string": "carbonate"
+        },
+        {
+          "member": "Chloride",
+          "string": "chloride"
+        },
+        {
+          "member": "Copper",
+          "string": "copper"
+        },
+        {
+          "member": "Iron",
+          "string": "iron"
+        },
+        {
+          "member": "Magnesium",
+          "string": "magnesium"
+        },
+        {
+          "member": "Manganese",
+          "string": "manganese"
+        },
+        {
+          "member": "Nitrate",
+          "string": "nitrate"
+        },
+        {
+          "member": "Nitrite",
+          "string": "nitrite"
+        },
+        {
+          "member": "Phosphate",
+          "string": "phosphate"
+        },
+        {
+          "member": "Potassium",
+          "string": "potassium"
+        },
+        {
+          "member": "Sodium",
+          "string": "sodium"
+        },
+        {
+          "member": "Sulfate",
+          "string": "sulfate"
+        },
+        {
+          "member": "Zinc",
+          "string": "zinc"
+        }
+      ]
+    },
+    "Yeast::flocculationStringMapping": {
+      "owner": "Yeast",
+      "name": "flocculationStringMapping",
+      "enum": "Yeast::Flocculation",
+      "source_file": "src/model/Yeast.cpp",
+      "values": [
+        {
+          "member": "VeryLow",
+          "string": "very low"
+        },
+        {
+          "member": "Low",
+          "string": "low"
+        },
+        {
+          "member": "MediumLow",
+          "string": "medium low"
+        },
+        {
+          "member": "Medium",
+          "string": "medium"
+        },
+        {
+          "member": "MediumHigh",
+          "string": "medium high"
+        },
+        {
+          "member": "High",
+          "string": "high"
+        },
+        {
+          "member": "VeryHigh",
+          "string": "very high"
+        }
+      ]
+    },
+    "Yeast::formStringMapping": {
+      "owner": "Yeast",
+      "name": "formStringMapping",
+      "enum": "Yeast::Form",
+      "source_file": "src/model/Yeast.cpp",
+      "values": [
+        {
+          "member": "Liquid",
+          "string": "liquid"
+        },
+        {
+          "member": "Dry",
+          "string": "dry"
+        },
+        {
+          "member": "Slant",
+          "string": "slant"
+        },
+        {
+          "member": "Culture",
+          "string": "culture"
+        },
+        {
+          "member": "Dregs",
+          "string": "dregs"
+        }
+      ]
+    },
+    "Yeast::typeStringMapping": {
+      "owner": "Yeast",
+      "name": "typeStringMapping",
+      "enum": "Yeast::Type",
+      "source_file": "src/model/Yeast.cpp",
+      "values": [
+        {
+          "member": "Ale",
+          "string": "ale"
+        },
+        {
+          "member": "Lager",
+          "string": "lager"
+        },
+        {
+          "member": "Other",
+          "string": "other"
+        },
+        {
+          "member": "Wine",
+          "string": "wine"
+        },
+        {
+          "member": "Champagne",
+          "string": "champagne"
+        },
+        {
+          "member": "Bacteria",
+          "string": "bacteria"
+        },
+        {
+          "member": "Brett",
+          "string": "brett"
+        },
+        {
+          "member": "Kveik",
+          "string": "kveik"
+        },
+        {
+          "member": "Lacto",
+          "string": "lacto"
+        },
+        {
+          "member": "Malolactic",
+          "string": "malolactic"
+        },
+        {
+          "member": "MixedCulture",
+          "string": "mixed-culture"
+        },
+        {
+          "member": "Pedio",
+          "string": "pedio"
+        },
+        {
+          "member": "Spontaneous",
+          "string": "spontaneous"
+        }
+      ]
+    }
+  },
+  "enum_members": {
+    "Boil::StepPhase": [
+      "PreBoil",
+      "BoilProper",
+      "PostBoil"
+    ],
+    "BoilStep::ChillingType": [
+      "Batch",
+      "Inline"
+    ],
+    "Fermentable::GrainGroup": [
+      "Base",
+      "Caramel",
+      "Flaked",
+      "Roasted",
+      "Specialty",
+      "Smoked",
+      "Adjunct"
+    ],
+    "Fermentable::Type": [
+      "Grain",
+      "Sugar",
+      "Extract",
+      "Dry_Extract",
+      "Other_Adjunct",
+      "Fruit",
+      "Juice",
+      "Honey"
+    ],
+    "Fermentation::KrausenHandling": [
+      "MixedIn",
+      "MinorDeposits",
+      "MediumDeposits",
+      "HeavyDeposits",
+      "VeryHeavyDeposits",
+      "BlownOffSlowFermentation",
+      "BlownOffNormalFermentation",
+      "BlownOffVigorousFermentation"
+    ],
+    "FolderPropertyBase::IsFolder": [
+      "Yes",
+      "No"
+    ],
+    "Hop::Form": [
+      "Leaf",
+      "Pellet",
+      "Plug",
+      "Extract",
+      "WetLeaf",
+      "Powder"
+    ],
+    "Hop::Type": [
+      "Bittering",
+      "Aroma",
+      "AromaAndBittering",
+      "Flavor",
+      "BitteringAndFlavor",
+      "AromaAndFlavor",
+      "AromaBitteringAndFlavor"
+    ],
+    "Ibu::Formula": [
+      "Tinseth",
+      "Rager",
+      "Noonan",
+      "Garetz",
+      "Daniels",
+      "mIbu",
+      "Smph"
+    ],
+    "MashStep::Type": [
+      "Infusion",
+      "Temperature",
+      "Decoction",
+      "FlySparge",
+      "BatchSparge",
+      "SouringMash",
+      "SouringWort"
+    ],
+    "Misc::Type": [
+      "Spice",
+      "Fining",
+      "WaterAgent",
+      "Herb",
+      "Flavor",
+      "Other",
+      "Wood"
+    ],
+    "Misc::WaterAgentType": [
+      "CalciumChloride_Anhydrous",
+      "CalciumChloride_Dihydrate",
+      "CalciumCarbonate",
+      "CalciumSulfate_Dihydrate",
+      "CalciumHydroxide",
+      "MagnesiumSulfate_Heptahydrate",
+      "MagnesiumChloride_Hexahydrate",
+      "SodiumChloride",
+      "SodiumBicarbonate",
+      "LacticAcid",
+      "PhosphoricAcid",
+      "SulfuricAcid",
+      "HydrochloricAcid",
+      "Other"
+    ],
+    "NamedEntity::PropertyId": [
+      "deleted",
+      "key",
+      "name",
+      "subsidiary"
+    ],
+    "NamedParameterBundle::OperationMode": [
+      "Strict",
+      "NotStrict"
+    ],
+    "NonPhysicalQuantity::NonPhysicalQuantity": [
+      "Date",
+      "String",
+      "Percentage",
+      "Bool",
+      "Enum",
+      "OrdinalNumeral",
+      "CardinalNumber",
+      "Dimensionless",
+      "Currency",
+      "Objects"
+    ],
+    "PhysicalQuantity::ChoiceOfPhysicalQuantity": [
+      "Mass_Volume",
+      "Mass_Volume_Count"
+    ],
+    "PhysicalQuantity::PhysicalQuantity": [
+      "Mass",
+      "Volume",
+      "Length",
+      "Count",
+      "Temperature",
+      "Time",
+      "Color",
+      "Gravity",
+      "DiastaticPower",
+      "Acidity",
+      "Bitterness",
+      "Carbonation",
+      "MassFractionOrConcentration",
+      "Viscosity",
+      "SpecificHeatCapacity",
+      "HeatCapacity",
+      "VolumePerMass",
+      "EnergyPerVolume"
+    ],
+    "Qualitative::WortClarity": [
+      "VeryClear",
+      "Clear",
+      "SomewhatClear",
+      "Average",
+      "SomewhatCloudy",
+      "Cloudy",
+      "VeryCloudy",
+      "ExtremelyCloudy"
+    ],
+    "Recipe::Type": [
+      "Extract",
+      "PartialMash",
+      "AllGrain",
+      "Cider",
+      "Kombucha",
+      "Soda",
+      "Other",
+      "Mead",
+      "Wine"
+    ],
+    "RecipeAddition::Stage": [
+      "Mash",
+      "Boil",
+      "Fermentation",
+      "Packaging"
+    ],
+    "RecipeAdditionHop::Use": [
+      "Mash",
+      "First_Wort",
+      "Boil",
+      "Aroma",
+      "Dry_Hop"
+    ],
+    "RecipeAdditionMisc::Use": [
+      "Mash",
+      "Boil",
+      "Primary",
+      "Secondary",
+      "Bottling"
+    ],
+    "RecipeUtils::LockReason": [
+      "NotLocked",
+      "ItemLocked",
+      "UsedByLockedRecipe"
+    ],
+    "StockUse::Reason": [
+      "Used",
+      "Lost",
+      "Disposed"
+    ],
+    "Style::Type": [
+      "Beer",
+      "Cider",
+      "Mead",
+      "Kombucha",
+      "Soda",
+      "Wine",
+      "Other"
+    ],
+    "SystemOfMeasurement::SystemOfMeasurement": [
+      "Imperial",
+      "UsCustomary",
+      "Metric",
+      "MetricAlternate",
+      "UniversalStandard",
+      "StandardReferenceMethod",
+      "EuropeanBreweryConvention",
+      "Lovibond",
+      "SpecificGravity",
+      "GravityPoints",
+      "Plato",
+      "Brix",
+      "Lintner",
+      "WindischKolbach",
+      "CarbonationVolumes",
+      "CarbonationMassPerVolume",
+      "BrewingConcentration",
+      "SpecificHeatCapacityCalories",
+      "SpecificHeatCapacityJoules",
+      "SpecificHeatCapacityBtus",
+      "HeatCapacityKilocalories",
+      "HeatCapacityJoules",
+      "HeatCapacityBtus"
+    ],
+    "UnitSystem::RelativeScale": [
+      "ExtraSmall",
+      "Small",
+      "Medium",
+      "Large",
+      "ExtraLarge",
+      "Huge"
+    ],
+    "Water::MineralIon": [
+      "Bicarbonate",
+      "Calcium",
+      "Carbonate",
+      "Chloride",
+      "Copper",
+      "Iron",
+      "Magnesium",
+      "Manganese",
+      "Nitrate",
+      "Nitrite",
+      "Phosphate",
+      "Potassium",
+      "Sodium",
+      "Sulfate",
+      "Zinc"
+    ],
+    "Yeast::Flocculation": [
+      "VeryLow",
+      "Low",
+      "MediumLow",
+      "Medium",
+      "MediumHigh",
+      "High",
+      "VeryHigh"
+    ],
+    "Yeast::Form": [
+      "Liquid",
+      "Dry",
+      "Slant",
+      "Culture",
+      "Dregs"
+    ],
+    "Yeast::Type": [
+      "Ale",
+      "Lager",
+      "Other",
+      "Wine",
+      "Champagne",
+      "Bacteria",
+      "Brett",
+      "Kveik",
+      "Lacto",
+      "Malolactic",
+      "MixedCulture",
+      "Pedio",
+      "Spontaneous"
+    ]
+  },
+  "referenced_by_schema": [
+    "BoilStep::chillingTypeStringMapping",
+    "Fermentable::grainGroupStringMapping",
+    "Fermentable::typeStringMapping",
+    "Fermentation::krausenHandlingStringMapping",
+    "Hop::formStringMapping",
+    "Hop::typeStringMapping",
+    "MashStep::typeStringMapping",
+    "Measurement::Qualitative::wortClarityStringMapping",
+    "Measurement::Units::unitStringMapping",
+    "Misc::typeStringMapping",
+    "Misc::waterAgentTypeStringMapping",
+    "Recipe::typeStringMapping",
+    "RecipeAddition::stageStringMapping",
+    "StockUse::reasonStringMapping",
+    "Style::typeStringMapping",
+    "Yeast::flocculationStringMapping",
+    "Yeast::formStringMapping",
+    "Yeast::typeStringMapping"
+  ],
+  "missing": [],
+  "inconsistent": []
+}
