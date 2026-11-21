@@ -1,0 +1,128 @@
+{
+  "generated_by": "tools/extract-calc-data.py",
+  "source_files": [
+    "src/calculations/Algorithms.cpp",
+    "src/measurement/PhysicalConstants.h"
+  ],
+  "physical_constants": {
+    "Calcium": 40.0784,
+    "Carbon": 12.0112,
+    "Chlorine": 35.45,
+    "Hydrogen": 1.00802,
+    "Magnesium": 24.3052,
+    "Oxygen": 15.9991,
+    "Phosphorus": 30.9737619985,
+    "Sodium": 22.989769282,
+    "Sulfur": 32.062,
+    "Chloride": 35.45,
+    "Bicarbonate": 61.01652,
+    "Carbonate": 60.008500000000005,
+    "Sulfate": 96.0584,
+    "Phosphate": 94.9701619985,
+    "Hydroxide": 17.00712,
+    "Water": 18.01514,
+    "CalciumChloride_Anhydrous": 110.97840000000001,
+    "CalciumChloride_Dihydrate": 147.00868,
+    "CalciumCarbonate": 100.08690000000001,
+    "CalciumSulfate": 136.1368,
+    "LacticAcid": 90.07902,
+    "MagnesiumSulfate": 120.3636,
+    "MagnesiumChloride": 95.2052,
+    "SodiumChloride": 58.439769282,
+    "SodiumBicarbonate": 84.006289282,
+    "PhosphoricAcid": 97.99422199850001,
+    "SulfuricAcid": 98.07444000000001,
+    "HydrochloricAcid": 36.458020000000005,
+    "CalciumHydroxide": 74.09264,
+    "CalciumSulfate_Dihydrate": 172.16708,
+    "MagnesiumSulfate_Heptahydrate": 246.46958,
+    "MagnesiumChloride_Hexahydrate": 203.29604,
+    "sucroseDensity_kgL": 1.587,
+    "grainDensity_kgL": 0.963,
+    "liquidExtractDensity_kgL": 1.412,
+    "dryExtractDensity_kgL": 1.587,
+    "grainAbsorption_Lkg": 1.085,
+    "absoluteZero": -273.15,
+    "waterSpecificHeat_calGC": 1.0,
+    "grainSpecificHeat_calGC": 0.4
+  },
+  "gravity_difference_factors": [
+    {
+      "excess_gravity_diff_x10_min": 0.0,
+      "excess_gravity_diff_x10_max": 69.0,
+      "pct_abv_min": 0.0,
+      "pct_abv_max": 0.8,
+      "factor": 0.125
+    },
+    {
+      "excess_gravity_diff_x10_min": 70.0,
+      "excess_gravity_diff_x10_max": 104.0,
+      "pct_abv_min": 0.8,
+      "pct_abv_max": 1.3,
+      "factor": 0.126
+    },
+    {
+      "excess_gravity_diff_x10_min": 105.0,
+      "excess_gravity_diff_x10_max": 172.0,
+      "pct_abv_min": 1.3,
+      "pct_abv_max": 2.1,
+      "factor": 0.127
+    },
+    {
+      "excess_gravity_diff_x10_min": 173.0,
+      "excess_gravity_diff_x10_max": 261.0,
+      "pct_abv_min": 2.2,
+      "pct_abv_max": 3.3,
+      "factor": 0.128
+    },
+    {
+      "excess_gravity_diff_x10_min": 262.0,
+      "excess_gravity_diff_x10_max": 360.0,
+      "pct_abv_min": 3.3,
+      "pct_abv_max": 4.6,
+      "factor": 0.129
+    },
+    {
+      "excess_gravity_diff_x10_min": 361.0,
+      "excess_gravity_diff_x10_max": 465.0,
+      "pct_abv_min": 4.6,
+      "pct_abv_max": 6.0,
+      "factor": 0.13
+    },
+    {
+      "excess_gravity_diff_x10_min": 466.0,
+      "excess_gravity_diff_x10_max": 571.0,
+      "pct_abv_min": 6.0,
+      "pct_abv_max": 7.5,
+      "factor": 0.131
+    },
+    {
+      "excess_gravity_diff_x10_min": 572.0,
+      "excess_gravity_diff_x10_max": 679.0,
+      "pct_abv_min": 7.5,
+      "pct_abv_max": 9.0,
+      "factor": 0.132
+    },
+    {
+      "excess_gravity_diff_x10_min": 680.0,
+      "excess_gravity_diff_x10_max": 788.0,
+      "pct_abv_min": 9.0,
+      "pct_abv_max": 10.5,
+      "factor": 0.133
+    },
+    {
+      "excess_gravity_diff_x10_min": 789.0,
+      "excess_gravity_diff_x10_max": 897.0,
+      "pct_abv_min": 10.5,
+      "pct_abv_max": 12.0,
+      "factor": 0.134
+    },
+    {
+      "excess_gravity_diff_x10_min": 898.0,
+      "excess_gravity_diff_x10_max": 1007.0,
+      "pct_abv_min": 12.0,
+      "pct_abv_max": 13.6,
+      "factor": 0.135
+    }
+  ]
+}

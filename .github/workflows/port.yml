@@ -62,6 +62,10 @@ jobs:
         run: |
           python3 tools/extract-units.py --out /tmp/units.json
           diff -u schema/units.json /tmp/units.json
+      - name: Calculation data extraction is reproducible
+        run: |
+          python3 tools/extract-calc-data.py --out /tmp/calculations.json
+          diff -u schema/calculations.json /tmp/calculations.json
       - name: Enum extraction is reproducible
         run: |
           python3 tools/extract-enums.py --out /tmp/enums.json

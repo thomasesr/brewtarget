@@ -219,7 +219,10 @@ version = "0.1.0"
 dependencies = [
  "bt-measure",
  "bt-model",
+ "serde",
+ "serde_json",
  "thiserror",
+ "tracing",
 ]
 
 [[package]]

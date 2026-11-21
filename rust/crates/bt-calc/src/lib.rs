@@ -21,3 +21,10 @@
 //! See `PLAN.md` for the phase this crate belongs to.
 
 #![forbid(unsafe_code)]
+
+pub mod algorithms;
+pub mod color;
+pub mod data;
+
+pub use color::{ColorFormula, mcu_to_srm, srm_to_display_color};
+pub use data::{CalculationData, calculation_data, constant};

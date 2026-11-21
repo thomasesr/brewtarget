@@ -206,7 +206,9 @@ presentation edge and are deferred to Phase 8.
   handle**, never from a global pool (§3.3 constraint 2). Keep the C++ semantics for soft delete (`deleted`), display
   flag (`display`), and cascading deletes of owned objects.
 - Load `data/DefaultContent*.{xml,json,beer}` on first run, tracking the default
-  content version exactly as `DefaultContentLoader.cpp` does.
+  content version exactly as `DefaultContentLoader.cpp` does. **This part waits for
+  Phase 6**: the seed files are BeerXML, BeerJSON and `.beer`, so there is nothing to
+  load them with until the parsers exist. The rest of Phase 4 does not depend on it.
 - Mirror `src/unitTests/DatabaseTests.cpp` and `CoreTests.cpp`.
 
 **Done when:** a fresh DB is seeded identically to the C++ app (same row counts and
