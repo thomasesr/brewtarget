@@ -56,9 +56,19 @@ def pascal_case(name: str) -> str:
 def type_case(name: str) -> str:
     """Capitalise without flattening camel case: `chillingType` becomes `ChillingType`.
 
-    `str.capitalize` would give `Chillingtype`, and `BoilStep` would become `Boilstep`.
+    `str.capitalize` would give `Chillingtype`, and `BoilStep` would become `Boilstep`.  A part
+    that is entirely upper case came from a SCREAMING_SNAKE name, though -- the serialization code
+    declares its mappings that way -- and has to be lowered first, or `BEER_XML_HOP_FORM_MAPPER`
+    comes out as `BEERXMLHOPFORMMAPPER`.
     """
-    return "".join(part[0].upper() + part[1:] for part in re.split(r"[_\s]+", name) if part)
+    parts = []
+    for part in re.split(r"[_\s]+", name):
+        if not part:
+            continue
+        if part.isupper() and len(part) > 1:
+            part = part.capitalize()
+        parts.append(part[0].upper() + part[1:])
+    return "".join(parts)
 
 
 def variant_name(member: str) -> str:

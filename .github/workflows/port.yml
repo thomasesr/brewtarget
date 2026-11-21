@@ -75,6 +75,10 @@ jobs:
           python3 tools/generate-model.py --out /tmp/generated --store-out /tmp/generated-store
           diff -ru rust/crates/bt-model/src/generated /tmp/generated
           diff -ru rust/crates/bt-store/src/generated /tmp/generated-store
+      - name: Format extraction is reproducible
+        run: |
+          python3 tools/extract-formats.py --out /tmp/formats.json
+          diff -u schema/formats.json /tmp/formats.json
       - name: Expected test values are reproducible
         run: |
           python3 tools/extract-test-data.py --out /tmp/expected

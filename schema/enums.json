@@ -2,9 +2,431 @@
   "generated_by": "tools/extract-enums.py",
   "source_dirs": [
     "src/model",
-    "src/measurement"
+    "src/measurement",
+    "src/serialization",
+    "src/calculations"
   ],
   "mappings": {
+    "BEER_JSON_IBU_FORMULA_MAPPER": {
+      "owner": "",
+      "name": "BEER_JSON_IBU_FORMULA_MAPPER",
+      "enum": "Ibu::Formula",
+      "source_file": "src/serialization/json/beerJson/BeerJson.cpp",
+      "values": [
+        {
+          "member": "Tinseth",
+          "string": "Tinseth"
+        },
+        {
+          "member": "Rager",
+          "string": "Rager"
+        },
+        {
+          "member": "Noonan",
+          "string": "Other"
+        },
+        {
+          "member": "Garetz",
+          "string": "Garetz"
+        },
+        {
+          "member": "Daniels",
+          "string": "Other"
+        },
+        {
+          "member": "mIbu",
+          "string": "Other"
+        },
+        {
+          "member": "Smph",
+          "string": "Other"
+        }
+      ]
+    },
+    "BEER_XML_FERMENTABLE_TYPE_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_FERMENTABLE_TYPE_MAPPER",
+      "enum": "Fermentable::Type",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Grain",
+          "string": "Grain"
+        },
+        {
+          "member": "Sugar",
+          "string": "Sugar"
+        },
+        {
+          "member": "Extract",
+          "string": "Extract"
+        },
+        {
+          "member": "Dry_Extract",
+          "string": "Dry Extract"
+        },
+        {
+          "member": "Other_Adjunct",
+          "string": "Adjunct"
+        },
+        {
+          "member": "Fruit",
+          "string": "Adjunct<!--Fruit-->"
+        },
+        {
+          "member": "Juice",
+          "string": "Adjunct<!--Juice-->"
+        },
+        {
+          "member": "Honey",
+          "string": "Adjunct<!--Honey-->"
+        }
+      ]
+    },
+    "BEER_XML_HOP_FORM_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_HOP_FORM_MAPPER",
+      "enum": "Hop::Form",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Leaf",
+          "string": "Leaf"
+        },
+        {
+          "member": "Pellet",
+          "string": "Pellet"
+        },
+        {
+          "member": "Plug",
+          "string": "Plug"
+        },
+        {
+          "member": "Extract",
+          "string": "Pellet<!--Extract-->"
+        },
+        {
+          "member": "WetLeaf",
+          "string": "Leaf<!--WetLeaf-->"
+        },
+        {
+          "member": "Powder",
+          "string": "Pellet<!--Powder-->"
+        }
+      ]
+    },
+    "BEER_XML_HOP_TYPE_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_HOP_TYPE_MAPPER",
+      "enum": "Hop::Type",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Bittering",
+          "string": "Bittering"
+        },
+        {
+          "member": "Aroma",
+          "string": "Aroma"
+        },
+        {
+          "member": "AromaAndBittering",
+          "string": "Both"
+        },
+        {
+          "member": "Flavor",
+          "string": "Aroma<!--Flavor-->"
+        },
+        {
+          "member": "BitteringAndFlavor",
+          "string": "Both<!--BitteringAndFlavor-->"
+        },
+        {
+          "member": "AromaAndFlavor",
+          "string": "Aroma<!--AromaAndFlavor-->"
+        },
+        {
+          "member": "AromaBitteringAndFlavor",
+          "string": "Both<!--AromaBitteringAndFlavor-->"
+        }
+      ]
+    },
+    "BEER_XML_MASH_STEP_TYPE_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_MASH_STEP_TYPE_MAPPER",
+      "enum": "MashStep::Type",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Infusion",
+          "string": "Infusion"
+        },
+        {
+          "member": "Temperature",
+          "string": "Temperature"
+        },
+        {
+          "member": "Decoction",
+          "string": "Decoction"
+        },
+        {
+          "member": "FlySparge",
+          "string": "Infusion<!-- Fly Sparge -->"
+        },
+        {
+          "member": "BatchSparge",
+          "string": "Infusion<!-- Batch Sparge -->"
+        },
+        {
+          "member": "SouringMash",
+          "string": "Decoction<!-- Souring Mash -->"
+        },
+        {
+          "member": "SouringWort",
+          "string": "Decoction<!-- Souring Wort -->"
+        }
+      ]
+    },
+    "BEER_XML_MISC_TYPE_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_MISC_TYPE_MAPPER",
+      "enum": "Misc::Type",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Spice",
+          "string": "Spice"
+        },
+        {
+          "member": "Fining",
+          "string": "Fining"
+        },
+        {
+          "member": "WaterAgent",
+          "string": "Water Agent"
+        },
+        {
+          "member": "Herb",
+          "string": "Herb"
+        },
+        {
+          "member": "Flavor",
+          "string": "Flavor"
+        },
+        {
+          "member": "Other",
+          "string": "Other"
+        },
+        {
+          "member": "Wood",
+          "string": "Other<!--Wood-->"
+        }
+      ]
+    },
+    "BEER_XML_RECIPE_STEP_TYPE_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_RECIPE_STEP_TYPE_MAPPER",
+      "enum": "Recipe::Type",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Extract",
+          "string": "Extract"
+        },
+        {
+          "member": "PartialMash",
+          "string": "Partial Mash"
+        },
+        {
+          "member": "AllGrain",
+          "string": "All Grain"
+        },
+        {
+          "member": "Cider",
+          "string": "All Grain<!-- Cider -->"
+        },
+        {
+          "member": "Kombucha",
+          "string": "All Grain<!-- Kombucha -->"
+        },
+        {
+          "member": "Soda",
+          "string": "All Grain<!-- Soda -->"
+        },
+        {
+          "member": "Other",
+          "string": "All Grain<!-- Other -->"
+        },
+        {
+          "member": "Mead",
+          "string": "All Grain<!-- Mead -->"
+        },
+        {
+          "member": "Wine",
+          "string": "All Grain<!-- Wine -->"
+        }
+      ]
+    },
+    "BEER_XML_STYLE_TYPE_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_STYLE_TYPE_MAPPER",
+      "enum": "Style::Type",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Beer",
+          "string": "Ale"
+        },
+        {
+          "member": "Cider",
+          "string": "Cider"
+        },
+        {
+          "member": "Mead",
+          "string": "Mead"
+        },
+        {
+          "member": "Kombucha",
+          "string": "Wheat"
+        },
+        {
+          "member": "Soda",
+          "string": "Mixed"
+        },
+        {
+          "member": "Wine",
+          "string": "Mixed<!--Wine-->"
+        },
+        {
+          "member": "Other",
+          "string": "Lager"
+        }
+      ]
+    },
+    "BEER_XML_YEAST_FLOCCULATION_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_YEAST_FLOCCULATION_MAPPER",
+      "enum": "Yeast::Flocculation",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "VeryLow",
+          "string": "Low<!--very low-->"
+        },
+        {
+          "member": "Low",
+          "string": "Low"
+        },
+        {
+          "member": "MediumLow",
+          "string": "Medium<!--medium low-->"
+        },
+        {
+          "member": "Medium",
+          "string": "Medium"
+        },
+        {
+          "member": "MediumHigh",
+          "string": "High<!--medium high-->"
+        },
+        {
+          "member": "High",
+          "string": "High"
+        },
+        {
+          "member": "VeryHigh",
+          "string": "Very High"
+        }
+      ]
+    },
+    "BEER_XML_YEAST_FORM_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_YEAST_FORM_MAPPER",
+      "enum": "Yeast::Form",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Liquid",
+          "string": "Liquid"
+        },
+        {
+          "member": "Dry",
+          "string": "Dry"
+        },
+        {
+          "member": "Slant",
+          "string": "Slant"
+        },
+        {
+          "member": "Culture",
+          "string": "Culture"
+        },
+        {
+          "member": "Dregs",
+          "string": "Liquid<!--dregs-->"
+        }
+      ]
+    },
+    "BEER_XML_YEAST_TYPE_MAPPER": {
+      "owner": "",
+      "name": "BEER_XML_YEAST_TYPE_MAPPER",
+      "enum": "Yeast::Type",
+      "source_file": "src/serialization/xml/BeerXml.cpp",
+      "values": [
+        {
+          "member": "Ale",
+          "string": "Ale"
+        },
+        {
+          "member": "Lager",
+          "string": "Lager"
+        },
+        {
+          "member": "Other",
+          "string": "Wheat"
+        },
+        {
+          "member": "Wine",
+          "string": "Wine"
+        },
+        {
+          "member": "Champagne",
+          "string": "Champagne"
+        },
+        {
+          "member": "Bacteria",
+          "string": "Ale<!--Bacteria-->"
+        },
+        {
+          "member": "Brett",
+          "string": "Ale<!--Brett-->"
+        },
+        {
+          "member": "Kveik",
+          "string": "Ale<!--Kveik-->"
+        },
+        {
+          "member": "Lacto",
+          "string": "Ale<!--Lacto-->"
+        },
+        {
+          "member": "Malolactic",
+          "string": "Ale<!--Malolactic-->"
+        },
+        {
+          "member": "MixedCulture",
+          "string": "Ale<!--Mixed-culture-->"
+        },
+        {
+          "member": "Pedio",
+          "string": "Ale<!--Pedio-->"
+        },
+        {
+          "member": "Spontaneous",
+          "string": "Ale<!--Spontaneous-->"
+        }
+      ]
+    },
     "BoilStep::chillingTypeStringMapping": {
       "owner": "BoilStep",
       "name": "chillingTypeStringMapping",
@@ -18,6 +440,26 @@
         {
           "member": "Inline",
           "string": "inline"
+        }
+      ]
+    },
+    "ColorMethods::formulaStringMapping": {
+      "owner": "ColorMethods",
+      "name": "formulaStringMapping",
+      "enum": "ColorMethods::ColorFormula",
+      "source_file": "src/calculations/ColorMethods.cpp",
+      "values": [
+        {
+          "member": "Mosher",
+          "string": "mosher"
+        },
+        {
+          "member": "Daniel",
+          "string": "daniel"
+        },
+        {
+          "member": "Morey",
+          "string": "morey"
         }
       ]
     },
@@ -202,6 +644,78 @@
         {
           "member": "AromaBitteringAndFlavor",
           "string": "aroma/bittering/flavor"
+        }
+      ]
+    },
+    "IbuMethods::formulaStringMapping": {
+      "owner": "IbuMethods",
+      "name": "formulaStringMapping",
+      "enum": "Ibu::Formula",
+      "source_file": "src/calculations/IbuMethods.cpp",
+      "values": [
+        {
+          "member": "Tinseth",
+          "string": "tinseth"
+        },
+        {
+          "member": "Rager",
+          "string": "rager"
+        },
+        {
+          "member": "Noonan",
+          "string": "noonan"
+        },
+        {
+          "member": "Garetz",
+          "string": "garetz"
+        },
+        {
+          "member": "Daniels",
+          "string": "daniels"
+        },
+        {
+          "member": "mIbu",
+          "string": "mibu"
+        },
+        {
+          "member": "Smph",
+          "string": "smph"
+        }
+      ]
+    },
+    "IbuMethods::formulaStringMappingUc": {
+      "owner": "IbuMethods",
+      "name": "formulaStringMappingUc",
+      "enum": "Ibu::Formula",
+      "source_file": "src/calculations/IbuMethods.cpp",
+      "values": [
+        {
+          "member": "Tinseth",
+          "string": "Tinseth"
+        },
+        {
+          "member": "Rager",
+          "string": "Rager"
+        },
+        {
+          "member": "Noonan",
+          "string": "Noonan"
+        },
+        {
+          "member": "Garetz",
+          "string": "Garetz"
+        },
+        {
+          "member": "Daniels",
+          "string": "Daniel"
+        },
+        {
+          "member": "mIbu",
+          "string": "mIBU"
+        },
+        {
+          "member": "Smph",
+          "string": "SMPH"
         }
       ]
     },
@@ -1121,6 +1635,138 @@
           "string": "spontaneous"
         }
       ]
+    },
+    "relativeScaleToName": {
+      "owner": "",
+      "name": "relativeScaleToName",
+      "enum": "Measurement::UnitSystem::RelativeScale",
+      "source_file": "src/measurement/UnitSystem.cpp",
+      "values": [
+        {
+          "member": "ExtraSmall",
+          "string": "scaleExtraSmall"
+        },
+        {
+          "member": "Small",
+          "string": "scaleSmall"
+        },
+        {
+          "member": "Medium",
+          "string": "scaleMedium"
+        },
+        {
+          "member": "Large",
+          "string": "scaleLarge"
+        },
+        {
+          "member": "ExtraLarge",
+          "string": "scaleExtraLarge"
+        },
+        {
+          "member": "Huge",
+          "string": "scaleHuge"
+        }
+      ]
+    },
+    "systemOfMeasurementToUniqueName": {
+      "owner": "",
+      "name": "systemOfMeasurementToUniqueName",
+      "enum": "Measurement::SystemOfMeasurement",
+      "source_file": "src/measurement/SystemOfMeasurement.cpp",
+      "values": [
+        {
+          "member": "Imperial",
+          "string": "Imperial"
+        },
+        {
+          "member": "UsCustomary",
+          "string": "UsCustomary"
+        },
+        {
+          "member": "Metric",
+          "string": "Metric"
+        },
+        {
+          "member": "MetricAlternate",
+          "string": "MetricAlternate"
+        },
+        {
+          "member": "UniversalStandard",
+          "string": "UniversalStandard"
+        },
+        {
+          "member": "StandardReferenceMethod",
+          "string": "StandardReferenceMethod"
+        },
+        {
+          "member": "EuropeanBreweryConvention",
+          "string": "EuropeanBreweryConvention"
+        },
+        {
+          "member": "Lovibond",
+          "string": "Lovibond"
+        },
+        {
+          "member": "SpecificGravity",
+          "string": "SpecificGravity"
+        },
+        {
+          "member": "GravityPoints",
+          "string": "GravityPoints"
+        },
+        {
+          "member": "Plato",
+          "string": "Plato"
+        },
+        {
+          "member": "Brix",
+          "string": "Brix"
+        },
+        {
+          "member": "Lintner",
+          "string": "Lintner"
+        },
+        {
+          "member": "WindischKolbach",
+          "string": "WindischKolbach"
+        },
+        {
+          "member": "CarbonationVolumes",
+          "string": "CarbonationVolumes"
+        },
+        {
+          "member": "CarbonationMassPerVolume",
+          "string": "CarbonationMassPerVolume"
+        },
+        {
+          "member": "BrewingConcentration",
+          "string": "BrewingConcentration"
+        },
+        {
+          "member": "SpecificHeatCapacityCalories",
+          "string": "SpecificHeatCapacityCalories"
+        },
+        {
+          "member": "SpecificHeatCapacityJoules",
+          "string": "SpecificHeatCapacityJoules"
+        },
+        {
+          "member": "SpecificHeatCapacityBtus",
+          "string": "SpecificHeatCapacityBtus"
+        },
+        {
+          "member": "HeatCapacityKilocalories",
+          "string": "HeatCapacityKilocalories"
+        },
+        {
+          "member": "HeatCapacityJoules",
+          "string": "HeatCapacityJoules"
+        },
+        {
+          "member": "HeatCapacityBtus",
+          "string": "HeatCapacityBtus"
+        }
+      ]
     }
   },
   "enum_members": {
@@ -1132,6 +1778,11 @@
     "BoilStep::ChillingType": [
       "Batch",
       "Inline"
+    ],
+    "ColorMethods::ColorFormula": [
+      "Mosher",
+      "Daniel",
+      "Morey"
     ],
     "Fermentable::GrainGroup": [
       "Base",
@@ -1192,6 +1843,55 @@
       "mIbu",
       "Smph"
     ],
+    "IbuMethods::HopForm": [
+      "Whole",
+      "Plug",
+      "Pellet",
+      "Powder",
+      "Extract"
+    ],
+    "ImportExport::ImportOrExport": [
+      "EXPORT",
+      "IMPORT"
+    ],
+    "JsonMeasureableUnitsMapping::MatchType": [
+      "CaseSensitive",
+      "CaseInsensitive"
+    ],
+    "JsonRecordDefinition::FieldType": [
+      "Bool",
+      "Int",
+      "UInt",
+      "Double",
+      "String",
+      "Enum",
+      "Record",
+      "ListOfRecords",
+      "Date",
+      "DateTimeOffset",
+      "DateOrDateTimeLocal",
+      "MeasurementWithUnits",
+      "OneOfMeasurementsWithUnits",
+      "SingleUnitValue",
+      "RequiredConstant",
+      "FolderPath",
+      "LocalId"
+    ],
+    "JsonRecordDefinition::RecordType": [
+      "Normal",
+      "Outline"
+    ],
+    "JsonSchema::Id": [
+      "DotBeer_1_0",
+      "BeerJSON_2_1"
+    ],
+    "MashFermentability::StepType": [
+      "Infusion",
+      "Temperature",
+      "Decoction",
+      "Sparge",
+      "Other"
+    ],
     "MashStep::Type": [
       "Infusion",
       "Temperature",
@@ -1247,6 +1947,10 @@
       "Dimensionless",
       "Currency",
       "Objects"
+    ],
+    "NullSentinel::Mode": [
+      "ReadAndWrite",
+      "WriteOnly"
     ],
     "PhysicalQuantity::ChoiceOfPhysicalQuantity": [
       "Mass_Volume",
@@ -1318,6 +2022,11 @@
       "ItemLocked",
       "UsedByLockedRecipe"
     ],
+    "SerializationRecord::ProcessingResult": [
+      "Succeeded",
+      "Failed",
+      "FoundDuplicate"
+    ],
     "StockUse::Reason": [
       "Used",
       "Lost",
@@ -1381,6 +2090,20 @@
       "Sodium",
       "Sulfate",
       "Zinc"
+    ],
+    "XmlRecordDefinition::FieldType": [
+      "Bool",
+      "Int",
+      "UInt",
+      "Double",
+      "String",
+      "Date",
+      "Enum",
+      "RequiredConstant",
+      "Record",
+      "ListOfRecords",
+      "Unit",
+      "FolderPath"
     ],
     "Yeast::Flocculation": [
       "VeryLow",

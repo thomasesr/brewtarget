@@ -24,6 +24,671 @@ pub struct UnknownValue {
     pub value: String,
 }
 
+/// `BEER_JSON_IBU_FORMULA_MAPPER`, declared in `src/serialization/json/beerJson/BeerJson.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerJsonIbuFormulaMapper {
+    /// Stored as `Tinseth`.
+    Tinseth,
+    /// Stored as `Rager`.
+    Rager,
+    /// Stored as `Other`.
+    Noonan,
+    /// Stored as `Garetz`.
+    Garetz,
+    /// Stored as `Other`.
+    Daniels,
+    /// Stored as `Other`. C++ `mIbu`.
+    MIbu,
+    /// Stored as `Other`.
+    Smph,
+}
+
+impl BeerJsonIbuFormulaMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Tinseth => "Tinseth",
+            Self::Rager => "Rager",
+            Self::Noonan => "Other",
+            Self::Garetz => "Garetz",
+            Self::Daniels => "Other",
+            Self::MIbu => "Other",
+            Self::Smph => "Other",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] =
+        [Self::Tinseth, Self::Rager, Self::Noonan, Self::Garetz, Self::Daniels, Self::MIbu, Self::Smph];
+}
+
+impl std::str::FromStr for BeerJsonIbuFormulaMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerJsonIbuFormulaMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerJsonIbuFormulaMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_FERMENTABLE_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlFermentableTypeMapper {
+    /// Stored as `Grain`.
+    Grain,
+    /// Stored as `Sugar`.
+    Sugar,
+    /// Stored as `Extract`.
+    Extract,
+    /// Stored as `Dry Extract`. C++ `Dry_Extract`.
+    DryExtract,
+    /// Stored as `Adjunct`. C++ `Other_Adjunct`.
+    OtherAdjunct,
+    /// Stored as `Adjunct<!--Fruit-->`.
+    Fruit,
+    /// Stored as `Adjunct<!--Juice-->`.
+    Juice,
+    /// Stored as `Adjunct<!--Honey-->`.
+    Honey,
+}
+
+impl BeerXmlFermentableTypeMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Grain => "Grain",
+            Self::Sugar => "Sugar",
+            Self::Extract => "Extract",
+            Self::DryExtract => "Dry Extract",
+            Self::OtherAdjunct => "Adjunct",
+            Self::Fruit => "Adjunct<!--Fruit-->",
+            Self::Juice => "Adjunct<!--Juice-->",
+            Self::Honey => "Adjunct<!--Honey-->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 8] = [
+        Self::Grain,
+        Self::Sugar,
+        Self::Extract,
+        Self::DryExtract,
+        Self::OtherAdjunct,
+        Self::Fruit,
+        Self::Juice,
+        Self::Honey,
+    ];
+}
+
+impl std::str::FromStr for BeerXmlFermentableTypeMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlFermentableTypeMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlFermentableTypeMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_HOP_FORM_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlHopFormMapper {
+    /// Stored as `Leaf`.
+    Leaf,
+    /// Stored as `Pellet`.
+    Pellet,
+    /// Stored as `Plug`.
+    Plug,
+    /// Stored as `Pellet<!--Extract-->`.
+    Extract,
+    /// Stored as `Leaf<!--WetLeaf-->`.
+    WetLeaf,
+    /// Stored as `Pellet<!--Powder-->`.
+    Powder,
+}
+
+impl BeerXmlHopFormMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Leaf => "Leaf",
+            Self::Pellet => "Pellet",
+            Self::Plug => "Plug",
+            Self::Extract => "Pellet<!--Extract-->",
+            Self::WetLeaf => "Leaf<!--WetLeaf-->",
+            Self::Powder => "Pellet<!--Powder-->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 6] = [Self::Leaf, Self::Pellet, Self::Plug, Self::Extract, Self::WetLeaf, Self::Powder];
+}
+
+impl std::str::FromStr for BeerXmlHopFormMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlHopFormMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlHopFormMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_HOP_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlHopTypeMapper {
+    /// Stored as `Bittering`.
+    Bittering,
+    /// Stored as `Aroma`.
+    Aroma,
+    /// Stored as `Both`.
+    AromaAndBittering,
+    /// Stored as `Aroma<!--Flavor-->`.
+    Flavor,
+    /// Stored as `Both<!--BitteringAndFlavor-->`.
+    BitteringAndFlavor,
+    /// Stored as `Aroma<!--AromaAndFlavor-->`.
+    AromaAndFlavor,
+    /// Stored as `Both<!--AromaBitteringAndFlavor-->`.
+    AromaBitteringAndFlavor,
+}
+
+impl BeerXmlHopTypeMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Bittering => "Bittering",
+            Self::Aroma => "Aroma",
+            Self::AromaAndBittering => "Both",
+            Self::Flavor => "Aroma<!--Flavor-->",
+            Self::BitteringAndFlavor => "Both<!--BitteringAndFlavor-->",
+            Self::AromaAndFlavor => "Aroma<!--AromaAndFlavor-->",
+            Self::AromaBitteringAndFlavor => "Both<!--AromaBitteringAndFlavor-->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] = [
+        Self::Bittering,
+        Self::Aroma,
+        Self::AromaAndBittering,
+        Self::Flavor,
+        Self::BitteringAndFlavor,
+        Self::AromaAndFlavor,
+        Self::AromaBitteringAndFlavor,
+    ];
+}
+
+impl std::str::FromStr for BeerXmlHopTypeMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlHopTypeMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlHopTypeMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_MASH_STEP_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlMashStepTypeMapper {
+    /// Stored as `Infusion`.
+    Infusion,
+    /// Stored as `Temperature`.
+    Temperature,
+    /// Stored as `Decoction`.
+    Decoction,
+    /// Stored as `Infusion<!-- Fly Sparge -->`.
+    FlySparge,
+    /// Stored as `Infusion<!-- Batch Sparge -->`.
+    BatchSparge,
+    /// Stored as `Decoction<!-- Souring Mash -->`.
+    SouringMash,
+    /// Stored as `Decoction<!-- Souring Wort -->`.
+    SouringWort,
+}
+
+impl BeerXmlMashStepTypeMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Infusion => "Infusion",
+            Self::Temperature => "Temperature",
+            Self::Decoction => "Decoction",
+            Self::FlySparge => "Infusion<!-- Fly Sparge -->",
+            Self::BatchSparge => "Infusion<!-- Batch Sparge -->",
+            Self::SouringMash => "Decoction<!-- Souring Mash -->",
+            Self::SouringWort => "Decoction<!-- Souring Wort -->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] = [
+        Self::Infusion,
+        Self::Temperature,
+        Self::Decoction,
+        Self::FlySparge,
+        Self::BatchSparge,
+        Self::SouringMash,
+        Self::SouringWort,
+    ];
+}
+
+impl std::str::FromStr for BeerXmlMashStepTypeMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlMashStepTypeMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlMashStepTypeMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_MISC_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlMiscTypeMapper {
+    /// Stored as `Spice`.
+    Spice,
+    /// Stored as `Fining`.
+    Fining,
+    /// Stored as `Water Agent`.
+    WaterAgent,
+    /// Stored as `Herb`.
+    Herb,
+    /// Stored as `Flavor`.
+    Flavor,
+    /// Stored as `Other`.
+    Other,
+    /// Stored as `Other<!--Wood-->`.
+    Wood,
+}
+
+impl BeerXmlMiscTypeMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Spice => "Spice",
+            Self::Fining => "Fining",
+            Self::WaterAgent => "Water Agent",
+            Self::Herb => "Herb",
+            Self::Flavor => "Flavor",
+            Self::Other => "Other",
+            Self::Wood => "Other<!--Wood-->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] =
+        [Self::Spice, Self::Fining, Self::WaterAgent, Self::Herb, Self::Flavor, Self::Other, Self::Wood];
+}
+
+impl std::str::FromStr for BeerXmlMiscTypeMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlMiscTypeMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlMiscTypeMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_RECIPE_STEP_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlRecipeStepTypeMapper {
+    /// Stored as `Extract`.
+    Extract,
+    /// Stored as `Partial Mash`.
+    PartialMash,
+    /// Stored as `All Grain`.
+    AllGrain,
+    /// Stored as `All Grain<!-- Cider -->`.
+    Cider,
+    /// Stored as `All Grain<!-- Kombucha -->`.
+    Kombucha,
+    /// Stored as `All Grain<!-- Soda -->`.
+    Soda,
+    /// Stored as `All Grain<!-- Other -->`.
+    Other,
+    /// Stored as `All Grain<!-- Mead -->`.
+    Mead,
+    /// Stored as `All Grain<!-- Wine -->`.
+    Wine,
+}
+
+impl BeerXmlRecipeStepTypeMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Extract => "Extract",
+            Self::PartialMash => "Partial Mash",
+            Self::AllGrain => "All Grain",
+            Self::Cider => "All Grain<!-- Cider -->",
+            Self::Kombucha => "All Grain<!-- Kombucha -->",
+            Self::Soda => "All Grain<!-- Soda -->",
+            Self::Other => "All Grain<!-- Other -->",
+            Self::Mead => "All Grain<!-- Mead -->",
+            Self::Wine => "All Grain<!-- Wine -->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 9] = [
+        Self::Extract,
+        Self::PartialMash,
+        Self::AllGrain,
+        Self::Cider,
+        Self::Kombucha,
+        Self::Soda,
+        Self::Other,
+        Self::Mead,
+        Self::Wine,
+    ];
+}
+
+impl std::str::FromStr for BeerXmlRecipeStepTypeMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlRecipeStepTypeMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlRecipeStepTypeMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_STYLE_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlStyleTypeMapper {
+    /// Stored as `Ale`.
+    Beer,
+    /// Stored as `Cider`.
+    Cider,
+    /// Stored as `Mead`.
+    Mead,
+    /// Stored as `Wheat`.
+    Kombucha,
+    /// Stored as `Mixed`.
+    Soda,
+    /// Stored as `Mixed<!--Wine-->`.
+    Wine,
+    /// Stored as `Lager`.
+    Other,
+}
+
+impl BeerXmlStyleTypeMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Beer => "Ale",
+            Self::Cider => "Cider",
+            Self::Mead => "Mead",
+            Self::Kombucha => "Wheat",
+            Self::Soda => "Mixed",
+            Self::Wine => "Mixed<!--Wine-->",
+            Self::Other => "Lager",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] =
+        [Self::Beer, Self::Cider, Self::Mead, Self::Kombucha, Self::Soda, Self::Wine, Self::Other];
+}
+
+impl std::str::FromStr for BeerXmlStyleTypeMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlStyleTypeMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlStyleTypeMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_YEAST_FLOCCULATION_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlYeastFlocculationMapper {
+    /// Stored as `Low<!--very low-->`.
+    VeryLow,
+    /// Stored as `Low`.
+    Low,
+    /// Stored as `Medium<!--medium low-->`.
+    MediumLow,
+    /// Stored as `Medium`.
+    Medium,
+    /// Stored as `High<!--medium high-->`.
+    MediumHigh,
+    /// Stored as `High`.
+    High,
+    /// Stored as `Very High`.
+    VeryHigh,
+}
+
+impl BeerXmlYeastFlocculationMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::VeryLow => "Low<!--very low-->",
+            Self::Low => "Low",
+            Self::MediumLow => "Medium<!--medium low-->",
+            Self::Medium => "Medium",
+            Self::MediumHigh => "High<!--medium high-->",
+            Self::High => "High",
+            Self::VeryHigh => "Very High",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] =
+        [Self::VeryLow, Self::Low, Self::MediumLow, Self::Medium, Self::MediumHigh, Self::High, Self::VeryHigh];
+}
+
+impl std::str::FromStr for BeerXmlYeastFlocculationMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlYeastFlocculationMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlYeastFlocculationMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_YEAST_FORM_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlYeastFormMapper {
+    /// Stored as `Liquid`.
+    Liquid,
+    /// Stored as `Dry`.
+    Dry,
+    /// Stored as `Slant`.
+    Slant,
+    /// Stored as `Culture`.
+    Culture,
+    /// Stored as `Liquid<!--dregs-->`.
+    Dregs,
+}
+
+impl BeerXmlYeastFormMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Liquid => "Liquid",
+            Self::Dry => "Dry",
+            Self::Slant => "Slant",
+            Self::Culture => "Culture",
+            Self::Dregs => "Liquid<!--dregs-->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 5] = [Self::Liquid, Self::Dry, Self::Slant, Self::Culture, Self::Dregs];
+}
+
+impl std::str::FromStr for BeerXmlYeastFormMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlYeastFormMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlYeastFormMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `BEER_XML_YEAST_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BeerXmlYeastTypeMapper {
+    /// Stored as `Ale`.
+    Ale,
+    /// Stored as `Lager`.
+    Lager,
+    /// Stored as `Wheat`.
+    Other,
+    /// Stored as `Wine`.
+    Wine,
+    /// Stored as `Champagne`.
+    Champagne,
+    /// Stored as `Ale<!--Bacteria-->`.
+    Bacteria,
+    /// Stored as `Ale<!--Brett-->`.
+    Brett,
+    /// Stored as `Ale<!--Kveik-->`.
+    Kveik,
+    /// Stored as `Ale<!--Lacto-->`.
+    Lacto,
+    /// Stored as `Ale<!--Malolactic-->`.
+    Malolactic,
+    /// Stored as `Ale<!--Mixed-culture-->`.
+    MixedCulture,
+    /// Stored as `Ale<!--Pedio-->`.
+    Pedio,
+    /// Stored as `Ale<!--Spontaneous-->`.
+    Spontaneous,
+}
+
+impl BeerXmlYeastTypeMapper {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Ale => "Ale",
+            Self::Lager => "Lager",
+            Self::Other => "Wheat",
+            Self::Wine => "Wine",
+            Self::Champagne => "Champagne",
+            Self::Bacteria => "Ale<!--Bacteria-->",
+            Self::Brett => "Ale<!--Brett-->",
+            Self::Kveik => "Ale<!--Kveik-->",
+            Self::Lacto => "Ale<!--Lacto-->",
+            Self::Malolactic => "Ale<!--Malolactic-->",
+            Self::MixedCulture => "Ale<!--Mixed-culture-->",
+            Self::Pedio => "Ale<!--Pedio-->",
+            Self::Spontaneous => "Ale<!--Spontaneous-->",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 13] = [
+        Self::Ale,
+        Self::Lager,
+        Self::Other,
+        Self::Wine,
+        Self::Champagne,
+        Self::Bacteria,
+        Self::Brett,
+        Self::Kveik,
+        Self::Lacto,
+        Self::Malolactic,
+        Self::MixedCulture,
+        Self::Pedio,
+        Self::Spontaneous,
+    ];
+}
+
+impl std::str::FromStr for BeerXmlYeastTypeMapper {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "BeerXmlYeastTypeMapper", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for BeerXmlYeastTypeMapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 /// `BoilStep::chillingTypeStringMapping`, declared in `src/model/BoilStep.cpp`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoilStepChillingType {
@@ -58,6 +723,48 @@ impl std::str::FromStr for BoilStepChillingType {
 }
 
 impl fmt::Display for BoilStepChillingType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `ColorMethods::formulaStringMapping`, declared in `src/calculations/ColorMethods.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ColorMethodsFormula {
+    /// Stored as `mosher`.
+    Mosher,
+    /// Stored as `daniel`.
+    Daniel,
+    /// Stored as `morey`.
+    Morey,
+}
+
+impl ColorMethodsFormula {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Mosher => "mosher",
+            Self::Daniel => "daniel",
+            Self::Morey => "morey",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 3] = [Self::Mosher, Self::Daniel, Self::Morey];
+}
+
+impl std::str::FromStr for ColorMethodsFormula {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "ColorMethodsFormula", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for ColorMethodsFormula {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
@@ -358,6 +1065,116 @@ impl std::str::FromStr for HopType {
 }
 
 impl fmt::Display for HopType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `IbuMethods::formulaStringMapping`, declared in `src/calculations/IbuMethods.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IbuMethodsFormula {
+    /// Stored as `tinseth`.
+    Tinseth,
+    /// Stored as `rager`.
+    Rager,
+    /// Stored as `noonan`.
+    Noonan,
+    /// Stored as `garetz`.
+    Garetz,
+    /// Stored as `daniels`.
+    Daniels,
+    /// Stored as `mibu`. C++ `mIbu`.
+    MIbu,
+    /// Stored as `smph`.
+    Smph,
+}
+
+impl IbuMethodsFormula {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Tinseth => "tinseth",
+            Self::Rager => "rager",
+            Self::Noonan => "noonan",
+            Self::Garetz => "garetz",
+            Self::Daniels => "daniels",
+            Self::MIbu => "mibu",
+            Self::Smph => "smph",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] =
+        [Self::Tinseth, Self::Rager, Self::Noonan, Self::Garetz, Self::Daniels, Self::MIbu, Self::Smph];
+}
+
+impl std::str::FromStr for IbuMethodsFormula {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "IbuMethodsFormula", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for IbuMethodsFormula {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `IbuMethods::formulaStringMappingUc`, declared in `src/calculations/IbuMethods.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IbuMethodsFormulaStringMappingUc {
+    /// Stored as `Tinseth`.
+    Tinseth,
+    /// Stored as `Rager`.
+    Rager,
+    /// Stored as `Noonan`.
+    Noonan,
+    /// Stored as `Garetz`.
+    Garetz,
+    /// Stored as `Daniel`.
+    Daniels,
+    /// Stored as `mIBU`. C++ `mIbu`.
+    MIbu,
+    /// Stored as `SMPH`.
+    Smph,
+}
+
+impl IbuMethodsFormulaStringMappingUc {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Tinseth => "Tinseth",
+            Self::Rager => "Rager",
+            Self::Noonan => "Noonan",
+            Self::Garetz => "Garetz",
+            Self::Daniels => "Daniel",
+            Self::MIbu => "mIBU",
+            Self::Smph => "SMPH",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 7] =
+        [Self::Tinseth, Self::Rager, Self::Noonan, Self::Garetz, Self::Daniels, Self::MIbu, Self::Smph];
+}
+
+impl std::str::FromStr for IbuMethodsFormulaStringMappingUc {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "IbuMethodsFormulaStringMappingUc", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for IbuMethodsFormulaStringMappingUc {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
@@ -1367,6 +2184,183 @@ impl std::str::FromStr for YeastType {
 }
 
 impl fmt::Display for YeastType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `relativeScaleToName`, declared in `src/measurement/UnitSystem.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RelativeScaleToName {
+    /// Stored as `scaleExtraSmall`.
+    ExtraSmall,
+    /// Stored as `scaleSmall`.
+    Small,
+    /// Stored as `scaleMedium`.
+    Medium,
+    /// Stored as `scaleLarge`.
+    Large,
+    /// Stored as `scaleExtraLarge`.
+    ExtraLarge,
+    /// Stored as `scaleHuge`.
+    Huge,
+}
+
+impl RelativeScaleToName {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::ExtraSmall => "scaleExtraSmall",
+            Self::Small => "scaleSmall",
+            Self::Medium => "scaleMedium",
+            Self::Large => "scaleLarge",
+            Self::ExtraLarge => "scaleExtraLarge",
+            Self::Huge => "scaleHuge",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 6] = [Self::ExtraSmall, Self::Small, Self::Medium, Self::Large, Self::ExtraLarge, Self::Huge];
+}
+
+impl std::str::FromStr for RelativeScaleToName {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "RelativeScaleToName", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for RelativeScaleToName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// `systemOfMeasurementToUniqueName`, declared in `src/measurement/SystemOfMeasurement.cpp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SystemOfMeasurementToUniqueName {
+    /// Stored as `Imperial`.
+    Imperial,
+    /// Stored as `UsCustomary`.
+    UsCustomary,
+    /// Stored as `Metric`.
+    Metric,
+    /// Stored as `MetricAlternate`.
+    MetricAlternate,
+    /// Stored as `UniversalStandard`.
+    UniversalStandard,
+    /// Stored as `StandardReferenceMethod`.
+    StandardReferenceMethod,
+    /// Stored as `EuropeanBreweryConvention`.
+    EuropeanBreweryConvention,
+    /// Stored as `Lovibond`.
+    Lovibond,
+    /// Stored as `SpecificGravity`.
+    SpecificGravity,
+    /// Stored as `GravityPoints`.
+    GravityPoints,
+    /// Stored as `Plato`.
+    Plato,
+    /// Stored as `Brix`.
+    Brix,
+    /// Stored as `Lintner`.
+    Lintner,
+    /// Stored as `WindischKolbach`.
+    WindischKolbach,
+    /// Stored as `CarbonationVolumes`.
+    CarbonationVolumes,
+    /// Stored as `CarbonationMassPerVolume`.
+    CarbonationMassPerVolume,
+    /// Stored as `BrewingConcentration`.
+    BrewingConcentration,
+    /// Stored as `SpecificHeatCapacityCalories`.
+    SpecificHeatCapacityCalories,
+    /// Stored as `SpecificHeatCapacityJoules`.
+    SpecificHeatCapacityJoules,
+    /// Stored as `SpecificHeatCapacityBtus`.
+    SpecificHeatCapacityBtus,
+    /// Stored as `HeatCapacityKilocalories`.
+    HeatCapacityKilocalories,
+    /// Stored as `HeatCapacityJoules`.
+    HeatCapacityJoules,
+    /// Stored as `HeatCapacityBtus`.
+    HeatCapacityBtus,
+}
+
+impl SystemOfMeasurementToUniqueName {
+    /// The string this member is stored as.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Imperial => "Imperial",
+            Self::UsCustomary => "UsCustomary",
+            Self::Metric => "Metric",
+            Self::MetricAlternate => "MetricAlternate",
+            Self::UniversalStandard => "UniversalStandard",
+            Self::StandardReferenceMethod => "StandardReferenceMethod",
+            Self::EuropeanBreweryConvention => "EuropeanBreweryConvention",
+            Self::Lovibond => "Lovibond",
+            Self::SpecificGravity => "SpecificGravity",
+            Self::GravityPoints => "GravityPoints",
+            Self::Plato => "Plato",
+            Self::Brix => "Brix",
+            Self::Lintner => "Lintner",
+            Self::WindischKolbach => "WindischKolbach",
+            Self::CarbonationVolumes => "CarbonationVolumes",
+            Self::CarbonationMassPerVolume => "CarbonationMassPerVolume",
+            Self::BrewingConcentration => "BrewingConcentration",
+            Self::SpecificHeatCapacityCalories => "SpecificHeatCapacityCalories",
+            Self::SpecificHeatCapacityJoules => "SpecificHeatCapacityJoules",
+            Self::SpecificHeatCapacityBtus => "SpecificHeatCapacityBtus",
+            Self::HeatCapacityKilocalories => "HeatCapacityKilocalories",
+            Self::HeatCapacityJoules => "HeatCapacityJoules",
+            Self::HeatCapacityBtus => "HeatCapacityBtus",
+        }
+    }
+
+    /// Every member, in the order the C++ declares them.
+    pub const ALL: [Self; 23] = [
+        Self::Imperial,
+        Self::UsCustomary,
+        Self::Metric,
+        Self::MetricAlternate,
+        Self::UniversalStandard,
+        Self::StandardReferenceMethod,
+        Self::EuropeanBreweryConvention,
+        Self::Lovibond,
+        Self::SpecificGravity,
+        Self::GravityPoints,
+        Self::Plato,
+        Self::Brix,
+        Self::Lintner,
+        Self::WindischKolbach,
+        Self::CarbonationVolumes,
+        Self::CarbonationMassPerVolume,
+        Self::BrewingConcentration,
+        Self::SpecificHeatCapacityCalories,
+        Self::SpecificHeatCapacityJoules,
+        Self::SpecificHeatCapacityBtus,
+        Self::HeatCapacityKilocalories,
+        Self::HeatCapacityJoules,
+        Self::HeatCapacityBtus,
+    ];
+}
+
+impl std::str::FromStr for SystemOfMeasurementToUniqueName {
+    type Err = UnknownValue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|member| member.as_str() == value)
+            .ok_or_else(|| UnknownValue { enumeration: "SystemOfMeasurementToUniqueName", value: value.to_owned() })
+    }
+}
+
+impl fmt::Display for SystemOfMeasurementToUniqueName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }

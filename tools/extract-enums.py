@@ -30,9 +30,13 @@ import sys
 from cpputil import match_balanced, strip_comments
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-SOURCE_DIRS = ["src/model", "src/measurement"]
+# BeerXML declares its own mappings -- it supports fewer hop forms and malt types than we do,
+# so it needs its own names for them -- which is why src/serialization is scanned too.
+SOURCE_DIRS = ["src/model", "src/measurement", "src/serialization", "src/calculations"]
 
-MAPPING_RE = re.compile(r"EnumStringMapping const ([\w:]+?)::(\w+)\s*(?=\{)")
+# Model classes declare theirs as `Owner::nameStringMapping`; the serialization code declares
+# file-scope ones with no owner at all.
+MAPPING_RE = re.compile(r"EnumStringMapping const (?:([\w:]+?)::)?(\w+)\s*(?=\{)")
 # Unit columns store a unit's name rather than an enum member, so their mapping is by object
 # address rather than by enum value.  Same job, different declaration.
 OBJECT_MAPPING_RE = re.compile(r"ObjectAddressStringMapping<(\w+)> const (\w+)\s*(?=\{)")
@@ -43,8 +47,8 @@ ENUM_DECL_RE = re.compile(r"enum class (\w+)\s*(?::[^{]*)?(?=\{)")
 def source_files() -> list[pathlib.Path]:
     files = []
     for directory in SOURCE_DIRS:
-        files += sorted((REPO / directory).glob("*.cpp"))
-        files += sorted((REPO / directory).glob("*.h"))
+        files += sorted((REPO / directory).rglob("*.cpp"))
+        files += sorted((REPO / directory).rglob("*.h"))
     return files
 
 
@@ -89,7 +93,7 @@ def build() -> dict:
                 }
 
         for match in MAPPING_RE.finditer(text):
-            owner, name = match.group(1), match.group(2)
+            owner, name = match.group(1) or "", match.group(2)
             start, end = match_balanced(text, match.end())
             entries = []
             for member, string in ENTRY_RE.findall(text[start + 1 : end - 1]):
@@ -98,7 +102,7 @@ def build() -> dict:
                 entries.append({"member": parts[-1], "enum": "::".join(parts[:-1]), "string": string})
             if not entries:
                 continue
-            mappings[f"{owner}::{name}"] = {
+            mappings[f"{owner}::{name}" if owner else name] = {
                 "owner": owner,
                 "name": name,
                 "enum": entries[0]["enum"],
