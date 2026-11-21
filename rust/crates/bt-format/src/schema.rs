@@ -104,6 +104,9 @@ impl Schema {
             root_document.ok_or_else(|| SchemaError::NoSchemaFiles(format!("{root} in {}", directory.display())))?;
 
         let validator = jsonschema::options()
+            // Draft 2020-12 treats `format` as an annotation unless asked otherwise, so a date
+            // like 2026-02-30 would pass as a string.  dotBeer means its formats to be checked.
+            .should_validate_formats(true)
             .with_retriever(DirectoryRetriever { documents })
             .build(&root_document)
             .map_err(|error| SchemaError::Build(error.to_string()))?;

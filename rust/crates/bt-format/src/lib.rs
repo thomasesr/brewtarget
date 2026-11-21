@@ -22,6 +22,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod consistency;
 pub mod jsonc;
 pub mod references;
 pub mod schema;

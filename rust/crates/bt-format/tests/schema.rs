@@ -53,9 +53,11 @@ fn every_valid_example_validates() {
     assert!(checked >= 5, "only checked {checked} files");
 }
 
-/// Half of the invalid fixtures break a rule the schema can express -- a value out of range, a
-/// required field missing, two mutually exclusive fields both present.
-const REJECTED_BY_THE_SCHEMA: [&str; 8] = [
+/// Most of the invalid fixtures break a rule the schema can express -- a value out of range, a
+/// required field missing, two mutually exclusive fields both present, a date that does not
+/// exist.  The last of those only counts because format assertion is switched on.
+const REJECTED_BY_THE_SCHEMA: [&str; 9] = [
+    "BrewLogDatesReversed.beer",
     "BrewLogFieldErrors.beer",
     "FermentableNoYield.beer",
     "FoundationVolumeErrors.beer",
@@ -66,12 +68,11 @@ const REJECTED_BY_THE_SCHEMA: [&str; 8] = [
     "WaterAgentRules.beer",
 ];
 
-/// The other half break rules JSON Schema cannot express: a reference to something that is not
-/// there, two records claiming the same identifier, dates in the wrong order.  Catching those is
-/// a separate pass, which the C++ does in its record classes rather than in the schema.
-const NEEDS_SEMANTIC_CHECKS: [&str; 6] = [
+/// The rest break rules JSON Schema cannot express: a reference to something that is not there,
+/// two records claiming the same identifier, a step index past the end of a mash, a batch that
+/// will not fit in its kettle.  Those are covered in `references.rs` and `consistency.rs`.
+const NEEDS_SEMANTIC_CHECKS: [&str; 5] = [
     "AdditionStepOutOfRange.beer",
-    "BrewLogDatesReversed.beer",
     "DanglingReference.beer",
     "DefaultBatchSizeErrors.beer",
     "DuplicateLocalId.beer",
