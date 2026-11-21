@@ -38,6 +38,8 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 SRC_UNIT = REPO / "src" / "measurement" / "Unit.cpp"
 SRC_UNIT_SYSTEM = REPO / "src" / "measurement" / "UnitSystem.cpp"
 SRC_PHYSICAL_QUANTITY = REPO / "src" / "measurement" / "PhysicalQuantity.h"
+SRC_SUCROSE = REPO / "src" / "measurement" / "SucroseConversion.cpp"
+SRC_ALGORITHMS = REPO / "src" / "calculations" / "Algorithms.cpp"
 
 
 class Unsupported(Exception):
@@ -177,6 +179,38 @@ def parse_enum(text: str, name: str) -> list[str]:
     return members
 
 
+# ── Reference data ────────────────────────────────────────────────────────────────────────────
+
+SUCROSE_TABLE_RE = re.compile(r"sucroseConversions\[\]\s*=\s*(?=\{)")
+POLYNOMIAL_RE = re.compile(r"Polynomial const (\w+)\s*\{\s*Polynomial\(\)((?:\s*<<\s*[-\d.e+]+)+)")
+
+
+def parse_sucrose_conversions(text: str) -> list[list[float]]:
+    """Read the USDA sucrose table: refractive index, degrees Brix, apparent specific gravity.
+
+    800-odd observed points, which the C++ interpolates between rather than fitting a curve to.
+    """
+    match = SUCROSE_TABLE_RE.search(text)
+    if not match:
+        raise Unsupported("no sucroseConversions table")
+    start, end = match_balanced(text, match.end())
+    rows = []
+    for row in split_arguments(text[start + 1 : end - 1]):
+        values = [number(value) for value in split_arguments(row.strip().strip("{}"))]
+        if len(values) != 3:
+            raise Unsupported(f"sucrose row {row!r}")
+        rows.append(values)
+    return rows
+
+
+def parse_polynomials(text: str) -> dict[str, list[float]]:
+    """Read the `Polynomial() << a << b << ...` declarations, lowest-order coefficient first."""
+    return {
+        match.group(1): [float(coefficient) for coefficient in re.findall(r"[-\d.e+]+", match.group(2))]
+        for match in POLYNOMIAL_RE.finditer(text)
+    }
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────────────────────
 
 
@@ -199,6 +233,8 @@ def build() -> dict:
             str(SRC_UNIT.relative_to(REPO)),
             str(SRC_UNIT_SYSTEM.relative_to(REPO)),
             str(SRC_PHYSICAL_QUANTITY.relative_to(REPO)),
+            str(SRC_SUCROSE.relative_to(REPO)),
+            str(SRC_ALGORITHMS.relative_to(REPO)),
         ],
         "physical_quantities": parse_enum(quantity_text, "PhysicalQuantity"),
         "systems_of_measurement": parse_enum(
@@ -207,6 +243,8 @@ def build() -> dict:
         ),
         "unit_systems": systems,
         "units": units,
+        "polynomials": parse_polynomials(strip_comments(SRC_ALGORITHMS.read_text(encoding="utf-8"))),
+        "sucrose_conversions": parse_sucrose_conversions(strip_comments(SRC_SUCROSE.read_text(encoding="utf-8"))),
         "converted_by_formula": [unit["name"] for unit in units if unit["converts_by_formula"]],
     }
 
@@ -226,7 +264,8 @@ def main() -> int:
         print(
             f"\n{len(document['units'])} units, {len(document['unit_systems'])} unit systems, "
             f"{len(document['physical_quantities'])} physical quantities, "
-            f"{len(document['converted_by_formula'])} converted by formula"
+            f"{len(document['converted_by_formula'])} converted by formula, "
+            f"{len(document['sucrose_conversions'])} sucrose data points"
         )
         return 0
 

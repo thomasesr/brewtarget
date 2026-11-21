@@ -21,3 +21,12 @@
 //! See `PLAN.md` for the phase this crate belongs to.
 
 #![forbid(unsafe_code)]
+
+pub mod data;
+pub mod formula;
+pub mod numeric;
+pub mod unit;
+
+pub use data::{UnitData, UnitDef, UnitSystemDef, unit_data};
+pub use numeric::{Polynomial, interpolate};
+pub use unit::{Amount, Unit, UnitSystem, split_amount_string};

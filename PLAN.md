@@ -187,7 +187,14 @@ meaningful evidence for both — and needs no Qt.
   `Qualitative`, `SucroseConversion`, `PhysicalConstants`.
 - Mirror `src/unitTests/MeasurementTests.cpp` as Rust tests, same tolerances.
 
-**Done when:** every assertion in `MeasurementTests.cpp` has a passing Rust twin.
+**Done when:** every assertion in `MeasurementTests.cpp` has a passing Rust twin. ✅
+
+`testUnitInverses` in the C++ walks a hand-maintained list of units carrying the
+warning "If you add a new Unit, please add it here!"; the Rust twin walks every unit
+in `schema/units.json` instead, so a new one cannot be missed. The two C++ cases that
+exercise Qt widgets and locale-dependent number formatting
+(`testPercentageDecimalPlaces`, `testNumberDisplayAndParsing`) belong to the
+presentation edge and are deferred to Phase 8.
 
 ### Phase 4 — `bt-model` + `bt-store`
 
@@ -391,6 +398,10 @@ content.
   `bt-schema`. Both checked-in databases migrate to v23 with their data intact, and a
   database created from the schema definitions has exactly the same shape as one
   brought up by migration — a check the C++ never makes.
+- [x] **Phase 3** — `bt-measure`. 79 units, 40 unit systems and the 801-point USDA
+  sucrose table lifted into `schema/units.json`; the six by-formula units hand-ported.
+  Mirrors `MeasurementTests.cpp`, including all 142 SG/Brix rows at the C++'s own
+  per-row tolerances.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only

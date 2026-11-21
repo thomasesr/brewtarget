@@ -1,0 +1,859 @@
+{
+  "generated_by": "tools/extract-test-data.py",
+  "source_file": "src/unitTests/MeasurementTests.cpp",
+  "description": "Specific gravity and degrees Brix, with the error margin each direction of the conversion is allowed, from MeasurementTests::testAlgorithms.",
+  "rows": [
+    {
+      "sg": 1.00156,
+      "brix": 0.4,
+      "error_margin_sg_to_brix": 1e-05,
+      "error_margin_brix_to_sg": 1e-05
+    },
+    {
+      "sg": 0.99,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.011
+    },
+    {
+      "sg": 0.991,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.01
+    },
+    {
+      "sg": 0.992,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.009
+    },
+    {
+      "sg": 0.993,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.008
+    },
+    {
+      "sg": 0.994,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.007
+    },
+    {
+      "sg": 0.995,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.006
+    },
+    {
+      "sg": 0.996,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.005
+    },
+    {
+      "sg": 0.997,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.004
+    },
+    {
+      "sg": 0.998,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.003
+    },
+    {
+      "sg": 0.999,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.002
+    },
+    {
+      "sg": 1.0,
+      "brix": 0.0,
+      "error_margin_sg_to_brix": 0.005,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.001,
+      "brix": 0.26,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.002,
+      "brix": 0.51,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.003,
+      "brix": 0.77,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.004,
+      "brix": 1.03,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.005,
+      "brix": 1.28,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.006,
+      "brix": 1.54,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.007,
+      "brix": 1.8,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.008,
+      "brix": 2.05,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.009,
+      "brix": 2.31,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.01,
+      "brix": 2.56,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.011,
+      "brix": 2.81,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.012,
+      "brix": 3.07,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.013,
+      "brix": 3.32,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.014,
+      "brix": 3.57,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.015,
+      "brix": 3.82,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.016,
+      "brix": 4.08,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.017,
+      "brix": 4.33,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.018,
+      "brix": 4.58,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.019,
+      "brix": 4.83,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.02,
+      "brix": 5.08,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.021,
+      "brix": 5.33,
+      "error_margin_sg_to_brix": 0.01,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.022,
+      "brix": 5.57,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.023,
+      "brix": 5.82,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.024,
+      "brix": 6.07,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.025,
+      "brix": 6.32,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.026,
+      "brix": 6.57,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.027,
+      "brix": 6.81,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.028,
+      "brix": 7.06,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.029,
+      "brix": 7.3,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.03,
+      "brix": 7.55,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.031,
+      "brix": 7.8,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.032,
+      "brix": 8.04,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.033,
+      "brix": 8.28,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.034,
+      "brix": 8.53,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.035,
+      "brix": 8.77,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.036,
+      "brix": 9.01,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.037,
+      "brix": 9.26,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.038,
+      "brix": 9.5,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.039,
+      "brix": 9.74,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.04,
+      "brix": 9.98,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.041,
+      "brix": 10.22,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.042,
+      "brix": 10.46,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.043,
+      "brix": 10.7,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.044,
+      "brix": 10.94,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.045,
+      "brix": 11.18,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.046,
+      "brix": 11.42,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.047,
+      "brix": 11.66,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.048,
+      "brix": 11.9,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.049,
+      "brix": 12.14,
+      "error_margin_sg_to_brix": 0.02,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.05,
+      "brix": 12.37,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.051,
+      "brix": 12.61,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.052,
+      "brix": 12.85,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.053,
+      "brix": 13.08,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.054,
+      "brix": 13.32,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.055,
+      "brix": 13.55,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.056,
+      "brix": 13.79,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.057,
+      "brix": 14.02,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.058,
+      "brix": 14.26,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.059,
+      "brix": 14.49,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.06,
+      "brix": 14.72,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.061,
+      "brix": 14.96,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.062,
+      "brix": 15.19,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.063,
+      "brix": 15.42,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.064,
+      "brix": 15.65,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.065,
+      "brix": 15.88,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.066,
+      "brix": 16.11,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.067,
+      "brix": 16.34,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.068,
+      "brix": 16.57,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.069,
+      "brix": 16.8,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.07,
+      "brix": 17.03,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.071,
+      "brix": 17.26,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.072,
+      "brix": 17.49,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.073,
+      "brix": 17.72,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.074,
+      "brix": 17.95,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.075,
+      "brix": 18.18,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.076,
+      "brix": 18.4,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.077,
+      "brix": 18.63,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.078,
+      "brix": 18.86,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.079,
+      "brix": 19.08,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.08,
+      "brix": 19.31,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.081,
+      "brix": 19.53,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.082,
+      "brix": 19.76,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.083,
+      "brix": 19.98,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.084,
+      "brix": 20.21,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.085,
+      "brix": 20.43,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.086,
+      "brix": 20.65,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.087,
+      "brix": 20.88,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.088,
+      "brix": 21.1,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.089,
+      "brix": 21.32,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.09,
+      "brix": 21.54,
+      "error_margin_sg_to_brix": 0.032,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.091,
+      "brix": 21.77,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.092,
+      "brix": 21.99,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.093,
+      "brix": 22.21,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.094,
+      "brix": 22.43,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.095,
+      "brix": 22.65,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.096,
+      "brix": 22.87,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.097,
+      "brix": 23.09,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.098,
+      "brix": 23.31,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.099,
+      "brix": 23.53,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.1,
+      "brix": 23.75,
+      "error_margin_sg_to_brix": 0.03,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.101,
+      "brix": 23.96,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.102,
+      "brix": 24.18,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.103,
+      "brix": 24.4,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.104,
+      "brix": 24.62,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.105,
+      "brix": 24.83,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.106,
+      "brix": 25.05,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.107,
+      "brix": 25.27,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.108,
+      "brix": 25.48,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.109,
+      "brix": 25.7,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.11,
+      "brix": 25.91,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.111,
+      "brix": 26.13,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.112,
+      "brix": 26.34,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.113,
+      "brix": 26.56,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.114,
+      "brix": 26.77,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.115,
+      "brix": 26.98,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.116,
+      "brix": 27.2,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.117,
+      "brix": 27.41,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.118,
+      "brix": 27.62,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.119,
+      "brix": 27.83,
+      "error_margin_sg_to_brix": 0.036,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.12,
+      "brix": 28.05,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.121,
+      "brix": 28.26,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.122,
+      "brix": 28.47,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.123,
+      "brix": 28.68,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.124,
+      "brix": 28.89,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.125,
+      "brix": 29.1,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.126,
+      "brix": 29.31,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.127,
+      "brix": 29.52,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.128,
+      "brix": 29.73,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.129,
+      "brix": 29.94,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    },
+    {
+      "sg": 1.13,
+      "brix": 30.15,
+      "error_margin_sg_to_brix": 0.035,
+      "error_margin_brix_to_sg": 0.0002
+    }
+  ]
+}

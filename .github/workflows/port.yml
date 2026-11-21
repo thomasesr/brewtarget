@@ -59,3 +59,7 @@ jobs:
         run: |
           python3 tools/extract-units.py --out /tmp/units.json
           diff -u schema/units.json /tmp/units.json
+      - name: Expected test values are reproducible
+        run: |
+          python3 tools/extract-test-data.py --out /tmp/expected
+          diff -ru testData/expected /tmp/expected
