@@ -29,3 +29,4 @@ pub mod jsonc;
 pub mod mapping;
 pub mod references;
 pub mod schema;
+pub mod writing;
