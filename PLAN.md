@@ -404,6 +404,16 @@ content.
   sucrose table lifted into `schema/units.json`; the six by-formula units hand-ported.
   Mirrors `MeasurementTests.cpp`, including all 142 SG/Brix rows at the C++'s own
   per-row tolerances.
+- [x] **Phase 4, generated half** — `bt-model` row structs and enums generated from the
+  schema; `bt-store` repositories over typed sqlx pools, with round-trip CRUD tests.
+- [~] **Phase 5** — `Algorithms`, `ColorMethods`, `MashFermentability` and five of the
+  seven IBU formulae done, each with mirrored tests. Outstanding: the mIBU and SMPH
+  formulae, which model post-flameout isomerisation and need Hosom's cooling curve;
+  and the recipe-level calculations in `Recipe.cpp`, which need the model wrappers.
+- [ ] **Phase 4, hand-written half** — the model types that wrap the generated rows and
+  carry the behaviour: validation, derived properties, `Recipe` ↔ `RecipeAddition*`
+  ownership, folder paths. The remaining Phase 5 and the `RecipeCalcTests` mirror both
+  depend on this.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only
