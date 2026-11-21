@@ -23,3 +23,4 @@
 #![forbid(unsafe_code)]
 
 pub mod jsonc;
+pub mod schema;
