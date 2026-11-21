@@ -40,7 +40,9 @@ SRC_SCHEMA_HELPER = REPO / "src" / "database" / "DatabaseSchemaHelper.cpp"
 # ── Field parsing ─────────────────────────────────────────────────────────────────────────────
 
 FIELD_TYPE_RE = re.compile(r"ObjectStore::FieldType::(\w+)")
-PROPERTY_RE = re.compile(r"PropertyNames::([\w:]+)::(\w+)")
+# The property name may be padded for alignment, as `PropertyNames::   StepBase::startTemp_c`,
+# so whitespace is allowed after each `::`.
+PROPERTY_RE = re.compile(r"PropertyNames::\s*([\w:\s]+?)\s*::\s*(\w+)")
 COLUMN_RE = re.compile(r'"([A-Za-z_][A-Za-z_0-9]*)"')
 
 
@@ -64,6 +66,14 @@ def parse_mapping(entry: str) -> str | None:
     return None
 
 
+def property_name(match: re.Match | None) -> str | None:
+    """`PropertyNames::   StepBase::startTemp_c` names `StepBase::startTemp_c`."""
+    if not match:
+        return None
+    owner = re.sub(r"\s+", "", match.group(1))
+    return f"{owner}::{match.group(2)}"
+
+
 def parse_fields(fields_body: str) -> list[dict]:
     fields = []
     for entry in split_top_level(fields_body[1:-1]):
@@ -77,7 +87,7 @@ def parse_fields(fields_body: str) -> list[dict]:
             {
                 "field_type": ft.group(1),
                 "columns": columns,
-                "property": f"{prop.group(1)}::{prop.group(2)}" if prop else None,
+                "property": property_name(prop),
                 "foreign_key_to_type": parse_fk_target(entry),
                 "string_mapping": parse_mapping(entry),
             }

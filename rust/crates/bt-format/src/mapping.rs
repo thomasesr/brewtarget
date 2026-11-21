@@ -20,6 +20,7 @@
 //! converted to canonical; a percentage or a pH is in a unit the field always uses.  That is why
 //! this depends on `bt-measure` rather than just copying numbers across.
 
+use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use serde_json::{Map, Value};
@@ -46,7 +47,14 @@ pub struct MappedRecord {
     /// The columns, keyed by column name, ready to deserialise into a row struct.
     pub columns: Map<String, Value>,
     /// The file-local identifier, where the record has one.
+    ///
+    /// Only the field actually called `local_id` is the record's own: every other `LocalId`
+    /// field is a reference to a different record, and a recipe has seven of those and no
+    /// identity of its own.
     pub local_id: Option<String>,
+    /// References to other records, by the field that holds them -- `style_id`, `hop_id` and so
+    /// on.  These become foreign keys once the records they name have been stored.
+    pub references: BTreeMap<String, String>,
     /// The folder this record says it lives in, which has to become a folder row of its own.
     pub folder_path: Option<String>,
 }
@@ -85,6 +93,17 @@ fn single_unit_is_dimensionless(format: &Format, mapping_name: &str) -> bool {
     matches!(format.unit_mappings.get(mapping_name), Some(UnitMapping::SingleUnit { .. }))
 }
 
+/// Read a `{"unit": …, "value": …}` pair, resolving the unit through the field's table.
+fn measurement(format: &Format, field: &Field, raw: &Value) -> Result<(f64, bt_measure::Unit), MappingError> {
+    let bad = |message: String| MappingError::BadValue { path: field.path.clone(), message };
+    let quantity = raw.get("value").and_then(Value::as_f64).ok_or_else(|| bad("expected a value".to_owned()))?;
+    let unit_name = raw.get("unit").and_then(Value::as_str).ok_or_else(|| bad("expected a unit".to_owned()))?;
+    let mapping = field.decoder.as_deref().ok_or_else(|| bad("no unit table for this measurement".to_owned()))?;
+    let unit = unit_named(format, mapping, unit_name)
+        .ok_or_else(|| bad(format!("{unit_name:?} is not a unit {mapping} knows")))?;
+    Ok((quantity, unit))
+}
+
 /// Read one field out of a record.
 ///
 /// Returns `None` when the field is simply absent, which is the common case: these formats make
@@ -99,8 +118,17 @@ fn read_field(format: &Format, record: &Value, field: &Field) -> Result<Option<V
     let bad = |message: &str| MappingError::BadValue { path: field.path.clone(), message: message.to_owned() };
 
     let value = match field.field_type.as_str() {
-        "String" | "Date" | "DateTimeOffset" | "DateOrDateTimeLocal" | "LocalId" | "FolderPath" => {
+        "String" | "LocalId" | "FolderPath" => {
             Value::String(raw.as_str().ok_or_else(|| bad("expected a string"))?.to_owned())
+        }
+
+        // The database keeps dates as dates.  A file may give a full timestamp -- a brew started
+        // at half past two in the afternoon -- and storing that into a DATE column keeps the day
+        // and drops the rest, which is what the C++ does when it puts a QDateTime into a QDate.
+        // The date taken is the one as written, so a local time stays on its local day.
+        "Date" | "DateTimeOffset" | "DateOrDateTimeLocal" => {
+            let text = raw.as_str().ok_or_else(|| bad("expected a date"))?;
+            Value::String(text.split('T').next().unwrap_or(text).to_owned())
         }
         "Bool" => Value::Bool(raw.as_bool().ok_or_else(|| bad("expected true or false"))?),
         "Int" | "UInt" => Value::from(raw.as_i64().ok_or_else(|| bad("expected a whole number"))?),
@@ -111,14 +139,12 @@ fn read_field(format: &Format, record: &Value, field: &Field) -> Result<Option<V
         // rejected any the mapping does not know.
         "Enum" => Value::String(raw.as_str().ok_or_else(|| bad("expected a string"))?.to_owned()),
 
-        // A measurement is a value and a unit together, and is stored canonically: 5 gal becomes
-        // 18.927 litres, because that is what the column means.
+        // A measurement is a value and a unit together.  Most columns hold one number, so the
+        // value is converted to the canonical unit -- five US gallons becomes 18.927 litres,
+        // because that is what the column means.  An ingredient amount is the exception, and is
+        // handled by the caller, which has two columns to fill.
         "MeasurementWithUnits" | "OneOfMeasurementsWithUnits" => {
-            let quantity = raw.get("value").and_then(Value::as_f64).ok_or_else(|| bad("expected a value"))?;
-            let unit_name = raw.get("unit").and_then(Value::as_str).ok_or_else(|| bad("expected a unit"))?;
-            let mapping = field.decoder.as_deref().ok_or_else(|| bad("no unit table for this measurement"))?;
-            let unit = unit_named(format, mapping, unit_name)
-                .ok_or_else(|| bad(&format!("{unit_name:?} is not a unit {mapping} knows")))?;
+            let (quantity, unit) = measurement(format, field, raw)?;
             Value::from(unit.to_canonical(quantity).quantity)
         }
 
@@ -168,6 +194,7 @@ pub fn map_record_with(format: &Format, definition: &Record, record: &Value) -> 
     let mut columns = Map::new();
     let mut local_id = None;
     let mut folder_path = None;
+    let mut references = BTreeMap::new();
 
     for field in &definition.fields {
         let Some(value) = read_field(format, record, field)? else {
@@ -176,10 +203,31 @@ pub fn map_record_with(format: &Format, definition: &Record, record: &Value) -> 
         match field.field_type.as_str() {
             // Neither of these is a column: a local ID exists only within the file, and a folder
             // path has to become a folder row before anything can point at it.
-            "LocalId" => local_id = value.as_str().map(str::to_owned),
+            "LocalId" if field.path == "local_id" => local_id = value.as_str().map(str::to_owned),
+            "LocalId" => {
+                if let Some(reference) = value.as_str() {
+                    references.insert(field.path.clone(), reference.to_owned());
+                }
+            }
             "FolderPath" => folder_path = value.as_str().map(str::to_owned),
             _ => {
                 let Some(property) = field.property.as_deref() else { continue };
+                // An ingredient amount is one field in the file but two columns in the database:
+                // how much, and in what unit.  Both are stored as given rather than converted,
+                // because the unit the user chose is part of what the recipe says -- 15 g of
+                // hops reads differently from 0.015 kg.
+                if property.ends_with("::amount")
+                    && let (Some(quantity_column), Some(unit_column)) = (
+                        bt_model::tables::column_for_property(table, "IngredientAmount::quantity"),
+                        bt_model::tables::column_for_property(table, "IngredientAmount::unit"),
+                    )
+                    && let Some(raw) = value_at(record, &field.path)
+                    && let Ok((quantity, unit)) = measurement(format, field, raw)
+                {
+                    columns.insert(quantity_column.to_owned(), Value::from(quantity));
+                    columns.insert(unit_column.to_owned(), Value::String(unit.name().to_owned()));
+                    continue;
+                }
                 // A property the schema does not store is a calculated one -- a recipe's ABV, a
                 // fermentable's colour in SRM -- and is written out but never read back in.
                 if let Some(column) = bt_model::tables::column_for_property(table, property) {
@@ -188,7 +236,7 @@ pub fn map_record_with(format: &Format, definition: &Record, record: &Value) -> 
             }
         }
     }
-    Ok(MappedRecord { table, columns, local_id, folder_path })
+    Ok(MappedRecord { table, columns, local_id, folder_path, references })
 }
 
 /// Read every record of a named collection out of a document.

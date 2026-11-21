@@ -24,6 +24,7 @@
 
 pub mod consistency;
 pub mod data;
+pub mod document;
 pub mod jsonc;
 pub mod mapping;
 pub mod references;

@@ -130,14 +130,14 @@
       "cpp_type": "BoilStep",
       "primary_key": {
         "name": "id",
-        "property": null
+        "property": "NamedEntity::key"
       },
       "columns": [
         {
           "name": "step_time_mins",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::stepTime_mins",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -145,7 +145,7 @@
           "name": "start_temp_c",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::startTemp_c",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -153,7 +153,7 @@
           "name": "end_temp_c",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::endTemp_c",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -161,7 +161,7 @@
           "name": "ramp_time_mins",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::rampTime_mins",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -169,7 +169,7 @@
           "name": "step_number",
           "base_type": "int",
           "field_type": "Int",
-          "property": null,
+          "property": "EnumeratedBase::sequenceNumber",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -177,7 +177,7 @@
           "name": "description",
           "base_type": "string",
           "field_type": "String",
-          "property": null,
+          "property": "Step::description",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -185,7 +185,7 @@
           "name": "start_acidity_ph",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::startAcidity_pH",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -193,7 +193,7 @@
           "name": "end_acidity_ph",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::endAcidity_pH",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -209,7 +209,7 @@
           "name": "end_gravity_sg",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepExtended::endGravity_sg",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -217,7 +217,7 @@
           "name": "chilling_type",
           "base_type": "string",
           "field_type": "Enum",
-          "property": null,
+          "property": "BoilStep::chillingType",
           "string_mapping": "BoilStep::chillingTypeStringMapping",
           "from_common_set": null
         },
@@ -243,7 +243,7 @@
           "column": "boil_id",
           "references_table": "boil",
           "references_column": "id",
-          "property": null,
+          "property": "EnumeratedBase::ownerId",
           "from_common_set": null
         }
       ]
@@ -1672,14 +1672,14 @@
       "cpp_type": "FermentationStep",
       "primary_key": {
         "name": "id",
-        "property": null
+        "property": "NamedEntity::key"
       },
       "columns": [
         {
           "name": "step_time_mins",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::stepTime_mins",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1687,7 +1687,7 @@
           "name": "start_temp_c",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::startTemp_c",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1695,7 +1695,7 @@
           "name": "end_temp_c",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::endTemp_c",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1703,7 +1703,7 @@
           "name": "step_number",
           "base_type": "int",
           "field_type": "Int",
-          "property": null,
+          "property": "EnumeratedBase::sequenceNumber",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1711,7 +1711,7 @@
           "name": "description",
           "base_type": "string",
           "field_type": "String",
-          "property": null,
+          "property": "Step::description",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1719,7 +1719,7 @@
           "name": "start_acidity_ph",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::startAcidity_pH",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1727,7 +1727,7 @@
           "name": "end_acidity_ph",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::endAcidity_pH",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1735,7 +1735,7 @@
           "name": "start_gravity_sg",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepExtended::startGravity_sg",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1743,7 +1743,7 @@
           "name": "end_gravity_sg",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepExtended::endGravity_sg",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -1785,7 +1785,7 @@
           "column": "fermentation_id",
           "references_table": "fermentation",
           "references_column": "id",
-          "property": null,
+          "property": "EnumeratedBase::ownerId",
           "from_common_set": null
         }
       ]
@@ -3004,14 +3004,14 @@
       "cpp_type": "MashStep",
       "primary_key": {
         "name": "id",
-        "property": null
+        "property": "NamedEntity::key"
       },
       "columns": [
         {
           "name": "end_temp_c",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::endTemp_c",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3019,7 +3019,7 @@
           "name": "infuse_temp_c",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "MashStep::infuseTemp_c",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3027,7 +3027,7 @@
           "name": "mstype",
           "base_type": "string",
           "field_type": "Enum",
-          "property": null,
+          "property": "MashStep::type",
           "string_mapping": "MashStep::typeStringMapping",
           "from_common_set": null
         },
@@ -3035,7 +3035,7 @@
           "name": "ramp_time_mins",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::rampTime_mins",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3051,7 +3051,7 @@
           "name": "step_temp_c",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::startTemp_c",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3059,7 +3059,7 @@
           "name": "step_time_mins",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "StepBase::stepTime_mins",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3067,7 +3067,7 @@
           "name": "amount_l",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "MashStep::amount_l",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3075,7 +3075,7 @@
           "name": "description",
           "base_type": "string",
           "field_type": "String",
-          "property": null,
+          "property": "Step::description",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3083,7 +3083,7 @@
           "name": "liquor_to_grist_ratio_lkg",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "MashStep::liquorToGristRatio_lKg",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3091,7 +3091,7 @@
           "name": "start_acidity_ph",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::startAcidity_pH",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3099,7 +3099,7 @@
           "name": "end_acidity_ph",
           "base_type": "double",
           "field_type": "Double",
-          "property": null,
+          "property": "Step::endAcidity_pH",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3107,7 +3107,7 @@
           "name": "amount_fixed",
           "base_type": "bool",
           "field_type": "Bool",
-          "property": null,
+          "property": "MashStep::amountFixed",
           "string_mapping": null,
           "from_common_set": null
         },
@@ -3115,7 +3115,7 @@
           "name": "infuse_temp_fixed",
           "base_type": "bool",
           "field_type": "Bool",
-          "property": null,
+          "property": "MashStep::infuseTempFixed",
           "string_mapping": null,
           "from_common_set": null
         },
