@@ -84,3 +84,77 @@ pub fn from_str<T: serde::de::DeserializeOwned>(source: &str) -> Result<T, serde
 pub fn value_from_str(source: &str) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::from_str(&blank_comments(source))
 }
+
+/// A JSON value parsed with duplicate object keys rejected.
+///
+/// RFC 8259 only says object names *should* be unique, and parsers differ over which value they
+/// keep -- Boost.JSON and Python keep the last, others the first -- so dotBeer forbids them
+/// outright.  A parser that silently keeps one would read such a file as if nothing were wrong,
+/// which is exactly the case the format wants caught.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Strict(pub serde_json::Value);
+
+impl<'de> serde::Deserialize<'de> for Strict {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_any(StrictVisitor).map(Strict)
+    }
+}
+
+struct StrictVisitor;
+
+impl<'de> serde::de::Visitor<'de> for StrictVisitor {
+    type Value = serde_json::Value;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("any JSON value")
+    }
+
+    fn visit_unit<E>(self) -> Result<Self::Value, E> {
+        Ok(serde_json::Value::Null)
+    }
+
+    fn visit_bool<E>(self, value: bool) -> Result<Self::Value, E> {
+        Ok(value.into())
+    }
+
+    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
+        Ok(value.into())
+    }
+
+    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E> {
+        Ok(value.into())
+    }
+
+    fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E> {
+        Ok(serde_json::Number::from_f64(value).map_or(serde_json::Value::Null, Into::into))
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
+        Ok(value.into())
+    }
+
+    fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
+        let mut values = Vec::new();
+        while let Some(Strict(value)) = access.next_element()? {
+            values.push(value);
+        }
+        Ok(serde_json::Value::Array(values))
+    }
+
+    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
+        let mut object = serde_json::Map::new();
+        while let Some(key) = access.next_key::<String>()? {
+            let Strict(value) = access.next_value()?;
+            if object.contains_key(&key) {
+                return Err(serde::de::Error::custom(format!("duplicate key {key:?} in object")));
+            }
+            object.insert(key, value);
+        }
+        Ok(serde_json::Value::Object(object))
+    }
+}
+
+/// Parse JSON that may contain comments, rejecting duplicate object keys.
+pub fn strict_value_from_str(source: &str) -> Result<serde_json::Value, serde_json::Error> {
+    serde_json::from_str::<Strict>(&blank_comments(source)).map(|Strict(value)| value)
+}

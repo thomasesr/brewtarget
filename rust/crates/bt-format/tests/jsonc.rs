@@ -126,3 +126,48 @@ fn most_invalid_fixtures_are_valid_json() {
         .count();
     assert_eq!(parsed, invalid.len() - JSON_LEVEL_FAILURES.len());
 }
+
+/// RFC 8259 only says object names *should* be unique, and parsers disagree over which value to
+/// keep, so dotBeer forbids duplicates outright.  A parser that silently keeps one would read
+/// such a file as if nothing were wrong.
+#[test]
+fn duplicate_keys_are_rejected_in_strict_mode() {
+    let source = r#"{"a": 1, "b": {"c": 2, "c": 3}}"#;
+
+    // The ordinary parser keeps the last, as Boost.JSON and Python do.
+    let lenient = jsonc::value_from_str(source).expect("parse");
+    assert_eq!(lenient["b"]["c"], 3);
+
+    let error = jsonc::strict_value_from_str(source).expect_err("duplicate key");
+    assert!(error.to_string().contains("duplicate key \"c\""), "{error}");
+}
+
+#[test]
+fn strict_parsing_accepts_everything_else() {
+    let source = r#"{"a": [1, 2.5, null, true, "x"], "b": {"c": {"d": []}}}"#;
+    assert_eq!(jsonc::strict_value_from_str(source).expect("parse"), jsonc::value_from_str(source).expect("parse"));
+}
+
+/// The duplicate-key fixture is the one example that only strict parsing rejects.
+#[test]
+fn the_duplicate_key_fixture_needs_strict_parsing() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../testData/dotBeer/examples/invalid/DuplicateKey.beer");
+    let source = std::fs::read_to_string(path).expect("read");
+    assert!(jsonc::value_from_str(&source).is_ok(), "lenient parsing sees nothing wrong");
+    let error = jsonc::strict_value_from_str(&source).expect_err("strict parsing should reject it");
+    assert!(error.to_string().contains("duplicate key \"alpha_acid\""), "{error}");
+}
+
+/// And every file that should be readable stays readable under strict parsing.
+#[test]
+fn strict_parsing_does_not_reject_anything_valid() {
+    for path in example_files() {
+        let name = path.file_name().expect("name").to_string_lossy().into_owned();
+        if JSON_LEVEL_FAILURES.contains(&name.as_str()) || name == "DuplicateKey.beer" {
+            continue;
+        }
+        let source = std::fs::read_to_string(&path).expect("read");
+        jsonc::strict_value_from_str(&source).unwrap_or_else(|e| panic!("{name}: {e}"));
+    }
+}

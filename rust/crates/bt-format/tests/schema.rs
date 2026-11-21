@@ -81,8 +81,9 @@ const NEEDS_SEMANTIC_CHECKS: [&str; 6] = [
 /// And two more that are rejected earlier still, as invalid JSON.
 const REJECTED_AS_JSON: [&str; 2] = ["NonFiniteNumber.beer", "TrailingComma.beer"];
 
-/// Two reference fixtures the schema cannot judge either; listed separately because what is
-/// wrong with them is which record a reference points at, not its shape.
+/// Two more the schema cannot judge: a duplicate JSON key, which only strict parsing sees, and a
+/// stock entry pointing at the wrong kind of record.  Both are covered in `references.rs` and
+/// `jsonc.rs`.
 const NEEDS_REFERENCE_CHECKS: [&str; 2] = ["DuplicateKey.beer", "StockReferenceErrors.beer"];
 
 #[test]
