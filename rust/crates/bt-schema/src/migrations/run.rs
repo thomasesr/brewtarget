@@ -15,7 +15,7 @@
 use sqlx::{AnyConnection, Connection, Row};
 
 use super::model::{Bind, Condition, Reference, Statement, migrations};
-use super::render::{bind_placeholders, render};
+use super::render::{bind_placeholders, render, rewrite_placeholders};
 use crate::dialect::Dialect;
 
 #[derive(Debug, thiserror::Error)]
@@ -66,7 +66,6 @@ fn apply_bind<'q>(
     query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
     bind: &Bind,
     latest_version: u32,
-    today: &str,
 ) -> sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>> {
     match bind {
         Bind::Bool(value) => query.bind(*value),
@@ -74,7 +73,8 @@ fn apply_bind<'q>(
         Bind::Float(value) => query.bind(*value),
         Bind::Text(value) => query.bind(value.clone()),
         Bind::Reference { reference: Reference::LatestVersion } => query.bind(i64::from(latest_version)),
-        Bind::Reference { reference: Reference::CurrentDate } => query.bind(today.to_owned()),
+        // Inlined as CURRENT_DATE before we get here, so this cannot be reached.
+        Bind::Reference { reference: Reference::CurrentDate } => query,
     }
 }
 
@@ -87,7 +87,6 @@ async fn run_statements(
 ) -> Result<(), MigrationError> {
     let (from, to, function) = context;
     let latest = migrations().latest_version;
-    let today = chrono::Utc::now().date_naive().to_string();
 
     // A statement may be conditional on the previous one having returned rows.  When it is
     // skipped, the flag is deliberately left untouched, so that several statements in a row can
@@ -102,10 +101,18 @@ async fn run_statements(
         {
             continue;
         }
-        let sql = bind_placeholders(&render(&statement.sql, dialect)?, dialect);
+        // CURRENT_DATE is written into the statement rather than bound; see rewrite_placeholders.
+        let inline: Vec<usize> = statement
+            .binds
+            .iter()
+            .enumerate()
+            .filter(|(_, bind)| matches!(bind, Bind::Reference { reference: Reference::CurrentDate }))
+            .map(|(index, _)| index)
+            .collect();
+        let (sql, to_bind) = rewrite_placeholders(&render(&statement.sql, dialect)?, dialect, &inline);
         let mut query = sqlx::query(&sql);
-        for bind in &statement.binds {
-            query = apply_bind(query, bind, latest, &today);
+        for index in to_bind {
+            query = apply_bind(query, &statement.binds[index], latest);
         }
         let row = query.fetch_optional(&mut *connection).await.map_err(|source| MigrationError::Statement {
             from,

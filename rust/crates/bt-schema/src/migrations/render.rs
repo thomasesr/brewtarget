@@ -86,12 +86,21 @@ fn cascade(dialect: Dialect) -> &'static str {
 /// Question marks inside SQL string literals are left alone; `'Bt:%'`-style literals appear
 /// throughout these migrations.
 pub fn bind_placeholders(sql: &str, dialect: Dialect) -> String {
-    if dialect != Dialect::Postgresql {
-        return sql.to_owned();
-    }
+    rewrite_placeholders(sql, dialect, &[]).0
+}
+
+/// Rewrite the bind placeholders, inlining any that are better written as SQL.
+///
+/// `QDate::currentDate()` is the only runtime value the migrations bind, and binding it is
+/// awkward: it would have to travel as text, and PostgreSQL will not accept text for a `date`
+/// column parameter. `CURRENT_DATE` means the same thing and is valid in all three dialects, so
+/// it is written into the statement and dropped from the bind list.
+///
+/// Returns the rewritten SQL and the indices of the binds that are still to be supplied.
+pub fn rewrite_placeholders(sql: &str, dialect: Dialect, inline: &[usize]) -> (String, Vec<usize>) {
     let mut out = String::with_capacity(sql.len());
     let mut in_literal = false;
-    let mut index = 0;
+    let (mut seen, mut numbered, mut remaining) = (0usize, 0usize, Vec::new());
     for character in sql.chars() {
         match character {
             '\'' => {
@@ -99,11 +108,21 @@ pub fn bind_placeholders(sql: &str, dialect: Dialect) -> String {
                 out.push(character);
             }
             '?' if !in_literal => {
-                index += 1;
-                out.push_str(&format!("${index}"));
+                if inline.contains(&seen) {
+                    out.push_str("CURRENT_DATE");
+                } else {
+                    remaining.push(seen);
+                    numbered += 1;
+                    if dialect == Dialect::Postgresql {
+                        out.push_str(&format!("${numbered}"));
+                    } else {
+                        out.push('?');
+                    }
+                }
+                seen += 1;
             }
             _ => out.push(character),
         }
     }
-    out
+    (out, remaining)
 }
