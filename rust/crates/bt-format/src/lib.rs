@@ -21,3 +21,5 @@
 //! See `PLAN.md` for the phase this crate belongs to.
 
 #![forbid(unsafe_code)]
+
+pub mod jsonc;
