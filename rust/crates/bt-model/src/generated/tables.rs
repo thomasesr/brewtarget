@@ -3459,3 +3459,52 @@ pub fn column_for_property(table: &str, property: &str) -> Option<&'static str> 
         _ => None,
     }
 }
+
+/// Every column of a table, primary key first.
+///
+/// Used to check a column name before it reaches SQL: column names cannot be bound as
+/// parameters, so anything interpolated into a statement has to be known to be one of these.
+pub fn columns_of(table: &str) -> Option<&'static [&'static str]> {
+    match table {
+        "boil" => Some(&BoilRow::COLUMNS),
+        "boil_step" => Some(&BoilStepRow::COLUMNS),
+        "brew_log" => Some(&BrewLogRow::COLUMNS),
+        "equipment" => Some(&EquipmentRow::COLUMNS),
+        "fermentable" => Some(&FermentableRow::COLUMNS),
+        "fermentable_in_recipe" => Some(&FermentableInRecipeRow::COLUMNS),
+        "fermentable_stock_purchase" => Some(&FermentableStockPurchaseRow::COLUMNS),
+        "fermentable_stock_use" => Some(&FermentableStockUseRow::COLUMNS),
+        "fermentation" => Some(&FermentationRow::COLUMNS),
+        "fermentation_step" => Some(&FermentationStepRow::COLUMNS),
+        "folder_for_boil" => Some(&FolderForBoilRow::COLUMNS),
+        "folder_for_equipment" => Some(&FolderForEquipmentRow::COLUMNS),
+        "folder_for_fermentable" => Some(&FolderForFermentableRow::COLUMNS),
+        "folder_for_fermentation" => Some(&FolderForFermentationRow::COLUMNS),
+        "folder_for_hop" => Some(&FolderForHopRow::COLUMNS),
+        "folder_for_mash" => Some(&FolderForMashRow::COLUMNS),
+        "folder_for_misc" => Some(&FolderForMiscRow::COLUMNS),
+        "folder_for_recipe" => Some(&FolderForRecipeRow::COLUMNS),
+        "folder_for_style" => Some(&FolderForStyleRow::COLUMNS),
+        "folder_for_water" => Some(&FolderForWaterRow::COLUMNS),
+        "folder_for_yeast" => Some(&FolderForYeastRow::COLUMNS),
+        "hop" => Some(&HopRow::COLUMNS),
+        "hop_in_recipe" => Some(&HopInRecipeRow::COLUMNS),
+        "hop_stock_purchase" => Some(&HopStockPurchaseRow::COLUMNS),
+        "hop_stock_use" => Some(&HopStockUseRow::COLUMNS),
+        "instruction" => Some(&InstructionRow::COLUMNS),
+        "mash" => Some(&MashRow::COLUMNS),
+        "mash_step" => Some(&MashStepRow::COLUMNS),
+        "misc" => Some(&MiscRow::COLUMNS),
+        "misc_in_recipe" => Some(&MiscInRecipeRow::COLUMNS),
+        "misc_stock_purchase" => Some(&MiscStockPurchaseRow::COLUMNS),
+        "misc_stock_use" => Some(&MiscStockUseRow::COLUMNS),
+        "recipe" => Some(&RecipeRow::COLUMNS),
+        "style" => Some(&StyleRow::COLUMNS),
+        "water" => Some(&WaterRow::COLUMNS),
+        "yeast" => Some(&YeastRow::COLUMNS),
+        "yeast_in_recipe" => Some(&YeastInRecipeRow::COLUMNS),
+        "yeast_stock_purchase" => Some(&YeastStockPurchaseRow::COLUMNS),
+        "yeast_stock_use" => Some(&YeastStockUseRow::COLUMNS),
+        _ => None,
+    }
+}

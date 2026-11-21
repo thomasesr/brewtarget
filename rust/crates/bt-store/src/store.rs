@@ -33,6 +33,10 @@ pub enum StoreError {
     Namespace(#[from] bt_schema::InvalidNamespace),
     #[error("{0} is not one of the folder tables in this schema")]
     UnknownFolderTable(String),
+    #[error("{0} is not a table in this schema")]
+    UnknownTable(String),
+    #[error("{table} has no column called {column}")]
+    UnknownColumn { table: String, column: String },
     #[error(transparent)]
     Folder(#[from] bt_model::folder::FolderError),
 }

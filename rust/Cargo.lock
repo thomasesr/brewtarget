@@ -291,6 +291,7 @@ dependencies = [
 name = "bt-store"
 version = "0.1.0"
 dependencies = [
+ "bt-format",
  "bt-measure",
  "bt-model",
  "bt-schema",

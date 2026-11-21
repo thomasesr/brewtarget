@@ -10,6 +10,7 @@ authors.workspace      = true
 
 [dependencies]
 bt-measure.workspace = true
+bt-format.workspace = true
 bt-model.workspace = true
 bt-schema.workspace = true
 sqlx.workspace = true

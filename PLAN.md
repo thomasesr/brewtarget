@@ -86,6 +86,12 @@ content pages needing SEO.
 
 Dependency order is strictly left-to-right; no cycles.
 
+`bt-format` sits below `bt-store` rather than above it, which is a correction to the
+original ordering. It reads a file into a graph whose edges are the file's own local
+identifiers and depends only on `bt-measure` and `bt-model`; turning those identifiers
+into foreign keys needs to know what key each row was given, so the importer belongs
+with the layer doing the storing.
+
 ### Frontend
 
 Bun + TypeScript + **React** + TanStack Query/Table. The UI is dense tabular editing

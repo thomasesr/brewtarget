@@ -378,3 +378,82 @@ async fn an_unnamed_profile_still_in_use_is_left_alone() {
     bt_store::recipes::delete(&store, ids[1]).await.expect("delete the second");
     assert!(tables::boil::get(&store, shared_boil).await.expect("get").is_none(), "now nothing uses it");
 }
+
+/// Import a whole `.beer` file and check the graph came out the other side.
+#[tokio::test]
+async fn a_dotbeer_file_is_stored_with_its_references_resolved() {
+    let store = fresh_store("import").await;
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../testData/dotBeer/examples/recipes/AmericanPaleAle.beer");
+    let source = std::fs::read_to_string(&path).expect("read the fixture");
+    let parsed = bt_format::jsonc::value_from_str(&source).expect("parse");
+    let document = bt_format::document::read_dotbeer(&parsed).expect("read");
+
+    let imported = bt_store::import::import(&store, &document).await.expect("import");
+
+    // Seventeen records plus the rows they own: steps, additions, instructions, a brew log.
+    assert!(imported.rows_written > 17, "only wrote {}", imported.rows_written);
+    assert_eq!(imported.recipe_ids.len(), 1);
+
+    // Every local ID in the file now has a key.
+    assert!(imported.by_local_id.contains_key("hop_magnum"));
+    assert!(imported.by_local_id.contains_key("style_bjcp2021_18b"));
+    assert_eq!(imported.by_local_id["hop_magnum"].0, "hop");
+
+    // The ingredients are all there.
+    assert_eq!(tables::hop::list(&store).await.expect("hops").len(), 3);
+    assert_eq!(tables::fermentable::list(&store).await.expect("fermentables").len(), 3);
+    assert_eq!(tables::yeast::list(&store).await.expect("cultures").len(), 1);
+    assert_eq!(tables::style::list(&store).await.expect("styles").len(), 1);
+
+    // And the recipe points at them by key rather than by local ID.
+    let recipe_id = imported.recipe_ids[0];
+    let recipe = bt_store::recipes::load(&store, recipe_id).await.expect("load").expect("the recipe");
+    assert_eq!(recipe.name(), "Cascade Pale Ale");
+    assert_eq!(recipe.style.as_ref().and_then(|style| style.name.as_deref()), Some("American Pale Ale"));
+    assert!(recipe.equipment.is_some(), "the equipment reference should have resolved");
+
+    // The additions came across with their ingredients and amounts.
+    assert_eq!(recipe.hops.len(), 5);
+    assert_eq!(recipe.fermentables.len(), 3);
+    assert_eq!(recipe.yeasts.len(), 1);
+    let magnum = recipe
+        .hops
+        .iter()
+        .find(|addition| addition.ingredient.as_ref().and_then(|hop| hop.name.as_deref()) == Some("Magnum"));
+    let magnum = magnum.expect("the Magnum addition");
+    assert_eq!(magnum.addition.quantity, Some(15.0));
+    assert_eq!(magnum.addition.unit.as_deref(), Some("grams"));
+
+    // The mash and its steps came too, in order.
+    let temperatures: Vec<f64> = recipe.mash_steps().iter().filter_map(|step| step.step_temp_c).collect();
+    assert_eq!(temperatures.len(), 3, "three mash steps");
+    assert!(temperatures.iter().all(|temperature| *temperature > 0.0));
+
+    // Folder paths became folder rows.
+    let hop_folders = bt_store::folders::load_tree(&store, "hop").await.expect("hop folders");
+    assert!(!hop_folders.is_empty(), "the hops are filed somewhere");
+    let hop = tables::hop::list(&store).await.expect("hops").into_iter().find(|h| h.name.as_deref() == Some("Magnum"));
+    let hop = hop.expect("Magnum");
+    let folder_id = hop.contained_in_folder_id.expect("Magnum is in a folder");
+    assert_eq!(hop_folders.full_path(folder_id).as_deref(), Some("Hops/German – Noble"));
+}
+
+/// Importing the same file twice gives two independent copies rather than failing or merging.
+#[tokio::test]
+async fn importing_twice_does_not_collide() {
+    let store = fresh_store("import-twice").await;
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../testData/dotBeer/examples/recipes/GermanPilsColdCrash.beer");
+    let source = std::fs::read_to_string(&path).expect("read");
+    let parsed = bt_format::jsonc::value_from_str(&source).expect("parse");
+    let document = bt_format::document::read_dotbeer(&parsed).expect("read");
+
+    let first = bt_store::import::import(&store, &document).await.expect("first import");
+    let second = bt_store::import::import(&store, &document).await.expect("second import");
+
+    assert_ne!(first.recipe_ids, second.recipe_ids, "the second import gets its own keys");
+    assert_eq!(tables::recipe::list(&store).await.expect("recipes").len(), 2);
+    // Local IDs are per file, so the second import reuses the names with different keys.
+    assert_eq!(first.by_local_id.len(), second.by_local_id.len());
+}

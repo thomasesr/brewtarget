@@ -336,6 +336,19 @@ def generate_tables(schema: dict) -> str:
             seen.add(property_name)
             out.append(f'        ("{table["name"]}", "{property_name}") => Some("{column}"),')
     out += ["        _ => None,", "    }", "}", ""]
+
+    out += [
+        "/// Every column of a table, primary key first.",
+        "///",
+        "/// Used to check a column name before it reaches SQL: column names cannot be bound as",
+        "/// parameters, so anything interpolated into a statement has to be known to be one of these.",
+        "pub fn columns_of(table: &str) -> Option<&'static [&'static str]> {",
+        "    match table {",
+    ]
+    for table in schema["tables"]:
+        struct = pascal_case(table["name"]) + "Row"
+        out.append(f'        "{table["name"]}" => Some(&{struct}::COLUMNS),')
+    out += ["        _ => None,", "    }", "}", ""]
     return "\n".join(out)
 
 
