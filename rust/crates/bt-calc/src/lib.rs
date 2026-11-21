@@ -25,6 +25,8 @@
 pub mod algorithms;
 pub mod color;
 pub mod data;
+pub mod ibu;
 
 pub use color::{ColorFormula, mcu_to_srm, srm_to_display_color};
 pub use data::{CalculationData, calculation_data, constant};
+pub use ibu::{Breakdown, Formula, HopForm, ibu_breakdown, ibus};
