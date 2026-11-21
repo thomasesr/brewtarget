@@ -415,9 +415,10 @@ content.
   across; ownership and cascade delete, including the rule that an unnamed one-off
   mash/boil/fermentation is cleaned up while a named profile is kept. Typed accessors
   for the 33 enum and unit columns are generated.
-- [ ] **Recipe-level calculations** — `recalcOgFg`, `recalcIBU`, `recalcColor_mcu` and
-  the rest of `Recipe.cpp`, now that there is an aggregate to calculate from. Mirrors
-  `RecipeCalcTests.cpp`.
+- [x] **Recipe-level calculations** — grains, volumes, sugar totals, colour, OG/FG,
+  ABV and calories, plus the boil-phase logic `RecipeCalcTests::testBoilStepPhases`
+  covers. Outstanding: `recalcIBU` at recipe level, which needs the mIBU and SMPH
+  formulae first.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only

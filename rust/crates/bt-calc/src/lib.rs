@@ -27,6 +27,7 @@ pub mod color;
 pub mod data;
 pub mod ibu;
 pub mod mash;
+pub mod recipe;
 
 pub use color::{ColorFormula, mcu_to_srm, srm_to_display_color};
 pub use data::{CalculationData, calculation_data, constant};
