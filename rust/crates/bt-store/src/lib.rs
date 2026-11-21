@@ -24,6 +24,7 @@
 
 pub mod folders;
 pub mod generated;
+pub mod recipes;
 pub mod store;
 
 pub use generated::tables;

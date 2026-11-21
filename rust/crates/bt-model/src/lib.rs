@@ -24,7 +24,9 @@
 
 pub mod folder;
 pub mod generated;
+pub mod recipe;
 
 pub use folder::{FolderError, FolderNode, FolderTree};
 pub use generated::enums;
 pub use generated::tables;
+pub use recipe::{Addition, IngredientAmount, Recipe};

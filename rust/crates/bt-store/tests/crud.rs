@@ -175,3 +175,117 @@ async fn each_kind_of_thing_keeps_its_own_folders() {
     let error = bt_store::folders::load_tree(&store, "nonsense").await.expect_err("no such folder table");
     assert!(error.to_string().contains("folder_for_nonsense"), "{error}");
 }
+
+/// Build a small but complete recipe and read the whole graph back.
+#[tokio::test]
+async fn a_recipe_is_reassembled_from_the_tables_it_is_spread_across() {
+    use bt_model::IngredientAmount;
+    use bt_model::enums::RecipeAdditionStage;
+    use bt_model::tables::*;
+
+    let store = fresh_store("recipe-aggregate").await;
+
+    let hop_id = tables::hop::insert(&store, &a_hop()).await.expect("hop");
+    let fermentable_id = tables::fermentable::insert(
+        &store,
+        &FermentableRow { name: Some("Maris Otter".to_owned()), deleted: Some(false), ..Default::default() },
+    )
+    .await
+    .expect("fermentable");
+    let style_id = tables::style::insert(
+        &store,
+        &StyleRow { name: Some("Best Bitter".to_owned()), deleted: Some(false), ..Default::default() },
+    )
+    .await
+    .expect("style");
+    let mash_id = tables::mash::insert(
+        &store,
+        &MashRow { name: Some("Single infusion".to_owned()), deleted: Some(false), ..Default::default() },
+    )
+    .await
+    .expect("mash");
+
+    let recipe_id = tables::recipe::insert(
+        &store,
+        &RecipeRow {
+            name: Some("Ordinary Bitter".to_owned()),
+            deleted: Some(false),
+            style_id: Some(style_id),
+            mash_id: Some(mash_id),
+            batch_size: Some(19.87),
+            ..Default::default()
+        },
+    )
+    .await
+    .expect("recipe");
+
+    // Steps come back in step_number order, so insert them out of order to prove it.
+    for (number, temp) in [(2, 72.0), (1, 66.0)] {
+        tables::mash_step::insert(
+            &store,
+            &MashStepRow {
+                name: Some(format!("Step {number}")),
+                deleted: Some(false),
+                mash_id: Some(mash_id),
+                step_number: Some(number),
+                step_temp_c: Some(temp),
+                ..Default::default()
+            },
+        )
+        .await
+        .expect("mash step");
+    }
+
+    let mut hop_addition = HopInRecipeRow {
+        name: Some("Fuggle at 60".to_owned()),
+        deleted: Some(false),
+        recipe_id: Some(recipe_id),
+        hop_id: Some(hop_id),
+        quantity: Some(28.0),
+        duration_mins: Some(60.0),
+        ..Default::default()
+    };
+    hop_addition.set_unit(bt_measure::Unit::by_name("grams"));
+    hop_addition.set_stage(Some(RecipeAdditionStage::Boil));
+    tables::hop_in_recipe::insert(&store, &hop_addition).await.expect("hop addition");
+
+    let mut fermentable_addition = FermentableInRecipeRow {
+        name: Some("Maris Otter".to_owned()),
+        deleted: Some(false),
+        recipe_id: Some(recipe_id),
+        fermentable_id: Some(fermentable_id),
+        quantity: Some(4.5),
+        ..Default::default()
+    };
+    fermentable_addition.set_unit(bt_measure::Unit::by_name("kilograms"));
+    fermentable_addition.set_stage(Some(RecipeAdditionStage::Mash));
+    tables::fermentable_in_recipe::insert(&store, &fermentable_addition).await.expect("fermentable addition");
+
+    let recipe = bt_store::recipes::load(&store, recipe_id).await.expect("load").expect("the recipe");
+
+    assert_eq!(recipe.name(), "Ordinary Bitter");
+    assert_eq!(recipe.style.as_ref().and_then(|s| s.name.as_deref()), Some("Best Bitter"));
+    assert!(recipe.equipment.is_none(), "this recipe has no equipment");
+    assert_eq!(recipe.instructions.len(), 0);
+
+    // Additions carry the ingredient they refer to rather than a copy of it.
+    assert_eq!(recipe.hops.len(), 1);
+    assert_eq!(recipe.hops[0].ingredient.as_ref().and_then(|h| h.name.as_deref()), Some("Saaz"));
+    assert_eq!(recipe.fermentables[0].ingredient.as_ref().and_then(|f| f.name.as_deref()), Some("Maris Otter"));
+
+    // 28 g of hops is 0.028 kg once converted to the canonical unit for a mass.
+    let amount = recipe.hops[0].addition.canonical_amount().expect("an amount");
+    assert_eq!(amount.unit.name(), "kilograms");
+    assert!((amount.quantity - 0.028).abs() < 1e-9, "{}", amount.quantity);
+
+    // Stage filtering looks through the stored strings.
+    assert_eq!(recipe.hops_at(RecipeAdditionStage::Boil).count(), 1);
+    assert_eq!(recipe.hops_at(RecipeAdditionStage::Mash).count(), 0);
+    assert_eq!(recipe.fermentables_at(RecipeAdditionStage::Mash).count(), 1);
+
+    // Steps come back ordered, whatever order they went in.
+    let temperatures: Vec<f64> = recipe.mash_steps().iter().filter_map(|step| step.step_temp_c).collect();
+    assert_eq!(temperatures, [66.0, 72.0]);
+
+    assert!(bt_store::recipes::load(&store, 9999).await.expect("load").is_none());
+}
