@@ -1,0 +1,1437 @@
+{
+  "generated_by": "tools/extract-units.py",
+  "source_files": [
+    "src/measurement/Unit.cpp",
+    "src/measurement/UnitSystem.cpp",
+    "src/measurement/PhysicalQuantity.h"
+  ],
+  "physical_quantities": [
+    "Mass",
+    "Volume",
+    "Length",
+    "Count",
+    "Temperature",
+    "Time",
+    "Color",
+    "Gravity",
+    "DiastaticPower",
+    "Acidity",
+    "Bitterness",
+    "Carbonation",
+    "MassFractionOrConcentration",
+    "Viscosity",
+    "SpecificHeatCapacity",
+    "HeatCapacity",
+    "VolumePerMass",
+    "EnergyPerVolume"
+  ],
+  "systems_of_measurement": [
+    "Imperial",
+    "UsCustomary",
+    "Metric",
+    "MetricAlternate",
+    "UniversalStandard",
+    "StandardReferenceMethod",
+    "EuropeanBreweryConvention",
+    "Lovibond",
+    "SpecificGravity",
+    "GravityPoints",
+    "Plato",
+    "Brix",
+    "Lintner",
+    "WindischKolbach",
+    "CarbonationVolumes",
+    "CarbonationMassPerVolume",
+    "BrewingConcentration",
+    "SpecificHeatCapacityCalories",
+    "SpecificHeatCapacityJoules",
+    "SpecificHeatCapacityBtus",
+    "HeatCapacityKilocalories",
+    "HeatCapacityJoules",
+    "HeatCapacityBtus"
+  ],
+  "unit_systems": [
+    {
+      "name": "mass_Metric",
+      "physical_quantity": "Mass",
+      "default_unit": "kilograms",
+      "unique_name": "mass_Metric",
+      "system_of_measurement": "Metric",
+      "units": [
+        "milligrams",
+        "grams",
+        "kilograms"
+      ],
+      "thickness": "kilograms"
+    },
+    {
+      "name": "mass_UsCustomary",
+      "physical_quantity": "Mass",
+      "default_unit": "pounds",
+      "unique_name": "mass_UsCustomary",
+      "system_of_measurement": "UsCustomary",
+      "units": [
+        "ounces",
+        "pounds"
+      ],
+      "thickness": "pounds"
+    },
+    {
+      "name": "mass_Imperial",
+      "physical_quantity": "Mass",
+      "default_unit": "imperial_pounds",
+      "unique_name": "mass_Imperial",
+      "system_of_measurement": "Imperial",
+      "units": [
+        "imperial_ounces",
+        "imperial_pounds"
+      ],
+      "thickness": "imperial_pounds"
+    },
+    {
+      "name": "volume_Metric",
+      "physical_quantity": "Volume",
+      "default_unit": "liters",
+      "unique_name": "volume_Metric",
+      "system_of_measurement": "Metric",
+      "units": [
+        "milliliters",
+        "liters"
+      ],
+      "thickness": "liters"
+    },
+    {
+      "name": "volume_UsCustomary",
+      "physical_quantity": "Volume",
+      "default_unit": "us_gallons",
+      "unique_name": "volume_UsCustomary",
+      "system_of_measurement": "UsCustomary",
+      "units": [
+        "us_teaspoons",
+        "us_tablespoons",
+        "us_cups",
+        "us_quarts",
+        "us_gallons",
+        "us_barrels"
+      ],
+      "thickness": "us_quarts"
+    },
+    {
+      "name": "volume_Imperial",
+      "physical_quantity": "Volume",
+      "default_unit": "imperial_gallons",
+      "unique_name": "volume_Imperial",
+      "system_of_measurement": "Imperial",
+      "units": [
+        "imperial_teaspoons",
+        "imperial_tablespoons",
+        "imperial_cups",
+        "imperial_quarts",
+        "imperial_gallons",
+        "imperial_barrels"
+      ],
+      "thickness": "imperial_quarts"
+    },
+    {
+      "name": "length_Metric",
+      "physical_quantity": "Length",
+      "default_unit": "centimeters",
+      "unique_name": "length_Metric",
+      "system_of_measurement": "Metric",
+      "units": [
+        "millimeters",
+        "centimeters",
+        "meters"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "length_UsCustomary",
+      "physical_quantity": "Length",
+      "default_unit": "inches",
+      "unique_name": "length_UsCustomary",
+      "system_of_measurement": "UsCustomary",
+      "units": [
+        "inches",
+        "feet"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "count_NumberOf",
+      "physical_quantity": "Count",
+      "default_unit": "numberOf",
+      "unique_name": "count_NumberOf",
+      "system_of_measurement": "UniversalStandard",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "temperature_MetricIsCelsius",
+      "physical_quantity": "Temperature",
+      "default_unit": "celsius",
+      "unique_name": "temperature_MetricIsCelsius",
+      "system_of_measurement": "Metric",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "temperature_UsCustomaryIsFahrenheit",
+      "physical_quantity": "Temperature",
+      "default_unit": "fahrenheit",
+      "unique_name": "temperature_UsCustomaryIsFahrenheit",
+      "system_of_measurement": "UsCustomary",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "time_CoordinatedUniversalTime",
+      "physical_quantity": "Time",
+      "default_unit": "minutes",
+      "unique_name": "time_CoordinatedUniversalTime",
+      "system_of_measurement": "UniversalStandard",
+      "units": [
+        "seconds",
+        "minutes",
+        "hours",
+        "days"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "color_EuropeanBreweryConvention",
+      "physical_quantity": "Color",
+      "default_unit": "ebc",
+      "unique_name": "color_EuropeanBreweryConvention",
+      "system_of_measurement": "EuropeanBreweryConvention",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "color_StandardReferenceMethod",
+      "physical_quantity": "Color",
+      "default_unit": "srm",
+      "unique_name": "color_StandardReferenceMethod",
+      "system_of_measurement": "StandardReferenceMethod",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "color_Lovibond",
+      "physical_quantity": "Color",
+      "default_unit": "lovibond",
+      "unique_name": "color_Lovibond",
+      "system_of_measurement": "Lovibond",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "density_SpecificGravity",
+      "physical_quantity": "Gravity",
+      "default_unit": "specificGravity",
+      "unique_name": "density_SpecificGravity",
+      "system_of_measurement": "SpecificGravity",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "density_GravityPoints",
+      "physical_quantity": "Gravity",
+      "default_unit": "gravityPoints",
+      "unique_name": "density_GravityPoints",
+      "system_of_measurement": "GravityPoints",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "density_Plato",
+      "physical_quantity": "Gravity",
+      "default_unit": "plato",
+      "unique_name": "density_Plato",
+      "system_of_measurement": "Plato",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "density_Brix",
+      "physical_quantity": "Gravity",
+      "default_unit": "brix",
+      "unique_name": "density_Brix",
+      "system_of_measurement": "Brix",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "diastaticPower_Lintner",
+      "physical_quantity": "DiastaticPower",
+      "default_unit": "lintner",
+      "unique_name": "diastaticPower_Lintner",
+      "system_of_measurement": "Lintner",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "diastaticPower_WindischKolbach",
+      "physical_quantity": "DiastaticPower",
+      "default_unit": "wk",
+      "unique_name": "diastaticPower_WindischKolbach",
+      "system_of_measurement": "WindischKolbach",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "acidity_pH",
+      "physical_quantity": "Acidity",
+      "default_unit": "pH",
+      "unique_name": "acidity_pH",
+      "system_of_measurement": "UniversalStandard",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "bitterness_InternationalBitternessUnits",
+      "physical_quantity": "Bitterness",
+      "default_unit": "ibu",
+      "unique_name": "bitterness_InternationalBitternessUnits",
+      "system_of_measurement": "UniversalStandard",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "carbonation_Volumes",
+      "physical_quantity": "Carbonation",
+      "default_unit": "carbonationVolumes",
+      "unique_name": "carbonation_Volumes",
+      "system_of_measurement": "CarbonationVolumes",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "carbonation_MassPerVolume",
+      "physical_quantity": "Carbonation",
+      "default_unit": "carbonationGramsPerLiter",
+      "unique_name": "carbonation_MassPerVolume",
+      "system_of_measurement": "CarbonationMassPerVolume",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "massFractionOrConc_Brewing",
+      "physical_quantity": "MassFractionOrConcentration",
+      "default_unit": "partsPerMillionMass",
+      "unique_name": "massFractionOrConc_Brewing",
+      "system_of_measurement": "BrewingConcentration",
+      "units": [
+        "partsPerBillionMass",
+        "partsPerMillionMass",
+        "milligramsPerLiter"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "viscosity_Metric",
+      "physical_quantity": "Viscosity",
+      "default_unit": "centipoise",
+      "unique_name": "viscosity_Metric",
+      "system_of_measurement": "Metric",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "viscosity_MetricAlternate",
+      "physical_quantity": "Viscosity",
+      "default_unit": "millipascalSecond",
+      "unique_name": "viscosity_MetricAlternate",
+      "system_of_measurement": "MetricAlternate",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "specificHeatCapacity_Calories",
+      "physical_quantity": "SpecificHeatCapacity",
+      "default_unit": "caloriesPerCelsiusPerGram",
+      "unique_name": "specificHeatCapacity_Calories",
+      "system_of_measurement": "SpecificHeatCapacityCalories",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "specificHeatCapacity_Joules",
+      "physical_quantity": "SpecificHeatCapacity",
+      "default_unit": "joulesPerKelvinPerKg",
+      "unique_name": "specificHeatCapacity_Joules",
+      "system_of_measurement": "SpecificHeatCapacityJoules",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "specificHeatCapacity_Btus",
+      "physical_quantity": "SpecificHeatCapacity",
+      "default_unit": "btuPerFahrenheitPerPound",
+      "unique_name": "specificHeatCapacity_Btus",
+      "system_of_measurement": "SpecificHeatCapacityBtus",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "heatCapacity_Kilocalories",
+      "physical_quantity": "HeatCapacity",
+      "default_unit": "kilocaloriesPerCelsius",
+      "unique_name": "heatCapacity_Kilocalories",
+      "system_of_measurement": "HeatCapacityKilocalories",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "heatCapacity_Joules",
+      "physical_quantity": "HeatCapacity",
+      "default_unit": "joulesPerKelvin",
+      "unique_name": "heatCapacity_Joules",
+      "system_of_measurement": "HeatCapacityJoules",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "heatCapacity_Btus",
+      "physical_quantity": "HeatCapacity",
+      "default_unit": "btuPerFahrenheit",
+      "unique_name": "heatCapacity_Btus",
+      "system_of_measurement": "HeatCapacityBtus",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "volumePerMass_Metric",
+      "physical_quantity": "VolumePerMass",
+      "default_unit": "litresPerKilogram",
+      "unique_name": "specificVolume_Metric",
+      "system_of_measurement": "Metric",
+      "units": [
+        "litresPerKilogram",
+        "cubicMetersPerKilogram",
+        "litresPerGram"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "volumePerMass_UsCustomary",
+      "physical_quantity": "VolumePerMass",
+      "default_unit": "us_quartsPerPound",
+      "unique_name": "specificVolume_UsCustomary",
+      "system_of_measurement": "UsCustomary",
+      "units": [
+        "us_fluidOuncesPerOunce",
+        "cubicFeetPerPound",
+        "us_gallonsPerPound",
+        "us_quartsPerPound",
+        "us_gallonsPerOunce"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "energyPerVolume_Metric",
+      "physical_quantity": "EnergyPerVolume",
+      "default_unit": "kilocaloriesPerLiter",
+      "unique_name": "energyPerVolume_Metric",
+      "system_of_measurement": "Metric",
+      "units": [
+        "kilocaloriesPerLiter",
+        "kilocaloriesPer50cl",
+        "kilocaloriesPer33cl",
+        "kilocaloriesPer25cl",
+        "kilocaloriesPer100ml"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "energyPerVolume_UsCustomary",
+      "physical_quantity": "EnergyPerVolume",
+      "default_unit": "kilocaloriesPer16us_floz",
+      "unique_name": "energyPerVolume_UsCustomary",
+      "system_of_measurement": "UsCustomary",
+      "units": [
+        "kilocaloriesPer16us_floz",
+        "kilocaloriesPer12us_floz"
+      ],
+      "thickness": null
+    },
+    {
+      "name": "energyPerVolume_Imperial",
+      "physical_quantity": "EnergyPerVolume",
+      "default_unit": "kilocaloriesPer20imp_floz",
+      "unique_name": "energyPerVolume_Imperial",
+      "system_of_measurement": "Imperial",
+      "units": [],
+      "thickness": null
+    },
+    {
+      "name": "energyPerVolume_MetricAlternate",
+      "physical_quantity": "EnergyPerVolume",
+      "default_unit": "kilojoulesPer100ml",
+      "unique_name": "energyPerVolume_MetricAlternate",
+      "system_of_measurement": "MetricAlternate",
+      "units": [],
+      "thickness": null
+    }
+  ],
+  "units": [
+    {
+      "name": "kilograms",
+      "unit_system": "mass_Metric",
+      "abbreviations": [
+        "kg"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "grams",
+      "unit_system": "mass_Metric",
+      "abbreviations": [
+        "g"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilograms",
+      "scale": 0.001,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "milligrams",
+      "unit_system": "mass_Metric",
+      "abbreviations": [
+        "mg"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilograms",
+      "scale": 1e-06,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "pounds",
+      "unit_system": "mass_UsCustomary",
+      "abbreviations": [
+        "lb"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilograms",
+      "scale": 0.45359237,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "ounces",
+      "unit_system": "mass_UsCustomary",
+      "abbreviations": [
+        "oz"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilograms",
+      "scale": 0.0283495231,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_pounds",
+      "unit_system": "mass_Imperial",
+      "abbreviations": [
+        "lb"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilograms",
+      "scale": 0.45359237,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_ounces",
+      "unit_system": "mass_Imperial",
+      "abbreviations": [
+        "oz"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilograms",
+      "scale": 0.0283495231,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "liters",
+      "unit_system": "volume_Metric",
+      "abbreviations": [
+        "L"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "milliliters",
+      "unit_system": "volume_Metric",
+      "abbreviations": [
+        "mL"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.001,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_barrels",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "bbl"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 117.34777,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_gallons",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "gal"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 3.785411784,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_quarts",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "qt"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.94635294599999,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_pints",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "pt"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.473176473,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_cups",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "cup"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.23658823648491,
+      "converts_by_formula": false,
+      "boundary_value": 0.25
+    },
+    {
+      "name": "us_fluidOunces",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "floz"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.029573529564112,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_tablespoons",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "tbsp"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.014786764782056,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_teaspoons",
+      "unit_system": "volume_UsCustomary",
+      "abbreviations": [
+        "tsp"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.0049289215940186,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_barrels",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "bbl"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 163.659,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_gallons",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "gal"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 4.54609,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_quarts",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "qt"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 1.1365225,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_pints",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "pt"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.56826125,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_cups",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "cup"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.284130625,
+      "converts_by_formula": false,
+      "boundary_value": 0.25
+    },
+    {
+      "name": "imperial_fluidOunces",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "floz"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.0284130625,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_tablespoons",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "tbsp"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.01420653125,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "imperial_teaspoons",
+      "unit_system": "volume_Imperial",
+      "abbreviations": [
+        "tsp"
+      ],
+      "sanitises_input": false,
+      "canonical": "liters",
+      "scale": 0.0035516328125,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "centimeters",
+      "unit_system": "length_Metric",
+      "abbreviations": [
+        "cm"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "millimeters",
+      "unit_system": "length_Metric",
+      "abbreviations": [
+        "mm"
+      ],
+      "sanitises_input": false,
+      "canonical": "centimeters",
+      "scale": 0.1,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "meters",
+      "unit_system": "length_Metric",
+      "abbreviations": [
+        "m"
+      ],
+      "sanitises_input": false,
+      "canonical": "centimeters",
+      "scale": 100.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "inches",
+      "unit_system": "length_UsCustomary",
+      "abbreviations": [
+        "in"
+      ],
+      "sanitises_input": false,
+      "canonical": "centimeters",
+      "scale": 2.54,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "feet",
+      "unit_system": "length_UsCustomary",
+      "abbreviations": [
+        "ft"
+      ],
+      "sanitises_input": false,
+      "canonical": "centimeters",
+      "scale": 30.48,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "numberOf",
+      "unit_system": "count_NumberOf",
+      "abbreviations": [
+        "(\u2116)"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "celsius",
+      "unit_system": "temperature_MetricIsCelsius",
+      "abbreviations": [
+        "\u00b0C",
+        "C"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "fahrenheit",
+      "unit_system": "temperature_UsCustomaryIsFahrenheit",
+      "abbreviations": [
+        "\u00b0F",
+        "F"
+      ],
+      "sanitises_input": false,
+      "canonical": "celsius",
+      "scale": 1.0,
+      "converts_by_formula": true,
+      "boundary_value": null
+    },
+    {
+      "name": "minutes",
+      "unit_system": "time_CoordinatedUniversalTime",
+      "abbreviations": [
+        "min"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "weeks",
+      "unit_system": "time_CoordinatedUniversalTime",
+      "abbreviations": [
+        "weeks"
+      ],
+      "sanitises_input": false,
+      "canonical": "minutes",
+      "scale": 10080.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "days",
+      "unit_system": "time_CoordinatedUniversalTime",
+      "abbreviations": [
+        "days"
+      ],
+      "sanitises_input": false,
+      "canonical": "minutes",
+      "scale": 1440.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "hours",
+      "unit_system": "time_CoordinatedUniversalTime",
+      "abbreviations": [
+        "hr"
+      ],
+      "sanitises_input": false,
+      "canonical": "minutes",
+      "scale": 60.0,
+      "converts_by_formula": false,
+      "boundary_value": 2.0
+    },
+    {
+      "name": "seconds",
+      "unit_system": "time_CoordinatedUniversalTime",
+      "abbreviations": [
+        "s"
+      ],
+      "sanitises_input": false,
+      "canonical": "minutes",
+      "scale": 0.016666666666666666,
+      "converts_by_formula": false,
+      "boundary_value": 90.0
+    },
+    {
+      "name": "srm",
+      "unit_system": "color_StandardReferenceMethod",
+      "abbreviations": [
+        "srm"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "ebc",
+      "unit_system": "color_EuropeanBreweryConvention",
+      "abbreviations": [
+        "ebc"
+      ],
+      "sanitises_input": false,
+      "canonical": "srm",
+      "scale": 0.508,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "lovibond",
+      "unit_system": "color_Lovibond",
+      "abbreviations": [
+        "lovibond"
+      ],
+      "sanitises_input": false,
+      "canonical": "srm",
+      "scale": 1.0,
+      "converts_by_formula": true,
+      "boundary_value": null
+    },
+    {
+      "name": "specificGravity",
+      "unit_system": "density_SpecificGravity",
+      "abbreviations": [
+        "sg"
+      ],
+      "sanitises_input": true,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "gravityPoints",
+      "unit_system": "density_GravityPoints",
+      "abbreviations": [
+        "points"
+      ],
+      "sanitises_input": false,
+      "canonical": "specificGravity",
+      "scale": 1.0,
+      "converts_by_formula": true,
+      "boundary_value": null
+    },
+    {
+      "name": "plato",
+      "unit_system": "density_Plato",
+      "abbreviations": [
+        "P"
+      ],
+      "sanitises_input": false,
+      "canonical": "specificGravity",
+      "scale": 1.0,
+      "converts_by_formula": true,
+      "boundary_value": null
+    },
+    {
+      "name": "brix",
+      "unit_system": "density_Brix",
+      "abbreviations": [
+        "brix"
+      ],
+      "sanitises_input": false,
+      "canonical": "specificGravity",
+      "scale": 1.0,
+      "converts_by_formula": true,
+      "boundary_value": null
+    },
+    {
+      "name": "lintner",
+      "unit_system": "diastaticPower_Lintner",
+      "abbreviations": [
+        "L"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "wk",
+      "unit_system": "diastaticPower_WindischKolbach",
+      "abbreviations": [
+        "WK"
+      ],
+      "sanitises_input": false,
+      "canonical": "lintner",
+      "scale": 1.0,
+      "converts_by_formula": true,
+      "boundary_value": null
+    },
+    {
+      "name": "pH",
+      "unit_system": "acidity_pH",
+      "abbreviations": [
+        "pH"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "ibu",
+      "unit_system": "bitterness_InternationalBitternessUnits",
+      "abbreviations": [
+        "IBU"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "carbonationVolumes",
+      "unit_system": "carbonation_Volumes",
+      "abbreviations": [
+        "vol"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "carbonationGramsPerLiter",
+      "unit_system": "carbonation_MassPerVolume",
+      "abbreviations": [
+        "mg/L"
+      ],
+      "sanitises_input": false,
+      "canonical": "carbonationVolumes",
+      "scale": 0.5102040816326531,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "partsPerMillionMass",
+      "unit_system": "massFractionOrConc_Brewing",
+      "abbreviations": [
+        "ppm"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "partsPerBillionMass",
+      "unit_system": "massFractionOrConc_Brewing",
+      "abbreviations": [
+        "ppb"
+      ],
+      "sanitises_input": false,
+      "canonical": "partsPerMillionMass",
+      "scale": 0.001,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "milligramsPerLiter",
+      "unit_system": "massFractionOrConc_Brewing",
+      "abbreviations": [
+        "mg/L"
+      ],
+      "sanitises_input": false,
+      "canonical": "partsPerMillionMass",
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "centipoise",
+      "unit_system": "viscosity_Metric",
+      "abbreviations": [
+        "cP"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "millipascalSecond",
+      "unit_system": "viscosity_MetricAlternate",
+      "abbreviations": [
+        "mPa-s"
+      ],
+      "sanitises_input": false,
+      "canonical": "centipoise",
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "caloriesPerCelsiusPerGram",
+      "unit_system": "specificHeatCapacity_Calories",
+      "abbreviations": [
+        "c/g\u00b7C"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "joulesPerKelvinPerKg",
+      "unit_system": "specificHeatCapacity_Joules",
+      "abbreviations": [
+        "J/kg\u00b7K"
+      ],
+      "sanitises_input": false,
+      "canonical": "caloriesPerCelsiusPerGram",
+      "scale": 0.0002390057361376673,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "btuPerFahrenheitPerPound",
+      "unit_system": "specificHeatCapacity_Btus",
+      "abbreviations": [
+        "BTU/lb\u00b7F"
+      ],
+      "sanitises_input": false,
+      "canonical": "caloriesPerCelsiusPerGram",
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPerCelsius",
+      "unit_system": "heatCapacity_Kilocalories",
+      "abbreviations": [
+        "kc/C"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "joulesPerKelvin",
+      "unit_system": "heatCapacity_Joules",
+      "abbreviations": [
+        "J/K"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerCelsius",
+      "scale": 0.0002390057361376673,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "btuPerFahrenheit",
+      "unit_system": "heatCapacity_Btus",
+      "abbreviations": [
+        "BTU/F"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerCelsius",
+      "scale": 0.45359237,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "litresPerKilogram",
+      "unit_system": "volumePerMass_Metric",
+      "abbreviations": [
+        "L/kg"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "litresPerGram",
+      "unit_system": "volumePerMass_Metric",
+      "abbreviations": [
+        "L/g"
+      ],
+      "sanitises_input": false,
+      "canonical": "litresPerKilogram",
+      "scale": 1000.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "cubicMetersPerKilogram",
+      "unit_system": "volumePerMass_Metric",
+      "abbreviations": [
+        "m^3/kg"
+      ],
+      "sanitises_input": false,
+      "canonical": "litresPerKilogram",
+      "scale": 1000.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_fluidOuncesPerOunce",
+      "unit_system": "volumePerMass_UsCustomary",
+      "abbreviations": [
+        "floz/oz"
+      ],
+      "sanitises_input": false,
+      "canonical": "litresPerKilogram",
+      "scale": 66.7632356142,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_gallonsPerPound",
+      "unit_system": "volumePerMass_UsCustomary",
+      "abbreviations": [
+        "gal/lb"
+      ],
+      "sanitises_input": false,
+      "canonical": "litresPerKilogram",
+      "scale": 8.34540445177617,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_quartsPerPound",
+      "unit_system": "volumePerMass_UsCustomary",
+      "abbreviations": [
+        "qt/lb"
+      ],
+      "sanitises_input": false,
+      "canonical": "litresPerKilogram",
+      "scale": 2.08635111294,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "us_gallonsPerOunce",
+      "unit_system": "volumePerMass_UsCustomary",
+      "abbreviations": [
+        "gal/oz"
+      ],
+      "sanitises_input": false,
+      "canonical": "litresPerKilogram",
+      "scale": 0.521587778236,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "cubicFeetPerPound",
+      "unit_system": "volumePerMass_UsCustomary",
+      "abbreviations": [
+        "ft^3/lb"
+      ],
+      "sanitises_input": false,
+      "canonical": "litresPerKilogram",
+      "scale": 62.4279605755126,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPerLiter",
+      "unit_system": "energyPerVolume_Metric",
+      "abbreviations": [
+        "kcal/L"
+      ],
+      "sanitises_input": false,
+      "canonical": null,
+      "scale": 1.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPer50cl",
+      "unit_system": "energyPerVolume_Metric",
+      "abbreviations": [
+        "kcal/50cl"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 2.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPer33cl",
+      "unit_system": "energyPerVolume_Metric",
+      "abbreviations": [
+        "kcal/33cl"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 3.0303030303030303,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPer25cl",
+      "unit_system": "energyPerVolume_Metric",
+      "abbreviations": [
+        "kcal/25cl"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 4.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPer100ml",
+      "unit_system": "energyPerVolume_Metric",
+      "abbreviations": [
+        "kcal/100ml"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 10.0,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPer16us_floz",
+      "unit_system": "energyPerVolume_UsCustomary",
+      "abbreviations": [
+        "kcal/pt"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 2.113,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPer12us_floz",
+      "unit_system": "energyPerVolume_UsCustomary",
+      "abbreviations": [
+        "kcal/12floz"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 2.818,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilocaloriesPer20imp_floz",
+      "unit_system": "energyPerVolume_Imperial",
+      "abbreviations": [
+        "kcal/pt"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 1.76,
+      "converts_by_formula": false,
+      "boundary_value": null
+    },
+    {
+      "name": "kilojoulesPer100ml",
+      "unit_system": "energyPerVolume_MetricAlternate",
+      "abbreviations": [
+        "kJ/100ml"
+      ],
+      "sanitises_input": false,
+      "canonical": "kilocaloriesPerLiter",
+      "scale": 2.390057361376673,
+      "converts_by_formula": false,
+      "boundary_value": null
+    }
+  ],
+  "converted_by_formula": [
+    "fahrenheit",
+    "lovibond",
+    "gravityPoints",
+    "plato",
+    "brix",
+    "wk"
+  ]
+}

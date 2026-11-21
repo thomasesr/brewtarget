@@ -55,3 +55,7 @@ jobs:
         run: |
           python3 tools/extract-migrations.py --out /tmp/migrations.json
           diff -u schema/migrations.json /tmp/migrations.json
+      - name: Unit extraction is reproducible
+        run: |
+          python3 tools/extract-units.py --out /tmp/units.json
+          diff -u schema/units.json /tmp/units.json
