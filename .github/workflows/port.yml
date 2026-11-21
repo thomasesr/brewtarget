@@ -47,6 +47,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
       - name: Schema extraction is reproducible
         run: |
           python3 tools/extract-schema.py --out /tmp/v23.json
@@ -63,6 +66,10 @@ jobs:
         run: |
           python3 tools/extract-enums.py --out /tmp/enums.json
           diff -u schema/enums.json /tmp/enums.json
+      - name: Generated model code is reproducible
+        run: |
+          python3 tools/generate-model.py --out /tmp/generated
+          diff -ru rust/crates/bt-model/src/generated /tmp/generated
       - name: Expected test values are reproducible
         run: |
           python3 tools/extract-test-data.py --out /tmp/expected

@@ -21,3 +21,8 @@
 //! See `PLAN.md` for the phase this crate belongs to.
 
 #![forbid(unsafe_code)]
+
+pub mod generated;
+
+pub use generated::enums;
+pub use generated::tables;
