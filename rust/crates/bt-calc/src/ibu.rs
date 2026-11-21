@@ -350,6 +350,15 @@ pub fn uses_hopping_rate_factor(formula: Formula) -> bool {
 ///
 /// Ported from `IbuMethods::getIbuBreakdown`.
 pub fn ibu_breakdown(parameters: &Parameters, formula: Formula) -> Breakdown {
+    ibu_breakdown_with(parameters, formula, &crate::smph::SmphParameters::default())
+}
+
+/// As [`ibu_breakdown`], but supplying the extra parameters SMPH needs.
+pub fn ibu_breakdown_with(
+    parameters: &Parameters,
+    formula: Formula,
+    smph_parameters: &crate::smph::SmphParameters,
+) -> Breakdown {
     let result = match formula {
         Formula::Tinseth => tinseth(parameters),
         Formula::Rager => rager(parameters),
@@ -357,11 +366,7 @@ pub fn ibu_breakdown(parameters: &Parameters, formula: Formula) -> Breakdown {
         Formula::Garetz => garetz(parameters),
         Formula::Daniels => daniels(parameters),
         Formula::MIbu => m_ibu(parameters),
-        Formula::Smph => {
-            // SMPH additionally models the losses after the kettle -- to the yeast, to the
-            // krausen, to time in the bottle -- and is not ported yet.  See PLAN.md Phase 5.
-            unimplemented!("the SMPH formula is not ported yet")
-        }
+        Formula::Smph => crate::smph::smph(parameters, smph_parameters),
     };
     if handles_hop_form(formula) { result } else { result.scaled(generic_hop_form_factor(parameters.hop_form)) }
 }

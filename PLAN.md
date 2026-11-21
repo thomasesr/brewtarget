@@ -406,10 +406,9 @@ content.
   per-row tolerances.
 - [x] **Phase 4, generated half** — `bt-model` row structs and enums generated from the
   schema; `bt-store` repositories over typed sqlx pools, with round-trip CRUD tests.
-- [~] **Phase 5** — `Algorithms`, `ColorMethods`, `MashFermentability` and five of the
-  seven IBU formulae done, each with mirrored tests. Outstanding: the mIBU and SMPH
-  formulae, which model post-flameout isomerisation and need Hosom's cooling curve;
-  and the recipe-level calculations in `Recipe.cpp`, which need the model wrappers.
+- [x] **Phase 5** — `Algorithms`, `ColorMethods`, `MashFermentability` and all seven
+  IBU formulae, each with mirrored tests. mIBU matches Hosom's worked examples; SMPH
+  follows the bitterness past the kettle, through fermentation and into the bottle.
 - [x] **Phase 4, hand-written half** — folder tree with path reconstruction and cycle
   detection; the recipe aggregate, assembled from the eleven tables a recipe is spread
   across; ownership and cascade delete, including the rule that an unnamed one-off
@@ -417,8 +416,8 @@ content.
   for the 33 enum and unit columns are generated.
 - [x] **Recipe-level calculations** — grains, volumes, sugar totals, colour, OG/FG,
   ABV and calories, plus the boil-phase logic `RecipeCalcTests::testBoilStepPhases`
-  covers. Outstanding: `recalcIBU` at recipe level, which needs the mIBU and SMPH
-  formulae first.
+  covers. Outstanding: wiring `recalcIBU` into the recipe aggregate, now that all seven
+  formulae exist.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only

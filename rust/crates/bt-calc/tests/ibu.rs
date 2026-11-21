@@ -305,3 +305,134 @@ fn the_cooling_model_behaves_physically() {
     };
     assert!(close(post_boil_wort_temperature_c(5.0, &[held], rate, 100.0), 100.0, 1e-9));
 }
+
+// ── SMPH ──────────────────────────────────────────────────────────────────────────────────────
+//
+// SMPH follows the bitterness past the kettle, so most of what it models cannot be checked
+// against the other formulae.  What can be checked is the shape: each loss factor pulls the
+// right way, the saturation curve saturates, and the breakdown's third component -- bitterness
+// that was never iso-alpha acid -- is the one only this method produces.
+
+use bt_calc::ibu::ibu_breakdown_with;
+use bt_calc::smph::{self, SmphParameters};
+use bt_model::enums::{FermentationKrausenHandling, QualitativeWortClarity, YeastFlocculation};
+
+fn smph_parameters() -> Parameters {
+    Parameters {
+        alpha_acid_rating: 0.10,
+        hops_grams: 56.7,
+        post_boil_volume_liters: 19.87,
+        wort_gravity_sg: 1.050,
+        original_gravity_sg: Some(1.050),
+        time_in_boil_minutes: 60.0,
+        kettle_internal_diameter_cm: Some(38.0),
+        kettle_opening_diameter_cm: Some(38.0),
+        ..Default::default()
+    }
+}
+
+#[test]
+fn smph_produces_a_plausible_bitterness_split_three_ways() {
+    let breakdown = ibu_breakdown_with(&smph_parameters(), Formula::Smph, &SmphParameters::default());
+
+    assert!(breakdown.boil_ibus > 0.0, "a sixty minute addition bitters");
+    assert_eq!(breakdown.post_boil_ibus, 0.0, "nothing cools here");
+    assert!(breakdown.non_iaa_ibus > 0.0, "oxidised acids and polyphenols bitter too");
+    // A 60-minute charge of 56.7 g at 10% into 19.87 L is a strongly bittered beer.
+    assert!((20.0..80.0).contains(&breakdown.total()), "total {}", breakdown.total());
+}
+
+/// Only SMPH reports bitterness that was never iso-alpha acid.
+#[test]
+fn the_non_iaa_component_is_unique_to_smph() {
+    for formula in [Formula::Tinseth, Formula::Rager, Formula::Noonan, Formula::Garetz, Formula::Daniels] {
+        assert_eq!(ibu_breakdown(&smph_parameters(), formula).non_iaa_ibus, 0.0, "{formula:?}");
+    }
+    let mut cooling = smph_parameters();
+    cooling.cool_time_minutes = Some(20.0);
+    assert_eq!(ibu_breakdown(&cooling, Formula::MIbu).non_iaa_ibus, 0.0, "mIBU models cooling but not oxidation");
+    assert!(ibu_breakdown_with(&smph_parameters(), Formula::Smph, &SmphParameters::default()).non_iaa_ibus > 0.0);
+}
+
+#[test]
+fn a_hop_stand_adds_bitterness_under_smph_too() {
+    let plain = ibu_breakdown_with(&smph_parameters(), Formula::Smph, &SmphParameters::default());
+    let mut with_stand = smph_parameters();
+    with_stand.cool_time_minutes = Some(30.0);
+    let stood = ibu_breakdown_with(&with_stand, Formula::Smph, &SmphParameters::default());
+
+    assert!(stood.post_boil_ibus > 0.0, "the wort keeps working as it cools");
+    assert!(close(stood.boil_ibus, plain.boil_ibus, 1e-9), "the boil part is unchanged");
+}
+
+/// Each loss factor has a direction, and getting one backwards would be invisible in a total.
+#[test]
+fn the_loss_factors_pull_the_way_they_should() {
+    // Clearer wort carries more bitterness through than trubby wort.
+    assert!(
+        smph::loss_factor_wort_clarity(Some(QualitativeWortClarity::VeryClear))
+            > smph::loss_factor_wort_clarity(Some(QualitativeWortClarity::ExtremelyCloudy))
+    );
+    assert_eq!(smph::loss_factor_wort_clarity(None), 1.0, "unrecorded means average");
+
+    // Blowing the krausen off takes bitterness with it; mixing it back in returns some.
+    assert!(
+        smph::loss_factor_krausen_iaa(Some(FermentationKrausenHandling::BlownOffVigorousFermentation))
+            < smph::loss_factor_krausen_iaa(Some(FermentationKrausenHandling::MixedIn))
+    );
+    // The non-IAA bitterness is three times as sensitive, so it swings further.
+    let blown = FermentationKrausenHandling::BlownOffNormalFermentation;
+    let iaa_drop = 1.0 - smph::loss_factor_krausen_iaa(Some(blown));
+    let non_iaa_drop = 1.0 - smph::loss_factor_krausen_non_iaa(Some(blown));
+    assert!(close(non_iaa_drop, 3.0 * iaa_drop, 1e-9));
+
+    // A flocculent yeast drags more down with it.
+    assert!(
+        smph::loss_factor_flocculation(Some(YeastFlocculation::VeryHigh))
+            < smph::loss_factor_flocculation(Some(YeastFlocculation::VeryLow))
+    );
+
+    // Bitterness fades with age, then levels off.
+    assert!(smph::loss_factor_age(1.0) > smph::loss_factor_age(10.0));
+    assert_eq!(smph::loss_factor_age(15.0), smph::loss_factor_age(50.0), "levels off after fifteen weeks");
+
+    // Stronger wort holds less, but only once it has steeped a while.
+    assert_eq!(smph::loss_factor_gravity(1.080, 20.0), 1.0, "too short to matter");
+    assert!(smph::loss_factor_gravity(1.080, 60.0) < smph::loss_factor_gravity(1.040, 60.0));
+
+    // The pH factors are both 1.0 at the pH they are defined around.
+    assert!(close(smph::loss_factor_ph_iaa(5.75), 1.0, 0.001));
+    assert!(close(smph::loss_factor_ph_oaa(5.75), 1.0, 0.001));
+}
+
+/// Wort can only hold so much alpha acid: past about 200 ppm each further addition dissolves
+/// less than the last, approaching a ceiling near 580.
+#[test]
+fn dissolved_alpha_acid_saturates() {
+    // Below the lower limit everything dissolves.
+    assert!(close(smph::dissolved_after_addition_ppm(0.0, 100.0), 100.0, 1e-9));
+
+    // Adding the same amount again yields less the second time.
+    let first = smph::dissolved_after_addition_ppm(0.0, 250.0);
+    let second = smph::dissolved_after_addition_ppm(first, 250.0);
+    assert!(second - first < 250.0, "the second charge dissolves less");
+    assert!(second > first, "but it does dissolve something");
+    assert!(second < 580.0, "and never passes the ceiling");
+
+    // An absurd charge reaches the ceiling exactly: the exponential underflows to zero, so the
+    // curve lands on 580 rather than merely approaching it.
+    assert!(close(smph::dissolved_after_addition_ppm(0.0, 100_000.0), 580.0, 1e-9));
+}
+
+/// Malt contributes bitterness of its own, which only SMPH counts.
+#[test]
+fn malt_polyphenols_bitter_the_recipe() {
+    let at_default_ph = smph::recipe_level_ibus(1.050, None);
+    assert!(at_default_ph > 0.0);
+    // Stronger wort, more malt, more of it.
+    assert!(smph::recipe_level_ibus(1.080, None) > at_default_ph);
+    // Water is not bitter.
+    assert_eq!(smph::recipe_level_ibus(1.000, None), 0.0);
+    // A lower mash pH raises the contribution.
+    assert!(smph::recipe_level_ibus(1.050, Some(5.20)) > at_default_ph);
+}
