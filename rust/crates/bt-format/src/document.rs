@@ -125,6 +125,29 @@ pub fn read_dotbeer(document: &Value) -> Result<Document, MappingError> {
     read("dotBeer", document, "DotBeer", &DOTBEER_COLLECTIONS, "recipes")
 }
 
+/// The collections a BeerJSON file may contain.
+///
+/// BeerJSON names several of them differently -- hops are `hop_varieties`, miscs are
+/// `miscellaneous_ingredients`, waters are `profiles` -- which is exactly the sort of thing the
+/// extracted record definitions exist so that nobody has to remember.
+const BEERJSON_COLLECTIONS: [&str; 10] = [
+    "fermentables",
+    "hop_varieties",
+    "miscellaneous_ingredients",
+    "cultures",
+    "profiles",
+    "styles",
+    "equipments",
+    "mashes",
+    "boils",
+    "fermentations",
+];
+
+/// Read a whole BeerJSON document.
+pub fn read_beerjson(document: &Value) -> Result<Document, MappingError> {
+    read("beerJson", document, "beerjson", &BEERJSON_COLLECTIONS, "recipes")
+}
+
 /// Read a document of any of the formats.
 pub fn read(
     format_name: &str,
