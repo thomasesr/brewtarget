@@ -22,6 +22,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod default_content;
 pub mod folders;
 pub mod generated;
 pub mod import;
@@ -30,4 +31,4 @@ pub mod rows;
 pub mod store;
 
 pub use generated::tables;
-pub use store::{Backend, Store, StoreError};
+pub use store::{Backend, Connection, Store, StoreError};

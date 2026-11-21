@@ -37,6 +37,12 @@ pub enum StoreError {
     UnknownTable(String),
     #[error("{table} has no column called {column}")]
     UnknownColumn { table: String, column: String },
+    #[error("could not read {path}: {source}")]
+    ContentDirectory { path: String, source: std::io::Error },
+    #[error("{path}: {message}")]
+    ContentFormat { path: String, message: String },
+    #[error("{found} files match {prefix}, expected exactly one")]
+    AmbiguousContentFile { prefix: String, found: usize },
     #[error(transparent)]
     Folder(#[from] bt_model::folder::FolderError),
 }
@@ -59,6 +65,31 @@ pub enum Backend {
 pub struct Store {
     backend: Backend,
     url: String,
+}
+
+/// A single connection taken from a [`Store`], which is what a transaction needs.
+///
+/// Work that must be atomic -- importing a file, seeding a database -- has to happen on one
+/// connection, since `BEGIN` on a pool would scatter statements across several.
+#[derive(Debug)]
+pub enum Connection {
+    Sqlite(sqlx::pool::PoolConnection<sqlx::Sqlite>),
+    Postgres(sqlx::pool::PoolConnection<sqlx::Postgres>),
+    MariaDb(sqlx::pool::PoolConnection<sqlx::MySql>),
+}
+
+/// Run the same code against whichever backend a [`Connection`] is.
+///
+/// The same trick as [`dispatch`], for a single connection rather than a pool.
+#[macro_export]
+macro_rules! dispatch_connection {
+    ($connection:expr, |$handle:ident| $body:block) => {
+        match $connection {
+            $crate::Connection::Sqlite($handle) => $body,
+            $crate::Connection::Postgres($handle) => $body,
+            $crate::Connection::MariaDb($handle) => $body,
+        }
+    };
 }
 
 /// Run the same code against whichever backend a [`Store`] holds.
@@ -104,6 +135,15 @@ impl Store {
             Backend::Postgres(_) => Dialect::Postgresql,
             Backend::MariaDb(_) => Dialect::Mariadb,
         }
+    }
+
+    /// Take a single connection, for work that has to happen on one.
+    pub async fn connection(&self) -> Result<Connection, StoreError> {
+        Ok(match &self.backend {
+            Backend::Sqlite(pool) => Connection::Sqlite(pool.acquire().await?),
+            Backend::Postgres(pool) => Connection::Postgres(pool.acquire().await?),
+            Backend::MariaDb(pool) => Connection::MariaDb(pool.acquire().await?),
+        })
     }
 
     /// A connection for schema work, through the `Any` driver.

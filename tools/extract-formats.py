@@ -170,6 +170,22 @@ def parse_field_lists(text: str) -> dict[str, list[dict]]:
     return lists
 
 
+def infer_cpp_type(fields: list[dict]) -> str | None:
+    """Work out which model class a record stores, from the properties its fields feed."""
+    owners: dict[str, int] = {}
+    for field in fields:
+        if not field["property"]:
+            continue
+        owner = field["property"].rsplit("::", 1)[0]
+        # Properties shared by everything say nothing about which class this is.
+        if owner in {"NamedEntity", "FolderPropertyBase", "IngredientAmount", "RecipeAddition"}:
+            continue
+        owners[owner] = owners.get(owner, 0) + 1
+    if not owners:
+        return None
+    return max(owners.items(), key=lambda entry: entry[1])[0]
+
+
 def parse_records(text: str, field_lists: dict[str, list[dict]]) -> list[dict]:
     """Read the record definitions, resolving the field lists each one is built from.
 
@@ -222,7 +238,10 @@ def parse_records(text: str, field_lists: dict[str, list[dict]]) -> list[dict]:
         records.append(
             {
                 "name": match.group(1),
-                "cpp_type": match.group(2) or match.group(1),
+                # A definition declared without a template parameter does not say what it stores,
+                # so take it from what its fields feed: the embedded hop in a BeerXML recipe
+                # addition has fields on Hop, and that is what makes it a hop.
+                "cpp_type": match.group(2) or infer_cpp_type(fields) or match.group(1),
                 "record_name": record_name,
                 "field_lists": referenced,
                 "fields": fields,

@@ -70,7 +70,7 @@ fn a_recipe_owns_its_additions_instructions_and_brew_logs() {
     let document = read("recipes", "AmericanPaleAle.beer");
     let recipe = &document.recipes[0];
     let child = |field: &str| {
-        recipe.children.iter().find(|(name, _)| name == field).unwrap_or_else(|| panic!("no {field}")).1.clone()
+        recipe.children.iter().find(|child| child.path == field).unwrap_or_else(|| panic!("no {field}")).records.clone()
     };
 
     assert_eq!(child("ingredients/fermentable_additions").len(), 3);
@@ -96,14 +96,15 @@ fn step_owners_carry_their_steps() {
         ("fermentations", "fermentation_steps", "fermentation_step", 2),
     ] {
         let (_, records) = document.collections.iter().find(|(name, _)| name == collection).expect(collection);
-        let steps = &records[0].children.iter().find(|(name, _)| name == field).expect(field).1;
+        let steps = &records[0].children.iter().find(|child| child.path == field).expect(field).records;
         assert_eq!(steps.len(), expected, "{collection}");
         assert!(steps.iter().all(|step| step.record.table == table));
     }
 
     // And the steps deserialise with their values.
     let (_, mashes) = document.collections.iter().find(|(name, _)| name == "mashes").expect("mashes");
-    let first: MashStepRow = mashes[0].children[0].1[0].record.clone().into_row().expect("deserialise a mash step");
+    let first: MashStepRow =
+        mashes[0].children[0].records[0].record.clone().into_row().expect("deserialise a mash step");
     assert!(first.step_temp_c.is_some(), "a mash step should have a temperature");
 }
 
@@ -113,11 +114,12 @@ fn step_owners_carry_their_steps() {
 #[test]
 fn an_ingredient_amount_becomes_a_quantity_and_a_unit() {
     let document = read("recipes", "AmericanPaleAle.beer");
-    let (_, additions) = document.recipes[0]
+    let additions = &document.recipes[0]
         .children
         .iter()
-        .find(|(name, _)| name == "ingredients/hop_additions")
-        .expect("hop additions");
+        .find(|child| child.path == "ingredients/hop_additions")
+        .expect("hop additions")
+        .records;
 
     let row: HopInRecipeRow = additions[0].record.clone().into_row().expect("deserialise");
     assert_eq!(row.quantity, Some(15.0));

@@ -7450,7 +7450,7 @@
         },
         {
           "name": "BEER_JSON_RECORD_DEFN_STYLE_IN_RECIPE",
-          "cpp_type": "BEER_JSON_RECORD_DEFN_STYLE_IN_RECIPE",
+          "cpp_type": "Style",
           "record_name": "styles",
           "field_lists": [
             "BeerJson_StyleBase"
@@ -8380,7 +8380,7 @@
         },
         {
           "name": "BEER_JSON_RECORD_DEFN_FERMENTABLE_IN_ADDITION",
-          "cpp_type": "BEER_JSON_RECORD_DEFN_FERMENTABLE_IN_ADDITION",
+          "cpp_type": "Fermentable",
           "record_name": "fermentable base",
           "field_lists": [
             "BeerJson_FermentableBase"
@@ -8478,7 +8478,7 @@
         },
         {
           "name": "BEER_JSON_RECORD_DEFN_HOP_IN_ADDITION",
-          "cpp_type": "BEER_JSON_RECORD_DEFN_HOP_IN_ADDITION",
+          "cpp_type": "Hop",
           "record_name": "hop base",
           "field_lists": [
             "BeerJson_HopBase"
@@ -8552,7 +8552,7 @@
         },
         {
           "name": "BEER_JSON_RECORD_DEFN_MISC_IN_ADDITION",
-          "cpp_type": "BEER_JSON_RECORD_DEFN_MISC_IN_ADDITION",
+          "cpp_type": "Misc",
           "record_name": "misc base",
           "field_lists": [
             "BeerJson_MiscBase"
@@ -8594,7 +8594,7 @@
         },
         {
           "name": "BEER_JSON_RECORD_DEFN_YEAST_IN_ADDITION",
-          "cpp_type": "BEER_JSON_RECORD_DEFN_YEAST_IN_ADDITION",
+          "cpp_type": "Yeast",
           "record_name": "yeast base",
           "field_lists": [
             "BeerJson_YeastBase"
@@ -8644,7 +8644,7 @@
         },
         {
           "name": "BEER_JSON_RECORD_DEFN_WATER_IN_ADDITION",
-          "cpp_type": "BEER_JSON_RECORD_DEFN_WATER_IN_ADDITION",
+          "cpp_type": "Water",
           "record_name": "water base",
           "field_lists": [
             "BeerJson_WaterBase"
@@ -13721,7 +13721,7 @@
         },
         {
           "name": "BEER_XML_RECORD_DEFN_FERMENTABLE_IN_RECIPE_ADDITION_FERMENTABLE",
-          "cpp_type": "BEER_XML_RECORD_DEFN_FERMENTABLE_IN_RECIPE_ADDITION_FERMENTABLE",
+          "cpp_type": "Fermentable",
           "record_name": "FERMENTABLE",
           "field_lists": [
             "BeerXml_FermentableBase"
@@ -14147,7 +14147,7 @@
         },
         {
           "name": "BEER_XML_RECORD_DEFN_HOP_IN_RECIPE_ADDITION_HOP",
-          "cpp_type": "BEER_XML_RECORD_DEFN_HOP_IN_RECIPE_ADDITION_HOP",
+          "cpp_type": "Hop",
           "record_name": "HOP",
           "field_lists": [
             "BeerXml_HopBase"
@@ -14493,7 +14493,7 @@
         },
         {
           "name": "BEER_XML_RECORD_DEFN_MISC_IN_RECIPE_ADDITION_MISC",
-          "cpp_type": "BEER_XML_RECORD_DEFN_MISC_IN_RECIPE_ADDITION_MISC",
+          "cpp_type": "Misc",
           "record_name": "MISC",
           "field_lists": [
             "BeerXml_MiscBase"
@@ -14687,7 +14687,7 @@
         },
         {
           "name": "BEER_XML_RECORD_DEFN_YEAST_IN_RECIPE_ADDITION_YEAST",
-          "cpp_type": "BEER_XML_RECORD_DEFN_YEAST_IN_RECIPE_ADDITION_YEAST",
+          "cpp_type": "Yeast",
           "record_name": "YEAST",
           "field_lists": [
             "BeerXml_YeastBase"
@@ -15049,7 +15049,7 @@
         },
         {
           "name": "BEER_XML_RECORD_DEFN_WATER_IN_RECIPE_USE_OF_WATER",
-          "cpp_type": "BEER_XML_RECORD_DEFN_WATER_IN_RECIPE_USE_OF_WATER",
+          "cpp_type": "Water",
           "record_name": "Water",
           "field_lists": [
             "BeerXml_WaterBase"

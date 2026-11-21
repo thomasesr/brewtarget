@@ -21,7 +21,7 @@
 use bt_model::tables::{columns_of, table_for_cpp_type};
 use serde_json::{Map, Value};
 
-use crate::{Store, StoreError, dispatch};
+use crate::{Connection, Store, StoreError, dispatch, dispatch_connection};
 
 /// Check a table name against the schema.
 fn checked_table(table: &str) -> Result<&'static str, StoreError> {
@@ -57,6 +57,50 @@ macro_rules! bind_value {
             other => $query.bind(other.to_string()),
         }
     };
+}
+
+/// Insert a row described by its table and columns, on a single connection.
+///
+/// Work that has to be atomic runs on one connection so that a transaction means anything, which
+/// is why this exists alongside the pool-based [`insert`].
+pub async fn insert_on(
+    connection: &mut Connection,
+    placeholders: impl Fn(&str) -> String,
+    table: &str,
+    columns: &Map<String, Value>,
+) -> Result<i64, StoreError> {
+    let (sql, values) = insert_statement(placeholders, table, columns)?;
+    Ok(dispatch_connection!(connection, |handle| {
+        let mut query = sqlx::query_scalar(&sql);
+        for value in &values {
+            query = bind_value!(query, value);
+        }
+        query.fetch_one(&mut **handle).await?
+    }))
+}
+
+/// Build the statement and the values it binds.
+fn insert_statement<'a>(
+    placeholders: impl Fn(&str) -> String,
+    table: &str,
+    columns: &'a Map<String, Value>,
+) -> Result<(String, Vec<&'a Value>), StoreError> {
+    let table = checked_table(table)?;
+    let primary_key = columns_of(table).and_then(|columns| columns.first()).copied().unwrap_or("id");
+
+    let named: Vec<(&'static str, &Value)> = columns
+        .iter()
+        .filter(|(name, _)| name.as_str() != primary_key)
+        .map(|(name, value)| checked_column(table, name).map(|column| (column, value)))
+        .collect::<Result<_, _>>()?;
+
+    if named.is_empty() {
+        return Ok((format!("INSERT INTO {table} DEFAULT VALUES RETURNING {primary_key}"), Vec::new()));
+    }
+    let column_list = named.iter().map(|(name, _)| *name).collect::<Vec<_>>().join(", ");
+    let marks = named.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+    let sql = placeholders(&format!("INSERT INTO {table} ({column_list}) VALUES ({marks}) RETURNING {primary_key}"));
+    Ok((sql, named.into_iter().map(|(_, value)| value).collect()))
 }
 
 /// Insert a row described by its table and columns, returning the key the database generated.

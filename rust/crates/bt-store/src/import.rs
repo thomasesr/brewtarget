@@ -19,11 +19,19 @@
 
 use std::collections::BTreeMap;
 
-use bt_format::document::{Document, Owned};
+use bt_format::document::{Document, Nesting, Owned};
 use bt_format::mapping::MappedRecord;
+use bt_model::folder::FolderTree;
 use serde_json::{Map, Value};
 
-use crate::{Store, StoreError, folders, rows};
+use crate::{Connection, Store, StoreError, dispatch_connection, folders, rows};
+
+/// The folder trees an import is building, one per kind of thing.
+///
+/// Held across the whole import rather than reloaded per record: asking for a folder once per
+/// record and reloading the table each time turns a few thousand records into a few thousand
+/// full scans, which is the difference between seconds and minutes when seeding a database.
+type FolderCache = BTreeMap<String, FolderTree>;
 
 /// What an import did.
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -54,9 +62,11 @@ fn owner_column(child_table: &str, owner_table: &str) -> Option<&'static str> {
 /// Store one record, resolving its folder and its references first.
 async fn store_record(
     store: &Store,
+    connection: &mut Connection,
     record: &MappedRecord,
     resolved: &BTreeMap<String, (String, i64)>,
     extra: &[(&str, i64)],
+    folder_cache: &mut FolderCache,
 ) -> Result<i64, StoreError> {
     let mut columns: Map<String, Value> = record.columns.clone();
 
@@ -66,9 +76,18 @@ async fn store_record(
     if let Some(path) = &record.folder_path
         && let Some(column) = column_for_reference(record.table, "contained_in_folder_id")
         && folders::folder_table_for(record.table).is_ok()
-        && let Some(folder_id) = folders::ensure_path(store, record.table, path).await?
     {
-        columns.insert(column.to_owned(), Value::from(folder_id));
+        let tree = match folder_cache.get_mut(record.table) {
+            Some(tree) => tree,
+            None => {
+                let tree = folders::load_tree_on(connection, record.table).await?;
+                folder_cache.entry(record.table.to_owned()).or_insert(tree)
+            }
+        };
+        let placeholders = |sql: &str| store.placeholders(sql);
+        if let Some(folder_id) = folders::ensure_path_on(connection, placeholders, record.table, path, tree).await? {
+            columns.insert(column.to_owned(), Value::from(folder_id));
+        }
     }
 
     for (field, local_id) in &record.references {
@@ -86,30 +105,48 @@ async fn store_record(
         columns.insert((*column).to_owned(), Value::from(*key));
     }
 
-    rows::insert(store, record.table, &columns).await
+    rows::insert_on(connection, |sql| store.placeholders(sql), record.table, &columns).await
 }
 
 /// Store a record and everything it owns.
 async fn store_owned(
     store: &Store,
+    connection: &mut Connection,
     owned: &Owned,
     resolved: &mut BTreeMap<String, (String, i64)>,
     extra: &[(&str, i64)],
     written: &mut usize,
+    folder_cache: &mut FolderCache,
 ) -> Result<i64, StoreError> {
-    let key = store_record(store, &owned.record, resolved, extra).await?;
+    // A referenced record has to exist before the record that points at it, so those go first
+    // and their keys become columns on this one.  BeerXML writes a hop addition and the hop as a
+    // single element, which is how this arises.
+    let mut pointing_at: Vec<(&'static str, i64)> = Vec::new();
+    for child in owned.children.iter().filter(|child| child.nesting == Nesting::Referenced) {
+        for nested in &child.records {
+            let nested_key =
+                Box::pin(store_owned(store, connection, nested, resolved, &[], written, folder_cache)).await?;
+            if let Some(column) = owner_column(owned.record.table, nested.record.table) {
+                pointing_at.push((column, nested_key));
+            }
+        }
+    }
+
+    let mut columns_to_add: Vec<(&str, i64)> = extra.to_vec();
+    columns_to_add.extend(pointing_at);
+    let key = store_record(store, connection, &owned.record, resolved, &columns_to_add, folder_cache).await?;
     *written += 1;
     if let Some(local_id) = &owned.record.local_id {
         resolved.insert(local_id.clone(), (owned.record.table.to_owned(), key));
     }
 
-    for (_, children) in &owned.children {
-        for child in children {
-            // A child points back at whatever owns it, which is the only thing it needs that is
-            // not in the file: `mash_step.mash_id`, `hop_in_recipe.recipe_id`.
-            let link = owner_column(child.record.table, owned.record.table).map(|column| (column, key));
+    for child in owned.children.iter().filter(|child| child.nesting == Nesting::Owned) {
+        for nested in &child.records {
+            // An owned record points back at whatever owns it, which is the only thing it needs
+            // that is not in the file: `mash_step.mash_id`, `hop_in_recipe.recipe_id`.
+            let link = owner_column(nested.record.table, owned.record.table).map(|column| (column, key));
             let extra: Vec<(&str, i64)> = link.into_iter().collect();
-            Box::pin(store_owned(store, child, resolved, &extra, written)).await?;
+            Box::pin(store_owned(store, connection, nested, resolved, &extra, written, folder_cache)).await?;
         }
     }
     Ok(key)
@@ -121,18 +158,55 @@ async fn store_owned(
 /// a recipe is stored every local ID it names already has a key.
 pub async fn import(store: &Store, document: &Document) -> Result<Imported, StoreError> {
     let mut resolved: BTreeMap<String, (String, i64)> = BTreeMap::new();
+    let mut folder_cache = FolderCache::new();
     let mut summary = Imported::default();
 
-    for (_, records) in &document.collections {
-        for record in records {
-            store_owned(store, record, &mut resolved, &[], &mut summary.rows_written).await?;
-        }
-    }
+    // Everything happens on one connection inside one transaction.  That is partly so a failed
+    // import leaves nothing behind, and partly because a database that commits every row on its
+    // own spends all its time waiting for the disk: seeding takes seconds this way and minutes
+    // the other.
+    let mut connection = store.connection().await?;
+    dispatch_connection!(&mut connection, |handle| {
+        sqlx::query("BEGIN").execute(&mut **handle).await?;
+    });
 
-    for recipe in &document.recipes {
-        let key = store_owned(store, recipe, &mut resolved, &[], &mut summary.rows_written).await?;
-        summary.recipe_ids.push(key);
+    let result = async {
+        for (_, records) in &document.collections {
+            for record in records {
+                store_owned(
+                    store,
+                    &mut connection,
+                    record,
+                    &mut resolved,
+                    &[],
+                    &mut summary.rows_written,
+                    &mut folder_cache,
+                )
+                .await?;
+            }
+        }
+        for recipe in &document.recipes {
+            let key = store_owned(
+                store,
+                &mut connection,
+                recipe,
+                &mut resolved,
+                &[],
+                &mut summary.rows_written,
+                &mut folder_cache,
+            )
+            .await?;
+            summary.recipe_ids.push(key);
+        }
+        Ok::<(), StoreError>(())
     }
+    .await;
+
+    let finish = if result.is_ok() { "COMMIT" } else { "ROLLBACK" };
+    dispatch_connection!(&mut connection, |handle| {
+        sqlx::query(finish).execute(&mut **handle).await?;
+    });
+    result?;
 
     summary.by_local_id = resolved;
     Ok(summary)

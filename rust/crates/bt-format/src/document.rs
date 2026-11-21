@@ -23,13 +23,34 @@ use serde_json::Value;
 use crate::data::{Format, Record, format_data};
 use crate::mapping::{MappedRecord, MappingError, map_record_with};
 
+/// How a nested record relates to the one it was found inside.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Nesting {
+    /// A list: the records belong to the one that holds them, and each points back at it.  A
+    /// recipe's hop additions, a mash's steps.
+    Owned,
+    /// A single record the holder refers to.  BeerXML writes a recipe's hop addition and the hop
+    /// itself as one element, so the hop has to become a row of its own that the addition then
+    /// points at -- the link runs the opposite way to a list.
+    Referenced,
+}
+
+/// A record together with whatever is nested inside it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Child {
+    /// The field it came from -- `ingredients/hop_additions`, `instructions`, or empty for a
+    /// record written into its holder's own element.
+    pub path: String,
+    pub nesting: Nesting,
+    pub records: Vec<Owned>,
+}
+
 /// A record together with whatever it owns.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Owned {
     pub record: MappedRecord,
-    /// Records this one owns, by the field they came from -- `ingredients/hop_additions`,
-    /// `instructions` and so on.  Each child carries the references it makes of its own.
-    pub children: Vec<(String, Vec<Owned>)>,
+    /// Records nested inside this one, each saying which way the link runs.
+    pub children: Vec<Child>,
 }
 
 /// Everything read out of one file.
@@ -77,16 +98,20 @@ fn read_owned(format: &Format, definition: &Record, node: &Value) -> Result<Owne
             continue;
         };
 
-        // The path into the record may be nested: a recipe's hop additions live under
-        // `ingredients/hop_additions`.
+        // The path into the record may be nested -- a recipe's hop additions live under
+        // `ingredients/hop_additions` -- or empty, which means the record is written into its
+        // holder's own element.  BeerXML does that: a recipe's `<HOP>` is both the addition and
+        // the hop, so the hop is read from the very element the addition came from.
         let mut current = node;
         let mut found = true;
-        for part in field.path.split('/') {
-            match current.get(part) {
-                Some(next) => current = next,
-                None => {
-                    found = false;
-                    break;
+        if !field.path.is_empty() {
+            for part in field.path.split('/') {
+                match current.get(part) {
+                    Some(next) => current = next,
+                    None => {
+                        found = false;
+                        break;
+                    }
                 }
             }
         }
@@ -106,7 +131,11 @@ fn read_owned(format: &Format, definition: &Record, node: &Value) -> Result<Owne
 
         let read: Result<Vec<Owned>, MappingError> =
             nested_nodes.into_iter().map(|nested| read_owned(format, nested_definition, nested)).collect();
-        children.push((field.path.clone(), read?));
+        let nesting = match field.field_type.as_str() {
+            "ListOfRecords" => Nesting::Owned,
+            _ => Nesting::Referenced,
+        };
+        children.push(Child { path: field.path.clone(), nesting, records: read? });
     }
 
     Ok(Owned { record, children })
