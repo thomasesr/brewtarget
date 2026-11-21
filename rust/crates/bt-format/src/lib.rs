@@ -23,6 +23,8 @@
 #![forbid(unsafe_code)]
 
 pub mod consistency;
+pub mod data;
 pub mod jsonc;
+pub mod mapping;
 pub mod references;
 pub mod schema;

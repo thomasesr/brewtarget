@@ -255,7 +255,11 @@ def generate_tables(schema: dict) -> str:
             f"/// A row of `{table['name']}`, which stores `{table['cpp_type']}`.",
             "#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]",
             f"pub struct {struct} {{",
-            f"    /// `{table['primary_key']['name']}`",
+            f"    /// `{table['primary_key']['name']}`, which the database assigns.",
+            "    ///",
+            "    /// Defaults to zero so that a row read out of a file -- which has no database",
+            "    /// identity until it is stored -- deserialises without one.",
+            "    #[serde(default)]",
             *rename_attribute(table["primary_key"]["name"]),
             f"    pub {field_name(table['primary_key']['name'])}: i64,",
         ]
@@ -295,6 +299,43 @@ def generate_tables(schema: dict) -> str:
     for table in schema["tables"]:
         out.append(f'    "{table["name"]}",')
     out += ["];", ""]
+
+    # The interchange formats name a model property rather than a column, so a reader needs to
+    # get from one to the other.  The schema records both, so the map is generated rather than
+    # written out.
+    out += [
+        "/// The table that stores a given C++ model class, e.g. `Hop` is kept in `hop`.",
+        "pub fn table_for_cpp_type(cpp_type: &str) -> Option<&'static str> {",
+        "    match cpp_type {",
+    ]
+    for table in schema["tables"]:
+        out.append(f'        "{table["cpp_type"]}" => Some("{table["name"]}"),')
+    out += [
+        "        _ => None,",
+        "    }",
+        "}",
+        "",
+        "/// The column a model property is stored in, e.g. `Hop::alpha_pct` is kept in",
+        "/// `hop.alpha_pct`.",
+        "///",
+        "/// A property may appear on several tables -- every table has `NamedEntity::name` -- so the",
+        "/// table has to be named too.",
+        "pub fn column_for_property(table: &str, property: &str) -> Option<&'static str> {",
+        "    match (table, property) {",
+    ]
+    for table in schema["tables"]:
+        seen = set()
+        entries = []
+        if table["primary_key"]["property"]:
+            entries.append((table["primary_key"]["property"], table["primary_key"]["name"]))
+        entries += [(column["property"], column["name"]) for column in table["columns"] if column["property"]]
+        entries += [(key["property"], key["column"]) for key in table["foreign_keys"] if key["property"]]
+        for property_name, column in entries:
+            if property_name in seen:
+                continue
+            seen.add(property_name)
+            out.append(f'        ("{table["name"]}", "{property_name}") => Some("{column}"),')
+    out += ["        _ => None,", "    }", "}", ""]
     return "\n".join(out)
 
 

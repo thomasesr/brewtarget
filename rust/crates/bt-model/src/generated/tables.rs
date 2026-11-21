@@ -33,7 +33,11 @@ use crate::enums::*;
 /// A row of `boil`, which stores `Boil`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct BoilRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `locked` (Bool).
     pub locked: Option<bool>,
@@ -62,7 +66,11 @@ impl BoilRow {
 /// A row of `boil_step`, which stores `BoilStep`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct BoilStepRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `step_time_mins` (Double).
     pub step_time_mins: Option<f64>,
@@ -134,7 +142,11 @@ impl BoilStepRow {
 /// A row of `brew_log`, which stores `BrewLog`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct BrewLogRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `brew_date` (Date).
     pub brew_date: Option<NaiveDate>,
@@ -263,7 +275,11 @@ impl BrewLogRow {
 /// A row of `equipment`, which stores `Equipment`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct EquipmentRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `fv_batch_size_l` (Double).
     pub fv_batch_size_l: Option<f64>,
@@ -439,7 +455,11 @@ impl EquipmentRow {
 /// A row of `fermentable`, which stores `Fermentable`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `coarse_fine_diff` (Double).
     pub coarse_fine_diff: Option<f64>,
@@ -592,7 +612,11 @@ impl FermentableRow {
 /// A row of `fermentable_in_recipe`, which stores `RecipeAdditionFermentable`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableInRecipeRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -667,7 +691,11 @@ impl FermentableInRecipeRow {
 /// A row of `fermentable_stock_purchase`, which stores `StockPurchaseFermentable`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableStockPurchaseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `color_lovibond` (Double).
     pub color_lovibond: Option<f64>,
@@ -748,7 +776,11 @@ impl FermentableStockPurchaseRow {
 /// A row of `fermentable_stock_use`, which stores `StockUseFermentable`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableStockUseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -805,7 +837,11 @@ impl FermentableStockUseRow {
 /// A row of `fermentation`, which stores `Fermentation`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentationRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `locked` (Bool).
     pub locked: Option<bool>,
@@ -848,7 +884,11 @@ impl FermentationRow {
 /// A row of `fermentation_step`, which stores `FermentationStep`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentationStepRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `step_time_mins` (Double).
     pub step_time_mins: Option<f64>,
@@ -906,7 +946,11 @@ impl FermentationStepRow {
 /// A row of `folder_for_boil`, which stores `Folder<Boil>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForBoilRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -926,7 +970,11 @@ impl FolderForBoilRow {
 /// A row of `folder_for_equipment`, which stores `Folder<Equipment>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForEquipmentRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -946,7 +994,11 @@ impl FolderForEquipmentRow {
 /// A row of `folder_for_fermentable`, which stores `Folder<Fermentable>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForFermentableRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -966,7 +1018,11 @@ impl FolderForFermentableRow {
 /// A row of `folder_for_fermentation`, which stores `Folder<Fermentation>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForFermentationRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -986,7 +1042,11 @@ impl FolderForFermentationRow {
 /// A row of `folder_for_hop`, which stores `Folder<Hop>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForHopRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1006,7 +1066,11 @@ impl FolderForHopRow {
 /// A row of `folder_for_mash`, which stores `Folder<Mash>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForMashRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1026,7 +1090,11 @@ impl FolderForMashRow {
 /// A row of `folder_for_misc`, which stores `Folder<Misc>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForMiscRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1046,7 +1114,11 @@ impl FolderForMiscRow {
 /// A row of `folder_for_recipe`, which stores `Folder<Recipe>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForRecipeRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1066,7 +1138,11 @@ impl FolderForRecipeRow {
 /// A row of `folder_for_style`, which stores `Folder<Style>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForStyleRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1086,7 +1162,11 @@ impl FolderForStyleRow {
 /// A row of `folder_for_water`, which stores `Folder<Water>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForWaterRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1106,7 +1186,11 @@ impl FolderForWaterRow {
 /// A row of `folder_for_yeast`, which stores `Folder<Yeast>`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FolderForYeastRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1126,7 +1210,11 @@ impl FolderForYeastRow {
 /// A row of `hop`, which stores `Hop`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `alpha_pct` (Double).
     pub alpha_pct: Option<f64>,
@@ -1266,7 +1354,11 @@ impl HopRow {
 /// A row of `hop_in_recipe`, which stores `RecipeAdditionHop`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopInRecipeRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1341,7 +1433,11 @@ impl HopInRecipeRow {
 /// A row of `hop_stock_purchase`, which stores `StockPurchaseHop`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopStockPurchaseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `alpha_pct` (Double).
     pub alpha_pct: Option<f64>,
@@ -1428,7 +1524,11 @@ impl HopStockPurchaseRow {
 /// A row of `hop_stock_use`, which stores `StockUseHop`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopStockUseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1485,7 +1585,11 @@ impl HopStockUseRow {
 /// A row of `instruction`, which stores `Instruction`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct InstructionRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `step_number` (Int).
     pub step_number: Option<i64>,
@@ -1528,7 +1632,11 @@ impl InstructionRow {
 /// A row of `mash`, which stores `Mash`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MashRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `locked` (Bool).
     pub locked: Option<bool>,
@@ -1583,7 +1691,11 @@ impl MashRow {
 /// A row of `mash_step`, which stores `MashStep`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MashStepRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `end_temp_c` (Double).
     pub end_temp_c: Option<f64>,
@@ -1664,7 +1776,11 @@ impl MashStepRow {
 /// A row of `misc`, which stores `Misc`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `mtype` (Enum). Stored via `Misc::typeStringMapping`.
     pub mtype: Option<String>,
@@ -1736,7 +1852,11 @@ impl MiscRow {
 /// A row of `misc_in_recipe`, which stores `RecipeAdditionMisc`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscInRecipeRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1811,7 +1931,11 @@ impl MiscInRecipeRow {
 /// A row of `misc_stock_purchase`, which stores `StockPurchaseMisc`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscStockPurchaseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1889,7 +2013,11 @@ impl MiscStockPurchaseRow {
 /// A row of `misc_stock_use`, which stores `StockUseMisc`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscStockUseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -1946,7 +2074,11 @@ impl MiscStockUseRow {
 /// A row of `recipe`, which stores `Recipe`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct RecipeRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `age` (Double).
     pub age: Option<f64>,
@@ -2105,7 +2237,11 @@ impl RecipeRow {
 /// A row of `style`, which stores `Style`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct StyleRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `abv_max` (Double).
     pub abv_max: Option<f64>,
@@ -2219,7 +2355,11 @@ impl StyleRow {
 /// A row of `water`, which stores `Water`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct WaterRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `notes` (String).
     pub notes: Option<String>,
@@ -2292,7 +2432,11 @@ impl WaterRow {
 /// A row of `yeast`, which stores `Yeast`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `max_temperature` (Double).
     pub max_temperature: Option<f64>,
@@ -2415,7 +2559,11 @@ impl YeastRow {
 /// A row of `yeast_in_recipe`, which stores `RecipeAdditionYeast`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastInRecipeRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `attenuation_pct` (Double).
     pub attenuation_pct: Option<f64>,
@@ -2499,7 +2647,11 @@ impl YeastInRecipeRow {
 /// A row of `yeast_stock_purchase`, which stores `StockPurchaseYeast`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastStockPurchaseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -2577,7 +2729,11 @@ impl YeastStockPurchaseRow {
 /// A row of `yeast_stock_use`, which stores `StockUseYeast`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastStockUseRow {
-    /// `id`
+    /// `id`, which the database assigns.
+    ///
+    /// Defaults to zero so that a row read out of a file -- which has no database
+    /// identity until it is stored -- deserialises without one.
+    #[serde(default)]
     pub id: i64,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
@@ -2673,3 +2829,596 @@ pub const TABLES: [&str; 39] = [
     "yeast_stock_purchase",
     "yeast_stock_use",
 ];
+
+/// The table that stores a given C++ model class, e.g. `Hop` is kept in `hop`.
+pub fn table_for_cpp_type(cpp_type: &str) -> Option<&'static str> {
+    match cpp_type {
+        "Boil" => Some("boil"),
+        "BoilStep" => Some("boil_step"),
+        "BrewLog" => Some("brew_log"),
+        "Equipment" => Some("equipment"),
+        "Fermentable" => Some("fermentable"),
+        "RecipeAdditionFermentable" => Some("fermentable_in_recipe"),
+        "StockPurchaseFermentable" => Some("fermentable_stock_purchase"),
+        "StockUseFermentable" => Some("fermentable_stock_use"),
+        "Fermentation" => Some("fermentation"),
+        "FermentationStep" => Some("fermentation_step"),
+        "Folder<Boil>" => Some("folder_for_boil"),
+        "Folder<Equipment>" => Some("folder_for_equipment"),
+        "Folder<Fermentable>" => Some("folder_for_fermentable"),
+        "Folder<Fermentation>" => Some("folder_for_fermentation"),
+        "Folder<Hop>" => Some("folder_for_hop"),
+        "Folder<Mash>" => Some("folder_for_mash"),
+        "Folder<Misc>" => Some("folder_for_misc"),
+        "Folder<Recipe>" => Some("folder_for_recipe"),
+        "Folder<Style>" => Some("folder_for_style"),
+        "Folder<Water>" => Some("folder_for_water"),
+        "Folder<Yeast>" => Some("folder_for_yeast"),
+        "Hop" => Some("hop"),
+        "RecipeAdditionHop" => Some("hop_in_recipe"),
+        "StockPurchaseHop" => Some("hop_stock_purchase"),
+        "StockUseHop" => Some("hop_stock_use"),
+        "Instruction" => Some("instruction"),
+        "Mash" => Some("mash"),
+        "MashStep" => Some("mash_step"),
+        "Misc" => Some("misc"),
+        "RecipeAdditionMisc" => Some("misc_in_recipe"),
+        "StockPurchaseMisc" => Some("misc_stock_purchase"),
+        "StockUseMisc" => Some("misc_stock_use"),
+        "Recipe" => Some("recipe"),
+        "Style" => Some("style"),
+        "Water" => Some("water"),
+        "Yeast" => Some("yeast"),
+        "RecipeAdditionYeast" => Some("yeast_in_recipe"),
+        "StockPurchaseYeast" => Some("yeast_stock_purchase"),
+        "StockUseYeast" => Some("yeast_stock_use"),
+        _ => None,
+    }
+}
+
+/// The column a model property is stored in, e.g. `Hop::alpha_pct` is kept in
+/// `hop.alpha_pct`.
+///
+/// A property may appear on several tables -- every table has `NamedEntity::name` -- so the
+/// table has to be named too.
+pub fn column_for_property(table: &str, property: &str) -> Option<&'static str> {
+    match (table, property) {
+        ("boil", "NamedEntity::key") => Some("id"),
+        ("boil", "LockablePropertyBase::locked") => Some("locked"),
+        ("boil", "Boil::description") => Some("description"),
+        ("boil", "Boil::notes") => Some("notes"),
+        ("boil", "Boil::preBoilSize_l") => Some("pre_boil_size_l"),
+        ("boil", "NamedEntity::name") => Some("name"),
+        ("boil", "NamedEntity::deleted") => Some("deleted"),
+        ("boil", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("boil_step", "StepExtended::startGravity_sg") => Some("start_gravity_sg"),
+        ("boil_step", "NamedEntity::name") => Some("name"),
+        ("boil_step", "NamedEntity::deleted") => Some("deleted"),
+        ("brew_log", "NamedEntity::key") => Some("id"),
+        ("brew_log", "BrewLog::brewDate") => Some("brew_date"),
+        ("brew_log", "BrewLog::fermentDate") => Some("ferment_date"),
+        ("brew_log", "BrewLog::notes") => Some("notes"),
+        ("brew_log", "BrewLog::expectedPreBoilGravity_sg") => Some("expected_pre_boil_gravity_sg"),
+        ("brew_log", "BrewLog::measuredPreBoilGravity_sg") => Some("measured_pre_boil_gravity_sg"),
+        ("brew_log", "BrewLog::expectedPreBoilVolume_l") => Some("expected_pre_boil_volume_l"),
+        ("brew_log", "BrewLog::measuredPreBoilVolume_l") => Some("measured_pre_boil_volume_l"),
+        ("brew_log", "BrewLog::expectedStrikeTemp_c") => Some("expected_strike_temp_c"),
+        ("brew_log", "BrewLog::measuredStrikeTemp_c") => Some("measured_strike_temp_c"),
+        ("brew_log", "BrewLog::expectedMashFinalTemp_c") => Some("expected_mash_final_temp_c"),
+        ("brew_log", "BrewLog::measuredMashFinalTemp_c") => Some("measured_mash_final_temp_c"),
+        ("brew_log", "BrewLog::expectedOriginalGravity_sg") => Some("expected_original_gravity_sg"),
+        ("brew_log", "BrewLog::forecastOriginalGravity_sg") => Some("forecast_original_gravity_sg"),
+        ("brew_log", "BrewLog::measuredOriginalGravity_sg") => Some("measured_original_gravity_sg"),
+        ("brew_log", "BrewLog::measuredPostBoilVolume_l") => Some("measured_post_boil_volume_l"),
+        ("brew_log", "BrewLog::expectedVolumeIntoFv_l") => Some("expected_volume_into_fv_l"),
+        ("brew_log", "BrewLog::measuredVolumeIntoFv_l") => Some("measured_volume_into_fv_l"),
+        ("brew_log", "BrewLog::measuredPitchTemp_c") => Some("measured_pitch_temp_c"),
+        ("brew_log", "BrewLog::expectedFinalGravity_sg") => Some("expected_final_gravity_sg"),
+        ("brew_log", "BrewLog::measuredFinalGravity_sg") => Some("measured_final_gravity_sg"),
+        ("brew_log", "BrewLog::measuredFinalVolume_l") => Some("measured_final_volume"),
+        ("brew_log", "BrewLog::expectedAlcoholByVolume_pct") => Some("expected_alcohol_by_volume_pct"),
+        ("brew_log", "BrewLog::computedAlcoholByVolume_pct") => Some("computed_alcohol_by_volume_pct"),
+        ("brew_log", "BrewLog::expectedAttenuation_pct") => Some("expected_attenuation_pct"),
+        ("brew_log", "BrewLog::measuredWortClarity") => Some("measured_wort_clarity"),
+        ("brew_log", "BrewLog::computedAttenuation_pct") => Some("computed_attenuation_pct"),
+        ("brew_log", "BrewLog::expectedEfficiency_pct") => Some("expected_efficiency_pct"),
+        ("brew_log", "BrewLog::computedEfficiency_pct") => Some("computed_efficiency_pct"),
+        ("brew_log", "BrewLog::computedPreBoilEfficiency_pct") => Some("computed_pre_boil_efficiency_pct"),
+        ("brew_log", "BrewLog::expectedBoilOff_l") => Some("expected_boil_off_l"),
+        ("brew_log", "NamedEntity::name") => Some("name"),
+        ("brew_log", "NamedEntity::deleted") => Some("deleted"),
+        ("brew_log", "OwnedByRecipe::recipeId") => Some("recipe_id"),
+        ("equipment", "NamedEntity::key") => Some("id"),
+        ("equipment", "Equipment::fvBatchSize_l") => Some("fv_batch_size_l"),
+        ("equipment", "Equipment::boilingPoint_c") => Some("boiling_point"),
+        ("equipment", "Equipment::kettleBoilSize_l") => Some("kettle_boil_size_l"),
+        ("equipment", "Equipment::kettleEvaporationPerHour_l") => Some("kettle_evaporation_per_hour_l"),
+        ("equipment", "Equipment::evapRate_pctHr") => Some("evap_rate"),
+        ("equipment", "Equipment::grainAbsorption_LKg") => Some("grain_absorption_lkg"),
+        ("equipment", "Equipment::hopUtilization_pct") => Some("hop_utilization"),
+        ("equipment", "Equipment::lauterTunDeadspaceLoss_l") => Some("lauter_tun_deadspace_loss_l"),
+        ("equipment", "Equipment::kettleNotes") => Some("kettle_notes"),
+        ("equipment", "Equipment::topUpKettle_l") => Some("top_up_kettle"),
+        ("equipment", "Equipment::topUpWater_l") => Some("top_up_water"),
+        ("equipment", "Equipment::kettleTrubChillerLoss_l") => Some("kettle_trub_chiller_loss_l"),
+        ("equipment", "Equipment::mashTunSpecificHeat_calGC") => Some("mash_tun_specific_heat_calgc"),
+        ("equipment", "Equipment::mashTunVolume_l") => Some("mash_tun_volume_l"),
+        ("equipment", "Equipment::mashTunWeight_kg") => Some("mash_tun_weight_kg"),
+        ("equipment", "Equipment::kettleInternalDiameter_cm") => Some("kettleInternalDiameter_cm"),
+        ("equipment", "Equipment::kettleOpeningDiameter_cm") => Some("kettleOpeningDiameter_cm"),
+        ("equipment", "Equipment::hltType") => Some("hlt_type"),
+        ("equipment", "Equipment::mashTunType") => Some("mash_tun_type"),
+        ("equipment", "Equipment::lauterTunType") => Some("lauter_tun_type"),
+        ("equipment", "Equipment::kettleType") => Some("kettle_type"),
+        ("equipment", "Equipment::fvType") => Some("fv_type"),
+        ("equipment", "Equipment::agingVesselType") => Some("agingvessel_type"),
+        ("equipment", "Equipment::packagingVesselType") => Some("packaging_vessel_type"),
+        ("equipment", "Equipment::hltVolume_l") => Some("hlt_volume_l"),
+        ("equipment", "Equipment::kettleVolume_l") => Some("kettle_volume_l"),
+        ("equipment", "Equipment::lauterTunVolume_l") => Some("lauter_tun_volume_l"),
+        ("equipment", "Equipment::fvVolume_l") => Some("fv_volume_l"),
+        ("equipment", "Equipment::agingVesselVolume_l") => Some("aging_vessel_volume_l"),
+        ("equipment", "Equipment::packagingVesselVolume_l") => Some("packaging_vessel_volume_l"),
+        ("equipment", "Equipment::hltLoss_l") => Some("hlt_loss_l"),
+        ("equipment", "Equipment::mashTunLoss_l") => Some("mash_tun_loss_l"),
+        ("equipment", "Equipment::foundationVolume_l") => Some("foundation_volume_l"),
+        ("equipment", "Equipment::fvLoss_l") => Some("fv_loss_l"),
+        ("equipment", "Equipment::agingVesselLoss_l") => Some("aging_vessel_loss_l"),
+        ("equipment", "Equipment::packagingVesselLoss_l") => Some("packaging_vessel_loss_l"),
+        ("equipment", "Equipment::kettleOutflowPerMinute_l") => Some("kettle_outflow_per_minute_l"),
+        ("equipment", "Equipment::hltWeight_kg") => Some("hlt_weight_kg"),
+        ("equipment", "Equipment::lauterTunWeight_kg") => Some("lauter_tun_weight_kg"),
+        ("equipment", "Equipment::kettleWeight_kg") => Some("kettle_weight_kg"),
+        ("equipment", "Equipment::hltSpecificHeat_calGC") => Some("hlt_specific_heat_calgc"),
+        ("equipment", "Equipment::lauterTunSpecificHeat_calGC") => Some("lauter_tun_specific_heat_calgc"),
+        ("equipment", "Equipment::kettleSpecificHeat_calGC") => Some("kettle_specific_heat_calgc"),
+        ("equipment", "Equipment::hltNotes") => Some("hlt_notes"),
+        ("equipment", "Equipment::mashTunNotes") => Some("mash_tun_notes"),
+        ("equipment", "Equipment::lauterTunNotes") => Some("lauter_tun_notes"),
+        ("equipment", "Equipment::fvNotes") => Some("fv_notes"),
+        ("equipment", "Equipment::agingVesselNotes") => Some("aging_vessel_notes"),
+        ("equipment", "Equipment::packagingVesselNotes") => Some("packaging_vessel_notes"),
+        ("equipment", "NamedEntity::name") => Some("name"),
+        ("equipment", "NamedEntity::deleted") => Some("deleted"),
+        ("equipment", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("fermentable", "NamedEntity::key") => Some("id"),
+        ("fermentable", "Fermentable::coarseFineDiff_pct") => Some("coarse_fine_diff"),
+        ("fermentable", "Fermentable::color_lovibond") => Some("color_lovibond"),
+        ("fermentable", "Fermentable::diastaticPower_lintner") => Some("diastatic_power"),
+        ("fermentable", "Fermentable::type") => Some("ftype"),
+        ("fermentable", "Fermentable::ibuGalPerLb") => Some("ibu_gal_per_lb"),
+        ("fermentable", "Fermentable::maxInBatch_pct") => Some("max_in_batch"),
+        ("fermentable", "Fermentable::moisture_pct") => Some("moisture"),
+        ("fermentable", "Fermentable::notes") => Some("notes"),
+        ("fermentable", "Fermentable::origin") => Some("origin"),
+        ("fermentable", "Fermentable::supplier") => Some("supplier"),
+        ("fermentable", "Fermentable::protein_pct") => Some("protein"),
+        ("fermentable", "Fermentable::recommendMash") => Some("recommend_mash"),
+        ("fermentable", "Fermentable::grainGroup") => Some("grain_group"),
+        ("fermentable", "Fermentable::producer") => Some("producer"),
+        ("fermentable", "Fermentable::productId") => Some("product_id"),
+        ("fermentable", "Fermentable::fineGrindYield_pct") => Some("fine_grind_yield_pct"),
+        ("fermentable", "Fermentable::coarseGrindYield_pct") => Some("coarse_grind_yield_pct"),
+        ("fermentable", "Fermentable::potentialYield_sg") => Some("potential_yield_sg"),
+        ("fermentable", "Fermentable::alphaAmylase_dextUnits") => Some("alpha_amylase_dext_units"),
+        ("fermentable", "Fermentable::kolbachIndex_pct") => Some("kolbach_index_pct"),
+        ("fermentable", "Fermentable::hardnessPrpGlassy_pct") => Some("hardness_prp_glassy_pct"),
+        ("fermentable", "Fermentable::hardnessPrpHalf_pct") => Some("hardness_prp_half_pct"),
+        ("fermentable", "Fermentable::hardnessPrpMealy_pct") => Some("hardness_prp_mealy_pct"),
+        ("fermentable", "Fermentable::kernelSizePrpPlump_pct") => Some("kernel_size_prp_plump_pct"),
+        ("fermentable", "Fermentable::kernelSizePrpThin_pct") => Some("kernel_size_prp_thin_pct"),
+        ("fermentable", "Fermentable::friability_pct") => Some("friability_pct"),
+        ("fermentable", "Fermentable::di_ph") => Some("di_ph"),
+        ("fermentable", "Fermentable::viscosity_cP") => Some("viscosity_cp"),
+        ("fermentable", "Fermentable::dmsP_ppm") => Some("dmsp_ppm"),
+        ("fermentable", "Fermentable::fan_ppm") => Some("fan_ppm"),
+        ("fermentable", "Fermentable::fermentability_pct") => Some("fermentability_pct"),
+        ("fermentable", "Fermentable::betaGlucan_ppm") => Some("beta_glucan_ppm"),
+        ("fermentable", "Fermentable::lacticAcidByWeight_pct") => Some("lactic_acid_by_weight_pct"),
+        ("fermentable", "Fermentable::fermentableFraction_pct") => Some("fermentable_fraction_pct"),
+        ("fermentable", "NamedEntity::name") => Some("name"),
+        ("fermentable", "NamedEntity::deleted") => Some("deleted"),
+        ("fermentable", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("fermentable_in_recipe", "NamedEntity::key") => Some("id"),
+        ("fermentable_in_recipe", "NamedEntity::name") => Some("name"),
+        ("fermentable_in_recipe", "NamedEntity::deleted") => Some("deleted"),
+        ("fermentable_in_recipe", "IngredientAmount::quantity") => Some("quantity"),
+        ("fermentable_in_recipe", "IngredientAmount::unit") => Some("unit"),
+        ("fermentable_in_recipe", "RecipeAddition::stage") => Some("stage"),
+        ("fermentable_in_recipe", "RecipeAddition::step") => Some("step"),
+        ("fermentable_in_recipe", "RecipeAddition::addAtTime_mins") => Some("add_at_time_mins"),
+        ("fermentable_in_recipe", "RecipeAddition::addAtGravity_sg") => Some("add_at_gravity_sg"),
+        ("fermentable_in_recipe", "RecipeAddition::addAtAcidity_pH") => Some("add_at_acidity_ph"),
+        ("fermentable_in_recipe", "RecipeAddition::duration_mins") => Some("duration_mins"),
+        ("fermentable_in_recipe", "OwnedByRecipe::recipeId") => Some("recipe_id"),
+        ("fermentable_in_recipe", "IngredientAmount::ingredientId") => Some("fermentable_id"),
+        ("fermentable_stock_purchase", "NamedEntity::key") => Some("id"),
+        ("fermentable_stock_purchase", "StockPurchaseFermentable::color_lovibond") => Some("color_lovibond"),
+        ("fermentable_stock_purchase", "NamedEntity::name") => Some("name"),
+        ("fermentable_stock_purchase", "NamedEntity::deleted") => Some("deleted"),
+        ("fermentable_stock_purchase", "IngredientAmount::quantity") => Some("quantity"),
+        ("fermentable_stock_purchase", "IngredientAmount::unit") => Some("unit"),
+        ("fermentable_stock_purchase", "StockPurchase::quantityOrdered") => Some("quantity_ordered"),
+        ("fermentable_stock_purchase", "StockPurchase::dateReceived") => Some("date_received"),
+        ("fermentable_stock_purchase", "StockPurchase::dateOrdered") => Some("date_ordered"),
+        ("fermentable_stock_purchase", "StockPurchase::dateBestBefore") => Some("date_best_before"),
+        ("fermentable_stock_purchase", "StockPurchase::supplier") => Some("supplier"),
+        ("fermentable_stock_purchase", "StockPurchase::note") => Some("note"),
+        ("fermentable_stock_purchase", "StockPurchase::purchasePrice") => Some("purchase_price_currency"),
+        ("fermentable_stock_purchase", "StockPurchase::purchaseTax") => Some("purchase_tax_currency"),
+        ("fermentable_stock_purchase", "StockPurchase::shippingCost") => Some("shipping_cost_currency"),
+        ("fermentable_stock_purchase", "IngredientAmount::ingredientId") => Some("fermentable_id"),
+        ("fermentable_stock_use", "NamedEntity::key") => Some("id"),
+        ("fermentable_stock_use", "NamedEntity::name") => Some("name"),
+        ("fermentable_stock_use", "NamedEntity::deleted") => Some("deleted"),
+        ("fermentable_stock_use", "EnumeratedBase::sequenceNumber") => Some("sequence_number"),
+        ("fermentable_stock_use", "StockUse::date") => Some("date"),
+        ("fermentable_stock_use", "StockUse::reason") => Some("reason"),
+        ("fermentable_stock_use", "StockUse::comment") => Some("comment"),
+        ("fermentable_stock_use", "StockUse::quantityUsed") => Some("quantity_used"),
+        ("fermentable_stock_use", "EnumeratedBase::ownerId") => Some("fermentable_purchase_id"),
+        ("fermentable_stock_use", "StockUse::brewLogId") => Some("brew_log_id"),
+        ("fermentation", "NamedEntity::key") => Some("id"),
+        ("fermentation", "LockablePropertyBase::locked") => Some("locked"),
+        ("fermentation", "Fermentation::description") => Some("description"),
+        ("fermentation", "Fermentation::notes") => Some("notes"),
+        ("fermentation", "Fermentation::krausenHandling") => Some("krausen_handling"),
+        ("fermentation", "NamedEntity::name") => Some("name"),
+        ("fermentation", "NamedEntity::deleted") => Some("deleted"),
+        ("fermentation", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("fermentation_step", "FermentationStep::freeRise") => Some("free_rise"),
+        ("fermentation_step", "FermentationStep::vessel") => Some("vessel"),
+        ("fermentation_step", "NamedEntity::name") => Some("name"),
+        ("fermentation_step", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_boil", "NamedEntity::key") => Some("id"),
+        ("folder_for_boil", "NamedEntity::name") => Some("name"),
+        ("folder_for_boil", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_boil", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_equipment", "NamedEntity::key") => Some("id"),
+        ("folder_for_equipment", "NamedEntity::name") => Some("name"),
+        ("folder_for_equipment", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_equipment", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_fermentable", "NamedEntity::key") => Some("id"),
+        ("folder_for_fermentable", "NamedEntity::name") => Some("name"),
+        ("folder_for_fermentable", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_fermentable", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_fermentation", "NamedEntity::key") => Some("id"),
+        ("folder_for_fermentation", "NamedEntity::name") => Some("name"),
+        ("folder_for_fermentation", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_fermentation", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_hop", "NamedEntity::key") => Some("id"),
+        ("folder_for_hop", "NamedEntity::name") => Some("name"),
+        ("folder_for_hop", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_hop", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_mash", "NamedEntity::key") => Some("id"),
+        ("folder_for_mash", "NamedEntity::name") => Some("name"),
+        ("folder_for_mash", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_mash", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_misc", "NamedEntity::key") => Some("id"),
+        ("folder_for_misc", "NamedEntity::name") => Some("name"),
+        ("folder_for_misc", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_misc", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_recipe", "NamedEntity::key") => Some("id"),
+        ("folder_for_recipe", "NamedEntity::name") => Some("name"),
+        ("folder_for_recipe", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_recipe", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_style", "NamedEntity::key") => Some("id"),
+        ("folder_for_style", "NamedEntity::name") => Some("name"),
+        ("folder_for_style", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_style", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_water", "NamedEntity::key") => Some("id"),
+        ("folder_for_water", "NamedEntity::name") => Some("name"),
+        ("folder_for_water", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_water", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("folder_for_yeast", "NamedEntity::key") => Some("id"),
+        ("folder_for_yeast", "NamedEntity::name") => Some("name"),
+        ("folder_for_yeast", "NamedEntity::deleted") => Some("deleted"),
+        ("folder_for_yeast", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("hop", "NamedEntity::key") => Some("id"),
+        ("hop", "Hop::alpha_pct") => Some("alpha_pct"),
+        ("hop", "Hop::alphaMin_pct") => Some("alpha_min_pct"),
+        ("hop", "Hop::alphaMax_pct") => Some("alpha_max_pct"),
+        ("hop", "Hop::beta_pct") => Some("beta_pct"),
+        ("hop", "Hop::betaMin_pct") => Some("beta_min_pct"),
+        ("hop", "Hop::betaMax_pct") => Some("beta_max_pct"),
+        ("hop", "Hop::caryophyllene_pct") => Some("caryophyllene_pct"),
+        ("hop", "Hop::cohumulone_pct") => Some("cohumulone_pct"),
+        ("hop", "Hop::form") => Some("form"),
+        ("hop", "Hop::sixMonthAlphaLoss_pct") => Some("sixMonthAlphaLoss_pct"),
+        ("hop", "Hop::humulene_pct") => Some("humulene_pct"),
+        ("hop", "Hop::myrcene_pct") => Some("myrcene_pct"),
+        ("hop", "Hop::notes") => Some("notes"),
+        ("hop", "Hop::origin") => Some("origin"),
+        ("hop", "Hop::substitutes") => Some("substitutes"),
+        ("hop", "Hop::type") => Some("htype"),
+        ("hop", "Hop::producer") => Some("producer"),
+        ("hop", "Hop::productId") => Some("product_id"),
+        ("hop", "Hop::year") => Some("year"),
+        ("hop", "Hop::totalOil_mlPer100g") => Some("total_oil_ml_per_100g"),
+        ("hop", "Hop::farnesene_pct") => Some("farnesene_pct"),
+        ("hop", "Hop::geraniol_pct") => Some("geraniol_pct"),
+        ("hop", "Hop::bPinene_pct") => Some("b_pinene_pct"),
+        ("hop", "Hop::linalool_pct") => Some("linalool_pct"),
+        ("hop", "Hop::limonene_pct") => Some("limonene_pct"),
+        ("hop", "Hop::nerol_pct") => Some("nerol_pct"),
+        ("hop", "Hop::pinene_pct") => Some("pinene_pct"),
+        ("hop", "Hop::polyphenols_pct") => Some("polyphenols_pct"),
+        ("hop", "Hop::xanthohumol_pct") => Some("xanthohumol_pct"),
+        ("hop", "NamedEntity::name") => Some("name"),
+        ("hop", "NamedEntity::deleted") => Some("deleted"),
+        ("hop", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("hop_in_recipe", "NamedEntity::key") => Some("id"),
+        ("hop_in_recipe", "NamedEntity::name") => Some("name"),
+        ("hop_in_recipe", "NamedEntity::deleted") => Some("deleted"),
+        ("hop_in_recipe", "IngredientAmount::quantity") => Some("quantity"),
+        ("hop_in_recipe", "IngredientAmount::unit") => Some("unit"),
+        ("hop_in_recipe", "RecipeAddition::stage") => Some("stage"),
+        ("hop_in_recipe", "RecipeAddition::step") => Some("step"),
+        ("hop_in_recipe", "RecipeAddition::addAtTime_mins") => Some("add_at_time_mins"),
+        ("hop_in_recipe", "RecipeAddition::addAtGravity_sg") => Some("add_at_gravity_sg"),
+        ("hop_in_recipe", "RecipeAddition::addAtAcidity_pH") => Some("add_at_acidity_ph"),
+        ("hop_in_recipe", "RecipeAddition::duration_mins") => Some("duration_mins"),
+        ("hop_in_recipe", "OwnedByRecipe::recipeId") => Some("recipe_id"),
+        ("hop_in_recipe", "IngredientAmount::ingredientId") => Some("hop_id"),
+        ("hop_stock_purchase", "NamedEntity::key") => Some("id"),
+        ("hop_stock_purchase", "StockPurchaseHop::alpha_pct") => Some("alpha_pct"),
+        ("hop_stock_purchase", "StockPurchaseHop::form") => Some("form"),
+        ("hop_stock_purchase", "StockPurchaseHop::year") => Some("year"),
+        ("hop_stock_purchase", "NamedEntity::name") => Some("name"),
+        ("hop_stock_purchase", "NamedEntity::deleted") => Some("deleted"),
+        ("hop_stock_purchase", "IngredientAmount::quantity") => Some("quantity"),
+        ("hop_stock_purchase", "IngredientAmount::unit") => Some("unit"),
+        ("hop_stock_purchase", "StockPurchase::quantityOrdered") => Some("quantity_ordered"),
+        ("hop_stock_purchase", "StockPurchase::dateReceived") => Some("date_received"),
+        ("hop_stock_purchase", "StockPurchase::dateOrdered") => Some("date_ordered"),
+        ("hop_stock_purchase", "StockPurchase::dateBestBefore") => Some("date_best_before"),
+        ("hop_stock_purchase", "StockPurchase::supplier") => Some("supplier"),
+        ("hop_stock_purchase", "StockPurchase::note") => Some("note"),
+        ("hop_stock_purchase", "StockPurchase::purchasePrice") => Some("purchase_price_currency"),
+        ("hop_stock_purchase", "StockPurchase::purchaseTax") => Some("purchase_tax_currency"),
+        ("hop_stock_purchase", "StockPurchase::shippingCost") => Some("shipping_cost_currency"),
+        ("hop_stock_purchase", "IngredientAmount::ingredientId") => Some("hop_id"),
+        ("hop_stock_use", "NamedEntity::key") => Some("id"),
+        ("hop_stock_use", "NamedEntity::name") => Some("name"),
+        ("hop_stock_use", "NamedEntity::deleted") => Some("deleted"),
+        ("hop_stock_use", "EnumeratedBase::sequenceNumber") => Some("sequence_number"),
+        ("hop_stock_use", "StockUse::date") => Some("date"),
+        ("hop_stock_use", "StockUse::reason") => Some("reason"),
+        ("hop_stock_use", "StockUse::comment") => Some("comment"),
+        ("hop_stock_use", "StockUse::quantityUsed") => Some("quantity_used"),
+        ("hop_stock_use", "EnumeratedBase::ownerId") => Some("hop_purchase_id"),
+        ("hop_stock_use", "StockUse::brewLogId") => Some("brew_log_id"),
+        ("instruction", "NamedEntity::key") => Some("id"),
+        ("instruction", "EnumeratedBase::sequenceNumber") => Some("step_number"),
+        ("instruction", "Instruction::directions") => Some("directions"),
+        ("instruction", "Instruction::hasTimer") => Some("has_timer"),
+        ("instruction", "Instruction::timerValue") => Some("timer_value"),
+        ("instruction", "Instruction::completed") => Some("completed"),
+        ("instruction", "Instruction::interval_mins") => Some("interval_mins"),
+        ("instruction", "NamedEntity::name") => Some("name"),
+        ("instruction", "NamedEntity::deleted") => Some("deleted"),
+        ("instruction", "EnumeratedBase::ownerId") => Some("recipe_id"),
+        ("mash", "NamedEntity::key") => Some("id"),
+        ("mash", "LockablePropertyBase::locked") => Some("locked"),
+        ("mash", "Mash::keptInSync") => Some("auto_adjust"),
+        ("mash", "Mash::equipAdjust") => Some("equip_adjust"),
+        ("mash", "Mash::grainTemp_c") => Some("grain_temp"),
+        ("mash", "Mash::notes") => Some("notes"),
+        ("mash", "Mash::ph") => Some("ph"),
+        ("mash", "Mash::spargeTemp_c") => Some("sparge_temp"),
+        ("mash", "Mash::tunSpecificHeat_calGC") => Some("tun_specific_heat_calgc"),
+        ("mash", "Mash::initialTunTemp_c") => Some("initial_tun_temp_c"),
+        ("mash", "Mash::tunWeight_kg") => Some("tun_weight_kg"),
+        ("mash", "NamedEntity::name") => Some("name"),
+        ("mash", "NamedEntity::deleted") => Some("deleted"),
+        ("mash", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("mash_step", "EnumeratedBase::sequenceNumber") => Some("step_number"),
+        ("mash_step", "NamedEntity::name") => Some("name"),
+        ("mash_step", "NamedEntity::deleted") => Some("deleted"),
+        ("mash_step", "EnumeratedBase::ownerId") => Some("mash_id"),
+        ("misc", "NamedEntity::key") => Some("id"),
+        ("misc", "Misc::type") => Some("mtype"),
+        ("misc", "Misc::useFor") => Some("use_for"),
+        ("misc", "Misc::notes") => Some("notes"),
+        ("misc", "Misc::producer") => Some("producer"),
+        ("misc", "Misc::productId") => Some("product_id"),
+        ("misc", "Misc::waterAgentType") => Some("water_agent_type"),
+        ("misc", "Misc::waterAgentPercentAcid") => Some("water_agent_percent_acid"),
+        ("misc", "NamedEntity::name") => Some("name"),
+        ("misc", "NamedEntity::deleted") => Some("deleted"),
+        ("misc", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("misc_in_recipe", "NamedEntity::key") => Some("id"),
+        ("misc_in_recipe", "NamedEntity::name") => Some("name"),
+        ("misc_in_recipe", "NamedEntity::deleted") => Some("deleted"),
+        ("misc_in_recipe", "IngredientAmount::quantity") => Some("quantity"),
+        ("misc_in_recipe", "IngredientAmount::unit") => Some("unit"),
+        ("misc_in_recipe", "RecipeAddition::stage") => Some("stage"),
+        ("misc_in_recipe", "RecipeAddition::step") => Some("step"),
+        ("misc_in_recipe", "RecipeAddition::addAtTime_mins") => Some("add_at_time_mins"),
+        ("misc_in_recipe", "RecipeAddition::addAtGravity_sg") => Some("add_at_gravity_sg"),
+        ("misc_in_recipe", "RecipeAddition::addAtAcidity_pH") => Some("add_at_acidity_ph"),
+        ("misc_in_recipe", "RecipeAddition::duration_mins") => Some("duration_mins"),
+        ("misc_in_recipe", "OwnedByRecipe::recipeId") => Some("recipe_id"),
+        ("misc_in_recipe", "IngredientAmount::ingredientId") => Some("misc_id"),
+        ("misc_stock_purchase", "NamedEntity::key") => Some("id"),
+        ("misc_stock_purchase", "NamedEntity::name") => Some("name"),
+        ("misc_stock_purchase", "NamedEntity::deleted") => Some("deleted"),
+        ("misc_stock_purchase", "IngredientAmount::quantity") => Some("quantity"),
+        ("misc_stock_purchase", "IngredientAmount::unit") => Some("unit"),
+        ("misc_stock_purchase", "StockPurchase::quantityOrdered") => Some("quantity_ordered"),
+        ("misc_stock_purchase", "StockPurchase::dateReceived") => Some("date_received"),
+        ("misc_stock_purchase", "StockPurchase::dateOrdered") => Some("date_ordered"),
+        ("misc_stock_purchase", "StockPurchase::dateBestBefore") => Some("date_best_before"),
+        ("misc_stock_purchase", "StockPurchase::supplier") => Some("supplier"),
+        ("misc_stock_purchase", "StockPurchase::note") => Some("note"),
+        ("misc_stock_purchase", "StockPurchase::purchasePrice") => Some("purchase_price_currency"),
+        ("misc_stock_purchase", "StockPurchase::purchaseTax") => Some("purchase_tax_currency"),
+        ("misc_stock_purchase", "StockPurchase::shippingCost") => Some("shipping_cost_currency"),
+        ("misc_stock_purchase", "IngredientAmount::ingredientId") => Some("misc_id"),
+        ("misc_stock_use", "NamedEntity::key") => Some("id"),
+        ("misc_stock_use", "NamedEntity::name") => Some("name"),
+        ("misc_stock_use", "NamedEntity::deleted") => Some("deleted"),
+        ("misc_stock_use", "EnumeratedBase::sequenceNumber") => Some("sequence_number"),
+        ("misc_stock_use", "StockUse::date") => Some("date"),
+        ("misc_stock_use", "StockUse::reason") => Some("reason"),
+        ("misc_stock_use", "StockUse::comment") => Some("comment"),
+        ("misc_stock_use", "StockUse::quantityUsed") => Some("quantity_used"),
+        ("misc_stock_use", "EnumeratedBase::ownerId") => Some("misc_purchase_id"),
+        ("misc_stock_use", "StockUse::brewLogId") => Some("brew_log_id"),
+        ("recipe", "NamedEntity::key") => Some("id"),
+        ("recipe", "Recipe::age_days") => Some("age"),
+        ("recipe", "Recipe::ageTemp_c") => Some("age_temp"),
+        ("recipe", "Recipe::assistantBrewer") => Some("assistant_brewer"),
+        ("recipe", "Recipe::batchSize_l") => Some("batch_size"),
+        ("recipe", "Recipe::brewer") => Some("brewer"),
+        ("recipe", "Recipe::carbonation_vols") => Some("carb_volume"),
+        ("recipe", "Recipe::carbonationTemp_c") => Some("carbonationtemp_c"),
+        ("recipe", "Recipe::date") => Some("date"),
+        ("recipe", "Recipe::efficiency_pct") => Some("efficiency"),
+        ("recipe", "Recipe::fg") => Some("fg"),
+        ("recipe", "Recipe::forcedCarbonation") => Some("forced_carb"),
+        ("recipe", "Recipe::kegPrimingFactor") => Some("keg_priming_factor"),
+        ("recipe", "Recipe::notes") => Some("notes"),
+        ("recipe", "Recipe::og") => Some("og"),
+        ("recipe", "Recipe::primingSugarEquiv") => Some("priming_sugar_equiv"),
+        ("recipe", "Recipe::primingSugarName") => Some("priming_sugar_name"),
+        ("recipe", "Recipe::tasteNotes") => Some("taste_notes"),
+        ("recipe", "Recipe::tasteRating") => Some("taste_rating"),
+        ("recipe", "Recipe::type") => Some("type"),
+        ("recipe", "Recipe::locked") => Some("locked"),
+        ("recipe", "Recipe::beerAcidity_pH") => Some("beer_acidity_ph"),
+        ("recipe", "Recipe::apparentAttenuation_pct") => Some("apparent_attenuation_pct"),
+        ("recipe", "Recipe::roWaterMash_pct") => Some("ro_water_mash_pct"),
+        ("recipe", "Recipe::roWaterSparge_pct") => Some("ro_water_sparge_pct"),
+        ("recipe", "Recipe::targetMashAcidity_pH") => Some("target_mash_ph"),
+        ("recipe", "Recipe::waterKeptInSync") => Some("water_kept_in_sync"),
+        ("recipe", "Recipe::fgCalcUsesMash") => Some("fg_calc_uses_mash"),
+        ("recipe", "Recipe::wortClarity") => Some("wort_clarity"),
+        ("recipe", "NamedEntity::name") => Some("name"),
+        ("recipe", "NamedEntity::deleted") => Some("deleted"),
+        ("recipe", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("recipe", "Recipe::equipmentId") => Some("equipment_id"),
+        ("recipe", "Recipe::mashId") => Some("mash_id"),
+        ("recipe", "Recipe::styleId") => Some("style_id"),
+        ("recipe", "Recipe::ancestorId") => Some("ancestor_id"),
+        ("recipe", "Recipe::boilId") => Some("boil_id"),
+        ("recipe", "Recipe::fermentationId") => Some("fermentation_id"),
+        ("recipe", "Recipe::waterBaseId") => Some("water_base"),
+        ("recipe", "Recipe::waterTargetId") => Some("water_target"),
+        ("style", "NamedEntity::key") => Some("id"),
+        ("style", "Style::abvMax_pct") => Some("abv_max"),
+        ("style", "Style::abvMin_pct") => Some("abv_min"),
+        ("style", "Style::carbMax_vol") => Some("carb_max"),
+        ("style", "Style::carbMin_vol") => Some("carb_min"),
+        ("style", "Style::category") => Some("category"),
+        ("style", "Style::categoryNumber") => Some("category_number"),
+        ("style", "Style::colorMax_srm") => Some("color_max"),
+        ("style", "Style::colorMin_srm") => Some("color_min"),
+        ("style", "Style::examples") => Some("examples"),
+        ("style", "Style::fgMax") => Some("fg_max"),
+        ("style", "Style::fgMin") => Some("fg_min"),
+        ("style", "Style::ibuMax") => Some("ibu_max"),
+        ("style", "Style::ibuMin") => Some("ibu_min"),
+        ("style", "Style::ingredients") => Some("ingredients"),
+        ("style", "Style::notes") => Some("notes"),
+        ("style", "Style::ogMax") => Some("og_max"),
+        ("style", "Style::ogMin") => Some("og_min"),
+        ("style", "Style::styleGuide") => Some("style_guide"),
+        ("style", "Style::styleLetter") => Some("style_letter"),
+        ("style", "Style::type") => Some("stype"),
+        ("style", "Style::aroma") => Some("aroma"),
+        ("style", "Style::appearance") => Some("appearance"),
+        ("style", "Style::flavor") => Some("flavor"),
+        ("style", "Style::mouthfeel") => Some("mouthfeel"),
+        ("style", "Style::overallImpression") => Some("overall_impression"),
+        ("style", "NamedEntity::name") => Some("name"),
+        ("style", "NamedEntity::deleted") => Some("deleted"),
+        ("style", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("water", "NamedEntity::key") => Some("id"),
+        ("water", "Water::notes") => Some("notes"),
+        ("water", "Water::calcium_ppm") => Some("calcium"),
+        ("water", "Water::bicarbonate_ppm") => Some("bicarbonate"),
+        ("water", "Water::sulfate_ppm") => Some("sulfate"),
+        ("water", "Water::sodium_ppm") => Some("sodium"),
+        ("water", "Water::chloride_ppm") => Some("chloride"),
+        ("water", "Water::magnesium_ppm") => Some("magnesium"),
+        ("water", "Water::ph") => Some("ph"),
+        ("water", "Water::alkalinity_ppm") => Some("alkalinity"),
+        ("water", "Water::alkalinityAsHCO3") => Some("as_hco3"),
+        ("water", "Water::carbonate_ppm") => Some("carbonate_ppm"),
+        ("water", "Water::potassium_ppm") => Some("potassium_ppm"),
+        ("water", "Water::iron_ppm") => Some("iron_ppm"),
+        ("water", "Water::nitrate_ppm") => Some("nitrate_ppm"),
+        ("water", "Water::nitrite_ppm") => Some("nitrite_ppm"),
+        ("water", "Water::fluoride_ppm") => Some("fluoride_ppm"),
+        ("water", "NamedEntity::name") => Some("name"),
+        ("water", "NamedEntity::deleted") => Some("deleted"),
+        ("water", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("yeast", "NamedEntity::key") => Some("id"),
+        ("yeast", "Yeast::maxTemperature_c") => Some("max_temperature"),
+        ("yeast", "Yeast::minTemperature_c") => Some("min_temperature"),
+        ("yeast", "Yeast::flocculation") => Some("flocculation"),
+        ("yeast", "Yeast::form") => Some("form"),
+        ("yeast", "Yeast::type") => Some("ytype"),
+        ("yeast", "Yeast::maxReuse") => Some("max_reuse"),
+        ("yeast", "Yeast::bestFor") => Some("best_for"),
+        ("yeast", "Yeast::laboratory") => Some("laboratory"),
+        ("yeast", "Yeast::notes") => Some("notes"),
+        ("yeast", "Yeast::productId") => Some("product_id"),
+        ("yeast", "Yeast::alcoholTolerance_pct") => Some("alcohol_tolerance_pct"),
+        ("yeast", "Yeast::attenuationMin_pct") => Some("attenuation_min_pct"),
+        ("yeast", "Yeast::attenuationMax_pct") => Some("attenuation_max_pct"),
+        ("yeast", "Yeast::phenolicOffFlavorPositive") => Some("phenolic_off_flavor_positive"),
+        ("yeast", "Yeast::glucoamylasePositive") => Some("glucoamylase_positive"),
+        ("yeast", "Yeast::killerProducingK1Toxin") => Some("killer_producing_k1_toxin"),
+        ("yeast", "Yeast::killerProducingK2Toxin") => Some("killer_producing_k2_toxin"),
+        ("yeast", "Yeast::killerProducingK28Toxin") => Some("killer_producing_k28_toxin"),
+        ("yeast", "Yeast::killerProducingKlusToxin") => Some("killer_producing_klus_toxin"),
+        ("yeast", "Yeast::killerNeutral") => Some("killer_neutral"),
+        ("yeast", "NamedEntity::name") => Some("name"),
+        ("yeast", "NamedEntity::deleted") => Some("deleted"),
+        ("yeast", "FolderPropertyBase::containedInFolderId") => Some("contained_in_folder_id"),
+        ("yeast_in_recipe", "NamedEntity::key") => Some("id"),
+        ("yeast_in_recipe", "RecipeAdditionYeast::attenuation_pct") => Some("attenuation_pct"),
+        ("yeast_in_recipe", "RecipeAdditionYeast::timesCultured") => Some("times_cultured"),
+        ("yeast_in_recipe", "RecipeAdditionYeast::cellCountBillions") => Some("cell_count_billions"),
+        ("yeast_in_recipe", "NamedEntity::name") => Some("name"),
+        ("yeast_in_recipe", "NamedEntity::deleted") => Some("deleted"),
+        ("yeast_in_recipe", "IngredientAmount::quantity") => Some("quantity"),
+        ("yeast_in_recipe", "IngredientAmount::unit") => Some("unit"),
+        ("yeast_in_recipe", "RecipeAddition::stage") => Some("stage"),
+        ("yeast_in_recipe", "RecipeAddition::step") => Some("step"),
+        ("yeast_in_recipe", "RecipeAddition::addAtTime_mins") => Some("add_at_time_mins"),
+        ("yeast_in_recipe", "RecipeAddition::addAtGravity_sg") => Some("add_at_gravity_sg"),
+        ("yeast_in_recipe", "RecipeAddition::addAtAcidity_pH") => Some("add_at_acidity_ph"),
+        ("yeast_in_recipe", "RecipeAddition::duration_mins") => Some("duration_mins"),
+        ("yeast_in_recipe", "OwnedByRecipe::recipeId") => Some("recipe_id"),
+        ("yeast_in_recipe", "IngredientAmount::ingredientId") => Some("yeast_id"),
+        ("yeast_stock_purchase", "NamedEntity::key") => Some("id"),
+        ("yeast_stock_purchase", "NamedEntity::name") => Some("name"),
+        ("yeast_stock_purchase", "NamedEntity::deleted") => Some("deleted"),
+        ("yeast_stock_purchase", "IngredientAmount::quantity") => Some("quantity"),
+        ("yeast_stock_purchase", "IngredientAmount::unit") => Some("unit"),
+        ("yeast_stock_purchase", "StockPurchase::quantityOrdered") => Some("quantity_ordered"),
+        ("yeast_stock_purchase", "StockPurchase::dateReceived") => Some("date_received"),
+        ("yeast_stock_purchase", "StockPurchase::dateOrdered") => Some("date_ordered"),
+        ("yeast_stock_purchase", "StockPurchase::dateBestBefore") => Some("date_best_before"),
+        ("yeast_stock_purchase", "StockPurchase::supplier") => Some("supplier"),
+        ("yeast_stock_purchase", "StockPurchase::note") => Some("note"),
+        ("yeast_stock_purchase", "StockPurchase::purchasePrice") => Some("purchase_price_currency"),
+        ("yeast_stock_purchase", "StockPurchase::purchaseTax") => Some("purchase_tax_currency"),
+        ("yeast_stock_purchase", "StockPurchase::shippingCost") => Some("shipping_cost_currency"),
+        ("yeast_stock_purchase", "IngredientAmount::ingredientId") => Some("yeast_id"),
+        ("yeast_stock_use", "NamedEntity::key") => Some("id"),
+        ("yeast_stock_use", "NamedEntity::name") => Some("name"),
+        ("yeast_stock_use", "NamedEntity::deleted") => Some("deleted"),
+        ("yeast_stock_use", "EnumeratedBase::sequenceNumber") => Some("sequence_number"),
+        ("yeast_stock_use", "StockUse::date") => Some("date"),
+        ("yeast_stock_use", "StockUse::reason") => Some("reason"),
+        ("yeast_stock_use", "StockUse::comment") => Some("comment"),
+        ("yeast_stock_use", "StockUse::quantityUsed") => Some("quantity_used"),
+        ("yeast_stock_use", "EnumeratedBase::ownerId") => Some("yeast_purchase_id"),
+        ("yeast_stock_use", "StockUse::brewLogId") => Some("brew_log_id"),
+        _ => None,
+    }
+}
