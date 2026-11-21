@@ -163,3 +163,145 @@ fn tinseth_takes_the_generic_hop_form_adjustment() {
     plug.hop_form = HopForm::Plug;
     assert!(close(ibus(&plug, Formula::Tinseth), whole * 1.02, 0.0001));
 }
+
+// ── What happens after flameout ───────────────────────────────────────────────────────────────
+//
+// Mirrors `RecipeCalcTests::testPostBoilIbus`, which checks the mIBU implementation against
+// Hosom's own worked examples.  Same hop addition as above, into 1.060 wort in a 38 cm kettle.
+
+fn post_boil_parameters(time_in_boil_minutes: f64) -> Parameters {
+    Parameters {
+        alpha_acid_rating: 0.10,
+        hops_grams: 56.7,
+        post_boil_volume_liters: 19.87,
+        wort_gravity_sg: 1.060,
+        time_in_boil_minutes,
+        kettle_internal_diameter_cm: Some(38.0),
+        kettle_opening_diameter_cm: Some(38.0),
+        ..Default::default()
+    }
+}
+
+#[test]
+fn tinseth_matches_hosoms_worked_example_and_ignores_the_cooling() {
+    let mut parameters = post_boil_parameters(6.0);
+    let tinseth_6 = ibus(&parameters, Formula::Tinseth);
+    assert!(close(tinseth_6 / MG_PER_LITER, 0.0493, 0.0005), "utilization {}", tinseth_6 / MG_PER_LITER);
+
+    // Tinseth knows nothing about what happens after the burner goes out.
+    parameters.cool_time_minutes = Some(10.0);
+    assert!(close(ibus(&parameters, Formula::Tinseth), tinseth_6, 0.0001));
+}
+
+#[test]
+fn mibu_is_tinseth_when_there_is_no_cooling_to_model() {
+    let tinseth_6 = ibus(&post_boil_parameters(6.0), Formula::Tinseth);
+
+    // An unrecorded cool time is treated as none at all.
+    let unknown = ibu_breakdown(&post_boil_parameters(6.0), Formula::MIbu);
+    assert!(close(unknown.boil_ibus, tinseth_6, 0.0001), "boil {}", unknown.boil_ibus);
+    assert!(close(unknown.post_boil_ibus, 0.0, 0.0001), "post-boil {}", unknown.post_boil_ibus);
+
+    let mut zero = post_boil_parameters(6.0);
+    zero.cool_time_minutes = Some(0.0);
+    assert!(close(ibus(&zero, Formula::MIbu), tinseth_6, 0.0001));
+}
+
+/// Hosom's example: a six-minute addition with ten minutes of cooling gains rather more
+/// bitterness while the wort sits than the boil-only methods would credit it with.
+#[test]
+fn mibu_adds_the_bitterness_gained_while_the_wort_cools() {
+    let tinseth_6 = ibus(&post_boil_parameters(6.0), Formula::Tinseth);
+    let mut parameters = post_boil_parameters(6.0);
+    parameters.cool_time_minutes = Some(10.0);
+
+    let breakdown = ibu_breakdown(&parameters, Formula::MIbu);
+    assert!(close(breakdown.boil_ibus, tinseth_6, 0.0001), "boil {}", breakdown.boil_ibus);
+    assert!(close(breakdown.post_boil_ibus, 12.355, 0.02), "post-boil {}", breakdown.post_boil_ibus);
+    assert!(close(breakdown.total(), 26.0, 0.6), "total {}", breakdown.total());
+}
+
+/// A flameout addition contributes nothing at all to the boil-only methods, but is most of the
+/// bitterness in a long hop stand.
+#[test]
+fn a_flameout_addition_only_counts_for_the_methods_that_model_cooling() {
+    let mut parameters = post_boil_parameters(0.0);
+    parameters.post_boil_addition = true;
+    parameters.cool_time_minutes = Some(30.0);
+    parameters.kettle_opening_diameter_cm = Some(25.0);
+
+    let breakdown = ibu_breakdown(&parameters, Formula::MIbu);
+    assert!(close(breakdown.boil_ibus, 0.0, 0.0001), "it was never in the boil");
+    assert!(close(breakdown.post_boil_ibus, 27.742, 0.05), "post-boil {}", breakdown.post_boil_ibus);
+
+    for formula in [Formula::Tinseth, Formula::Rager, Formula::Noonan] {
+        assert!(!models_post_boil_isomerization(formula));
+        assert!(close(ibus(&parameters, formula), 0.0, 0.0001), "{formula:?} should see nothing");
+    }
+    assert!(models_post_boil_isomerization(Formula::MIbu));
+}
+
+/// A hop added ten minutes after flameout, into wort that has already cooled a little, gets less
+/// than one added at flameout would.
+#[test]
+fn a_delayed_hop_stand_addition_gets_less() {
+    let mut delayed = post_boil_parameters(0.0);
+    delayed.post_boil_addition = true;
+    delayed.post_boil_delay_minutes = 10.0;
+    delayed.cool_time_minutes = Some(20.0);
+    assert!(close(ibus(&delayed, Formula::MIbu), 17.644, 0.05), "{}", ibus(&delayed, Formula::MIbu));
+}
+
+/// Held at 80 °C the wort still isomerises, just more slowly than at the boil.
+#[test]
+fn a_profile_that_holds_the_wort_hot_keeps_it_working() {
+    let mut held = post_boil_parameters(0.0);
+    held.post_boil_addition = true;
+    held.cool_time_minutes = Some(30.0);
+    held.post_boil_temperature_profile = vec![TemperatureSegment {
+        duration_minutes: 60.0,
+        start_temp_c: 80.0,
+        end_temp_c: 80.0,
+        natural_cooling: false,
+        starts_at_previous_temp: false,
+    }];
+
+    let mut cooling = held.clone();
+    cooling.post_boil_temperature_profile.clear();
+
+    let held_ibus = ibus(&held, Formula::MIbu);
+    assert!(held_ibus > 0.0, "80 C is still hot enough to isomerise");
+    assert!(held_ibus < ibus(&cooling, Formula::MIbu), "but less than wort left to cool from boiling");
+}
+
+#[test]
+fn the_cooling_model_behaves_physically() {
+    // A wider opening loses heat faster.
+    assert!(natural_cooling_rate(20.0, 38.0, 38.0) > natural_cooling_rate(20.0, 38.0, 25.0));
+    // More wort holds its heat longer.
+    assert!(natural_cooling_rate(40.0, 38.0, 38.0) < natural_cooling_rate(20.0, 38.0, 38.0));
+    // Isomerisation falls away sharply as the wort cools.
+    assert!(relative_utilization(100.0) > relative_utilization(80.0));
+    assert!(relative_utilization(80.0) > relative_utilization(60.0));
+    assert!(close(relative_utilization(100.0), 1.0, 0.05), "boiling is the reference point");
+
+    // With no profile the wort simply cools along Hosom's curve.  That curve is fitted with a
+    // flameout temperature of 100.1 C rather than exactly 100, and the C++ does not clamp this
+    // path to boiling -- only the paths that walk a profile segment do.  So the reading at
+    // flameout is a tenth of a degree over, which is the model being what it is rather than an
+    // error.
+    let rate = natural_cooling_rate(19.87, 38.0, 38.0);
+    let at_flameout = post_boil_wort_temperature_c(0.0, &[], rate, 100.0);
+    let later = post_boil_wort_temperature_c(30.0, &[], rate, 100.0);
+    assert!(close(at_flameout, 100.1, 0.01), "{at_flameout}");
+    assert!(later < at_flameout, "and it only goes down from there");
+    // A profile segment, by contrast, is capped at boiling.
+    let held = TemperatureSegment {
+        duration_minutes: 10.0,
+        start_temp_c: 120.0,
+        end_temp_c: 120.0,
+        natural_cooling: false,
+        starts_at_previous_temp: false,
+    };
+    assert!(close(post_boil_wort_temperature_c(5.0, &[held], rate, 100.0), 100.0, 1e-9));
+}
