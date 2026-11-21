@@ -1,0 +1,4843 @@
+{
+  "schema_version": 23,
+  "generated_by": "tools/extract-schema.py",
+  "source_files": [
+    "src/database/ObjectStoreTyped.cpp",
+    "src/database/DatabaseSchemaHelper.cpp"
+  ],
+  "dialects": [
+    "sqlite",
+    "postgresql",
+    "mariadb"
+  ],
+  "native_types": {
+    "bool": {
+      "sqlite": "BOOLEAN",
+      "postgresql": "BOOLEAN",
+      "mariadb": "BOOLEAN"
+    },
+    "int": {
+      "sqlite": "INTEGER",
+      "postgresql": "INTEGER",
+      "mariadb": "INT"
+    },
+    "uint": {
+      "sqlite": "INTEGER",
+      "postgresql": "INTEGER",
+      "mariadb": "INT"
+    },
+    "double": {
+      "sqlite": "DOUBLE",
+      "postgresql": "DOUBLE PRECISION",
+      "mariadb": "DOUBLE"
+    },
+    "string": {
+      "sqlite": "TEXT",
+      "postgresql": "TEXT",
+      "mariadb": "TEXT"
+    },
+    "date": {
+      "sqlite": "DATE",
+      "postgresql": "DATE",
+      "mariadb": "DATE"
+    }
+  },
+  "primary_key_declaration": {
+    "sqlite": "INTEGER PRIMARY KEY",
+    "postgresql": "SERIAL PRIMARY KEY",
+    "mariadb": "INT AUTO_INCREMENT PRIMARY KEY"
+  },
+  "add_foreign_key": {
+    "sqlite": "ALTER TABLE {table} ADD COLUMN {column} INTEGER REFERENCES {ref_table}({ref_column});",
+    "postgresql": "ALTER TABLE {table} ADD COLUMN {column} INTEGER REFERENCES {ref_table}({ref_column});",
+    "mariadb": "ALTER TABLE {table} ADD COLUMN {column} INT, ADD FOREIGN KEY ({column}) REFERENCES {ref_table}({ref_column});"
+  },
+  "identifier_quote": {
+    "sqlite": "\"",
+    "postgresql": "\"",
+    "mariadb": "`"
+  },
+  "tables": [
+    {
+      "name": "boil",
+      "cpp_type": "Boil",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "locked",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "LockablePropertyBase::locked",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "description",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Boil::description",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Boil::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "pre_boil_size_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Boil::preBoilSize_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_boil",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "boil_step",
+      "cpp_type": "BoilStep",
+      "primary_key": {
+        "name": "id",
+        "property": null
+      },
+      "columns": [
+        {
+          "name": "step_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "start_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "end_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ramp_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "step_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "description",
+          "base_type": "string",
+          "field_type": "String",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "start_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "end_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "start_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StepExtended::startGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "end_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "chilling_type",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": null,
+          "string_mapping": "BoilStep::chillingTypeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "boil_id",
+          "references_table": "boil",
+          "references_column": "id",
+          "property": null,
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "brew_log",
+      "cpp_type": "BrewLog",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "brew_date",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "BrewLog::brewDate",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ferment_date",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "BrewLog::fermentDate",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "BrewLog::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_pre_boil_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedPreBoilGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_pre_boil_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredPreBoilGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_pre_boil_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedPreBoilVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_pre_boil_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredPreBoilVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_strike_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedStrikeTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_strike_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredStrikeTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_mash_final_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedMashFinalTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_mash_final_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredMashFinalTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_original_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedOriginalGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "forecast_original_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::forecastOriginalGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_original_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredOriginalGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_post_boil_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredPostBoilVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_volume_into_fv_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedVolumeIntoFv_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_volume_into_fv_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredVolumeIntoFv_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_pitch_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredPitchTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_final_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedFinalGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_final_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredFinalGravity_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_final_volume",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::measuredFinalVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_alcohol_by_volume_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedAlcoholByVolume_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "computed_alcohol_by_volume_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::computedAlcoholByVolume_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_attenuation_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedAttenuation_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "measured_wort_clarity",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "BrewLog::measuredWortClarity",
+          "string_mapping": "Measurement::Qualitative::wortClarityStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "computed_attenuation_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::computedAttenuation_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_efficiency_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedEfficiency_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "computed_efficiency_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::computedEfficiency_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "computed_pre_boil_efficiency_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::computedPreBoilEfficiency_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "expected_boil_off_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "BrewLog::expectedBoilOff_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "recipe_id",
+          "references_table": "recipe",
+          "references_column": "id",
+          "property": "OwnedByRecipe::recipeId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "equipment",
+      "cpp_type": "Equipment",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "fv_batch_size_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::fvBatchSize_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "boiling_point",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::boilingPoint_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_boil_size_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleBoilSize_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_evaporation_per_hour_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleEvaporationPerHour_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "evap_rate",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::evapRate_pctHr",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "grain_absorption_lkg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::grainAbsorption_LKg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hop_utilization",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::hopUtilization_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "lauter_tun_deadspace_loss_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::lauterTunDeadspaceLoss_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::kettleNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "top_up_kettle",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::topUpKettle_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "top_up_water",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::topUpWater_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_trub_chiller_loss_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleTrubChillerLoss_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mash_tun_specific_heat_calgc",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::mashTunSpecificHeat_calGC",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mash_tun_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::mashTunVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mash_tun_weight_kg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::mashTunWeight_kg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettleInternalDiameter_cm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleInternalDiameter_cm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettleOpeningDiameter_cm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleOpeningDiameter_cm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hlt_type",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::hltType",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mash_tun_type",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::mashTunType",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "lauter_tun_type",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::lauterTunType",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_type",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::kettleType",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fv_type",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::fvType",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "agingvessel_type",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::agingVesselType",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "packaging_vessel_type",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::packagingVesselType",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hlt_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::hltVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "lauter_tun_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::lauterTunVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fv_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::fvVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "aging_vessel_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::agingVesselVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "packaging_vessel_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::packagingVesselVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hlt_loss_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::hltLoss_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mash_tun_loss_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::mashTunLoss_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "foundation_volume_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::foundationVolume_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fv_loss_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::fvLoss_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "aging_vessel_loss_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::agingVesselLoss_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "packaging_vessel_loss_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::packagingVesselLoss_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_outflow_per_minute_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleOutflowPerMinute_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hlt_weight_kg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::hltWeight_kg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "lauter_tun_weight_kg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::lauterTunWeight_kg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_weight_kg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleWeight_kg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hlt_specific_heat_calgc",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::hltSpecificHeat_calGC",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "lauter_tun_specific_heat_calgc",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::lauterTunSpecificHeat_calGC",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kettle_specific_heat_calgc",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Equipment::kettleSpecificHeat_calGC",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hlt_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::hltNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mash_tun_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::mashTunNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "lauter_tun_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::lauterTunNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fv_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::fvNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "aging_vessel_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::agingVesselNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "packaging_vessel_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Equipment::packagingVesselNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_equipment",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "fermentable",
+      "cpp_type": "Fermentable",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "coarse_fine_diff",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::coarseFineDiff_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "color_lovibond",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::color_lovibond",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "diastatic_power",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::diastaticPower_lintner",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ftype",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Fermentable::type",
+          "string_mapping": "Fermentable::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "ibu_gal_per_lb",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::ibuGalPerLb",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "max_in_batch",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::maxInBatch_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "moisture",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::moisture_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Fermentable::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "origin",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Fermentable::origin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "supplier",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Fermentable::supplier",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "protein",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::protein_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "recommend_mash",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Fermentable::recommendMash",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "grain_group",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Fermentable::grainGroup",
+          "string_mapping": "Fermentable::grainGroupStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "producer",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Fermentable::producer",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "product_id",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Fermentable::productId",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fine_grind_yield_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::fineGrindYield_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "coarse_grind_yield_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::coarseGrindYield_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "potential_yield_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::potentialYield_sg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "alpha_amylase_dext_units",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::alphaAmylase_dextUnits",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kolbach_index_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::kolbachIndex_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hardness_prp_glassy_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::hardnessPrpGlassy_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hardness_prp_half_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::hardnessPrpHalf_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "hardness_prp_mealy_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::hardnessPrpMealy_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kernel_size_prp_plump_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::kernelSizePrpPlump_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "kernel_size_prp_thin_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::kernelSizePrpThin_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "friability_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::friability_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "di_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::di_ph",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "viscosity_cp",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::viscosity_cP",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "dmsp_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::dmsP_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fan_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::fan_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fermentability_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::fermentability_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "beta_glucan_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::betaGlucan_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "lactic_acid_by_weight_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::lacticAcidByWeight_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fermentable_fraction_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Fermentable::fermentableFraction_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_fermentable",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "fermentable_in_recipe",
+      "cpp_type": "RecipeAdditionFermentable",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "stage",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "RecipeAddition::stage",
+          "string_mapping": "RecipeAddition::stageStringMapping",
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "step",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "RecipeAddition::step",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtTime_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtGravity_sg",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtAcidity_pH",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "duration_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::duration_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "recipe_id",
+          "references_table": "recipe",
+          "references_column": "id",
+          "property": "OwnedByRecipe::recipeId",
+          "from_common_set": null
+        },
+        {
+          "column": "fermentable_id",
+          "references_table": "fermentable",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "fermentable_stock_purchase",
+      "cpp_type": "StockPurchaseFermentable",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "color_lovibond",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockPurchaseFermentable::color_lovibond",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_ordered",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockPurchase::quantityOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_received",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateReceived",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_ordered",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_best_before",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateBestBefore",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "supplier",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::supplier",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "note",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::note",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "fermentable_id",
+          "references_table": "fermentable",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "fermentable_stock_use",
+      "cpp_type": "StockUseFermentable",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "sequence_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "EnumeratedBase::sequenceNumber",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "date",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockUse::date",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "reason",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "StockUse::reason",
+          "string_mapping": "StockUse::reasonStringMapping",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "comment",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockUse::comment",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_used",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockUse::quantityUsed",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "fermentable_purchase_id",
+          "references_table": "fermentable_stock_purchase",
+          "references_column": "id",
+          "property": "EnumeratedBase::ownerId",
+          "from_common_set": null
+        },
+        {
+          "column": "brew_log_id",
+          "references_table": "brew_log",
+          "references_column": "id",
+          "property": "StockUse::brewLogId",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ]
+    },
+    {
+      "name": "fermentation",
+      "cpp_type": "Fermentation",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "locked",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "LockablePropertyBase::locked",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "description",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Fermentation::description",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Fermentation::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "krausen_handling",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Fermentation::krausenHandling",
+          "string_mapping": "Fermentation::krausenHandlingStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_fermentation",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "fermentation_step",
+      "cpp_type": "FermentationStep",
+      "primary_key": {
+        "name": "id",
+        "property": null
+      },
+      "columns": [
+        {
+          "name": "step_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "start_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "end_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "step_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "description",
+          "base_type": "string",
+          "field_type": "String",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "start_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "end_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "start_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "end_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "free_rise",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "FermentationStep::freeRise",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "vessel",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "FermentationStep::vessel",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "fermentation_id",
+          "references_table": "fermentation",
+          "references_column": "id",
+          "property": null,
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_boil",
+      "cpp_type": "Folder<Boil>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_boil",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_equipment",
+      "cpp_type": "Folder<Equipment>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_equipment",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_fermentable",
+      "cpp_type": "Folder<Fermentable>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_fermentable",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_fermentation",
+      "cpp_type": "Folder<Fermentation>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_fermentation",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_hop",
+      "cpp_type": "Folder<Hop>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_hop",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_mash",
+      "cpp_type": "Folder<Mash>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_mash",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_misc",
+      "cpp_type": "Folder<Misc>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_misc",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_recipe",
+      "cpp_type": "Folder<Recipe>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_recipe",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_style",
+      "cpp_type": "Folder<Style>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_style",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_water",
+      "cpp_type": "Folder<Water>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_water",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "folder_for_yeast",
+      "cpp_type": "Folder<Yeast>",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_yeast",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "hop",
+      "cpp_type": "Hop",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "alpha_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::alpha_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "alpha_min_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::alphaMin_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "alpha_max_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::alphaMax_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "beta_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::beta_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "beta_min_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::betaMin_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "beta_max_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::betaMax_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "caryophyllene_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::caryophyllene_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "cohumulone_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::cohumulone_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "form",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Hop::form",
+          "string_mapping": "Hop::formStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "sixMonthAlphaLoss_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::sixMonthAlphaLoss_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "humulene_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::humulene_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "myrcene_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::myrcene_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Hop::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "origin",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Hop::origin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "substitutes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Hop::substitutes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "htype",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Hop::type",
+          "string_mapping": "Hop::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "producer",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Hop::producer",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "product_id",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Hop::productId",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "year",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Hop::year",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "total_oil_ml_per_100g",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::totalOil_mlPer100g",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "farnesene_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::farnesene_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "geraniol_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::geraniol_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "b_pinene_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::bPinene_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "linalool_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::linalool_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "limonene_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::limonene_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "nerol_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::nerol_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "pinene_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::pinene_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "polyphenols_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::polyphenols_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "xanthohumol_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Hop::xanthohumol_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_hop",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "hop_in_recipe",
+      "cpp_type": "RecipeAdditionHop",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "stage",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "RecipeAddition::stage",
+          "string_mapping": "RecipeAddition::stageStringMapping",
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "step",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "RecipeAddition::step",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtTime_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtGravity_sg",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtAcidity_pH",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "duration_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::duration_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "recipe_id",
+          "references_table": "recipe",
+          "references_column": "id",
+          "property": "OwnedByRecipe::recipeId",
+          "from_common_set": null
+        },
+        {
+          "column": "hop_id",
+          "references_table": "hop",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "hop_stock_purchase",
+      "cpp_type": "StockPurchaseHop",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "alpha_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockPurchaseHop::alpha_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "form",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchaseHop::form",
+          "string_mapping": "Hop::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "year",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchaseHop::year",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_ordered",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockPurchase::quantityOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_received",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateReceived",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_ordered",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_best_before",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateBestBefore",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "supplier",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::supplier",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "note",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::note",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "hop_id",
+          "references_table": "hop",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "hop_stock_use",
+      "cpp_type": "StockUseHop",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "sequence_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "EnumeratedBase::sequenceNumber",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "date",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockUse::date",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "reason",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "StockUse::reason",
+          "string_mapping": "StockUse::reasonStringMapping",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "comment",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockUse::comment",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_used",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockUse::quantityUsed",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "hop_purchase_id",
+          "references_table": "hop_stock_purchase",
+          "references_column": "id",
+          "property": "EnumeratedBase::ownerId",
+          "from_common_set": null
+        },
+        {
+          "column": "brew_log_id",
+          "references_table": "brew_log",
+          "references_column": "id",
+          "property": "StockUse::brewLogId",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ]
+    },
+    {
+      "name": "instruction",
+      "cpp_type": "Instruction",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "step_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "EnumeratedBase::sequenceNumber",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "directions",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Instruction::directions",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "has_timer",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Instruction::hasTimer",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "timer_value",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Instruction::timerValue",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "completed",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Instruction::completed",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "interval_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Instruction::interval_mins",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "recipe_id",
+          "references_table": "recipe",
+          "references_column": "id",
+          "property": "EnumeratedBase::ownerId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "mash",
+      "cpp_type": "Mash",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "locked",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "LockablePropertyBase::locked",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "auto_adjust",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Mash::keptInSync",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "equip_adjust",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Mash::equipAdjust",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "grain_temp",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Mash::grainTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Mash::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Mash::ph",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "sparge_temp",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Mash::spargeTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "tun_specific_heat_calgc",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Mash::tunSpecificHeat_calGC",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "initial_tun_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Mash::initialTunTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "tun_weight_kg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Mash::tunWeight_kg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_mash",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "mash_step",
+      "cpp_type": "MashStep",
+      "primary_key": {
+        "name": "id",
+        "property": null
+      },
+      "columns": [
+        {
+          "name": "end_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "infuse_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mstype",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": null,
+          "string_mapping": "MashStep::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "ramp_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "step_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "EnumeratedBase::sequenceNumber",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "step_temp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "step_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "amount_l",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "description",
+          "base_type": "string",
+          "field_type": "String",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "liquor_to_grist_ratio_lkg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "start_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "end_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "amount_fixed",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "infuse_temp_fixed",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": null,
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "mash_id",
+          "references_table": "mash",
+          "references_column": "id",
+          "property": "EnumeratedBase::ownerId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "misc",
+      "cpp_type": "Misc",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "mtype",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Misc::type",
+          "string_mapping": "Misc::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "use_for",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Misc::useFor",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Misc::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "producer",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Misc::producer",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "product_id",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Misc::productId",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "water_agent_type",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Misc::waterAgentType",
+          "string_mapping": "Misc::waterAgentTypeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "water_agent_percent_acid",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Misc::waterAgentPercentAcid",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_misc",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "misc_in_recipe",
+      "cpp_type": "RecipeAdditionMisc",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "stage",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "RecipeAddition::stage",
+          "string_mapping": "RecipeAddition::stageStringMapping",
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "step",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "RecipeAddition::step",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtTime_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtGravity_sg",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtAcidity_pH",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "duration_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::duration_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "recipe_id",
+          "references_table": "recipe",
+          "references_column": "id",
+          "property": "OwnedByRecipe::recipeId",
+          "from_common_set": null
+        },
+        {
+          "column": "misc_id",
+          "references_table": "misc",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "misc_stock_purchase",
+      "cpp_type": "StockPurchaseMisc",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_ordered",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockPurchase::quantityOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_received",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateReceived",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_ordered",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_best_before",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateBestBefore",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "supplier",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::supplier",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "note",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::note",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "misc_id",
+          "references_table": "misc",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "misc_stock_use",
+      "cpp_type": "StockUseMisc",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "sequence_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "EnumeratedBase::sequenceNumber",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "date",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockUse::date",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "reason",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "StockUse::reason",
+          "string_mapping": "StockUse::reasonStringMapping",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "comment",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockUse::comment",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_used",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockUse::quantityUsed",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "misc_purchase_id",
+          "references_table": "misc_stock_purchase",
+          "references_column": "id",
+          "property": "EnumeratedBase::ownerId",
+          "from_common_set": null
+        },
+        {
+          "column": "brew_log_id",
+          "references_table": "brew_log",
+          "references_column": "id",
+          "property": "StockUse::brewLogId",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ]
+    },
+    {
+      "name": "recipe",
+      "cpp_type": "Recipe",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "age",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::age_days",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "age_temp",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::ageTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "assistant_brewer",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Recipe::assistantBrewer",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "batch_size",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::batchSize_l",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "brewer",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Recipe::brewer",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "carb_volume",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::carbonation_vols",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "carbonationtemp_c",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::carbonationTemp_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "date",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "Recipe::date",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "efficiency",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::efficiency_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::fg",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "forced_carb",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Recipe::forcedCarbonation",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "keg_priming_factor",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::kegPrimingFactor",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Recipe::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "og",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::og",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "priming_sugar_equiv",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::primingSugarEquiv",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "priming_sugar_name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Recipe::primingSugarName",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "taste_notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Recipe::tasteNotes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "taste_rating",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::tasteRating",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "type",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Recipe::type",
+          "string_mapping": "Recipe::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "locked",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Recipe::locked",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "beer_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::beerAcidity_pH",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "apparent_attenuation_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::apparentAttenuation_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ro_water_mash_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::roWaterMash_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ro_water_sparge_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::roWaterSparge_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "target_mash_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Recipe::targetMashAcidity_pH",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "water_kept_in_sync",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Recipe::waterKeptInSync",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fg_calc_uses_mash",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Recipe::fgCalcUsesMash",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "wort_clarity",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Recipe::wortClarity",
+          "string_mapping": "Measurement::Qualitative::wortClarityStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_recipe",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        },
+        {
+          "column": "equipment_id",
+          "references_table": "equipment",
+          "references_column": "id",
+          "property": "Recipe::equipmentId",
+          "from_common_set": null
+        },
+        {
+          "column": "mash_id",
+          "references_table": "mash",
+          "references_column": "id",
+          "property": "Recipe::mashId",
+          "from_common_set": null
+        },
+        {
+          "column": "style_id",
+          "references_table": "style",
+          "references_column": "id",
+          "property": "Recipe::styleId",
+          "from_common_set": null
+        },
+        {
+          "column": "ancestor_id",
+          "references_table": "recipe",
+          "references_column": "id",
+          "property": "Recipe::ancestorId",
+          "from_common_set": null
+        },
+        {
+          "column": "boil_id",
+          "references_table": "boil",
+          "references_column": "id",
+          "property": "Recipe::boilId",
+          "from_common_set": null
+        },
+        {
+          "column": "fermentation_id",
+          "references_table": "fermentation",
+          "references_column": "id",
+          "property": "Recipe::fermentationId",
+          "from_common_set": null
+        },
+        {
+          "column": "water_base",
+          "references_table": "water",
+          "references_column": "id",
+          "property": "Recipe::waterBaseId",
+          "from_common_set": null
+        },
+        {
+          "column": "water_target",
+          "references_table": "water",
+          "references_column": "id",
+          "property": "Recipe::waterTargetId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "style",
+      "cpp_type": "Style",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "abv_max",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::abvMax_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "abv_min",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::abvMin_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "carb_max",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::carbMax_vol",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "carb_min",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::carbMin_vol",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "category",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::category",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "category_number",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::categoryNumber",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "color_max",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::colorMax_srm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "color_min",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::colorMin_srm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "examples",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::examples",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fg_max",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::fgMax",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fg_min",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::fgMin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ibu_max",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::ibuMax",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ibu_min",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::ibuMin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ingredients",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::ingredients",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "og_max",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::ogMax",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "og_min",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Style::ogMin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "style_guide",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::styleGuide",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "style_letter",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::styleLetter",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "stype",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Style::type",
+          "string_mapping": "Style::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "aroma",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::aroma",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "appearance",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::appearance",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "flavor",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::flavor",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "mouthfeel",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::mouthfeel",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "overall_impression",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Style::overallImpression",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_style",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "water",
+      "cpp_type": "Water",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Water::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "calcium",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::calcium_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "bicarbonate",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::bicarbonate_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "sulfate",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::sulfate_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "sodium",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::sodium_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "chloride",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::chloride_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "magnesium",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::magnesium_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::ph",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "alkalinity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::alkalinity_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "as_hco3",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Water::alkalinityAsHCO3",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "carbonate_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::carbonate_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "potassium_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::potassium_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "iron_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::iron_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "nitrate_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::nitrate_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "nitrite_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::nitrite_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "fluoride_ppm",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Water::fluoride_ppm",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_water",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "yeast",
+      "cpp_type": "Yeast",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "max_temperature",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Yeast::maxTemperature_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "min_temperature",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Yeast::minTemperature_c",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "flocculation",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Yeast::flocculation",
+          "string_mapping": "Yeast::flocculationStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "form",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Yeast::form",
+          "string_mapping": "Yeast::formStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "ytype",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "Yeast::type",
+          "string_mapping": "Yeast::typeStringMapping",
+          "from_common_set": null
+        },
+        {
+          "name": "max_reuse",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "Yeast::maxReuse",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "best_for",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Yeast::bestFor",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "laboratory",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Yeast::laboratory",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "notes",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Yeast::notes",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "product_id",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "Yeast::productId",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "alcohol_tolerance_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Yeast::alcoholTolerance_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "attenuation_min_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Yeast::attenuationMin_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "attenuation_max_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "Yeast::attenuationMax_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "phenolic_off_flavor_positive",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Yeast::phenolicOffFlavorPositive",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "glucoamylase_positive",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Yeast::glucoamylasePositive",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "killer_producing_k1_toxin",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Yeast::killerProducingK1Toxin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "killer_producing_k2_toxin",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Yeast::killerProducingK2Toxin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "killer_producing_k28_toxin",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Yeast::killerProducingK28Toxin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "killer_producing_klus_toxin",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Yeast::killerProducingKlusToxin",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "killer_neutral",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "Yeast::killerNeutral",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "contained_in_folder_id",
+          "references_table": "folder_for_yeast",
+          "references_column": "id",
+          "property": "FolderPropertyBase::containedInFolderId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "yeast_in_recipe",
+      "cpp_type": "RecipeAdditionYeast",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "attenuation_pct",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAdditionYeast::attenuation_pct",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "times_cultured",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "RecipeAdditionYeast::timesCultured",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "cell_count_billions",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAdditionYeast::cellCountBillions",
+          "string_mapping": null,
+          "from_common_set": null
+        },
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "stage",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "RecipeAddition::stage",
+          "string_mapping": "RecipeAddition::stageStringMapping",
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "step",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "RecipeAddition::step",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_time_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtTime_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_gravity_sg",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtGravity_sg",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "add_at_acidity_ph",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::addAtAcidity_pH",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        },
+        {
+          "name": "duration_mins",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "RecipeAddition::duration_mins",
+          "string_mapping": null,
+          "from_common_set": "RECIPE_ADDITION_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "recipe_id",
+          "references_table": "recipe",
+          "references_column": "id",
+          "property": "OwnedByRecipe::recipeId",
+          "from_common_set": null
+        },
+        {
+          "column": "yeast_id",
+          "references_table": "yeast",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "yeast_stock_purchase",
+      "cpp_type": "StockPurchaseYeast",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "IngredientAmount::quantity",
+          "string_mapping": null,
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "unit",
+          "base_type": "string",
+          "field_type": "Unit",
+          "property": "IngredientAmount::unit",
+          "string_mapping": "Measurement::Units::unitStringMapping",
+          "from_common_set": "INGREDIENT_AMOUNT_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_ordered",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockPurchase::quantityOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_received",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateReceived",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_ordered",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateOrdered",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "date_best_before",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockPurchase::dateBestBefore",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "supplier",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::supplier",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "note",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockPurchase::note",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_price",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchasePrice",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "purchase_tax",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::purchaseTax",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost_currency",
+          "base_type": "string",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        },
+        {
+          "name": "shipping_cost",
+          "base_type": "int",
+          "field_type": "Money",
+          "property": "StockPurchase::shippingCost",
+          "string_mapping": null,
+          "from_common_set": "STOCK_PURCHASE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "yeast_id",
+          "references_table": "yeast",
+          "references_column": "id",
+          "property": "IngredientAmount::ingredientId",
+          "from_common_set": null
+        }
+      ]
+    },
+    {
+      "name": "yeast_stock_use",
+      "cpp_type": "StockUseYeast",
+      "primary_key": {
+        "name": "id",
+        "property": "NamedEntity::key"
+      },
+      "columns": [
+        {
+          "name": "name",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "NamedEntity::name",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "deleted",
+          "base_type": "bool",
+          "field_type": "Bool",
+          "property": "NamedEntity::deleted",
+          "string_mapping": null,
+          "from_common_set": "NAMED_ENTITY_COMMON_FIELDS"
+        },
+        {
+          "name": "sequence_number",
+          "base_type": "int",
+          "field_type": "Int",
+          "property": "EnumeratedBase::sequenceNumber",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "date",
+          "base_type": "date",
+          "field_type": "Date",
+          "property": "StockUse::date",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "reason",
+          "base_type": "string",
+          "field_type": "Enum",
+          "property": "StockUse::reason",
+          "string_mapping": "StockUse::reasonStringMapping",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "comment",
+          "base_type": "string",
+          "field_type": "String",
+          "property": "StockUse::comment",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        },
+        {
+          "name": "quantity_used",
+          "base_type": "double",
+          "field_type": "Double",
+          "property": "StockUse::quantityUsed",
+          "string_mapping": null,
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "yeast_purchase_id",
+          "references_table": "yeast_stock_purchase",
+          "references_column": "id",
+          "property": "EnumeratedBase::ownerId",
+          "from_common_set": null
+        },
+        {
+          "column": "brew_log_id",
+          "references_table": "brew_log",
+          "references_column": "id",
+          "property": "StockUse::brewLogId",
+          "from_common_set": "STOCK_USE_COMMON_FIELDS"
+        }
+      ]
+    }
+  ]
+}
