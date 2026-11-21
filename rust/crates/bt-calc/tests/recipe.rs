@@ -210,3 +210,165 @@ fn the_mash_schedule_moves_the_final_gravity() {
     // The mash changes nothing before fermentation.
     assert_eq!(cool.og, hot.og);
 }
+
+// ── Bitterness ────────────────────────────────────────────────────────────────────────────────
+
+use bt_calc::ibu::Formula;
+use bt_calc::recipe_ibu::{IbuSettings, boil_addition_timing, kettle_sugars, recipe_ibus};
+use bt_model::enums::HopForm;
+
+/// A recipe with a three-step boil: fifteen minutes heating, an hour boiling, twenty cooling.
+fn a_recipe_with_a_boil() -> Recipe {
+    let mut recipe = a_simple_recipe();
+    recipe.boil = Some((
+        BoilRow { pre_boil_size_l: Some(23.66), ..Default::default() },
+        vec![boil_step(65.0, 100.0, 15.0), boil_step(100.0, 100.0, 60.0), boil_step(100.0, 20.0, 20.0)],
+    ));
+    recipe
+}
+
+fn a_hop_addition(step: i64, add_at_time_mins: Option<f64>, grams: f64) -> Addition<HopInRecipeRow, HopRow> {
+    let mut hop = HopRow { alpha_pct: Some(10.0), ..Default::default() };
+    hop.set_form(Some(HopForm::Leaf));
+    let mut addition =
+        HopInRecipeRow { quantity: Some(grams / 1000.0), step: Some(step), add_at_time_mins, ..Default::default() };
+    addition.set_unit(bt_measure::Unit::by_name("kilograms"));
+    addition.set_stage(Some(RecipeAdditionStage::Boil));
+    Addition { addition, ingredient: Some(hop) }
+}
+
+#[test]
+fn a_boil_addition_is_timed_against_the_boil_proper() {
+    let recipe = a_recipe_with_a_boil();
+
+    // Added at the start of the boiling step: the whole hour.
+    let whole = boil_addition_timing(&recipe, None, Some(2), None);
+    assert!(!whole.post_boil);
+    assert_eq!(whole.boil_proper_mins, 60.0);
+
+    // Added with fifteen minutes left.
+    let late = boil_addition_timing(&recipe, Some(15.0), Some(2), None);
+    assert_eq!(late.boil_proper_mins, 15.0);
+
+    // Added during the cooling step: after flameout, not in the boil at all.
+    let whirlpool = boil_addition_timing(&recipe, None, Some(3), None);
+    assert!(whirlpool.post_boil);
+    assert_eq!(whirlpool.boil_proper_mins, 0.0);
+
+    // Added during the heating step: it is in the kettle for the whole boil that follows.
+    let first_wort = boil_addition_timing(&recipe, Some(0.0), Some(1), None);
+    assert!(!first_wort.post_boil);
+    assert_eq!(first_wort.boil_proper_mins, 60.0);
+}
+
+#[test]
+fn a_recipe_with_hops_is_bitter_and_one_without_is_not() {
+    let mut recipe = a_recipe_with_a_boil();
+    let (none, per_addition) = recipe_ibus(&recipe, 1.050, IbuSettings::default());
+    assert_eq!(none, 0.0);
+    assert!(per_addition.is_empty());
+
+    recipe.hops.push(a_hop_addition(2, None, 28.0));
+    let (bitter, per_addition) = recipe_ibus(&recipe, 1.050, IbuSettings::default());
+    assert!(bitter > 0.0, "{bitter}");
+    assert_eq!(per_addition.len(), 1);
+    assert!(close(per_addition[0], bitter, 1e-9), "one hop, so it is all of it");
+    // 28 g of 10% hops boiled an hour into 19.87 L is a well-bittered beer.
+    assert!((20.0..60.0).contains(&bitter), "{bitter}");
+}
+
+#[test]
+fn a_later_addition_bitters_less_than_an_earlier_one() {
+    let mut early = a_recipe_with_a_boil();
+    early.hops.push(a_hop_addition(2, None, 28.0));
+    let mut late = a_recipe_with_a_boil();
+    late.hops.push(a_hop_addition(2, Some(10.0), 28.0));
+
+    let (early_ibus, _) = recipe_ibus(&early, 1.050, IbuSettings::default());
+    let (late_ibus, _) = recipe_ibus(&late, 1.050, IbuSettings::default());
+    assert!(late_ibus < early_ibus, "{late_ibus} vs {early_ibus}");
+}
+
+/// A dry hop is for aroma, so it contributes no bitterness under any method.
+#[test]
+fn a_dry_hop_adds_no_bitterness() {
+    let mut recipe = a_recipe_with_a_boil();
+    let mut dry_hop = a_hop_addition(1, None, 56.0);
+    dry_hop.addition.set_stage(Some(RecipeAdditionStage::Fermentation));
+    recipe.hops.push(dry_hop);
+
+    let (total, per_addition) = recipe_ibus(&recipe, 1.050, IbuSettings::default());
+    assert_eq!(per_addition, vec![0.0]);
+    assert_eq!(total, 0.0);
+}
+
+/// A mash hop contributes nothing by default, which is what the C++'s setting defaults to.
+#[test]
+fn a_mash_hop_contributes_only_if_the_setting_says_so() {
+    let mut recipe = a_recipe_with_a_boil();
+    let mut mash_hop = a_hop_addition(1, None, 28.0);
+    mash_hop.addition.set_stage(Some(RecipeAdditionStage::Mash));
+    recipe.hops.push(mash_hop);
+
+    assert_eq!(recipe_ibus(&recipe, 1.050, IbuSettings::default()).0, 0.0);
+
+    let generous = IbuSettings { mash_hop_adjustment: 0.5, ..Default::default() };
+    assert!(recipe_ibus(&recipe, 1.050, generous).0 > 0.0);
+}
+
+/// Every method should agree a recipe is bitter, even if they disagree by how much.
+#[test]
+fn all_seven_formulae_produce_a_figure() {
+    let mut recipe = a_recipe_with_a_boil();
+    recipe.hops.push(a_hop_addition(2, None, 28.0));
+
+    for formula in [
+        Formula::Tinseth,
+        Formula::Rager,
+        Formula::Noonan,
+        Formula::Garetz,
+        Formula::Daniels,
+        Formula::MIbu,
+        Formula::Smph,
+    ] {
+        let settings = IbuSettings { formula, ..Default::default() };
+        let (total, _) = recipe_ibus(&recipe, 1.050, settings);
+        assert!(total > 0.0 && total < 200.0, "{formula:?} gave {total}");
+    }
+}
+
+/// Sugar added part way through the boil thickens the wort only from that point on.
+#[test]
+fn sugar_added_during_the_boil_is_tracked_against_the_clock() {
+    let mut recipe = a_recipe_with_a_boil();
+    let mut late_sugar = FermentableRow { fine_grind_yield_pct: Some(100.0), ..Default::default() };
+    late_sugar.set_ftype(Some(FermentableType::Sugar));
+    let mut addition = FermentableInRecipeRow {
+        quantity: Some(1.0),
+        step: Some(2),
+        add_at_time_mins: Some(10.0),
+        ..Default::default()
+    };
+    addition.set_unit(bt_measure::Unit::by_name("kilograms"));
+    addition.set_stage(Some(RecipeAdditionStage::Boil));
+    recipe.fermentables.push(Addition { addition, ingredient: Some(late_sugar) });
+
+    let sugars = kettle_sugars(&recipe);
+    // The grain was mashed, so it is in the kettle from the start; the sugar arrives later.
+    assert!(sugars.at_start_of_boil_kg > 0.0);
+    assert_eq!(sugars.in_boil_additions.len(), 1);
+    // With fifty minutes left the late sugar is not in yet; with five minutes left it is.
+    assert!(sugars.in_kettle_kg(50.0) < sugars.in_kettle_kg(5.0));
+}
+
+#[test]
+fn calculate_reports_bitterness_alongside_everything_else() {
+    let mut recipe = a_recipe_with_a_boil();
+    recipe.hops.push(a_hop_addition(2, None, 28.0));
+    let calculated = calculate(&recipe, ColorFormula::Morey, None);
+
+    assert!(calculated.ibus > 0.0);
+    assert_eq!(calculated.ibus_per_addition.len(), 1);
+    assert!(close(calculated.ibus_per_addition.iter().sum::<f64>(), calculated.ibus, 1e-9));
+    assert!(calculated.og > 1.0, "and the rest still works");
+}

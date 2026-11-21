@@ -28,6 +28,7 @@ pub mod data;
 pub mod ibu;
 pub mod mash;
 pub mod recipe;
+pub mod recipe_ibu;
 pub mod smph;
 
 pub use color::{ColorFormula, mcu_to_srm, srm_to_display_color};

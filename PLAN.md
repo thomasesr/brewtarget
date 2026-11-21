@@ -416,8 +416,9 @@ content.
   for the 33 enum and unit columns are generated.
 - [x] **Recipe-level calculations** — grains, volumes, sugar totals, colour, OG/FG,
   ABV and calories, plus the boil-phase logic `RecipeCalcTests::testBoilStepPhases`
-  covers. Outstanding: wiring `recalcIBU` into the recipe aggregate, now that all seven
-  formulae exist.
+  covers, and `recalcIBU` wired through the recipe: per-addition timing against the
+  boil proper, kettle sugar and gravity over time, and the saturation order SMPH
+  needs.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only

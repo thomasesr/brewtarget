@@ -38,7 +38,7 @@ const DEFAULT_TOP_UP_WATER_L: f64 = 0.0;
 const DEFAULT_ATTENUATION_PCT: f64 = 75.0;
 
 /// Everything a recipe works out to.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Calculated {
     pub grains_kg: f64,
     pub grains_in_mash_kg: f64,
@@ -56,6 +56,9 @@ pub struct Calculated {
     pub fg_fermentable: f64,
     pub abv_pct: f64,
     pub calories_per_liter: f64,
+    pub ibus: f64,
+    /// What each hop addition contributes, in the order they appear on the recipe.
+    pub ibus_per_addition: Vec<f64>,
 }
 
 /// Sugar in the recipe, split the four ways `recalcOgFg` needs it.
@@ -74,7 +77,7 @@ pub struct Sugars {
 /// Whether a fermentable arrives with its sugar already made.
 ///
 /// Ported from `Fermentable::isExistingSugar`.
-fn is_existing_sugar(fermentable_type: Option<FermentableType>) -> bool {
+pub fn is_existing_sugar_type(fermentable_type: Option<FermentableType>) -> bool {
     matches!(
         fermentable_type,
         Some(
@@ -148,7 +151,7 @@ pub fn sugar_totals(recipe: &Recipe) -> Sugars {
         // A fermentable may be only partly fermentable -- lactose is the obvious case.
         let unfermentable_share = 1.0 - fermentable.fermentable_fraction_pct.unwrap_or(100.0) / 100.0;
 
-        if is_existing_sugar(fermentable.ftype().ok().flatten()) {
+        if is_existing_sugar_type(fermentable.ftype().ok().flatten()) {
             totals.existing_sugars_all_kg += sucrose_kg;
             totals.existing_sugars_non_fermentable_kg += sucrose_kg * unfermentable_share;
         } else {
@@ -530,6 +533,17 @@ pub fn calories_per_liter(og: f64, fg: f64) -> f64 {
 /// `mash_attenuation_multiplier` comes from [`crate::mash`]; pass `None` to leave attenuation as
 /// the yeast describes it.
 pub fn calculate(recipe: &Recipe, formula: ColorFormula, mash_attenuation_multiplier: Option<f64>) -> Calculated {
+    calculate_with(recipe, formula, mash_attenuation_multiplier, crate::recipe_ibu::IbuSettings::default())
+}
+
+/// As [`calculate`], but choosing which IBU method to use and how to treat first wort and mash
+/// hops.
+pub fn calculate_with(
+    recipe: &Recipe,
+    formula: ColorFormula,
+    mash_attenuation_multiplier: Option<f64>,
+    ibu_settings: crate::recipe_ibu::IbuSettings,
+) -> Calculated {
     let (grains_kg, grains_in_mash_kg) = grains(recipe);
     let (wort_from_mash_l, boil_volume_l, post_boil_volume_l, final_volume_l) = volumes(recipe, grains_in_mash_kg);
 
@@ -549,6 +563,8 @@ pub fn calculate(recipe: &Recipe, formula: ColorFormula, mash_attenuation_multip
         0.0
     };
 
+    let (ibus, ibus_per_addition) = crate::recipe_ibu::recipe_ibus(recipe, og, ibu_settings);
+
     Calculated {
         grains_kg,
         grains_in_mash_kg,
@@ -564,5 +580,9 @@ pub fn calculate(recipe: &Recipe, formula: ColorFormula, mash_attenuation_multip
         fg_fermentable,
         abv_pct,
         calories_per_liter: calories_per_liter(og, fg),
+        // Bitterness is worked out last because it needs the original gravity: every method
+        // extracts less from the hops as the wort thickens.
+        ibus,
+        ibus_per_addition,
     }
 }
