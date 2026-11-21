@@ -27,62 +27,15 @@ import pathlib
 import re
 import sys
 
+# Python puts this script's directory on sys.path, so this resolves to tools/cpputil.py.
+from cpputil import match_balanced, split_top_level, strip_comments
+
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SRC_TYPED = REPO / "src" / "database" / "ObjectStoreTyped.cpp"
 SRC_SCHEMA_HELPER = REPO / "src" / "database" / "DatabaseSchemaHelper.cpp"
 
 
 # ── C++ source handling ───────────────────────────────────────────────────────────────────────
-
-def strip_comments(text: str) -> str:
-    """Remove // and /* */ comments without touching string literals."""
-    out, i, n = [], 0, len(text)
-    while i < n:
-        c = text[i]
-        if c == '"':
-            j = i + 1
-            while j < n and not (text[j] == '"' and text[j - 1] != "\\"):
-                j += 1
-            out.append(text[i : j + 1])
-            i = j + 1
-        elif text.startswith("//", i):
-            j = text.find("\n", i)
-            i = n if j < 0 else j
-        elif text.startswith("/*", i):
-            j = text.find("*/", i + 2)
-            i = n if j < 0 else j + 2
-        else:
-            out.append(c)
-            i += 1
-    return "".join(out)
-
-
-def match_balanced(text: str, start: int, opener: str = "{", closer: str = "}") -> tuple[int, int]:
-    """Return (start, end) of the balanced group whose opener is at or after `start`."""
-    i = text.index(opener, start)
-    depth, j = 0, i
-    while j < len(text):
-        if text[j] == opener:
-            depth += 1
-        elif text[j] == closer:
-            depth -= 1
-            if depth == 0:
-                return i, j + 1
-        j += 1
-    raise ValueError(f"unbalanced {opener!r} from offset {start}")
-
-
-def split_top_level(body: str) -> list[str]:
-    """Split a brace body into its top-level `{...}` groups."""
-    groups, i = [], 0
-    while True:
-        try:
-            s, e = match_balanced(body, i)
-        except ValueError:
-            return groups
-        groups.append(body[s:e])
-        i = e
-
 
 # ── Field parsing ─────────────────────────────────────────────────────────────────────────────
 
