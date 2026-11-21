@@ -410,10 +410,14 @@ content.
   seven IBU formulae done, each with mirrored tests. Outstanding: the mIBU and SMPH
   formulae, which model post-flameout isomerisation and need Hosom's cooling curve;
   and the recipe-level calculations in `Recipe.cpp`, which need the model wrappers.
-- [ ] **Phase 4, hand-written half** — the model types that wrap the generated rows and
-  carry the behaviour: validation, derived properties, `Recipe` ↔ `RecipeAddition*`
-  ownership, folder paths. The remaining Phase 5 and the `RecipeCalcTests` mirror both
-  depend on this.
+- [x] **Phase 4, hand-written half** — folder tree with path reconstruction and cycle
+  detection; the recipe aggregate, assembled from the eleven tables a recipe is spread
+  across; ownership and cascade delete, including the rule that an unnamed one-off
+  mash/boil/fermentation is cleaned up while a named profile is kept. Typed accessors
+  for the 33 enum and unit columns are generated.
+- [ ] **Recipe-level calculations** — `recalcOgFg`, `recalcIBU`, `recalcColor_mcu` and
+  the rest of `Recipe.cpp`, now that there is an aggregate to calculate from. Mirrors
+  `RecipeCalcTests.cpp`.
 - [ ] **Get `testData/schema-v23.sqlite.sql` produced on a Qt6-capable machine.**
   Phase 1 can be *written* without it but cannot be *verified* without it, and Qt6,
   CMake and Meson are all absent from the current environment. **Still the only

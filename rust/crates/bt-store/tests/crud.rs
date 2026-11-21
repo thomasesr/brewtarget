@@ -289,3 +289,92 @@ async fn a_recipe_is_reassembled_from_the_tables_it_is_spread_across() {
 
     assert!(bt_store::recipes::load(&store, 9999).await.expect("load").is_none());
 }
+
+/// Deleting a recipe takes what it owns with it, but leaves profiles alone.
+#[tokio::test]
+async fn deleting_a_recipe_removes_what_it_owns_but_keeps_named_profiles() {
+    use bt_model::tables::*;
+
+    let store = fresh_store("recipe-delete").await;
+
+    // A named mash is a profile the user meant to reuse.
+    let named_mash =
+        tables::mash::insert(&store, &MashRow { name: Some("Single infusion".to_owned()), ..Default::default() })
+            .await
+            .expect("mash");
+    // An unnamed boil was made for this recipe alone.
+    let unnamed_boil =
+        tables::boil::insert(&store, &BoilRow { name: Some(String::new()), ..Default::default() }).await.expect("boil");
+    tables::boil_step::insert(
+        &store,
+        &BoilStepRow { boil_id: Some(unnamed_boil), step_number: Some(1), ..Default::default() },
+    )
+    .await
+    .expect("boil step");
+
+    let recipe_id = tables::recipe::insert(
+        &store,
+        &RecipeRow {
+            name: Some("Doomed".to_owned()),
+            mash_id: Some(named_mash),
+            boil_id: Some(unnamed_boil),
+            ..Default::default()
+        },
+    )
+    .await
+    .expect("recipe");
+
+    tables::hop_in_recipe::insert(
+        &store,
+        &HopInRecipeRow { recipe_id: Some(recipe_id), quantity: Some(28.0), ..Default::default() },
+    )
+    .await
+    .expect("hop addition");
+    tables::instruction::insert(
+        &store,
+        &InstructionRow { recipe_id: Some(recipe_id), step_number: Some(1), ..Default::default() },
+    )
+    .await
+    .expect("instruction");
+
+    bt_store::recipes::delete(&store, recipe_id).await.expect("delete");
+
+    assert!(tables::recipe::get(&store, recipe_id).await.expect("get").is_none());
+    assert!(tables::hop_in_recipe::list(&store).await.expect("list").is_empty(), "additions go with the recipe");
+    assert!(tables::instruction::list(&store).await.expect("list").is_empty(), "instructions go with the recipe");
+
+    assert!(tables::mash::get(&store, named_mash).await.expect("get").is_some(), "a named profile is kept");
+    assert!(tables::boil::get(&store, unnamed_boil).await.expect("get").is_none(), "an unnamed one-off is cleaned up");
+    assert!(tables::boil_step::list(&store).await.expect("list").is_empty(), "and takes its steps with it");
+
+    // Deleting something that is not there is not an error.
+    bt_store::recipes::delete(&store, recipe_id).await.expect("second delete");
+}
+
+/// An unnamed profile shared by two recipes survives the first of them being deleted.
+#[tokio::test]
+async fn an_unnamed_profile_still_in_use_is_left_alone() {
+    use bt_model::tables::*;
+
+    let store = fresh_store("recipe-delete-shared").await;
+    let shared_boil =
+        tables::boil::insert(&store, &BoilRow { name: Some(String::new()), ..Default::default() }).await.expect("boil");
+
+    let mut ids = Vec::new();
+    for name in ["First", "Second"] {
+        ids.push(
+            tables::recipe::insert(
+                &store,
+                &RecipeRow { name: Some(name.to_owned()), boil_id: Some(shared_boil), ..Default::default() },
+            )
+            .await
+            .expect("recipe"),
+        );
+    }
+
+    bt_store::recipes::delete(&store, ids[0]).await.expect("delete the first");
+    assert!(tables::boil::get(&store, shared_boil).await.expect("get").is_some(), "the second recipe still uses it");
+
+    bt_store::recipes::delete(&store, ids[1]).await.expect("delete the second");
+    assert!(tables::boil::get(&store, shared_boil).await.expect("get").is_none(), "now nothing uses it");
+}
