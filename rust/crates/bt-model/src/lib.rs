@@ -22,7 +22,9 @@
 
 #![forbid(unsafe_code)]
 
+pub mod folder;
 pub mod generated;
 
+pub use folder::{FolderError, FolderNode, FolderTree};
 pub use generated::enums;
 pub use generated::tables;

@@ -19,8 +19,13 @@
 //! fields a row really requires is decided by the model classes in `src/model/`, not by the
 //! database.
 
+use std::str::FromStr;
+
+use bt_measure::Unit;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
+
+use crate::enums::*;
 
 // `sqlx::FromRow` reads a row straight into one of these.  Fields whose Rust spelling
 // differs from the column name carry an explicit rename, so the two cannot drift.
@@ -110,6 +115,20 @@ impl BoilStepRow {
         "deleted",
         "boil_id",
     ];
+}
+
+impl BoilStepRow {
+    /// `chilling_type`, stored via `BoilStep::chillingTypeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn chilling_type(&self) -> Result<Option<BoilStepChillingType>, UnknownValue> {
+        self.chilling_type.as_deref().map(BoilStepChillingType::from_str).transpose()
+    }
+
+    pub fn set_chilling_type(&mut self, value: Option<BoilStepChillingType>) {
+        self.chilling_type = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `brew_log`, which stores `BrewLog`.
@@ -225,6 +244,20 @@ impl BrewLogRow {
         "deleted",
         "recipe_id",
     ];
+}
+
+impl BrewLogRow {
+    /// `measured_wort_clarity`, stored via `Measurement::Qualitative::wortClarityStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn measured_wort_clarity(&self) -> Result<Option<QualitativeWortClarity>, UnknownValue> {
+        self.measured_wort_clarity.as_deref().map(QualitativeWortClarity::from_str).transpose()
+    }
+
+    pub fn set_measured_wort_clarity(&mut self, value: Option<QualitativeWortClarity>) {
+        self.measured_wort_clarity = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `equipment`, which stores `Equipment`.
@@ -530,6 +563,32 @@ impl FermentableRow {
     ];
 }
 
+impl FermentableRow {
+    /// `ftype`, stored via `Fermentable::typeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn ftype(&self) -> Result<Option<FermentableType>, UnknownValue> {
+        self.ftype.as_deref().map(FermentableType::from_str).transpose()
+    }
+
+    pub fn set_ftype(&mut self, value: Option<FermentableType>) {
+        self.ftype = value.map(|value| value.as_str().to_owned());
+    }
+
+    /// `grain_group`, stored via `Fermentable::grainGroupStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn grain_group(&self) -> Result<Option<FermentableGrainGroup>, UnknownValue> {
+        self.grain_group.as_deref().map(FermentableGrainGroup::from_str).transpose()
+    }
+
+    pub fn set_grain_group(&mut self, value: Option<FermentableGrainGroup>) {
+        self.grain_group = value.map(|value| value.as_str().to_owned());
+    }
+}
+
 /// A row of `fermentable_in_recipe`, which stores `RecipeAdditionFermentable`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableInRecipeRow {
@@ -580,6 +639,29 @@ impl FermentableInRecipeRow {
         "recipe_id",
         "fermentable_id",
     ];
+}
+
+impl FermentableInRecipeRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+
+    /// `stage`, stored via `RecipeAddition::stageStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn stage(&self) -> Result<Option<RecipeAdditionStage>, UnknownValue> {
+        self.stage.as_deref().map(RecipeAdditionStage::from_str).transpose()
+    }
+
+    pub fn set_stage(&mut self, value: Option<RecipeAdditionStage>) {
+        self.stage = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `fermentable_stock_purchase`, which stores `StockPurchaseFermentable`.
@@ -652,6 +734,17 @@ impl FermentableStockPurchaseRow {
     ];
 }
 
+impl FermentableStockPurchaseRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+}
+
 /// A row of `fermentable_stock_use`, which stores `StockUseFermentable`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentableStockUseRow {
@@ -695,6 +788,20 @@ impl FermentableStockUseRow {
     ];
 }
 
+impl FermentableStockUseRow {
+    /// `reason`, stored via `StockUse::reasonStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn reason(&self) -> Result<Option<StockUseReason>, UnknownValue> {
+        self.reason.as_deref().map(StockUseReason::from_str).transpose()
+    }
+
+    pub fn set_reason(&mut self, value: Option<StockUseReason>) {
+        self.reason = value.map(|value| value.as_str().to_owned());
+    }
+}
+
 /// A row of `fermentation`, which stores `Fermentation`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FermentationRow {
@@ -722,6 +829,20 @@ impl FermentationRow {
     /// Every column, primary key first, then the ordinary columns, then the foreign keys.
     pub const COLUMNS: [&'static str; 8] =
         ["id", "locked", "description", "notes", "krausen_handling", "name", "deleted", "contained_in_folder_id"];
+}
+
+impl FermentationRow {
+    /// `krausen_handling`, stored via `Fermentation::krausenHandlingStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn krausen_handling(&self) -> Result<Option<FermentationKrausenHandling>, UnknownValue> {
+        self.krausen_handling.as_deref().map(FermentationKrausenHandling::from_str).transpose()
+    }
+
+    pub fn set_krausen_handling(&mut self, value: Option<FermentationKrausenHandling>) {
+        self.krausen_handling = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `fermentation_step`, which stores `FermentationStep`.
@@ -1116,6 +1237,32 @@ impl HopRow {
     ];
 }
 
+impl HopRow {
+    /// `form`, stored via `Hop::formStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn form(&self) -> Result<Option<HopForm>, UnknownValue> {
+        self.form.as_deref().map(HopForm::from_str).transpose()
+    }
+
+    pub fn set_form(&mut self, value: Option<HopForm>) {
+        self.form = value.map(|value| value.as_str().to_owned());
+    }
+
+    /// `htype`, stored via `Hop::typeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn htype(&self) -> Result<Option<HopType>, UnknownValue> {
+        self.htype.as_deref().map(HopType::from_str).transpose()
+    }
+
+    pub fn set_htype(&mut self, value: Option<HopType>) {
+        self.htype = value.map(|value| value.as_str().to_owned());
+    }
+}
+
 /// A row of `hop_in_recipe`, which stores `RecipeAdditionHop`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopInRecipeRow {
@@ -1166,6 +1313,29 @@ impl HopInRecipeRow {
         "recipe_id",
         "hop_id",
     ];
+}
+
+impl HopInRecipeRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+
+    /// `stage`, stored via `RecipeAddition::stageStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn stage(&self) -> Result<Option<RecipeAdditionStage>, UnknownValue> {
+        self.stage.as_deref().map(RecipeAdditionStage::from_str).transpose()
+    }
+
+    pub fn set_stage(&mut self, value: Option<RecipeAdditionStage>) {
+        self.stage = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `hop_stock_purchase`, which stores `StockPurchaseHop`.
@@ -1244,6 +1414,17 @@ impl HopStockPurchaseRow {
     ];
 }
 
+impl HopStockPurchaseRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+}
+
 /// A row of `hop_stock_use`, which stores `StockUseHop`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct HopStockUseRow {
@@ -1285,6 +1466,20 @@ impl HopStockUseRow {
         "hop_purchase_id",
         "brew_log_id",
     ];
+}
+
+impl HopStockUseRow {
+    /// `reason`, stored via `StockUse::reasonStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn reason(&self) -> Result<Option<StockUseReason>, UnknownValue> {
+        self.reason.as_deref().map(StockUseReason::from_str).transpose()
+    }
+
+    pub fn set_reason(&mut self, value: Option<StockUseReason>) {
+        self.reason = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `instruction`, which stores `Instruction`.
@@ -1452,6 +1647,20 @@ impl MashStepRow {
     ];
 }
 
+impl MashStepRow {
+    /// `mstype`, stored via `MashStep::typeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn mstype(&self) -> Result<Option<MashStepType>, UnknownValue> {
+        self.mstype.as_deref().map(MashStepType::from_str).transpose()
+    }
+
+    pub fn set_mstype(&mut self, value: Option<MashStepType>) {
+        self.mstype = value.map(|value| value.as_str().to_owned());
+    }
+}
+
 /// A row of `misc`, which stores `Misc`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscRow {
@@ -1496,6 +1705,32 @@ impl MiscRow {
         "deleted",
         "contained_in_folder_id",
     ];
+}
+
+impl MiscRow {
+    /// `mtype`, stored via `Misc::typeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn mtype(&self) -> Result<Option<MiscType>, UnknownValue> {
+        self.mtype.as_deref().map(MiscType::from_str).transpose()
+    }
+
+    pub fn set_mtype(&mut self, value: Option<MiscType>) {
+        self.mtype = value.map(|value| value.as_str().to_owned());
+    }
+
+    /// `water_agent_type`, stored via `Misc::waterAgentTypeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn water_agent_type(&self) -> Result<Option<MiscWaterAgentType>, UnknownValue> {
+        self.water_agent_type.as_deref().map(MiscWaterAgentType::from_str).transpose()
+    }
+
+    pub fn set_water_agent_type(&mut self, value: Option<MiscWaterAgentType>) {
+        self.water_agent_type = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `misc_in_recipe`, which stores `RecipeAdditionMisc`.
@@ -1548,6 +1783,29 @@ impl MiscInRecipeRow {
         "recipe_id",
         "misc_id",
     ];
+}
+
+impl MiscInRecipeRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+
+    /// `stage`, stored via `RecipeAddition::stageStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn stage(&self) -> Result<Option<RecipeAdditionStage>, UnknownValue> {
+        self.stage.as_deref().map(RecipeAdditionStage::from_str).transpose()
+    }
+
+    pub fn set_stage(&mut self, value: Option<RecipeAdditionStage>) {
+        self.stage = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `misc_stock_purchase`, which stores `StockPurchaseMisc`.
@@ -1617,6 +1875,17 @@ impl MiscStockPurchaseRow {
     ];
 }
 
+impl MiscStockPurchaseRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+}
+
 /// A row of `misc_stock_use`, which stores `StockUseMisc`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MiscStockUseRow {
@@ -1658,6 +1927,20 @@ impl MiscStockUseRow {
         "misc_purchase_id",
         "brew_log_id",
     ];
+}
+
+impl MiscStockUseRow {
+    /// `reason`, stored via `StockUse::reasonStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn reason(&self) -> Result<Option<StockUseReason>, UnknownValue> {
+        self.reason.as_deref().map(StockUseReason::from_str).transpose()
+    }
+
+    pub fn set_reason(&mut self, value: Option<StockUseReason>) {
+        self.reason = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `recipe`, which stores `Recipe`.
@@ -1793,6 +2076,32 @@ impl RecipeRow {
     ];
 }
 
+impl RecipeRow {
+    /// `type`, stored via `Recipe::typeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn r#type(&self) -> Result<Option<RecipeType>, UnknownValue> {
+        self.r#type.as_deref().map(RecipeType::from_str).transpose()
+    }
+
+    pub fn set_type(&mut self, value: Option<RecipeType>) {
+        self.r#type = value.map(|value| value.as_str().to_owned());
+    }
+
+    /// `wort_clarity`, stored via `Measurement::Qualitative::wortClarityStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn wort_clarity(&self) -> Result<Option<QualitativeWortClarity>, UnknownValue> {
+        self.wort_clarity.as_deref().map(QualitativeWortClarity::from_str).transpose()
+    }
+
+    pub fn set_wort_clarity(&mut self, value: Option<QualitativeWortClarity>) {
+        self.wort_clarity = value.map(|value| value.as_str().to_owned());
+    }
+}
+
 /// A row of `style`, which stores `Style`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct StyleRow {
@@ -1891,6 +2200,20 @@ impl StyleRow {
         "deleted",
         "contained_in_folder_id",
     ];
+}
+
+impl StyleRow {
+    /// `stype`, stored via `Style::typeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn stype(&self) -> Result<Option<StyleType>, UnknownValue> {
+        self.stype.as_deref().map(StyleType::from_str).transpose()
+    }
+
+    pub fn set_stype(&mut self, value: Option<StyleType>) {
+        self.stype = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `water`, which stores `Water`.
@@ -2051,6 +2374,44 @@ impl YeastRow {
     ];
 }
 
+impl YeastRow {
+    /// `flocculation`, stored via `Yeast::flocculationStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn flocculation(&self) -> Result<Option<YeastFlocculation>, UnknownValue> {
+        self.flocculation.as_deref().map(YeastFlocculation::from_str).transpose()
+    }
+
+    pub fn set_flocculation(&mut self, value: Option<YeastFlocculation>) {
+        self.flocculation = value.map(|value| value.as_str().to_owned());
+    }
+
+    /// `form`, stored via `Yeast::formStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn form(&self) -> Result<Option<YeastForm>, UnknownValue> {
+        self.form.as_deref().map(YeastForm::from_str).transpose()
+    }
+
+    pub fn set_form(&mut self, value: Option<YeastForm>) {
+        self.form = value.map(|value| value.as_str().to_owned());
+    }
+
+    /// `ytype`, stored via `Yeast::typeStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn ytype(&self) -> Result<Option<YeastType>, UnknownValue> {
+        self.ytype.as_deref().map(YeastType::from_str).transpose()
+    }
+
+    pub fn set_ytype(&mut self, value: Option<YeastType>) {
+        self.ytype = value.map(|value| value.as_str().to_owned());
+    }
+}
+
 /// A row of `yeast_in_recipe`, which stores `RecipeAdditionYeast`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastInRecipeRow {
@@ -2110,6 +2471,29 @@ impl YeastInRecipeRow {
         "recipe_id",
         "yeast_id",
     ];
+}
+
+impl YeastInRecipeRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+
+    /// `stage`, stored via `RecipeAddition::stageStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn stage(&self) -> Result<Option<RecipeAdditionStage>, UnknownValue> {
+        self.stage.as_deref().map(RecipeAdditionStage::from_str).transpose()
+    }
+
+    pub fn set_stage(&mut self, value: Option<RecipeAdditionStage>) {
+        self.stage = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// A row of `yeast_stock_purchase`, which stores `StockPurchaseYeast`.
@@ -2179,6 +2563,17 @@ impl YeastStockPurchaseRow {
     ];
 }
 
+impl YeastStockPurchaseRow {
+    /// `unit`, which holds a unit's name.
+    pub fn unit(&self) -> Option<Unit> {
+        self.unit.as_deref().and_then(Unit::by_name)
+    }
+
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
+        self.unit = unit.map(|unit| unit.name().to_owned());
+    }
+}
+
 /// A row of `yeast_stock_use`, which stores `StockUseYeast`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct YeastStockUseRow {
@@ -2220,6 +2615,20 @@ impl YeastStockUseRow {
         "yeast_purchase_id",
         "brew_log_id",
     ];
+}
+
+impl YeastStockUseRow {
+    /// `reason`, stored via `StockUse::reasonStringMapping`.
+    ///
+    /// `Err` means the column holds a string this version does not recognise, which is
+    /// worth surfacing rather than silently treating as absent.
+    pub fn reason(&self) -> Result<Option<StockUseReason>, UnknownValue> {
+        self.reason.as_deref().map(StockUseReason::from_str).transpose()
+    }
+
+    pub fn set_reason(&mut self, value: Option<StockUseReason>) {
+        self.reason = value.map(|value| value.as_str().to_owned());
+    }
 }
 
 /// Every table in the schema, in the order `schema/v23.json` lists them.

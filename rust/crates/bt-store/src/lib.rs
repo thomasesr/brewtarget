@@ -22,6 +22,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod folders;
 pub mod generated;
 pub mod store;
 

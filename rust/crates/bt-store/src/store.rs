@@ -31,6 +31,10 @@ pub enum StoreError {
     Migration(#[from] bt_schema::MigrationError),
     #[error("{0}")]
     Namespace(#[from] bt_schema::InvalidNamespace),
+    #[error("{0} is not one of the folder tables in this schema")]
+    UnknownFolderTable(String),
+    #[error(transparent)]
+    Folder(#[from] bt_model::folder::FolderError),
 }
 
 /// A connection pool for one brewing database.

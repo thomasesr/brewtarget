@@ -133,3 +133,45 @@ async fn foreign_keys_are_stored_and_read_back() {
     let read = tables::recipe::get(&store, id).await.expect("get").expect("row");
     assert_eq!(read.contained_in_folder_id, Some(folder));
 }
+
+#[tokio::test]
+async fn folders_are_created_along_a_path_and_read_back_as_a_tree() {
+    let store = fresh_store("folders").await;
+
+    // Nothing exists yet, and the root is no folder at all rather than a folder named "".
+    assert_eq!(bt_store::folders::ensure_path(&store, "recipe", "").await.expect("root"), None);
+    assert!(bt_store::folders::load_tree(&store, "recipe").await.expect("tree").is_empty());
+
+    let hum = bt_store::folders::ensure_path(&store, "recipe", "foo/bar/hum").await.expect("ensure").expect("an id");
+    let tree = bt_store::folders::load_tree(&store, "recipe").await.expect("tree");
+    assert_eq!(tree.len(), 3, "the whole chain should have been created");
+    assert_eq!(tree.full_path(hum).as_deref(), Some("foo/bar/hum"));
+
+    // Asking again finds what is there rather than creating a second copy.
+    let again = bt_store::folders::ensure_path(&store, "recipe", "/foo/bar/hum/").await.expect("ensure").expect("id");
+    assert_eq!(again, hum);
+    assert_eq!(bt_store::folders::load_tree(&store, "recipe").await.expect("tree").len(), 3);
+
+    // A sibling branch reuses the part of the path that already exists.
+    bt_store::folders::ensure_path(&store, "recipe", "foo/other").await.expect("ensure");
+    let tree = bt_store::folders::load_tree(&store, "recipe").await.expect("tree");
+    assert_eq!(tree.len(), 4);
+    assert_eq!(tree.children(None).len(), 1, "still one root");
+
+    assert_eq!(
+        bt_store::folders::full_path(&store, "recipe", hum).await.expect("path").as_deref(),
+        Some("foo/bar/hum")
+    );
+}
+
+#[tokio::test]
+async fn each_kind_of_thing_keeps_its_own_folders() {
+    let store = fresh_store("folder-kinds").await;
+
+    bt_store::folders::ensure_path(&store, "recipe", "shared-name").await.expect("recipe folder");
+    assert!(bt_store::folders::load_tree(&store, "hop").await.expect("tree").is_empty(), "hops have their own table");
+
+    // And a kind with no folder table is rejected rather than reaching SQL as a table name.
+    let error = bt_store::folders::load_tree(&store, "nonsense").await.expect_err("no such folder table");
+    assert!(error.to_string().contains("folder_for_nonsense"), "{error}");
+}

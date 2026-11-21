@@ -156,6 +156,61 @@ def rename_attribute(column: str) -> list[str]:
     return [] if name == column else [f'    #[sqlx(rename = "{column}")]', f'    #[serde(rename = "{column}")]']
 
 
+def enum_type_name(mapping_name: str) -> str:
+    """The Rust enum a `string_mapping` refers to, named the same way `generate_enums` names it."""
+    owner, _, name = mapping_name.rpartition("::")
+    return type_case(owner.split("::")[-1]) + type_case(name.removesuffix("StringMapping"))
+
+
+def generate_accessors(table: dict) -> list[str]:
+    """Typed getters and setters for the columns that hold an enum or a unit name.
+
+    Those columns store a string, so reading one back means parsing it.  Generating the accessors
+    keeps them in step with `schema/enums.json` and spares 33 hand-written pairs.
+    """
+    struct = pascal_case(table["name"]) + "Row"
+    out = []
+    for column in table["columns"]:
+        mapping = column["string_mapping"]
+        if not mapping:
+            continue
+        field = field_name(column["name"])
+        # The getter keeps the raw identifier where the column name is a Rust keyword; the setter
+        # has `set_` in front of it and so needs no escaping.
+        accessor = field.removeprefix("r#")
+        if column["field_type"] == "Unit":
+            out += [
+                f"    /// `{column['name']}`, which holds a unit's name.",
+                f"    pub fn {field}(&self) -> Option<Unit> {{",
+                f"        self.{field}.as_deref().and_then(Unit::by_name)",
+                "    }",
+                "",
+                f"    pub fn set_{accessor}(&mut self, unit: Option<Unit>) {{",
+                f"        self.{field} = unit.map(|unit| unit.name().to_owned());",
+                "    }",
+                "",
+            ]
+        elif column["field_type"] == "Enum":
+            enum = enum_type_name(mapping)
+            out += [
+                f"    /// `{column['name']}`, stored via `{mapping}`.",
+                "    ///",
+                "    /// `Err` means the column holds a string this version does not recognise, which is",
+                "    /// worth surfacing rather than silently treating as absent.",
+                f"    pub fn {field}(&self) -> Result<Option<{enum}>, UnknownValue> {{",
+                f"        self.{field}.as_deref().map({enum}::from_str).transpose()",
+                "    }",
+                "",
+                f"    pub fn set_{accessor}(&mut self, value: Option<{enum}>) {{",
+                f"        self.{field} = value.map(|value| value.as_str().to_owned());",
+                "    }",
+                "",
+            ]
+    if not out:
+        return []
+    return [f"impl {struct} {{", *out[:-1], "}", ""]
+
+
 def generate_tables(schema: dict) -> str:
     """One Rust struct per table, mirroring its columns exactly."""
     out = [
@@ -171,8 +226,13 @@ def generate_tables(schema: dict) -> str:
         "//! fields a row really requires is decided by the model classes in `src/model/`, not by the",
         "//! database.",
         "",
+        "use std::str::FromStr;",
+        "",
+        "use bt_measure::Unit;",
         "use chrono::NaiveDate;",
         "use serde::{Deserialize, Serialize};",
+        "",
+        "use crate::enums::*;",
         "",
         "// `sqlx::FromRow` reads a row straight into one of these.  Fields whose Rust spelling",
         "// differs from the column name carry an explicit rename, so the two cannot drift.",
@@ -216,6 +276,7 @@ def generate_tables(schema: dict) -> str:
         ]
         out += [f'        "{column}",' for column in columns]
         out += ["    ];", "}", ""]
+        out += generate_accessors(table)
 
     out += [
         "/// Every table in the schema, in the order `schema/v23.json` lists them.",
