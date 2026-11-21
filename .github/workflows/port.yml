@@ -1,0 +1,53 @@
+# CI for the Rust/Bun web port.  The legacy Qt/C++ build is covered by the other
+# workflows in this directory; this one deliberately touches neither Qt nor Boost.
+name: port
+
+on:
+  push:
+    paths: ['rust/**', 'web/**', 'tools/**', 'schema/**', '.github/workflows/port.yml']
+  pull_request:
+    paths: ['rust/**', 'web/**', 'tools/**', 'schema/**', '.github/workflows/port.yml']
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo build --workspace --release
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run build
+
+  tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Schema extraction is reproducible
+        run: |
+          python3 tools/extract-schema.py --out /tmp/v23.json
+          diff -u schema/v23.json /tmp/v23.json

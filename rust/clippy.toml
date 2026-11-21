@@ -1,0 +1,3 @@
+# Brewing maths is full of empirical constants; literal transcription from the C++ is
+# deliberate (see PLAN.md Phase 5), so do not fight it.
+too-many-arguments-threshold = 12

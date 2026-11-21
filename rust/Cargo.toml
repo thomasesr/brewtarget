@@ -1,0 +1,61 @@
+[workspace]
+resolver = "3"
+members = [
+   "crates/bt-measure",
+   "crates/bt-model",
+   "crates/bt-calc",
+   "crates/bt-schema",
+   "crates/bt-store",
+   "crates/bt-format",
+   "crates/bt-api",
+   "crates/bt-server",
+]
+
+[workspace.package]
+version       = "0.1.0"
+edition       = "2024"
+rust-version  = "1.90"
+license       = "GPL-3.0-or-later"
+repository    = "https://github.com/Brewtarget/brewtarget"
+authors       = ["The Brewtarget contributors"]
+
+[workspace.dependencies]
+# Internal crates
+bt-measure = { path = "crates/bt-measure" }
+bt-model   = { path = "crates/bt-model"   }
+bt-calc    = { path = "crates/bt-calc"    }
+bt-schema  = { path = "crates/bt-schema"  }
+bt-store   = { path = "crates/bt-store"   }
+bt-format  = { path = "crates/bt-format"  }
+bt-api     = { path = "crates/bt-api"     }
+
+# Errors and logging
+thiserror     = "2"
+anyhow        = "1"
+tracing       = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Serialisation
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Persistence.  All three backends are compiled in; the active one is chosen at runtime.
+sqlx = { version = "0.8", default-features = false, features = [
+   "runtime-tokio-rustls", "sqlite", "postgres", "mysql", "chrono", "macros",
+] }
+
+# Async runtime and HTTP
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "signal"] }
+axum  = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "trace", "compression-gzip"] }
+
+# Domain support
+chrono     = { version = "0.4", default-features = false, features = ["std", "serde", "clock"] }
+quick-xml  = { version = "0.37", features = ["serialize"] }
+jsonschema = "0.26"
+
+[profile.release]
+lto           = "thin"
+codegen-units = 1
+strip         = true
