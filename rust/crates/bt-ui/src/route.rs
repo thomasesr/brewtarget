@@ -35,6 +35,8 @@ pub enum Route {
         AddToRecipe { recipe: i32, kind: views::Addable },
         #[route("/recipes/:recipe/:kind/:id")]
         EditAddition { recipe: i32, kind: views::Addable, id: i32 },
+        #[route("/tools/:tool")]
+        Tools { tool: views::tools::Tool },
         #[route("/transfer")]
         Transfer {},
         #[route("/catalogue/:which")]
@@ -80,6 +82,11 @@ pub fn EditAddition(recipe: i32, kind: views::Addable, id: i32) -> Element {
     rsx! {
         views::additions::AdditionEditor { recipe, kind, editing: views::editor::Editing::Existing(id) }
     }
+}
+
+#[component]
+pub fn Tools(tool: views::tools::Tool) -> Element {
+    rsx! { views::tools::Tools { tool } }
 }
 
 #[component]

@@ -445,3 +445,30 @@ body {
    .bt-pane { padding: 0; }
    body { background: #fff; color: #000; }
 }
+
+/* ---- Tools -------------------------------------------------------------- */
+
+.bt-nav-heading {
+   display: block;
+   padding: 0 1.25rem 0.25rem;
+   font-size: 0.6875rem;
+   font-weight: 600;
+   color: var(--bt-quiet);
+   text-transform: uppercase;
+   letter-spacing: 0.07em;
+}
+
+.bt-tool { max-width: 44rem; }
+
+.bt-tool .bt-derived { margin-top: 0.5rem; }
+
+/* A unit beside the box it belongs to, rather than in the label. */
+.bt-input-row { display: flex; align-items: center; gap: 0.4rem; }
+
+.bt-input-row input { flex: 1; min-width: 0; }
+
+.bt-suffix {
+   color: var(--bt-quiet);
+   font-size: 0.875rem;
+   white-space: nowrap;
+}

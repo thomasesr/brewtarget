@@ -32,6 +32,7 @@ pub mod mash_adjust;
 pub mod recipe;
 pub mod recipe_ibu;
 pub mod smph;
+pub mod tools;
 pub mod water;
 
 pub use color::{ColorFormula, mcu_to_srm, srm_to_display_color};

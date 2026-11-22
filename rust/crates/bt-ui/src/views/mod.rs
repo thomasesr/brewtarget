@@ -19,6 +19,7 @@ pub mod recipe;
 pub mod recipes;
 pub mod steps;
 pub mod table;
+pub mod tools;
 pub mod transfer;
 pub mod water;
 
@@ -256,6 +257,18 @@ pub fn Shell() -> Element {
                                 to: Route::Catalogue { which },
                                 class: if open_catalogue == Some(which) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
                                 "{which.title()}"
+                            }
+                        }
+                    }
+                    li { class: "bt-nav-apart",
+                        span { class: "bt-nav-heading", "Tools" }
+                    }
+                    for tool in tools::Tool::ALL {
+                        li { key: "{tool}",
+                            Link {
+                                to: Route::Tools { tool },
+                                class: if route == (Route::Tools { tool }) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
+                                "{tool.title()}"
                             }
                         }
                     }

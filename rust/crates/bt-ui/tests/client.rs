@@ -629,3 +629,24 @@ async fn a_recipe_carries_the_water_it_starts_from() {
         eprintln!("none of the shipped recipes names a water profile; nothing was checked");
     }
 }
+
+/// Tool names appear in addresses, so they have to survive being written down and read back.
+#[test]
+fn every_tool_has_an_address_that_round_trips() {
+    use std::collections::BTreeSet;
+    use std::str::FromStr;
+
+    use bt_ui::views::tools::Tool;
+
+    let mut seen = BTreeSet::new();
+    for tool in Tool::ALL {
+        let slug = tool.slug();
+        assert!(seen.insert(slug), "two tools are both called {slug:?}");
+        assert_eq!(Tool::from_str(slug).expect("reads back"), tool);
+        assert!(
+            slug.chars().all(|character| character.is_ascii_lowercase() || character == '-'),
+            "{slug:?} should need no escaping in an address"
+        );
+    }
+    assert!(Tool::from_str("hammer").is_err());
+}
