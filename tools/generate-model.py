@@ -349,6 +349,25 @@ def generate_tables(schema: dict) -> str:
         struct = pascal_case(table["name"]) + "Row"
         out.append(f'        "{table["name"]}" => Some(&{struct}::COLUMNS),')
     out += ["        _ => None,", "    }", "}", ""]
+
+    out += [
+        "/// Whether a column holds a true/false value.",
+        "///",
+        "/// Needed when a row is read back without a struct to deserialise into: SQLite keeps a",
+        "/// BOOLEAN as 0 or 1 and MySQL as a TINYINT, so what the column means has to come from the",
+        "/// schema rather than from what the database hands back.",
+        "pub fn is_boolean_column(table: &str, column: &str) -> bool {",
+        "    matches!(",
+        "        (table, column),",
+    ]
+    booleans = [
+        f'("{table["name"]}", "{column["name"]}")'
+        for table in schema["tables"]
+        for column in table["columns"]
+        if column["field_type"] == "Bool"
+    ]
+    out.append("        " + " | ".join(booleans))
+    out += ["    )", "}", ""]
     return "\n".join(out)
 
 
@@ -465,10 +484,108 @@ def generate_store(schema: dict) -> str:
     return "\n".join(out)
 
 
+def generate_routes(schema: dict) -> str:
+    """One resource group per table, built on the generated repositories."""
+    out = [
+        HEADER.format(file="routes.rs", sources="schema/v23.json"),
+        "",
+        "//! A resource group per table.",
+        "//!",
+        "//! Five routes each -- list, create, read, update, delete -- over the repositories in",
+        "//! `bt-store`.  Generated, because thirty-nine near-identical modules written by hand would",
+        "//! be thirty-nine chances to get one wrong.",
+        "//!",
+        "//! Every handler takes its store from the request's state rather than a global, so the",
+        "//! session layer Stage 2 adds wraps these without any of them changing (PLAN.md §3.3).",
+        "",
+        "use axum::extract::{Path, State};",
+        "use axum::routing::get;",
+        "use axum::{Json, Router};",
+        "use bt_model::tables::*;",
+        "use bt_store::tables;",
+        "",
+        "use crate::error::{ApiError, ApiResult};",
+        "use crate::state::AppState;",
+        "",
+    ]
+
+    for table in schema["tables"]:
+        struct = pascal_case(table["name"]) + "Row"
+        module = table["name"]
+        singular = table["cpp_type"]
+        out += [
+            f"/// `/api/{module}`",
+            f"pub mod {module} {{",
+            "    use super::*;",
+            "",
+            f"    pub fn routes() -> Router<AppState> {{",
+            f'        Router::new().route("/", get(list).post(create)).route("/{{id}}", get(read).put(update).delete(remove))',
+            "    }",
+            "",
+            f"    async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<{struct}>>> {{",
+            f"        Ok(Json(tables::{module}::list(state.store()).await?))",
+            "    }",
+            "",
+            f"    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<{struct}>> {{",
+            f"        tables::{module}::get(state.store(), id)",
+            "            .await?",
+            "            .map(Json)",
+            f'            .ok_or_else(|| ApiError::NotFound(format!("no {singular} with id {{id}}")))',
+            "    }",
+            "",
+            f"    async fn create(State(state): State<AppState>, Json(row): Json<{struct}>) -> ApiResult<Json<{struct}>> {{",
+            f"        let id = tables::{module}::insert(state.store(), &row).await?;",
+            f"        read(State(state), Path(id)).await",
+            "    }",
+            "",
+            "    async fn update(",
+            "        State(state): State<AppState>,",
+            "        Path(id): Path<i64>,",
+            f"        Json(mut row): Json<{struct}>,",
+            f"    ) -> ApiResult<Json<{struct}>> {{",
+            "        // The key in the path is the one that counts; a body claiming another is a",
+            "        // mistake rather than a way to move a row.",
+            "        row.id = id;",
+            f"        if tables::{module}::get(state.store(), id).await?.is_none() {{",
+            f'            return Err(ApiError::NotFound(format!("no {singular} with id {{id}}")));',
+            "        }",
+            f"        tables::{module}::update(state.store(), &row).await?;",
+            f"        read(State(state), Path(id)).await",
+            "    }",
+            "",
+            "    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {",
+        ]
+        if any(column["name"] == "deleted" for column in table["columns"]):
+            out += [
+                "        // Deleting is soft: the row stays so that anything referring to it still",
+                "        // resolves, and is simply hidden from the lists.",
+                f"        tables::{module}::soft_delete(state.store(), id, true).await?;",
+            ]
+        else:
+            out += [f"        tables::{module}::delete(state.store(), id).await?;"]
+        out += [
+            "        Ok(axum::http::StatusCode::NO_CONTENT)",
+            "    }",
+            "}",
+            "",
+        ]
+
+    out += [
+        "/// Every generated resource group, mounted under its table's name.",
+        "pub fn table_routes() -> Router<AppState> {",
+        "    Router::new()",
+    ]
+    for table in schema["tables"]:
+        out.append(f'        .nest("/{table["name"]}", {table["name"]}::routes())')
+    out += ["}", ""]
+    return "\n".join(out)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", type=pathlib.Path, required=True, help="directory for the bt-model files")
     parser.add_argument("--store-out", type=pathlib.Path, help="directory for the bt-store repository files")
+    parser.add_argument("--api-out", type=pathlib.Path, help="directory for the bt-api route files")
     args = parser.parse_args()
 
     schema = json.loads((REPO / "schema" / "v23.json").read_text(encoding="utf-8"))
@@ -490,6 +607,19 @@ def main() -> int:
                     "tables.rs": generate_store(schema),
                     "mod.rs": HEADER.format(file="mod.rs", sources="schema/v23.json")
                     + "\n//! Generated repositories.  See `tools/generate-model.py`.\n\npub mod tables;\n",
+                },
+            )
+        )
+
+    if args.api_out:
+        args.api_out.mkdir(parents=True, exist_ok=True)
+        targets.append(
+            (
+                args.api_out,
+                {
+                    "routes.rs": generate_routes(schema),
+                    "mod.rs": HEADER.format(file="mod.rs", sources="schema/v23.json")
+                    + "\n//! Generated routes.  See `tools/generate-model.py`.\n\npub mod routes;\n",
                 },
             )
         )

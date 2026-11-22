@@ -203,6 +203,7 @@ dependencies = [
  "bt-format",
  "bt-measure",
  "bt-model",
+ "bt-schema",
  "bt-store",
  "serde",
  "serde_json",

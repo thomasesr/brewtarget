@@ -72,9 +72,10 @@ jobs:
           diff -u schema/enums.json /tmp/enums.json
       - name: Generated model code is reproducible
         run: |
-          python3 tools/generate-model.py --out /tmp/generated --store-out /tmp/generated-store
+          python3 tools/generate-model.py --out /tmp/generated --store-out /tmp/generated-store --api-out /tmp/generated-api
           diff -ru rust/crates/bt-model/src/generated /tmp/generated
           diff -ru rust/crates/bt-store/src/generated /tmp/generated-store
+          diff -ru rust/crates/bt-api/src/generated /tmp/generated-api
       - name: Format extraction is reproducible
         run: |
           python3 tools/extract-formats.py --out /tmp/formats.json

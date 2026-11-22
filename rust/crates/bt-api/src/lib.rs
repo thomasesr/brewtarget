@@ -19,3 +19,14 @@
 //! See `PLAN.md` for the phase this crate belongs to.
 
 #![forbid(unsafe_code)]
+
+pub mod error;
+pub mod generated;
+pub mod recipes;
+pub mod router;
+pub mod state;
+pub mod transfer;
+
+pub use error::{ApiError, ApiResult};
+pub use router::{api, router};
+pub use state::{AppState, Preferences};

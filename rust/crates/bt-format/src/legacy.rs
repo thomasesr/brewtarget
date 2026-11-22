@@ -43,6 +43,7 @@ pub fn expand(owned: &mut Owned) {
         "hop_in_recipe" => expand_hop_addition(&mut owned.record),
         "misc_in_recipe" => expand_misc_addition(&mut owned.record),
         "yeast_in_recipe" => expand_yeast_addition(&mut owned.record),
+        "mash_step" => expand_mash_step(&mut owned.record),
         _ => {}
     }
     default_unit(&mut owned.record);
@@ -59,6 +60,22 @@ pub fn expand(owned: &mut Owned) {
 /// `src/model/RecipeAddition*.cpp` do.
 fn default_stage(record: &mut MappedRecord, stage: &str) {
     record.columns.entry("stage".to_owned()).or_insert_with(|| Value::String(stage.to_owned()));
+}
+
+/// How much water or mash a mash step calls for.
+///
+/// Ported from the `NamedParameterBundle` constructor of `MashStep`.  BeerXML has no one column
+/// for it: an infusion step has an `INFUSE_AMOUNT` and a decoction step has a `DECOCTION_AMOUNT`,
+/// and both are the same figure as far as the database is concerned.  An explicit amount wins.
+fn expand_mash_step(record: &mut MappedRecord) {
+    if record.columns.get("amount_l").and_then(Value::as_f64).unwrap_or(0.0) != 0.0 {
+        return;
+    }
+    let decoction = record.columns.get("mstype").and_then(Value::as_str) == Some("decoction");
+    let property = if decoction { "MashStep::decoctionAmount_l" } else { "MashStep::infuseAmount_l" };
+    if let Some(amount) = record.legacy.get(property) {
+        record.columns.insert("amount_l".to_owned(), amount.clone());
+    }
 }
 
 /// The tables that record an amount, and what the ingredient they name is measured in.
@@ -346,6 +363,9 @@ fn make_fermentation(fermentation: &BTreeMap<String, Value>, recipe_name: &str) 
 ///
 /// Only a definition that names property paths needs this, which is BeerXML and nothing else.
 pub fn fold(definition: &crate::data::Record, owned: &Owned) -> Option<Owned> {
+    if owned.record.table == "mash_step" {
+        return fold_mash_step(definition, owned);
+    }
     if owned.record.table != "recipe" || !definition.fields.iter().any(|field| field.property_path.is_some()) {
         return None;
     }
@@ -438,4 +458,31 @@ fn fold_hop_additions(recipe: &mut Owned) {
             addition.record.legacy.insert("RecipeAdditionHop::beerXmlTime_mins".to_owned(), Value::from(time));
         }
     }
+}
+
+/// Say how much a mash step calls for in the terms the format uses for it.
+///
+/// A format that reads `MashStep::infuseAmount_l` has to be written one, since it has no field
+/// for `amount_l` itself.  Which of the two it is follows the step's type, as it does on the way
+/// in.
+fn fold_mash_step(definition: &crate::data::Record, owned: &Owned) -> Option<Owned> {
+    let properties: Vec<&str> = definition
+        .fields
+        .iter()
+        .filter_map(|field| field.property.as_deref())
+        .filter(|property| *property == "MashStep::infuseAmount_l" || *property == "MashStep::decoctionAmount_l")
+        .collect();
+    if properties.is_empty() {
+        return None;
+    }
+    let amount = owned.record.columns.get("amount_l")?.clone();
+    let decoction = owned.record.columns.get("mstype").and_then(Value::as_str) == Some("decoction");
+    let wanted = if decoction { "MashStep::decoctionAmount_l" } else { "MashStep::infuseAmount_l" };
+    if !properties.contains(&wanted) {
+        return None;
+    }
+
+    let mut folded = owned.clone();
+    folded.record.legacy.insert(wanted.to_owned(), amount);
+    Some(folded)
 }

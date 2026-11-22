@@ -12,6 +12,7 @@ authors.workspace      = true
 bt-measure.workspace = true
 bt-model.workspace = true
 bt-calc.workspace = true
+bt-schema.workspace = true
 bt-store.workspace = true
 bt-format.workspace = true
 axum.workspace = true
@@ -22,3 +23,9 @@ tower.workspace = true
 tower-http.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+bt-schema.workspace = true
+tokio.workspace = true
+tower.workspace = true
+serde_json.workspace = true
