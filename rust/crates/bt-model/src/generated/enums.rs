@@ -62,6 +62,14 @@ impl BeerJsonIbuFormulaMapper {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Tinseth, Self::Rager, Self::Noonan, Self::Garetz, Self::Daniels, Self::MIbu, Self::Smph];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerJsonIbuFormulaMapper {
@@ -128,6 +136,14 @@ impl BeerXmlFermentableTypeMapper {
         Self::Juice,
         Self::Honey,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlFermentableTypeMapper {
@@ -179,6 +195,14 @@ impl BeerXmlHopFormMapper {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 6] = [Self::Leaf, Self::Pellet, Self::Plug, Self::Extract, Self::WetLeaf, Self::Powder];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlHopFormMapper {
@@ -241,6 +265,14 @@ impl BeerXmlHopTypeMapper {
         Self::AromaAndFlavor,
         Self::AromaBitteringAndFlavor,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlHopTypeMapper {
@@ -303,6 +335,14 @@ impl BeerXmlMashStepTypeMapper {
         Self::SouringMash,
         Self::SouringWort,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlMashStepTypeMapper {
@@ -358,6 +398,14 @@ impl BeerXmlMiscTypeMapper {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Spice, Self::Fining, Self::WaterAgent, Self::Herb, Self::Flavor, Self::Other, Self::Wood];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlMiscTypeMapper {
@@ -428,6 +476,14 @@ impl BeerXmlRecipeStepTypeMapper {
         Self::Mead,
         Self::Wine,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlRecipeStepTypeMapper {
@@ -483,6 +539,14 @@ impl BeerXmlStyleTypeMapper {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Beer, Self::Cider, Self::Mead, Self::Kombucha, Self::Soda, Self::Wine, Self::Other];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlStyleTypeMapper {
@@ -538,6 +602,14 @@ impl BeerXmlYeastFlocculationMapper {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::VeryLow, Self::Low, Self::MediumLow, Self::Medium, Self::MediumHigh, Self::High, Self::VeryHigh];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlYeastFlocculationMapper {
@@ -586,6 +658,14 @@ impl BeerXmlYeastFormMapper {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 5] = [Self::Liquid, Self::Dry, Self::Slant, Self::Culture, Self::Dregs];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlYeastFormMapper {
@@ -672,6 +752,14 @@ impl BeerXmlYeastTypeMapper {
         Self::Pedio,
         Self::Spontaneous,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for BeerXmlYeastTypeMapper {
@@ -711,6 +799,17 @@ impl BoilStepChillingType {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 2] = [Self::Batch, Self::Inline];
+
+    /// The name this member is shown by.
+    ///
+    /// From `BoilStep::chillingTypeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Batch => "Batch",
+            Self::Inline => "Inline",
+        }
+    }
 }
 
 impl std::str::FromStr for BoilStepChillingType {
@@ -753,6 +852,14 @@ impl ColorMethodsFormula {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 3] = [Self::Mosher, Self::Daniel, Self::Morey];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for ColorMethodsFormula {
@@ -808,6 +915,22 @@ impl FermentableGrainGroup {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Base, Self::Caramel, Self::Flaked, Self::Roasted, Self::Specialty, Self::Smoked, Self::Adjunct];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Fermentable::grainGroupDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Base => "Base",
+            Self::Caramel => "Caramel",
+            Self::Flaked => "Flaked",
+            Self::Roasted => "Roasted",
+            Self::Specialty => "Specialty",
+            Self::Smoked => "Smoked",
+            Self::Adjunct => "Adjunct",
+        }
+    }
 }
 
 impl std::str::FromStr for FermentableGrainGroup {
@@ -874,6 +997,23 @@ impl FermentableType {
         Self::Juice,
         Self::Honey,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Fermentable::typeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Grain => "Grain",
+            Self::Sugar => "Sugar",
+            Self::Extract => "Extract",
+            Self::DryExtract => "Dry Extract",
+            Self::OtherAdjunct => "Other Adjunct",
+            Self::Fruit => "Fruit",
+            Self::Juice => "Juice",
+            Self::Honey => "Honey",
+        }
+    }
 }
 
 impl std::str::FromStr for FermentableType {
@@ -940,6 +1080,23 @@ impl FermentationKrausenHandling {
         Self::BlownOffNormalFermentation,
         Self::BlownOffVigorousFermentation,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Fermentation::krausenHandlingDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::MixedIn => "Mixed In",
+            Self::MinorDeposits => "Minor Deposits on Fermenter",
+            Self::MediumDeposits => "Medium Deposits on Fermenter",
+            Self::HeavyDeposits => "Heavy Deposits on Fermenter",
+            Self::VeryHeavyDeposits => "Very Heavy Deposits on Fermenter",
+            Self::BlownOffSlowFermentation => "Blown Off, Slow Fermentation",
+            Self::BlownOffNormalFermentation => "Blown Off, Normal Fermentation",
+            Self::BlownOffVigorousFermentation => "Blown Off, Vigorous Fermentation",
+        }
+    }
 }
 
 impl std::str::FromStr for FermentationKrausenHandling {
@@ -991,6 +1148,21 @@ impl HopForm {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 6] = [Self::Leaf, Self::Pellet, Self::Plug, Self::Extract, Self::WetLeaf, Self::Powder];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Hop::formDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Leaf => "Leaf",
+            Self::Pellet => "Pellet",
+            Self::Plug => "Plug",
+            Self::Extract => "Extract",
+            Self::WetLeaf => "WetLeaf",
+            Self::Powder => "Powder",
+        }
+    }
 }
 
 impl std::str::FromStr for HopForm {
@@ -1053,6 +1225,22 @@ impl HopType {
         Self::AromaAndFlavor,
         Self::AromaBitteringAndFlavor,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Hop::typeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Bittering => "Bittering",
+            Self::Aroma => "Aroma",
+            Self::AromaAndBittering => "Aroma & Bittering",
+            Self::Flavor => "Flavor",
+            Self::BitteringAndFlavor => "Bittering & Flavor",
+            Self::AromaAndFlavor => "Aroma & Flavor",
+            Self::AromaBitteringAndFlavor => "Aroma, Bittering & Flavor",
+        }
+    }
 }
 
 impl std::str::FromStr for HopType {
@@ -1108,6 +1296,14 @@ impl IbuMethodsFormula {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Tinseth, Self::Rager, Self::Noonan, Self::Garetz, Self::Daniels, Self::MIbu, Self::Smph];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for IbuMethodsFormula {
@@ -1163,6 +1359,14 @@ impl IbuMethodsFormulaStringMappingUc {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Tinseth, Self::Rager, Self::Noonan, Self::Garetz, Self::Daniels, Self::MIbu, Self::Smph];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for IbuMethodsFormulaStringMappingUc {
@@ -1225,6 +1429,22 @@ impl MashStepType {
         Self::SouringMash,
         Self::SouringWort,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `MashStep::typeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Infusion => "Infusion",
+            Self::Temperature => "Temperature",
+            Self::Decoction => "Decoction",
+            Self::FlySparge => "Normal (Fly) Sparge",
+            Self::BatchSparge => "Batch Sparge (Drain Mash Tun)",
+            Self::SouringMash => "Souring Mash",
+            Self::SouringWort => "Souring Wort",
+        }
+    }
 }
 
 impl std::str::FromStr for MashStepType {
@@ -1291,6 +1511,23 @@ impl QualitativeWortClarity {
         Self::VeryCloudy,
         Self::ExtremelyCloudy,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Measurement::Qualitative::wortClarityDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::VeryClear => "Very Clear",
+            Self::Clear => "Clear",
+            Self::SomewhatClear => "Somewhat Clear",
+            Self::Average => "Average",
+            Self::SomewhatCloudy => "Somewhat Cloudy",
+            Self::Cloudy => "Cloudy",
+            Self::VeryCloudy => "Very Cloudy",
+            Self::ExtremelyCloudy => "Extremely Cloudy",
+        }
+    }
 }
 
 impl std::str::FromStr for QualitativeWortClarity {
@@ -1330,6 +1567,17 @@ impl MeasurementChoiceOfPhysicalQuantity {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 2] = [Self::MassVolume, Self::MassVolumeCount];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Measurement::choiceOfPhysicalQuantityDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::MassVolume => "Mass or Volume",
+            Self::MassVolumeCount => "Mass, Volume or Count",
+        }
+    }
 }
 
 impl std::str::FromStr for MeasurementChoiceOfPhysicalQuantity {
@@ -1436,6 +1684,33 @@ impl MeasurementPhysicalQuantity {
         Self::VolumePerMass,
         Self::EnergyPerVolume,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Measurement::physicalQuantityDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Mass => "Weight (Mass)",
+            Self::Volume => "Volume",
+            Self::Length => "Length",
+            Self::Count => "Count",
+            Self::Temperature => "Temperature",
+            Self::Time => "Time",
+            Self::Color => "Color",
+            Self::Gravity => "Density",
+            Self::DiastaticPower => "Diastatic Power",
+            Self::Acidity => "Acidity",
+            Self::Bitterness => "Bitterness",
+            Self::Carbonation => "Carbonation",
+            Self::MassFractionOrConcentration => "Mass Fraction or Concentration",
+            Self::Viscosity => "Viscosity",
+            Self::SpecificHeatCapacity => "Specific Heat Capacity",
+            Self::HeatCapacity => "Heat Capacity",
+            Self::VolumePerMass => "Volume per Mass",
+            Self::EnergyPerVolume => "Energy per Volume",
+        }
+    }
 }
 
 impl std::str::FromStr for MeasurementPhysicalQuantity {
@@ -1491,6 +1766,22 @@ impl MiscType {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Spice, Self::Fining, Self::WaterAgent, Self::Herb, Self::Flavor, Self::Other, Self::Wood];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Misc::typeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Spice => "Spice",
+            Self::Fining => "Fining",
+            Self::WaterAgent => "Water Agent",
+            Self::Herb => "Herb",
+            Self::Flavor => "Flavor",
+            Self::Other => "Other",
+            Self::Wood => "Wood",
+        }
+    }
 }
 
 impl std::str::FromStr for MiscType {
@@ -1581,6 +1872,29 @@ impl MiscWaterAgentType {
         Self::HydrochloricAcid,
         Self::Other,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Misc::waterAgentTypeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::CalciumChlorideAnhydrous => "calcium chloride anhydrous",
+            Self::CalciumChlorideDihydrate => "calcium chloride dihydrate",
+            Self::CalciumCarbonate => "calcium carbonate",
+            Self::CalciumSulfateDihydrate => "calcium sulfate dihydrate",
+            Self::CalciumHydroxide => "calcium hydroxide",
+            Self::MagnesiumSulfateHeptahydrate => "magnesium sulfate heptahydrate",
+            Self::MagnesiumChlorideHexahydrate => "magnesium chloride hexahydrate",
+            Self::SodiumChloride => "sodium chloride",
+            Self::SodiumBicarbonate => "sodium bicarbonate",
+            Self::LacticAcid => "lactic acid",
+            Self::PhosphoricAcid => "phosphoric acid",
+            Self::SulfuricAcid => "sulfuric acid",
+            Self::HydrochloricAcid => "hydrochloric acid",
+            Self::Other => "Other",
+        }
+    }
 }
 
 impl std::str::FromStr for MiscWaterAgentType {
@@ -1651,6 +1965,24 @@ impl RecipeType {
         Self::Mead,
         Self::Wine,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Recipe::typeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Extract => "Extract",
+            Self::PartialMash => "Partial Mash",
+            Self::AllGrain => "All Grain",
+            Self::Cider => "Cider",
+            Self::Kombucha => "Kombucha",
+            Self::Soda => "Soda",
+            Self::Other => "Other",
+            Self::Mead => "Mead",
+            Self::Wine => "Wine",
+        }
+    }
 }
 
 impl std::str::FromStr for RecipeType {
@@ -1696,6 +2028,19 @@ impl RecipeAdditionStage {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 4] = [Self::Mash, Self::Boil, Self::Fermentation, Self::Packaging];
+
+    /// The name this member is shown by.
+    ///
+    /// From `RecipeAddition::stageDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Mash => "Mash",
+            Self::Boil => "Boil",
+            Self::Fermentation => "Fermentation",
+            Self::Packaging => "Package",
+        }
+    }
 }
 
 impl std::str::FromStr for RecipeAdditionStage {
@@ -1744,6 +2089,20 @@ impl RecipeAdditionHopUse {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 5] = [Self::Mash, Self::FirstWort, Self::Boil, Self::Aroma, Self::DryHop];
+
+    /// The name this member is shown by.
+    ///
+    /// From `RecipeAdditionHop::useDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Mash => "Mash",
+            Self::FirstWort => "First Wort",
+            Self::Boil => "Boil",
+            Self::Aroma => "Post-Boil",
+            Self::DryHop => "Dry Hop",
+        }
+    }
 }
 
 impl std::str::FromStr for RecipeAdditionHopUse {
@@ -1792,6 +2151,20 @@ impl RecipeAdditionMiscUse {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 5] = [Self::Mash, Self::Boil, Self::Primary, Self::Secondary, Self::Bottling];
+
+    /// The name this member is shown by.
+    ///
+    /// From `RecipeAdditionMisc::useDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Mash => "Mash",
+            Self::Boil => "Boil",
+            Self::Primary => "Primary",
+            Self::Secondary => "Secondary",
+            Self::Bottling => "Bottling",
+        }
+    }
 }
 
 impl std::str::FromStr for RecipeAdditionMiscUse {
@@ -1834,6 +2207,18 @@ impl StockUseReason {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 3] = [Self::Used, Self::Lost, Self::Disposed];
+
+    /// The name this member is shown by.
+    ///
+    /// From `StockUse::reasonDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Used => "Used",
+            Self::Lost => "Lost",
+            Self::Disposed => "Disposed",
+        }
+    }
 }
 
 impl std::str::FromStr for StockUseReason {
@@ -1889,6 +2274,22 @@ impl StyleType {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::Beer, Self::Cider, Self::Mead, Self::Kombucha, Self::Soda, Self::Wine, Self::Other];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Style::typeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Beer => "Beer",
+            Self::Cider => "Cider",
+            Self::Mead => "Mead",
+            Self::Kombucha => "Kombucha",
+            Self::Soda => "Soda",
+            Self::Wine => "Wine",
+            Self::Other => "Other",
+        }
+    }
 }
 
 impl std::str::FromStr for StyleType {
@@ -1983,6 +2384,30 @@ impl WaterIon {
         Self::Sulfate,
         Self::Zinc,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Water::ionDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Bicarbonate => "Bicarbonate (HCOââ»)",
+            Self::Calcium => "Calcium (CaÂ²âº)",
+            Self::Carbonate => "Carbonate (COâÂ²â»)",
+            Self::Chloride => "Chloride (Clâ»)",
+            Self::Copper => "Copper (CuÂ²âº)",
+            Self::Iron => "Iron (FeÂ²âº)",
+            Self::Magnesium => "Magnesium (MgÂ²âº)",
+            Self::Manganese => "Manganese (MnÂ²âº)",
+            Self::Nitrate => "Nitrate (NOââ»)",
+            Self::Nitrite => "Nitrite (NOââ»)",
+            Self::Phosphate => "Phosphate (POâÂ³â»)",
+            Self::Potassium => "Potassium (Kâº)",
+            Self::Sodium => "Sodium (Naâº)",
+            Self::Sulfate => "Sulfate (SOâÂ²â»)",
+            Self::Zinc => "Zinc (ZnÂ²âº)",
+        }
+    }
 }
 
 impl std::str::FromStr for WaterIon {
@@ -2038,6 +2463,22 @@ impl YeastFlocculation {
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 7] =
         [Self::VeryLow, Self::Low, Self::MediumLow, Self::Medium, Self::MediumHigh, Self::High, Self::VeryHigh];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Yeast::flocculationDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::VeryLow => "Very Low",
+            Self::Low => "Low",
+            Self::MediumLow => "Medium Low",
+            Self::Medium => "Medium",
+            Self::MediumHigh => "Medium High",
+            Self::High => "High",
+            Self::VeryHigh => "Very High",
+        }
+    }
 }
 
 impl std::str::FromStr for YeastFlocculation {
@@ -2086,6 +2527,20 @@ impl YeastForm {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 5] = [Self::Liquid, Self::Dry, Self::Slant, Self::Culture, Self::Dregs];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Yeast::formDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Liquid => "Liquid",
+            Self::Dry => "Dry",
+            Self::Slant => "Slant",
+            Self::Culture => "Culture",
+            Self::Dregs => "Dregs",
+        }
+    }
 }
 
 impl std::str::FromStr for YeastForm {
@@ -2172,6 +2627,28 @@ impl YeastType {
         Self::Pedio,
         Self::Spontaneous,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// From `Yeast::typeDisplayNames`, which is a mapping of its own: what is
+    /// stored and what is shown are different strings, and neither follows from the other.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Ale => "Ale",
+            Self::Lager => "Lager",
+            Self::Other => "Other",
+            Self::Wine => "Wine",
+            Self::Champagne => "Champagne",
+            Self::Bacteria => "Bacteria",
+            Self::Brett => "Brett",
+            Self::Kveik => "Kveik",
+            Self::Lacto => "Lacto",
+            Self::Malolactic => "Malolactic",
+            Self::MixedCulture => "Mixed-culture",
+            Self::Pedio => "Pedio",
+            Self::Spontaneous => "Spontaneous",
+        }
+    }
 }
 
 impl std::str::FromStr for YeastType {
@@ -2223,6 +2700,14 @@ impl RelativeScaleToName {
 
     /// Every member, in the order the C++ declares them.
     pub const ALL: [Self; 6] = [Self::ExtraSmall, Self::Small, Self::Medium, Self::Large, Self::ExtraLarge, Self::Huge];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for RelativeScaleToName {
@@ -2349,6 +2834,14 @@ impl SystemOfMeasurementToUniqueName {
         Self::HeatCapacityJoules,
         Self::HeatCapacityBtus,
     ];
+
+    /// The name this member is shown by.
+    ///
+    /// This enumeration has no display mapping in the C++, so what is stored is what is
+    /// shown.
+    pub fn display_name(&self) -> &'static str {
+        self.as_str()
+    }
 }
 
 impl std::str::FromStr for SystemOfMeasurementToUniqueName {

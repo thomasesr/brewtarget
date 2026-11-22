@@ -40,6 +40,15 @@ impl Column {
         Self { header, align: Align::End }
     }
 
+    /// A column headed by whatever the application calls that column.
+    ///
+    /// Preferred over spelling the heading out here: the C++ named these, the names are
+    /// extracted from it, and a second set written by hand would be a second thing to keep
+    /// in step.  See `format::column_label`.
+    pub fn of(table: &str, column: &'static str, align: Align) -> Self {
+        Self { header: super::format::column_label(table, column), align }
+    }
+
     fn class(&self) -> &'static str {
         match self.align {
             Align::Start => "bt-cell",

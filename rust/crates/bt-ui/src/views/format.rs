@@ -45,15 +45,15 @@ pub fn percent(value: Option<f64>) -> String {
     }
 }
 
-/// An enumerated value, as a word rather than as it is stored.
+/// An enumerated value, by the name it is shown by.
 ///
-/// The stored strings are lower case and underscored because that is what goes in the column.
-/// The C++ has a second mapping of its own for display (`EnumDisplayNameMapping`, which is also
-/// where translation happens); until that is extracted, this tidies the stored form, which is
-/// close enough to read and never wrong about *which* value it is.
-pub fn label<T>(value: Result<Option<T>, UnknownValue>, as_str: impl Fn(&T) -> &'static str) -> String {
+/// What is stored and what is shown are two different strings: the database holds
+/// `drain mash tun` and the application shows "Batch Sparge (Drain Mash Tun)".  Neither follows
+/// from the other, so `display_name` is extracted from the C++ rather than derived -- see
+/// `tools/extract-labels.py`.
+pub fn label<T>(value: Result<Option<T>, UnknownValue>, display_name: impl Fn(&T) -> &'static str) -> String {
     match value {
-        Ok(Some(value)) => title_case(as_str(&value)),
+        Ok(Some(value)) => display_name(&value).to_owned(),
         Ok(None) => NOTHING.to_owned(),
         // A value this build does not recognise is shown rather than hidden: it is in the
         // database, and a user looking for it should be able to see that it is there.
@@ -61,20 +61,12 @@ pub fn label<T>(value: Result<Option<T>, UnknownValue>, as_str: impl Fn(&T) -> &
     }
 }
 
-/// `drain mash tun` becomes `Drain Mash Tun`.
-fn title_case(value: &str) -> String {
-    value
-        .split(['_', ' '])
-        .filter(|word| !word.is_empty())
-        .map(|word| {
-            let mut characters = word.chars();
-            match characters.next() {
-                Some(first) => first.to_uppercase().collect::<String>() + characters.as_str(),
-                None => String::new(),
-            }
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
+/// What a column is called when it is shown.
+///
+/// Falls back to the column name, which is at least true, for the few columns the C++ never
+/// shows and therefore never named.
+pub fn column_label(table: &str, column: &'static str) -> &'static str {
+    bt_model::tables::label_for(table, column).unwrap_or(column)
 }
 
 /// A malt's colour in SRM, which is what the catalogue shows, from the degrees Lovibond the
@@ -92,7 +84,7 @@ pub fn color_srm(lovibond: Option<f64>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use bt_model::enums::FermentableType;
+    use bt_model::enums::{FermentableType, MashStepType};
 
     use super::*;
 
@@ -124,13 +116,30 @@ mod tests {
         assert_eq!(color_srm(None), NOTHING);
     }
 
+    /// What is stored and what is shown are different strings, and the one shown is the one
+    /// the C++ shows -- not a tidied-up version of the stored form, which would be a guess.
     #[test]
-    fn stored_words_are_tidied_without_changing_which_value_they_are() {
-        let grain: Result<Option<FermentableType>, _> = Ok(Some(FermentableType::Grain));
-        assert_eq!(label(grain, |value| value.as_str()), "Grain");
+    fn an_enumerated_value_is_shown_by_the_name_the_application_gives_it() {
+        let dry: Result<Option<FermentableType>, _> = Ok(Some(FermentableType::DryExtract));
+        assert_eq!(label(dry, FermentableType::display_name), "Dry Extract", "stored as `dry extract`");
+
+        // The one that makes the point: tidying the stored string would read "Drain Mash Tun".
+        let sparge: Result<Option<MashStepType>, _> = Ok(Some(MashStepType::BatchSparge));
+        assert_eq!(label(sparge, MashStepType::display_name), "Batch Sparge (Drain Mash Tun)");
+        assert_eq!(MashStepType::BatchSparge.as_str(), "drain mash tun", "which is not what is stored");
 
         let none: Result<Option<FermentableType>, _> = Ok(None);
-        assert_eq!(label(none, |value| value.as_str()), NOTHING);
+        assert_eq!(label(none, FermentableType::display_name), NOTHING);
+    }
+
+    /// Column labels come from the C++ too, for the same reason.
+    #[test]
+    fn a_column_is_shown_by_the_name_the_application_gives_it() {
+        assert_eq!(column_label("fermentable", "fine_grind_yield_pct"), "Yield (DBFG) %");
+        assert_eq!(column_label("fermentable", "color_lovibond"), "Color");
+        assert_eq!(column_label("hop", "alpha_pct"), "% Alpha");
+        // A column the C++ never shows falls back to its own name rather than to nothing.
+        assert_eq!(column_label("hop", "no_such_column"), "no_such_column");
     }
 
     /// A value this build does not know is shown, not hidden: it is in the database, and
@@ -139,6 +148,6 @@ mod tests {
     fn an_unrecognised_value_is_shown_rather_than_swallowed() {
         let unknown: Result<Option<FermentableType>, _> =
             Err(UnknownValue { enumeration: "FermentableType", value: "unobtainium".to_owned() });
-        assert_eq!(label(unknown, |value: &FermentableType| value.as_str()), "unobtainium (unrecognised)");
+        assert_eq!(label(unknown, FermentableType::display_name), "unobtainium (unrecognised)");
     }
 }

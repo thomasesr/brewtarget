@@ -20,7 +20,7 @@ use bt_model::recipe::{Addition, IngredientAmount, Recipe};
 use dioxus::prelude::*;
 
 use super::format::{NOTHING, color_srm, label, number, percent, text};
-use super::table::{Cells, Column, DataTable};
+use super::table::{Align, Cells, Column, DataTable};
 
 /// How much of an ingredient an addition calls for, in the unit it was recorded in.
 ///
@@ -35,7 +35,7 @@ fn amount<Row: IngredientAmount, Ingredient>(addition: &Addition<Row, Ingredient
 
 /// When in the brew an addition is made.
 fn stage<Row: bt_model::recipe::HasStage, Ingredient>(addition: &Addition<Row, Ingredient>) -> String {
-    label(addition.addition.stage_value(), |value| value.as_str())
+    label(addition.addition.stage_value(), |value| value.display_name())
 }
 
 /// Which step of that stage, where the addition names one.
@@ -57,14 +57,14 @@ fn at_time(value: Option<f64>) -> String {
 #[component]
 pub fn Fermentables(recipe: Recipe) -> Element {
     let columns = vec![
-        Column::text("Name"),
-        Column::text("Type"),
-        Column::number("Yield %"),
-        Column::number("Color"),
-        Column::number("Amount"),
-        Column::text("Stage"),
-        Column::number("Step"),
-        Column::number("Time"),
+        Column::of("fermentable", "name", Align::Start),
+        Column::of("fermentable", "ftype", Align::Start),
+        Column::of("fermentable", "fine_grind_yield_pct", Align::End),
+        Column::of("fermentable", "color_lovibond", Align::End),
+        Column::of("fermentable_in_recipe", "quantity", Align::End),
+        Column::of("fermentable_in_recipe", "stage", Align::Start),
+        Column::of("fermentable_in_recipe", "step", Align::End),
+        Column::of("fermentable_in_recipe", "add_at_time_mins", Align::End),
     ];
     let rows: Vec<Cells> = recipe
         .fermentables
@@ -73,7 +73,8 @@ pub fn Fermentables(recipe: Recipe) -> Element {
             let malt = addition.ingredient.as_ref();
             vec![
                 text(malt.and_then(|malt| malt.name.as_deref())),
-                malt.map(|malt| label(malt.ftype(), |value| value.as_str())).unwrap_or_else(|| NOTHING.to_owned()),
+                malt.map(|malt| label(malt.ftype(), |value| value.display_name()))
+                    .unwrap_or_else(|| NOTHING.to_owned()),
                 percent(malt.and_then(|malt| malt.fine_grind_yield_pct)),
                 color_srm(malt.and_then(|malt| malt.color_lovibond)),
                 amount(addition),
@@ -89,13 +90,14 @@ pub fn Fermentables(recipe: Recipe) -> Element {
 #[component]
 pub fn Hops(recipe: Recipe, figures: Calculated) -> Element {
     let columns = vec![
-        Column::text("Name"),
-        Column::number("Alpha %"),
-        Column::number("Amount"),
-        Column::text("Stage"),
-        Column::number("Step"),
-        Column::number("Time"),
-        Column::text("Form"),
+        Column::of("hop", "name", Align::Start),
+        Column::of("hop", "alpha_pct", Align::End),
+        Column::of("hop_in_recipe", "quantity", Align::End),
+        Column::of("hop_in_recipe", "stage", Align::Start),
+        Column::of("hop_in_recipe", "step", Align::End),
+        Column::of("hop_in_recipe", "add_at_time_mins", Align::End),
+        Column::of("hop", "form", Align::Start),
+        // Not a column anywhere: what this addition contributes, worked out here.
         Column::number("IBU"),
     ];
     let rows: Vec<Cells> = recipe
@@ -111,7 +113,7 @@ pub fn Hops(recipe: Recipe, figures: Calculated) -> Element {
                 stage(addition),
                 step(addition.addition.step),
                 at_time(addition.addition.add_at_time_mins),
-                hop.map(|hop| label(hop.form(), |value| value.as_str())).unwrap_or_else(|| NOTHING.to_owned()),
+                hop.map(|hop| label(hop.form(), |value| value.display_name())).unwrap_or_else(|| NOTHING.to_owned()),
                 // What this addition contributes, which the Qt table does not show but the
                 // recipe screen does -- and which is the figure a brewer is actually choosing
                 // between when deciding what to change.
@@ -125,12 +127,12 @@ pub fn Hops(recipe: Recipe, figures: Calculated) -> Element {
 #[component]
 pub fn Miscs(recipe: Recipe) -> Element {
     let columns = vec![
-        Column::text("Name"),
-        Column::text("Type"),
-        Column::number("Amount"),
-        Column::text("Stage"),
-        Column::number("Step"),
-        Column::number("Time"),
+        Column::of("misc", "name", Align::Start),
+        Column::of("misc", "mtype", Align::Start),
+        Column::of("misc_in_recipe", "quantity", Align::End),
+        Column::of("misc_in_recipe", "stage", Align::Start),
+        Column::of("misc_in_recipe", "step", Align::End),
+        Column::of("misc_in_recipe", "add_at_time_mins", Align::End),
     ];
     let rows: Vec<Cells> = recipe
         .miscs
@@ -139,7 +141,8 @@ pub fn Miscs(recipe: Recipe) -> Element {
             let misc = addition.ingredient.as_ref();
             vec![
                 text(misc.and_then(|misc| misc.name.as_deref())),
-                misc.map(|misc| label(misc.mtype(), |value| value.as_str())).unwrap_or_else(|| NOTHING.to_owned()),
+                misc.map(|misc| label(misc.mtype(), |value| value.display_name()))
+                    .unwrap_or_else(|| NOTHING.to_owned()),
                 amount(addition),
                 stage(addition),
                 step(addition.addition.step),
@@ -153,15 +156,15 @@ pub fn Miscs(recipe: Recipe) -> Element {
 #[component]
 pub fn Yeasts(recipe: Recipe) -> Element {
     let columns = vec![
-        Column::text("Name"),
-        Column::text("Laboratory"),
-        Column::text("Product ID"),
-        Column::number("Amount"),
-        Column::text("Stage"),
-        Column::number("Step"),
-        Column::text("Type"),
-        Column::text("Form"),
-        Column::number("Attenuation"),
+        Column::of("yeast", "name", Align::Start),
+        Column::of("yeast", "laboratory", Align::Start),
+        Column::of("yeast", "product_id", Align::Start),
+        Column::of("yeast_in_recipe", "quantity", Align::End),
+        Column::of("yeast_in_recipe", "stage", Align::Start),
+        Column::of("yeast_in_recipe", "step", Align::End),
+        Column::of("yeast", "ytype", Align::Start),
+        Column::of("yeast", "form", Align::Start),
+        Column::of("yeast_in_recipe", "attenuation_pct", Align::End),
     ];
     let rows: Vec<Cells> = recipe
         .yeasts
@@ -175,8 +178,12 @@ pub fn Yeasts(recipe: Recipe) -> Element {
                 amount(addition),
                 stage(addition),
                 step(addition.addition.step),
-                yeast.map(|yeast| label(yeast.ytype(), |value| value.as_str())).unwrap_or_else(|| NOTHING.to_owned()),
-                yeast.map(|yeast| label(yeast.form(), |value| value.as_str())).unwrap_or_else(|| NOTHING.to_owned()),
+                yeast
+                    .map(|yeast| label(yeast.ytype(), |value| value.display_name()))
+                    .unwrap_or_else(|| NOTHING.to_owned()),
+                yeast
+                    .map(|yeast| label(yeast.form(), |value| value.display_name()))
+                    .unwrap_or_else(|| NOTHING.to_owned()),
                 percent(addition.addition.attenuation_pct),
             ]
         })

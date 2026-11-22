@@ -82,6 +82,10 @@ jobs:
         run: |
           python3 tools/extract-enums.py --out /tmp/enums.json
           diff -u schema/enums.json /tmp/enums.json
+      - name: Label extraction is reproducible
+        run: |
+          python3 tools/extract-labels.py --out /tmp/labels.json
+          diff -u schema/labels.json /tmp/labels.json
       - name: Generated model code is reproducible
         run: |
           python3 tools/generate-model.py --out /tmp/generated --store-out /tmp/generated-store --api-out /tmp/generated-api

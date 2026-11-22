@@ -24,7 +24,7 @@ use bt_model::tables::*;
 use dioxus::prelude::*;
 
 use super::format::{color_srm, label, number, percent, text};
-use super::table::{Cells, Column, DataTable, Failed, Loading};
+use super::table::{Align, Cells, Column, DataTable, Failed, Loading};
 use crate::Client;
 
 /// Build a component that fetches one catalogue and shows it as a table.
@@ -32,7 +32,7 @@ use crate::Client;
 /// The ten of them differ only in what they fetch and what they show, so they are written as
 /// ten descriptions rather than ten components.
 macro_rules! catalogue {
-    ($component:ident, $fetch:ident, $row:ty, [$($header:expr => $cell:expr),+ $(,)?]) => {
+    ($component:ident, $fetch:ident, $row:ty, $table:literal, [$($column:literal: $align:expr => $cell:expr),+ $(,)?]) => {
         #[component]
         pub fn $component() -> Element {
             let client = use_context::<Client>();
@@ -41,7 +41,7 @@ macro_rules! catalogue {
                 async move { client.$fetch().await }
             });
 
-            let columns: Vec<Column> = vec![$($header),+];
+            let columns: Vec<Column> = vec![$(Column::of($table, $column, $align)),+];
             match &*rows.read_unchecked() {
                 None => rsx! { Loading {} },
                 Some(Err(error)) => rsx! { Failed { message: error.to_string() } },
@@ -60,78 +60,78 @@ macro_rules! catalogue {
     };
 }
 
-catalogue!(Fermentables, fermentables, FermentableRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::text("Type") => |row| label(row.ftype(), |value| value.as_str()),
-    Column::number("Yield %") => |row| percent(row.fine_grind_yield_pct),
-    Column::number("Color") => |row| color_srm(row.color_lovibond),
+catalogue!(Fermentables, fermentables, FermentableRow, "fermentable", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "ftype": Align::Start => |row| label(row.ftype(), |value| value.display_name()),
+    "fine_grind_yield_pct": Align::End => |row| percent(row.fine_grind_yield_pct),
+    "color_lovibond": Align::End => |row| color_srm(row.color_lovibond),
 ]);
 
-catalogue!(Hops, hops, HopRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::text("Form") => |row| label(row.form(), |value| value.as_str()),
-    Column::text("Year") => |row| text(row.year.as_deref()),
-    Column::number("Alpha %") => |row| percent(row.alpha_pct),
+catalogue!(Hops, hops, HopRow, "hop", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "form": Align::Start => |row| label(row.form(), |value| value.display_name()),
+    "year": Align::Start => |row| text(row.year.as_deref()),
+    "alpha_pct": Align::End => |row| percent(row.alpha_pct),
 ]);
 
-catalogue!(Miscs, miscs, MiscRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::text("Type") => |row| label(row.mtype(), |value| value.as_str()),
+catalogue!(Miscs, miscs, MiscRow, "misc", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "mtype": Align::Start => |row| label(row.mtype(), |value| value.display_name()),
 ]);
 
-catalogue!(Yeasts, yeasts, YeastRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::text("Laboratory") => |row| text(row.laboratory.as_deref()),
-    Column::text("Product ID") => |row| text(row.product_id.as_deref()),
-    Column::text("Type") => |row| label(row.ytype(), |value| value.as_str()),
-    Column::text("Form") => |row| label(row.form(), |value| value.as_str()),
+catalogue!(Yeasts, yeasts, YeastRow, "yeast", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "laboratory": Align::Start => |row| text(row.laboratory.as_deref()),
+    "product_id": Align::Start => |row| text(row.product_id.as_deref()),
+    "ytype": Align::Start => |row| label(row.ytype(), |value| value.display_name()),
+    "form": Align::Start => |row| label(row.form(), |value| value.display_name()),
 ]);
 
-catalogue!(Waters, waters, WaterRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::number("Ca") => |row| number(row.calcium, 1),
-    Column::number("HCO3") => |row| number(row.bicarbonate, 1),
-    Column::number("SO4") => |row| number(row.sulfate, 1),
-    Column::number("Cl") => |row| number(row.chloride, 1),
-    Column::number("Na") => |row| number(row.sodium, 1),
-    Column::number("Mg") => |row| number(row.magnesium, 1),
+catalogue!(Waters, waters, WaterRow, "water", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "calcium": Align::End => |row| number(row.calcium, 1),
+    "bicarbonate": Align::End => |row| number(row.bicarbonate, 1),
+    "sulfate": Align::End => |row| number(row.sulfate, 1),
+    "chloride": Align::End => |row| number(row.chloride, 1),
+    "sodium": Align::End => |row| number(row.sodium, 1),
+    "magnesium": Align::End => |row| number(row.magnesium, 1),
 ]);
 
-catalogue!(Styles, styles, StyleRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::text("Type") => |row| label(row.stype(), |value| value.as_str()),
-    Column::text("Category") => |row| text(row.category.as_deref()),
-    Column::text("Number") => |row| text(row.category_number.as_deref()),
-    Column::text("Letter") => |row| text(row.style_letter.as_deref()),
-    Column::text("Guide") => |row| text(row.style_guide.as_deref()),
+catalogue!(Styles, styles, StyleRow, "style", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "stype": Align::Start => |row| label(row.stype(), |value| value.display_name()),
+    "category": Align::Start => |row| text(row.category.as_deref()),
+    "category_number": Align::Start => |row| text(row.category_number.as_deref()),
+    "style_letter": Align::Start => |row| text(row.style_letter.as_deref()),
+    "style_guide": Align::Start => |row| text(row.style_guide.as_deref()),
 ]);
 
-catalogue!(Equipments, equipments, EquipmentRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::number("Mash Tun") => |row| number(row.mash_tun_volume_l, 1),
-    Column::number("Kettle") => |row| number(row.kettle_volume_l, 1),
-    Column::number("Fermenter") => |row| number(row.fv_volume_l, 1),
+catalogue!(Equipments, equipments, EquipmentRow, "equipment", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "mash_tun_volume_l": Align::End => |row| number(row.mash_tun_volume_l, 1),
+    "kettle_volume_l": Align::End => |row| number(row.kettle_volume_l, 1),
+    "fv_volume_l": Align::End => |row| number(row.fv_volume_l, 1),
 ]);
 
 // The three profiles a recipe refers to.  The Qt application edits these in dialogs rather than
 // listing them, so these columns are what the dialogs show at the top rather than a ported table.
-catalogue!(Mashes, mashes, MashRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::number("Grain Temp") => |row| number(row.grain_temp, 1),
-    Column::number("Sparge Temp") => |row| number(row.sparge_temp, 1),
-    Column::number("Sparge pH") => |row| number(row.ph, 2),
+catalogue!(Mashes, mashes, MashRow, "mash", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "grain_temp": Align::End => |row| number(row.grain_temp, 1),
+    "sparge_temp": Align::End => |row| number(row.sparge_temp, 1),
+    "ph": Align::End => |row| number(row.ph, 2),
 ]);
 
-catalogue!(Boils, boils, BoilRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::number("Pre-boil Size") => |row| number(row.pre_boil_size_l, 1),
-    Column::text("Notes") => |row| text(row.notes.as_deref()),
+catalogue!(Boils, boils, BoilRow, "boil", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "pre_boil_size_l": Align::End => |row| number(row.pre_boil_size_l, 1),
+    "notes": Align::Start => |row| text(row.notes.as_deref()),
 ]);
 
-catalogue!(Fermentations, fermentations, FermentationRow, [
-    Column::text("Name") => |row| text(row.name.as_deref()),
-    Column::text("Description") => |row| text(row.description.as_deref()),
-    Column::text("Notes") => |row| text(row.notes.as_deref()),
+catalogue!(Fermentations, fermentations, FermentationRow, "fermentation", [
+    "name": Align::Start => |row| text(row.name.as_deref()),
+    "description": Align::Start => |row| text(row.description.as_deref()),
+    "notes": Align::Start => |row| text(row.notes.as_deref()),
 ]);
 
 /// Whichever catalogue the address names.

@@ -89,7 +89,7 @@ def field_name(column: str) -> str:
     return f"r#{name}" if name in RUST_KEYWORDS else name
 
 
-def generate_enums(enums: dict) -> str:
+def generate_enums(enums: dict, labels: dict) -> str:
     """One Rust enum per mapping, with the exact strings the database stores."""
     out = [
         HEADER.format(file="enums.rs", sources="schema/enums.json"),
@@ -140,8 +140,40 @@ def generate_enums(enums: dict) -> str:
         ]
         for value in mapping["values"]:
             out.append(f"        Self::{variant_name(value['member'])},")
+        out += ["    ];", ""]
+
+        # The name shown to a person is a second mapping of its own: `drain mash tun` is
+        # stored, "Batch Sparge (Drain Mash Tun)" is shown.  Neither follows from the other.
+        shown = labels["display_names"].get(name.replace("StringMapping", "DisplayNames"), {})
+        if shown:
+            out += [
+                "    /// The name this member is shown by.",
+                "    ///",
+                f"    /// From `{name.replace('StringMapping', 'DisplayNames')}`, which is a mapping of its own: what is",
+                "    /// stored and what is shown are different strings, and neither follows from the other.",
+                "    pub fn display_name(&self) -> &'static str {",
+                "        match self {",
+            ]
+            for value in mapping["values"]:
+                label = shown.get(value["member"])
+                if label is None:
+                    # A member the C++ stores but never shows; its stored form is all there is.
+                    label = value["string"]
+                out.append(f'            Self::{variant_name(value["member"])} => "{label}",')
+            out += ["        }", "    }", ""]
+        else:
+            out += [
+                "    /// The name this member is shown by.",
+                "    ///",
+                "    /// This enumeration has no display mapping in the C++, so what is stored is what is",
+                "    /// shown.",
+                "    pub fn display_name(&self) -> &'static str {",
+                "        self.as_str()",
+                "    }",
+                "",
+            ]
+
         out += [
-            "    ];",
             "}",
             "",
             f"impl std::str::FromStr for {type_name} {{",
@@ -231,7 +263,7 @@ def generate_accessors(table: dict) -> list[str]:
     return [f"impl {struct} {{", *out[:-1], "}", ""]
 
 
-def generate_tables(schema: dict) -> str:
+def generate_tables(schema: dict, labels: dict) -> str:
     """One Rust struct per table, mirroring its columns exactly."""
     out = [
         HEADER.format(file="tables.rs", sources="schema/v23.json"),
@@ -363,6 +395,33 @@ def generate_tables(schema: dict) -> str:
         struct = pascal_case(table["name"]) + "Row"
         out.append(f'        "{table["name"]}" => Some(&{struct}::COLUMNS),')
     out += ["        _ => None,", "    }", "}", ""]
+
+    # What each column is called when shown to a person.  Not derivable from the column name:
+    # `fine_grind_yield_pct` is "Yield (DBFG) %" and `color_lovibond` is simply "Color".
+    out += [
+        "/// What a column is called when it is shown to a person.",
+        "///",
+        "/// From the `localisedName_*` functions in `src/model/`.  Not derivable from the column",
+        "/// name -- `fine_grind_yield_pct` is shown as \"Yield (DBFG) %\" -- so it is extracted",
+        "/// rather than guessed at.  `None` means the C++ never shows that column.",
+        "pub fn label_for(table: &str, column: &str) -> Option<&'static str> {",
+        "    let found = match (table, column) {",
+    ]
+    seen_labels: set[tuple[str, str]] = set()
+    for table in schema["tables"]:
+        entries = []
+        if table["primary_key"].get("property"):
+            entries.append((table["primary_key"]["name"], table["primary_key"]["property"]))
+        entries += [(column["name"], column["property"]) for column in table["columns"] if column["property"]]
+        entries += [(key["column"], key["property"]) for key in table["foreign_keys"] if key["property"]]
+        for column, property_name in entries:
+            label = labels["labels"].get(property_name)
+            if label is None or (table["name"], column) in seen_labels:
+                continue
+            seen_labels.add((table["name"], column))
+            escaped = label.replace("\\", "\\\\").replace('"', '\\"')
+            out.append(f'        ("{table["name"]}", "{column}") => "{escaped}",')
+    out += ["        _ => return None,", "    };", "    Some(found)", "}", ""]
 
     out += [
         "/// What a column holds, as the schema declares it.",
@@ -680,9 +739,10 @@ def main() -> int:
 
     schema = json.loads((REPO / "schema" / "v23.json").read_text(encoding="utf-8"))
     enums = json.loads((REPO / "schema" / "enums.json").read_text(encoding="utf-8"))
+    labels = json.loads((REPO / "schema" / "labels.json").read_text(encoding="utf-8"))
 
     args.out.mkdir(parents=True, exist_ok=True)
-    files = {"enums.rs": generate_enums(enums), "tables.rs": generate_tables(schema)}
+    files = {"enums.rs": generate_enums(enums, labels), "tables.rs": generate_tables(schema, labels)}
     files["mod.rs"] = (
         HEADER.format(file="mod.rs", sources="schema/v23.json and schema/enums.json")
         + "\n//! Generated model code.  See `tools/generate-model.py`.\n\npub mod enums;\npub mod tables;\n"
