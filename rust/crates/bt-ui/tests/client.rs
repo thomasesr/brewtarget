@@ -411,3 +411,96 @@ async fn something_that_is_not_a_brewing_file_is_refused() {
     assert!(!failure.is_not_found(), "{failure:?}");
     assert!(failure.to_string().contains("not a"), "{failure}");
 }
+
+/// Adding a hop to a recipe changes what the recipe comes to.
+///
+/// The point of the addition editor: a row written to `hop_in_recipe` has to show up in the
+/// recipe aggregate and in its bitterness, or the screen will say the recipe is unchanged while
+/// the database says otherwise.
+#[tokio::test]
+async fn adding_a_hop_to_a_recipe_bitters_it() {
+    use bt_model::tables::HopRow;
+    use serde_json::{Map, json};
+
+    let client = serving_with_content("addition").await;
+    let id = client
+        .recipe_rows()
+        .await
+        .expect("the recipes")
+        .iter()
+        .find(|row| row.name.as_deref() == Some("Bt: American Pale Ale"))
+        .expect("the shipped pale ale")
+        .id;
+
+    let before = bt_calc::recipe::calculate_recipe(
+        &client.recipe(id).await.expect("the recipe"),
+        Default::default(),
+        Default::default(),
+    );
+
+    let hop = client
+        .create_hop(&HopRow { name: Some("Test Hop".to_owned()), alpha_pct: Some(15.0), ..HopRow::default() })
+        .await
+        .expect("a hop to add");
+
+    let mut addition = Map::new();
+    addition.insert("recipe_id".to_owned(), json!(id));
+    addition.insert("hop_id".to_owned(), json!(hop.id));
+    addition.insert("quantity".to_owned(), json!(0.1));
+    addition.insert("unit".to_owned(), json!("kilograms"));
+    addition.insert("stage".to_owned(), json!("add_to_boil"));
+    addition.insert("step".to_owned(), json!(2));
+    addition.insert("add_at_time_mins".to_owned(), json!(60.0));
+    let stored = client.post_row("hop_in_recipe", &addition).await.expect("add it");
+    let addition_id = stored["id"].as_i64().expect("a key") as i32;
+
+    let after = client.recipe(id).await.expect("the recipe again");
+    assert!(
+        after
+            .hops
+            .iter()
+            .any(|addition| addition.ingredient.as_ref().and_then(|hop| hop.name.as_deref()) == Some("Test Hop")),
+        "the addition is not on the recipe"
+    );
+    let bittered = bt_calc::recipe::calculate_recipe(&after, Default::default(), Default::default());
+    assert!(bittered.ibus > before.ibus, "100 g of 15% hops for an hour should bitter it");
+
+    // ...and taking it away puts the recipe back.
+    client.delete_row("hop_in_recipe", addition_id).await.expect("remove it");
+    let removed = client.recipe(id).await.expect("the recipe once more");
+    assert!(
+        !removed
+            .hops
+            .iter()
+            .any(|addition| addition.ingredient.as_ref().and_then(|hop| hop.name.as_deref()) == Some("Test Hop")),
+        "the addition is still there"
+    );
+    let plain = bt_calc::recipe::calculate_recipe(&removed, Default::default(), Default::default());
+    agree(plain.ibus, before.ibus, "bitterness after removing the addition");
+}
+
+/// A foreign key is chosen from the table it names, so the editor has to know which table that
+/// is.  Getting this wrong offers a picker full of the wrong things.
+#[test]
+fn a_foreign_key_names_the_table_it_is_chosen_from() {
+    use bt_model::tables::editable_columns;
+
+    let hop_id = editable_columns("hop_in_recipe")
+        .iter()
+        .find(|field| field.column == "hop_id")
+        .expect("a hop addition names a hop");
+    assert_eq!(hop_id.references, Some("hop"));
+    // Named for the thing being chosen, not for its key: the C++ calls this one "Hop".
+    assert_eq!(hop_id.label, "Hop");
+
+    let style = editable_columns("recipe").iter().find(|field| field.column == "style_id").expect(
+        "recipes
+ have styles",
+    );
+    assert_eq!(style.references, Some("style"));
+    assert_eq!(style.label, "Style");
+
+    // A column that names nothing has no table to choose from.
+    let quantity = editable_columns("hop_in_recipe").iter().find(|field| field.column == "quantity").expect("amount");
+    assert_eq!(quantity.references, None);
+}

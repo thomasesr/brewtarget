@@ -25,6 +25,78 @@ use dioxus::prelude::*;
 
 use crate::route::Route;
 
+/// Which kind of thing a recipe has additions of.
+///
+/// The four ingredient tabs on the recipe screen; each is a table of its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Addable {
+    Fermentable,
+    Hop,
+    Misc,
+    Yeast,
+}
+
+impl Addable {
+    pub const ALL: [Self; 4] = [Self::Fermentable, Self::Hop, Self::Misc, Self::Yeast];
+
+    /// The table the additions themselves live in.
+    pub fn table(self) -> &'static str {
+        match self {
+            Self::Fermentable => "fermentable_in_recipe",
+            Self::Hop => "hop_in_recipe",
+            Self::Misc => "misc_in_recipe",
+            Self::Yeast => "yeast_in_recipe",
+        }
+    }
+
+    pub fn title(self) -> &'static str {
+        match self {
+            Self::Fermentable => "Fermentables",
+            Self::Hop => "Hops",
+            Self::Misc => "Miscellaneous",
+            Self::Yeast => "Yeasts",
+        }
+    }
+
+    pub fn singular(self) -> &'static str {
+        match self {
+            Self::Fermentable => "Fermentable",
+            Self::Hop => "Hop",
+            Self::Misc => "Miscellaneous Ingredient",
+            Self::Yeast => "Yeast",
+        }
+    }
+
+    /// What this tab is called in an address.
+    pub fn slug(self) -> &'static str {
+        match self {
+            Self::Fermentable => "fermentables",
+            Self::Hop => "hops",
+            Self::Misc => "miscs",
+            Self::Yeast => "yeasts",
+        }
+    }
+}
+
+impl fmt::Display for Addable {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.slug())
+    }
+}
+
+/// An address naming a kind of addition that does not exist.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("there is nothing called {0:?} to add to a recipe")]
+pub struct NoSuchAddable(String);
+
+impl FromStr for Addable {
+    type Err = NoSuchAddable;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL.into_iter().find(|kind| kind.slug() == value).ok_or_else(|| NoSuchAddable(value.to_owned()))
+    }
+}
+
 /// Which catalogue is being looked at.
 ///
 /// Part of the address, so it has to survive being written down and read back.

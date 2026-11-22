@@ -276,6 +276,13 @@ impl Client {
         })
     }
 
+    /// Every row of a table, as columns rather than as a typed struct.
+    ///
+    /// What a picker needs: a list of rows of the table a foreign key names, to choose one of.
+    pub async fn rows(&self, table: &str) -> Result<Vec<serde_json::Map<String, Value>>, ApiError> {
+        self.get(&format!("/{table}")).await
+    }
+
     /// Read a file and store everything in it.
     ///
     /// The whole file goes in the body: that is what a browser already has after reading one,

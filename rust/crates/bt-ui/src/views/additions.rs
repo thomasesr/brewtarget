@@ -20,7 +20,8 @@ use bt_model::recipe::{Addition, IngredientAmount, Recipe};
 use dioxus::prelude::*;
 
 use super::format::{NOTHING, color_srm, label, number, percent, text};
-use super::table::{Align, Cells, Column, DataTable};
+use super::table::{Align, Cells, Column};
+use crate::route::Route;
 
 /// How much of an ingredient an addition calls for, in the unit it was recorded in.
 ///
@@ -66,25 +67,28 @@ pub fn Fermentables(recipe: Recipe) -> Element {
         Column::of("fermentable_in_recipe", "step", Align::End),
         Column::of("fermentable_in_recipe", "add_at_time_mins", Align::End),
     ];
-    let rows: Vec<Cells> = recipe
+    let rows: Vec<(i32, Cells)> = recipe
         .fermentables
         .iter()
         .map(|addition| {
             let malt = addition.ingredient.as_ref();
-            vec![
-                text(malt.and_then(|malt| malt.name.as_deref())),
-                malt.map(|malt| label(malt.ftype(), |value| value.display_name()))
-                    .unwrap_or_else(|| NOTHING.to_owned()),
-                percent(malt.and_then(|malt| malt.fine_grind_yield_pct)),
-                color_srm(malt.and_then(|malt| malt.color_lovibond)),
-                amount(addition),
-                stage(addition),
-                step(addition.addition.step),
-                at_time(addition.addition.add_at_time_mins),
-            ]
+            (
+                addition.addition.id,
+                vec![
+                    text(malt.and_then(|malt| malt.name.as_deref())),
+                    malt.map(|malt| label(malt.ftype(), |value| value.display_name()))
+                        .unwrap_or_else(|| NOTHING.to_owned()),
+                    percent(malt.and_then(|malt| malt.fine_grind_yield_pct)),
+                    color_srm(malt.and_then(|malt| malt.color_lovibond)),
+                    amount(addition),
+                    stage(addition),
+                    step(addition.addition.step),
+                    at_time(addition.addition.add_at_time_mins),
+                ],
+            )
         })
         .collect();
-    rsx! { DataTable { columns, rows } }
+    rsx! { AdditionTable { recipe: recipe.id(), kind: super::Addable::Fermentable, columns, rows } }
 }
 
 #[component]
@@ -100,28 +104,32 @@ pub fn Hops(recipe: Recipe, figures: Calculated) -> Element {
         // Not a column anywhere: what this addition contributes, worked out here.
         Column::number("IBU"),
     ];
-    let rows: Vec<Cells> = recipe
+    let rows: Vec<(i32, Cells)> = recipe
         .hops
         .iter()
         .enumerate()
         .map(|(index, addition)| {
             let hop = addition.ingredient.as_ref();
-            vec![
-                text(hop.and_then(|hop| hop.name.as_deref())),
-                percent(hop.and_then(|hop| hop.alpha_pct)),
-                amount(addition),
-                stage(addition),
-                step(addition.addition.step),
-                at_time(addition.addition.add_at_time_mins),
-                hop.map(|hop| label(hop.form(), |value| value.display_name())).unwrap_or_else(|| NOTHING.to_owned()),
-                // What this addition contributes, which the Qt table does not show but the
-                // recipe screen does -- and which is the figure a brewer is actually choosing
-                // between when deciding what to change.
-                number(figures.ibus_per_addition.get(index).copied(), 1),
-            ]
+            (
+                addition.addition.id,
+                vec![
+                    text(hop.and_then(|hop| hop.name.as_deref())),
+                    percent(hop.and_then(|hop| hop.alpha_pct)),
+                    amount(addition),
+                    stage(addition),
+                    step(addition.addition.step),
+                    at_time(addition.addition.add_at_time_mins),
+                    hop.map(|hop| label(hop.form(), |value| value.display_name()))
+                        .unwrap_or_else(|| NOTHING.to_owned()),
+                    // What this addition contributes, which the Qt table does not show but the
+                    // recipe screen does -- and which is the figure a brewer is actually choosing
+                    // between when deciding what to change.
+                    number(figures.ibus_per_addition.get(index).copied(), 1),
+                ],
+            )
         })
         .collect();
-    rsx! { DataTable { columns, rows } }
+    rsx! { AdditionTable { recipe: recipe.id(), kind: super::Addable::Hop, columns, rows } }
 }
 
 #[component]
@@ -134,23 +142,26 @@ pub fn Miscs(recipe: Recipe) -> Element {
         Column::of("misc_in_recipe", "step", Align::End),
         Column::of("misc_in_recipe", "add_at_time_mins", Align::End),
     ];
-    let rows: Vec<Cells> = recipe
+    let rows: Vec<(i32, Cells)> = recipe
         .miscs
         .iter()
         .map(|addition| {
             let misc = addition.ingredient.as_ref();
-            vec![
-                text(misc.and_then(|misc| misc.name.as_deref())),
-                misc.map(|misc| label(misc.mtype(), |value| value.display_name()))
-                    .unwrap_or_else(|| NOTHING.to_owned()),
-                amount(addition),
-                stage(addition),
-                step(addition.addition.step),
-                at_time(addition.addition.add_at_time_mins),
-            ]
+            (
+                addition.addition.id,
+                vec![
+                    text(misc.and_then(|misc| misc.name.as_deref())),
+                    misc.map(|misc| label(misc.mtype(), |value| value.display_name()))
+                        .unwrap_or_else(|| NOTHING.to_owned()),
+                    amount(addition),
+                    stage(addition),
+                    step(addition.addition.step),
+                    at_time(addition.addition.add_at_time_mins),
+                ],
+            )
         })
         .collect();
-    rsx! { DataTable { columns, rows } }
+    rsx! { AdditionTable { recipe: recipe.id(), kind: super::Addable::Misc, columns, rows } }
 }
 
 #[component]
@@ -166,27 +177,106 @@ pub fn Yeasts(recipe: Recipe) -> Element {
         Column::of("yeast", "form", Align::Start),
         Column::of("yeast_in_recipe", "attenuation_pct", Align::End),
     ];
-    let rows: Vec<Cells> = recipe
+    let rows: Vec<(i32, Cells)> = recipe
         .yeasts
         .iter()
         .map(|addition| {
             let yeast = addition.ingredient.as_ref();
-            vec![
-                text(yeast.and_then(|yeast| yeast.name.as_deref())),
-                text(yeast.and_then(|yeast| yeast.laboratory.as_deref())),
-                text(yeast.and_then(|yeast| yeast.product_id.as_deref())),
-                amount(addition),
-                stage(addition),
-                step(addition.addition.step),
-                yeast
-                    .map(|yeast| label(yeast.ytype(), |value| value.display_name()))
-                    .unwrap_or_else(|| NOTHING.to_owned()),
-                yeast
-                    .map(|yeast| label(yeast.form(), |value| value.display_name()))
-                    .unwrap_or_else(|| NOTHING.to_owned()),
-                percent(addition.addition.attenuation_pct),
-            ]
+            (
+                addition.addition.id,
+                vec![
+                    text(yeast.and_then(|yeast| yeast.name.as_deref())),
+                    text(yeast.and_then(|yeast| yeast.laboratory.as_deref())),
+                    text(yeast.and_then(|yeast| yeast.product_id.as_deref())),
+                    amount(addition),
+                    stage(addition),
+                    step(addition.addition.step),
+                    yeast
+                        .map(|yeast| label(yeast.ytype(), |value| value.display_name()))
+                        .unwrap_or_else(|| NOTHING.to_owned()),
+                    yeast
+                        .map(|yeast| label(yeast.form(), |value| value.display_name()))
+                        .unwrap_or_else(|| NOTHING.to_owned()),
+                    percent(addition.addition.attenuation_pct),
+                ],
+            )
         })
         .collect();
-    rsx! { DataTable { columns, rows } }
+    rsx! { AdditionTable { recipe: recipe.id(), kind: super::Addable::Yeast, columns, rows } }
+}
+
+/// Adding an ingredient to a recipe, or changing how much of it goes in.
+///
+/// The same editor the catalogues use, against the addition's own table.  Which recipe it
+/// belongs to is fixed by the address rather than offered as a choice: this screen was reached
+/// from that recipe, and letting it be changed here would be a way to move an addition between
+/// recipes by accident.
+#[component]
+pub fn AdditionEditor(recipe: i32, kind: super::Addable, editing: super::editor::Editing) -> Element {
+    let navigator = use_navigator();
+    let back = crate::route::Route::Recipe { id: recipe };
+
+    rsx! {
+        Link { to: back.clone(), class: "bt-link bt-back", "← Recipe" }
+        h2 {
+            match editing {
+                super::editor::Editing::New => format!("Add {}", kind.singular()),
+                super::editor::Editing::Existing(_) => format!("Edit {}", kind.singular()),
+            }
+        }
+        super::editor::Editor {
+            table: kind.table().to_owned(),
+            editing,
+            fixed: vec![("recipe_id".to_owned(), serde_json::Value::from(recipe))],
+            on_done: move |_| {
+                navigator.push(back.clone());
+            },
+        }
+    }
+}
+
+/// The additions of one kind, with a way into each and a way to add one.
+#[component]
+fn AdditionTable(recipe: i32, kind: super::Addable, columns: Vec<Column>, rows: Vec<(i32, Cells)>) -> Element {
+    let add = rsx! {
+        Link {
+            to: Route::AddToRecipe { recipe, kind },
+            class: "bt-primary bt-add",
+            "Add {kind.singular()}"
+        }
+    };
+
+    rsx! {
+        div { class: "bt-toolbar", {add} }
+        if rows.is_empty() {
+            p { class: "bt-empty", "Nothing added yet." }
+        } else {
+            table { class: "bt-table",
+                thead {
+                    tr {
+                        for column in columns.iter() {
+                            th { class: column.class(), "{column.header}" }
+                        }
+                        th { class: "bt-cell", span { class: "bt-hidden", "Edit" } }
+                    }
+                }
+                tbody {
+                    for (id, cells) in rows.iter() {
+                        tr { key: "{id}",
+                            for (column, cell) in columns.iter().zip(cells) {
+                                td { class: column.class(), "{cell}" }
+                            }
+                            td { class: "bt-cell",
+                                Link {
+                                    to: Route::EditAddition { recipe, kind, id: *id },
+                                    class: "bt-link",
+                                    "Edit"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

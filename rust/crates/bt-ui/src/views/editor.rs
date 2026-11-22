@@ -74,11 +74,69 @@ fn is_long_text(field: &Editable) -> bool {
         && matches!(field.column, "notes" | "description" | "ingredients" | "examples" | "best_for" | "use_for")
 }
 
+/// The rows of every table a foreign key on this one names, so they can be chosen from.
+///
+/// Fetched together rather than one picker at a time: a recipe names six other rows, and six
+/// requests fired off independently would have the screen filling in piecemeal.
+#[derive(Debug, Clone, Default, PartialEq)]
+struct Choosable(BTreeMap<String, Vec<(i32, String)>>);
+
+impl Choosable {
+    async fn fetch(client: &Client, fields: &[Editable]) -> Self {
+        let mut found = BTreeMap::new();
+        for table in fields.iter().filter_map(|field| field.references) {
+            if found.contains_key(table) {
+                continue;
+            }
+            // A table that cannot be read leaves its picker empty rather than stopping the
+            // whole editor: every other field is still worth being able to change.
+            let rows = client.rows(table).await.unwrap_or_default();
+            let mut named: Vec<(i32, String)> = rows
+                .iter()
+                .filter(|row| !row.get("deleted").and_then(Value::as_bool).unwrap_or(false))
+                .filter_map(|row| {
+                    let id = i32::try_from(row.get("id")?.as_i64()?).ok()?;
+                    let name = row.get("name").and_then(Value::as_str).unwrap_or_default();
+                    // A row with no name is still choosable; its key is all there is to go on.
+                    Some((id, if name.is_empty() { format!("#{id}") } else { name.to_owned() }))
+                })
+                .collect();
+            named.sort_by(|left, right| left.1.cmp(&right.1));
+            found.insert(table.to_owned(), named);
+        }
+        Self(found)
+    }
+
+    fn of(&self, table: &str) -> &[(i32, String)] {
+        self.0.get(table).map(Vec::as_slice).unwrap_or_default()
+    }
+}
+
 /// The editor for one row of one table.
+///
+/// `fixed` are columns set by whoever opened the editor rather than by whoever is using it --
+/// the recipe a hop addition belongs to, say.  They are written with the row and not shown.
 #[component]
-pub fn Editor(table: String, editing: Editing, on_done: EventHandler<Option<i32>>) -> Element {
+pub fn Editor(
+    table: String,
+    editing: Editing,
+    #[props(default)] fixed: Vec<(String, Value)>,
+    on_done: EventHandler<Option<i32>>,
+) -> Element {
     let client = use_context::<Client>();
-    let fields = editable_columns(&table);
+    let fields: Vec<Editable> = editable_columns(&table)
+        .iter()
+        .filter(|field| !fixed.iter().any(|(column, _)| column == field.column))
+        .copied()
+        .collect();
+
+    let choosable = use_resource({
+        let (client, fields) = (client.clone(), fields.clone());
+        move || {
+            let (client, fields) = (client.clone(), fields.clone());
+            async move { Choosable::fetch(&client, &fields).await }
+        }
+    });
 
     // What is in the boxes, by column.  Separate from what was loaded so that an edit can be
     // abandoned, and so that what someone typed survives a failed save.
@@ -136,47 +194,50 @@ pub fn Editor(table: String, editing: Editing, on_done: EventHandler<Option<i32>
         }
     };
 
-    let save = move |event: FormEvent| {
-        // Without this the browser navigates away and the whole application reloads.
-        event.prevent_default();
-        let (client, table) = (client.clone(), table.clone());
-        // Everything typed, turned back into columns.  A box left empty clears the column.
-        let mut row = loaded();
-        let mut rejected = None;
-        for field in fields {
-            let text = typed().get(field.column).cloned().unwrap_or_default();
-            match parse(field.kind, &text) {
-                Ok(value) => {
-                    row.insert(field.column.to_owned(), value);
-                }
-                Err(message) => {
-                    rejected = Some(format!("{}: {message}", field.label));
-                    break;
+    let save = {
+        let fields = fields.clone();
+        move |event: FormEvent| {
+            // Without this the browser navigates away and the whole application reloads.
+            event.prevent_default();
+            let (client, table) = (client.clone(), table.clone());
+            // Everything typed, turned back into columns.  A box left empty clears the column.
+            let mut row = loaded();
+            let mut rejected = None;
+            for field in fields.iter() {
+                let text = typed().get(field.column).cloned().unwrap_or_default();
+                match parse(field.kind, &text) {
+                    Ok(value) => {
+                        row.insert(field.column.to_owned(), value);
+                    }
+                    Err(message) => {
+                        rejected = Some(format!("{}: {message}", field.label));
+                        break;
+                    }
                 }
             }
-        }
-        if let Some(message) = rejected {
-            problem.set(Some(message));
-            return;
-        }
+            if let Some(message) = rejected {
+                problem.set(Some(message));
+                return;
+            }
 
-        problem.set(None);
-        saving.set(true);
-        spawn(async move {
-            let stored = match editing {
-                Editing::Existing(id) => client.put_row(&table, id, &row).await,
-                Editing::New => client.post_row(&table, &row).await,
-            };
-            saving.set(false);
-            match stored {
-                Ok(stored) => {
-                    let id = stored.get("id").and_then(Value::as_i64).and_then(|id| i32::try_from(id).ok());
-                    on_done.call(id);
+            problem.set(None);
+            saving.set(true);
+            spawn(async move {
+                let stored = match editing {
+                    Editing::Existing(id) => client.put_row(&table, id, &row).await,
+                    Editing::New => client.post_row(&table, &row).await,
+                };
+                saving.set(false);
+                match stored {
+                    Ok(stored) => {
+                        let id = stored.get("id").and_then(Value::as_i64).and_then(|id| i32::try_from(id).ok());
+                        on_done.call(id);
+                    }
+                    // The boxes keep what was typed, so nothing is lost to a failed save.
+                    Err(error) => problem.set(Some(error.to_string())),
                 }
-                // The boxes keep what was typed, so nothing is lost to a failed save.
-                Err(error) => problem.set(Some(error.to_string())),
-            }
-        });
+            });
+        }
     };
 
     rsx! {
@@ -185,11 +246,12 @@ pub fn Editor(table: String, editing: Editing, on_done: EventHandler<Option<i32>
                 p { class: "bt-error", role: "alert", "{message}" }
             }
             div { class: "bt-fields",
-                for field in fields {
+                for field in fields.iter().copied() {
                     Field {
                         key: "{field.column}",
-                        field: *field,
+                        field,
                         value: typed().get(field.column).cloned().unwrap_or_default(),
+                        choices: choosable().unwrap_or_default().of(field.references.unwrap_or_default()).to_vec(),
                         on_change: move |text| {
                             typed.write().insert(field.column.to_owned(), text);
                         },
@@ -231,13 +293,30 @@ pub fn Editor(table: String, editing: Editing, on_done: EventHandler<Option<i32>
 
 /// One labelled control.
 #[component]
-fn Field(field: Editable, value: String, on_change: EventHandler<String>) -> Element {
+fn Field(
+    field: Editable,
+    value: String,
+    /// The rows this field may name, where it names a row of another table.
+    choices: Vec<(i32, String)>,
+    on_change: EventHandler<String>,
+) -> Element {
     let id = format!("field-{}", field.column);
 
     rsx! {
         div { class: if is_long_text(&field) { "bt-field bt-wide" } else { "bt-field" },
             label { r#for: "{id}", "{field.label}" }
-            if !field.choices.is_empty() {
+            if field.references.is_some() {
+                // A row of another table: chosen by its name, stored as its key.
+                select {
+                    id: "{id}",
+                    value: "{value}",
+                    onchange: move |event| on_change.call(event.value()),
+                    option { value: "", "—" }
+                    for (key, name) in choices.iter() {
+                        option { key: "{key}", value: "{key}", "{name}" }
+                    }
+                }
+            } else if !field.choices.is_empty() {
                 // An enumerated column: the stored value goes in, the shown name comes out.
                 select {
                     id: "{id}",

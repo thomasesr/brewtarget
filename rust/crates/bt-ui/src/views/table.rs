@@ -51,7 +51,7 @@ impl Column {
         Self { header: super::format::column_label(table, column), align }
     }
 
-    fn class(&self) -> &'static str {
+    pub fn class(&self) -> &'static str {
         match self.align {
             Align::Start => "bt-cell",
             Align::End => "bt-cell bt-number",

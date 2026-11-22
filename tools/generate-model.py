@@ -359,8 +359,30 @@ def generate_tables(schema: dict, labels: dict, enums: dict) -> str:
                 choices = f"&[{pairs}]"
             editable.append(
                 f'        Editable {{ column: "{column["name"]}", label: "{escaped}", '
-                f'kind: BaseType::{base_types[column["base_type"]]}, choices: {choices} }},'
+                f'kind: BaseType::{base_types[column["base_type"]]}, choices: {choices}, references: None }},'
             )
+        for key in table["foreign_keys"]:
+            # A foreign key has two names in the C++: one for the key (`Recipe::equipmentId`,
+            # "Equipment ID") and one for the thing it names (`Recipe::equipment`, "Equipment").
+            # What is being chosen is the thing, not its key, so that is the name used where
+            # there is one.  Both are the C++'s own; neither is invented here.
+            owner = (key["property"] or "").rsplit("::", 1)[0]
+            object_label = None
+            for candidate in (key["property"] or "",):
+                member = candidate.rsplit("::", 1)[-1]
+                if member.endswith("Id"):
+                    object_label = labels["labels"].get(f"{owner}::{member[:-2]}")
+            # The shared `ingredientId` and `ownerId` name the thing on the derived class
+            # instead, so the table's own type is where to look.
+            if object_label is None:
+                object_label = labels["labels"].get(f"{table['cpp_type']}::{key['references_table']}")
+            label = object_label or labels["labels"].get(key["property"] or "", key["column"])
+            escaped = label.replace("\\", "\\\\").replace('"', '\\"')
+            editable.append(
+                f'        Editable {{ column: "{key["column"]}", label: "{escaped}", '
+                f'kind: BaseType::Int, choices: &[], references: Some("{key["references_table"]}") }},'
+            )
+
         out += [
             f"    /// The columns an editor offers, in the order the schema declares them.",
             f"    pub const EDITABLE: [Editable; {len(editable)}] = [",
@@ -447,12 +469,16 @@ def generate_tables(schema: dict, labels: dict, enums: dict) -> str:
         "    /// For an enumerated column, every value it may hold, as (stored, shown) pairs.",
         "    /// Empty for every other kind.",
         "    pub choices: &'static [(&'static str, &'static str)],",
+        "    /// For a foreign key, the table it names a row of.  The choice is a row of that",
+        "    /// table rather than something typed, so an editor has to go and fetch them.",
+        "    pub references: Option<&'static str>,",
         "}",
         "",
         "/// Every column of a table that is worth editing, in the order the schema declares them.",
         "///",
-        "/// The primary key is left out -- the database assigns it -- as are the foreign keys,",
-        "/// which name other rows and need a way of choosing one rather than a text box.",
+        "/// The primary key is left out, because the database assigns it.  Everything else is in,",
+        "/// foreign keys included -- those name a row of another table, so they are offered as a",
+        "/// choice from it rather than as something to type.",
         "pub fn editable_columns(table: &str) -> &'static [Editable] {",
         "    match table {",
     ]

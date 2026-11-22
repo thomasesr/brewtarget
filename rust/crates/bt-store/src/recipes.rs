@@ -19,10 +19,35 @@ use bt_model::tables::*;
 use crate::{Store, StoreError, dispatch, tables};
 
 /// Fetch rows of one table whose `column` matches `id`, in `order_by` order.
+/// Every column of a table, named and aliased in the case the schema declares it in.
+///
+/// PostgreSQL folds an unquoted identifier to lower case, so `SELECT *` hands back a column the
+/// row struct will not recognise.  The generated repositories deal with this; these queries are
+/// written here, so they have to deal with it too.
+fn selected(table: &str) -> String {
+    bt_model::tables::columns_of(table)
+        .unwrap_or_default()
+        .iter()
+        .map(|column| format!("{column} AS {{q}}{column}{{q}}"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// The rows of a table belonging to one owner, in order.
+///
+/// Rows marked deleted are left out.  For a recipe addition that is not a tidying-up but the
+/// whole meaning of the flag: taking a hop out of a recipe marks its addition deleted, and
+/// counting it afterwards would mean the hop was never really removed.  `Recipe.cpp` says as
+/// much where it counts them -- "we want to exclude deleted RecipeAdditions".
 macro_rules! fetch_children {
     ($store:expr, $row:ty, $table:expr, $column:expr, $id:expr, $order_by:expr) => {{
-        let sql =
-            $store.placeholders(&format!("SELECT * FROM {} WHERE {} = ? ORDER BY {}", $table, $column, $order_by));
+        let sql = $store.placeholders(&format!(
+            "SELECT {} FROM {} WHERE {} = ? AND (deleted IS NULL OR deleted = FALSE) ORDER BY {}",
+            selected($table),
+            $table,
+            $column,
+            $order_by,
+        ));
         dispatch!($store, |pool| { sqlx::query_as::<_, $row>(&sql).bind($id).fetch_all(pool).await? })
     }};
 }

@@ -67,13 +67,32 @@ impl BoilRow {
         ["id", "locked", "description", "notes", "pre_boil_size_l", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 6] = [
-        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "description", label: "Description", kind: BaseType::String, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "pre_boil_size_l", label: "Pre-Boil Size", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 7] = [
+        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "description",
+            label: "Description",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "pre_boil_size_l",
+            label: "Pre-Boil Size",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_boil"),
+        },
     ];
 }
 
@@ -140,25 +159,81 @@ impl BoilStepRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 13] = [
-        Editable { column: "step_time_mins", label: "Step Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "start_temp_c", label: "Start Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "end_temp_c", label: "End Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "ramp_time_mins", label: "Ramp Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "description", label: "Description", kind: BaseType::String, choices: &[] },
-        Editable { column: "start_acidity_ph", label: "Start Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "end_acidity_ph", label: "End Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "start_gravity_sg", label: "Start Gravity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "end_gravity_sg", label: "End Gravity", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 14] = [
+        Editable {
+            column: "step_time_mins",
+            label: "Step Time",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "start_temp_c",
+            label: "Start Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "end_temp_c",
+            label: "End Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "ramp_time_mins",
+            label: "Ramp Time",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable {
+            column: "description",
+            label: "Description",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "start_acidity_ph",
+            label: "Start Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "end_acidity_ph",
+            label: "End Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "start_gravity_sg",
+            label: "Start Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "end_gravity_sg",
+            label: "End Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "chilling_type",
             label: "Chilling Type",
             kind: BaseType::String,
             choices: &[("batch", "Batch"), ("inline", "Inline")],
+            references: None,
         },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "boil_id", label: "Owner ID", kind: BaseType::Int, choices: &[], references: Some("boil") },
     ];
 }
 
@@ -296,105 +371,162 @@ impl BrewLogRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 32] = [
-        Editable { column: "brew_date", label: "Brew Date", kind: BaseType::Date, choices: &[] },
-        Editable { column: "ferment_date", label: "Ferment Date", kind: BaseType::Date, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
+    pub const EDITABLE: [Editable; 33] = [
+        Editable { column: "brew_date", label: "Brew Date", kind: BaseType::Date, choices: &[], references: None },
+        Editable {
+            column: "ferment_date",
+            label: "Ferment Date",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "expected_pre_boil_gravity_sg",
             label: "Expected pre-boil specific gravity",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "measured_pre_boil_gravity_sg",
             label: "Measured pre-boil specific gravity",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "expected_pre_boil_volume_l",
             label: "Projected Volume Into Boil Kettle",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "measured_pre_boil_volume_l",
             label: "Volume Into Boil Kettle",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "expected_strike_temp_c",
             label: "Projected Strike Temperature",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "measured_strike_temp_c",
             label: "Strike Temperature",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "expected_mash_final_temp_c",
             label: "Projected Mash Final Temperature",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "measured_mash_final_temp_c",
             label: "Mash Final Temperature",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "expected_original_gravity_sg", label: "Planned OG", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "expected_original_gravity_sg",
+            label: "Planned OG",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "forecast_original_gravity_sg",
             label: "Projected OG",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "measured_original_gravity_sg", label: "OG", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "measured_original_gravity_sg",
+            label: "OG",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "measured_post_boil_volume_l",
             label: "Post-Boil Volume",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "expected_volume_into_fv_l",
             label: "Projected Volume Into Fermentation Vessel",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "measured_volume_into_fv_l",
             label: "Volume Into Fermentation Vessel",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "measured_pitch_temp_c",
             label: "Measured Pitch Temperature",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "expected_final_gravity_sg", label: "Projected FG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "measured_final_gravity_sg", label: "Measured FG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "measured_final_volume", label: "Final Volume", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "expected_final_gravity_sg",
+            label: "Projected FG",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "measured_final_gravity_sg",
+            label: "Measured FG",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "measured_final_volume",
+            label: "Final Volume",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "expected_alcohol_by_volume_pct",
             label: "Projected ABV",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "computed_alcohol_by_volume_pct", label: "ABV", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "computed_alcohol_by_volume_pct",
+            label: "ABV",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "expected_attenuation_pct",
             label: "Projected Attenuation",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "measured_wort_clarity",
@@ -410,29 +542,52 @@ impl BrewLogRow {
                 ("very cloudy", "Very Cloudy"),
                 ("extremely cloudy", "Extremely Cloudy"),
             ],
+            references: None,
         },
-        Editable { column: "computed_attenuation_pct", label: "Attenuation", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "computed_attenuation_pct",
+            label: "Attenuation",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "expected_efficiency_pct",
             label: "Projected Efficiency",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "computed_efficiency_pct",
             label: "Brewhouse Efficiency",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "computed_pre_boil_efficiency_pct",
             label: "Efficiency Into Boil Kettle",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "expected_boil_off_l", label: "Expected Boil-Off", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable {
+            column: "expected_boil_off_l",
+            label: "Expected Boil-Off",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "recipe_id",
+            label: "Recipe",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("recipe"),
+        },
     ];
 }
 
@@ -631,133 +786,335 @@ impl EquipmentRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 51] = [
-        Editable { column: "fv_batch_size_l", label: "Default Batch Size", kind: BaseType::Double, choices: &[] },
-        Editable { column: "boiling_point", label: "Boiling Point", kind: BaseType::Double, choices: &[] },
-        Editable { column: "kettle_boil_size_l", label: "Default Pre-Boil Size", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 52] = [
+        Editable {
+            column: "fv_batch_size_l",
+            label: "Default Batch Size",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "boiling_point",
+            label: "Boiling Point",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "kettle_boil_size_l",
+            label: "Default Pre-Boil Size",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "kettle_evaporation_per_hour_l",
             label: "Kettle Evaporation Per Hour",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "evap_rate", label: "Evaporation Rate", kind: BaseType::Double, choices: &[] },
-        Editable { column: "grain_absorption_lkg", label: "Grain Absorption", kind: BaseType::Double, choices: &[] },
-        Editable { column: "hop_utilization", label: "Hop Utilization", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "evap_rate",
+            label: "Evaporation Rate",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "grain_absorption_lkg",
+            label: "Grain Absorption",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "hop_utilization",
+            label: "Hop Utilization",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "lauter_tun_deadspace_loss_l",
             label: "Lauter Tun Deadspace Loss",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "kettle_notes", label: "Kettle Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "top_up_kettle", label: "Top Up Kettle", kind: BaseType::Double, choices: &[] },
-        Editable { column: "top_up_water", label: "Top Up Water", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "kettle_notes",
+            label: "Kettle Notes",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "top_up_kettle",
+            label: "Top Up Kettle",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "top_up_water",
+            label: "Top Up Water",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "kettle_trub_chiller_loss_l",
             label: "Kettle Trub Chiller Loss",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "mash_tun_specific_heat_calgc",
             label: "Mash Tun Specific Heat",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "mash_tun_volume_l", label: "Mash Tun Volume", kind: BaseType::Double, choices: &[] },
-        Editable { column: "mash_tun_weight_kg", label: "Mash Tun Weight", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "mash_tun_volume_l",
+            label: "Mash Tun Volume",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "mash_tun_weight_kg",
+            label: "Mash Tun Weight",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "kettleInternalDiameter_cm",
             label: "Kettle Internal Diameter",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "kettleOpeningDiameter_cm",
             label: "Kettle Opening Diameter",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "hlt_type", label: "HLT Type", kind: BaseType::String, choices: &[] },
-        Editable { column: "mash_tun_type", label: "Mash Tun Type", kind: BaseType::String, choices: &[] },
-        Editable { column: "lauter_tun_type", label: "Lauter Tun Type", kind: BaseType::String, choices: &[] },
-        Editable { column: "kettle_type", label: "Kettle Type", kind: BaseType::String, choices: &[] },
-        Editable { column: "fv_type", label: "Fermentor Type", kind: BaseType::String, choices: &[] },
-        Editable { column: "agingvessel_type", label: "Aging Vessel Type", kind: BaseType::String, choices: &[] },
+        Editable { column: "hlt_type", label: "HLT Type", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "mash_tun_type",
+            label: "Mash Tun Type",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "lauter_tun_type",
+            label: "Lauter Tun Type",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "kettle_type",
+            label: "Kettle Type",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "fv_type", label: "Fermentor Type", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "agingvessel_type",
+            label: "Aging Vessel Type",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "packaging_vessel_type",
             label: "Packaging Vessel Type",
             kind: BaseType::String,
             choices: &[],
+            references: None,
         },
-        Editable { column: "hlt_volume_l", label: "HLT Volume", kind: BaseType::Double, choices: &[] },
-        Editable { column: "kettle_volume_l", label: "Kettle Volume", kind: BaseType::Double, choices: &[] },
-        Editable { column: "lauter_tun_volume_l", label: "Lauter Tun Volume", kind: BaseType::Double, choices: &[] },
-        Editable { column: "fv_volume_l", label: "Fermentor Volume", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "hlt_volume_l",
+            label: "HLT Volume",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "kettle_volume_l",
+            label: "Kettle Volume",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "lauter_tun_volume_l",
+            label: "Lauter Tun Volume",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "fv_volume_l",
+            label: "Fermentor Volume",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "aging_vessel_volume_l",
             label: "Aging Vessel Volume",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "packaging_vessel_volume_l",
             label: "Packaging Vessel Volume",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "hlt_loss_l", label: "HLT Loss", kind: BaseType::Double, choices: &[] },
-        Editable { column: "mash_tun_loss_l", label: "Mash Tun Loss", kind: BaseType::Double, choices: &[] },
-        Editable { column: "foundation_volume_l", label: "Foundation Volume", kind: BaseType::Double, choices: &[] },
-        Editable { column: "fv_loss_l", label: "Fermentor Loss", kind: BaseType::Double, choices: &[] },
-        Editable { column: "aging_vessel_loss_l", label: "Aging Vessel Loss", kind: BaseType::Double, choices: &[] },
+        Editable { column: "hlt_loss_l", label: "HLT Loss", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "mash_tun_loss_l",
+            label: "Mash Tun Loss",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "foundation_volume_l",
+            label: "Foundation Volume",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "fv_loss_l",
+            label: "Fermentor Loss",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "aging_vessel_loss_l",
+            label: "Aging Vessel Loss",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "packaging_vessel_loss_l",
             label: "Packaging Vessel Loss",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "kettle_outflow_per_minute_l",
             label: "Kettle Outflow Per Minute",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "hlt_weight_kg", label: "HLT Weight", kind: BaseType::Double, choices: &[] },
-        Editable { column: "lauter_tun_weight_kg", label: "Lauter Tun Weight", kind: BaseType::Double, choices: &[] },
-        Editable { column: "kettle_weight_kg", label: "Kettle Weight", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "hlt_weight_kg",
+            label: "HLT Weight",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "lauter_tun_weight_kg",
+            label: "Lauter Tun Weight",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "kettle_weight_kg",
+            label: "Kettle Weight",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "hlt_specific_heat_calgc",
             label: "HLT Specific Heat",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "lauter_tun_specific_heat_calgc",
             label: "Lauter Tun Specific Heat",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "kettle_specific_heat_calgc",
             label: "Kettle Specific Heat",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "hlt_notes", label: "HLT Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "mash_tun_notes", label: "Mash Tun Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "lauter_tun_notes", label: "Lauter Tun Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "fv_notes", label: "Fermentor Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "aging_vessel_notes", label: "Aging Vessel Notes", kind: BaseType::String, choices: &[] },
+        Editable { column: "hlt_notes", label: "HLT Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "mash_tun_notes",
+            label: "Mash Tun Notes",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "lauter_tun_notes",
+            label: "Lauter Tun Notes",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "fv_notes",
+            label: "Fermentor Notes",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "aging_vessel_notes",
+            label: "Aging Vessel Notes",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "packaging_vessel_notes",
             label: "Packaging Vessel Notes",
             kind: BaseType::String,
             choices: &[],
+            references: None,
         },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_equipment"),
+        },
     ];
 }
 
@@ -893,10 +1250,22 @@ impl FermentableRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 36] = [
-        Editable { column: "coarse_fine_diff", label: "Coarse Fine Diff", kind: BaseType::Double, choices: &[] },
-        Editable { column: "color_lovibond", label: "Color", kind: BaseType::Double, choices: &[] },
-        Editable { column: "diastatic_power", label: "Diastatic Power", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 37] = [
+        Editable {
+            column: "coarse_fine_diff",
+            label: "Coarse Fine Diff",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "color_lovibond", label: "Color", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "diastatic_power",
+            label: "Diastatic Power",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "ftype",
             label: "Type",
@@ -911,15 +1280,34 @@ impl FermentableRow {
                 ("juice", "Juice"),
                 ("honey", "Honey"),
             ],
+            references: None,
         },
-        Editable { column: "ibu_gal_per_lb", label: "IBU Gal Per Lb", kind: BaseType::Double, choices: &[] },
-        Editable { column: "max_in_batch", label: "Max In Batch", kind: BaseType::Double, choices: &[] },
-        Editable { column: "moisture", label: "Moisture", kind: BaseType::Double, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "origin", label: "Origin", kind: BaseType::String, choices: &[] },
-        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[] },
-        Editable { column: "protein", label: "Protein", kind: BaseType::Double, choices: &[] },
-        Editable { column: "recommend_mash", label: "Recommend Mash", kind: BaseType::Bool, choices: &[] },
+        Editable {
+            column: "ibu_gal_per_lb",
+            label: "IBU Gal Per Lb",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "max_in_batch",
+            label: "Max In Batch",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "moisture", label: "Moisture", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "origin", label: "Origin", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "protein", label: "Protein", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "recommend_mash",
+            label: "Recommend Mash",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "grain_group",
             label: "Grain Group",
@@ -933,70 +1321,140 @@ impl FermentableRow {
                 ("smoked", "Smoked"),
                 ("adjunct", "Adjunct"),
             ],
+            references: None,
         },
-        Editable { column: "producer", label: "Producer", kind: BaseType::String, choices: &[] },
-        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[] },
-        Editable { column: "fine_grind_yield_pct", label: "Yield (DBFG) %", kind: BaseType::Double, choices: &[] },
+        Editable { column: "producer", label: "Producer", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "fine_grind_yield_pct",
+            label: "Yield (DBFG) %",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "coarse_grind_yield_pct",
             label: "Coarse Grind Yield",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "potential_yield_sg", label: "Potential Yield", kind: BaseType::Double, choices: &[] },
-        Editable { column: "alpha_amylase_dext_units", label: "Alpha Amylase", kind: BaseType::Double, choices: &[] },
-        Editable { column: "kolbach_index_pct", label: "Kolbach Index", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "potential_yield_sg",
+            label: "Potential Yield",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "alpha_amylase_dext_units",
+            label: "Alpha Amylase",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "kolbach_index_pct",
+            label: "Kolbach Index",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "hardness_prp_glassy_pct",
             label: "Hardness Proportion Glassy",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "hardness_prp_half_pct",
             label: "Hardness Proportion Half",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "hardness_prp_mealy_pct",
             label: "Hardness Proportion Mealy",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "kernel_size_prp_plump_pct",
             label: "Kernel Size Proportion Plump",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "kernel_size_prp_thin_pct",
             label: "Kernel Size Proportion Thin",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "friability_pct", label: "Friability", kind: BaseType::Double, choices: &[] },
-        Editable { column: "di_ph", label: "DI pH", kind: BaseType::Double, choices: &[] },
-        Editable { column: "viscosity_cp", label: "Viscosity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "dmsp_ppm", label: "DMS precursors", kind: BaseType::Double, choices: &[] },
-        Editable { column: "fan_ppm", label: "Free Amino Nitrogen (FAN)", kind: BaseType::Double, choices: &[] },
-        Editable { column: "fermentability_pct", label: "Fermentability", kind: BaseType::Double, choices: &[] },
-        Editable { column: "beta_glucan_ppm", label: "Beta Glucan", kind: BaseType::Double, choices: &[] },
+        Editable {
+            column: "friability_pct",
+            label: "Friability",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "di_ph", label: "DI pH", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "viscosity_cp", label: "Viscosity", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "dmsp_ppm",
+            label: "DMS precursors",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "fan_ppm",
+            label: "Free Amino Nitrogen (FAN)",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "fermentability_pct",
+            label: "Fermentability",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "beta_glucan_ppm",
+            label: "Beta Glucan",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "lactic_acid_by_weight_pct",
             label: "Lactic Acid content (% weight)",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "fermentable_fraction_pct",
             label: "Fermentable by yeast (%)",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_fermentable"),
+        },
     ];
 }
 
@@ -1083,11 +1541,11 @@ impl FermentableInRecipeRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 10] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
+    pub const EDITABLE: [Editable; 12] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "stage",
             label: "Stage",
@@ -1098,12 +1556,39 @@ impl FermentableInRecipeRow {
                 ("add_to_fermentation", "Fermentation"),
                 ("add_to_package", "Package"),
             ],
+            references: None,
         },
-        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[] },
-        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_gravity_sg", label: "Add At Gravity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_acidity_ph", label: "Add At Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[] },
+        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "add_at_gravity_sg",
+            label: "Add At Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "add_at_acidity_ph",
+            label: "Add At Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "recipe_id",
+            label: "Recipe",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("recipe"),
+        },
+        Editable {
+            column: "fermentable_id",
+            label: "Fermentable",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("fermentable"),
+        },
     ];
 }
 
@@ -1205,24 +1690,85 @@ impl FermentableStockPurchaseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 17] = [
-        Editable { column: "color_lovibond", label: "Color", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_ordered", label: "Quantity Ordered", kind: BaseType::Double, choices: &[] },
-        Editable { column: "date_received", label: "Date Received", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_ordered", label: "Date Ordered", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_best_before", label: "Best Before Date", kind: BaseType::Date, choices: &[] },
-        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[] },
-        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price_currency", label: "Purchase Price", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price", label: "Purchase Price", kind: BaseType::Int, choices: &[] },
-        Editable { column: "purchase_tax_currency", label: "Purchase Tax", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[] },
-        Editable { column: "shipping_cost_currency", label: "Shipping Cost", kind: BaseType::String, choices: &[] },
-        Editable { column: "shipping_cost", label: "Shipping Cost", kind: BaseType::Int, choices: &[] },
+    pub const EDITABLE: [Editable; 18] = [
+        Editable { column: "color_lovibond", label: "Color", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_ordered",
+            label: "Quantity Ordered",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_received",
+            label: "Date Received",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_ordered",
+            label: "Date Ordered",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_best_before",
+            label: "Best Before Date",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "purchase_price_currency",
+            label: "Purchase Price",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_price",
+            label: "Purchase Price",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_tax_currency",
+            label: "Purchase Tax",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[], references: None },
+        Editable {
+            column: "shipping_cost_currency",
+            label: "Shipping Cost",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "shipping_cost",
+            label: "Shipping Cost",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "fermentable_id",
+            label: "Ingredient ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("fermentable"),
+        },
     ];
 }
 
@@ -1285,19 +1831,40 @@ impl FermentableStockUseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 7] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[] },
+    pub const EDITABLE: [Editable; 9] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[], references: None },
         Editable {
             column: "reason",
             label: "Reason",
             kind: BaseType::String,
             choices: &[("used", "Used"), ("lost", "Lost"), ("disposed", "Disposed")],
+            references: None,
         },
-        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_used", label: "Quantity Used", kind: BaseType::Double, choices: &[] },
+        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_used",
+            label: "Quantity Used",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "fermentable_purchase_id",
+            label: "Owner ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("fermentable_stock_purchase"),
+        },
+        Editable {
+            column: "brew_log_id",
+            label: "Brew Log",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("brew_log"),
+        },
     ];
 }
 
@@ -1349,10 +1916,16 @@ impl FermentationRow {
         ["id", "locked", "description", "notes", "krausen_handling", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 6] = [
-        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "description", label: "Description", kind: BaseType::String, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
+    pub const EDITABLE: [Editable; 7] = [
+        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "description",
+            label: "Description",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "krausen_handling",
             label: "Krausen Handling",
@@ -1367,9 +1940,17 @@ impl FermentationRow {
                 ("blown off, normal fermentation", "Blown Off, Normal Fermentation"),
                 ("blown off, vigorous fermentation", "Blown Off, Vigorous Fermentation"),
             ],
+            references: None,
         },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_fermentation"),
+        },
     ];
 }
 
@@ -1450,20 +2031,75 @@ impl FermentationStepRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 13] = [
-        Editable { column: "step_time_mins", label: "Step Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "start_temp_c", label: "Start Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "end_temp_c", label: "End Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "description", label: "Description", kind: BaseType::String, choices: &[] },
-        Editable { column: "start_acidity_ph", label: "Start Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "end_acidity_ph", label: "End Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "start_gravity_sg", label: "Start Gravity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "end_gravity_sg", label: "End Gravity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "free_rise", label: "Free Rise", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "vessel", label: "Vessel", kind: BaseType::String, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 14] = [
+        Editable {
+            column: "step_time_mins",
+            label: "Step Time",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "start_temp_c",
+            label: "Start Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "end_temp_c",
+            label: "End Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable {
+            column: "description",
+            label: "Description",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "start_acidity_ph",
+            label: "Start Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "end_acidity_ph",
+            label: "End Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "start_gravity_sg",
+            label: "Start Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "end_gravity_sg",
+            label: "End Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "free_rise", label: "Free Rise", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "vessel", label: "Vessel", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "fermentation_id",
+            label: "Owner ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("fermentation"),
+        },
     ];
 }
 
@@ -1492,9 +2128,16 @@ impl FolderForBoilRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_boil"),
+        },
     ];
 }
 
@@ -1523,9 +2166,16 @@ impl FolderForEquipmentRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_equipment"),
+        },
     ];
 }
 
@@ -1554,9 +2204,16 @@ impl FolderForFermentableRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_fermentable"),
+        },
     ];
 }
 
@@ -1585,9 +2242,16 @@ impl FolderForFermentationRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_fermentation"),
+        },
     ];
 }
 
@@ -1616,9 +2280,16 @@ impl FolderForHopRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_hop"),
+        },
     ];
 }
 
@@ -1647,9 +2318,16 @@ impl FolderForMashRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_mash"),
+        },
     ];
 }
 
@@ -1678,9 +2356,16 @@ impl FolderForMiscRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_misc"),
+        },
     ];
 }
 
@@ -1709,9 +2394,16 @@ impl FolderForRecipeRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_recipe"),
+        },
     ];
 }
 
@@ -1740,9 +2432,16 @@ impl FolderForStyleRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_style"),
+        },
     ];
 }
 
@@ -1771,9 +2470,16 @@ impl FolderForWaterRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_water"),
+        },
     ];
 }
 
@@ -1802,9 +2508,16 @@ impl FolderForYeastRow {
     pub const COLUMNS: [&'static str; 4] = ["id", "name", "deleted", "contained_in_folder_id"];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 2] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 3] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_yeast"),
+        },
     ];
 }
 
@@ -1927,15 +2640,51 @@ impl HopRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 31] = [
-        Editable { column: "alpha_pct", label: "% Alpha", kind: BaseType::Double, choices: &[] },
-        Editable { column: "alpha_min_pct", label: "Min % Alpha", kind: BaseType::Double, choices: &[] },
-        Editable { column: "alpha_max_pct", label: "Max % Alpha", kind: BaseType::Double, choices: &[] },
-        Editable { column: "beta_pct", label: "% Beta", kind: BaseType::Double, choices: &[] },
-        Editable { column: "beta_min_pct", label: "Min % Beta", kind: BaseType::Double, choices: &[] },
-        Editable { column: "beta_max_pct", label: "Max % Beta", kind: BaseType::Double, choices: &[] },
-        Editable { column: "caryophyllene_pct", label: "Caryophyllene", kind: BaseType::Double, choices: &[] },
-        Editable { column: "cohumulone_pct", label: "Cohumulone", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 32] = [
+        Editable { column: "alpha_pct", label: "% Alpha", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "alpha_min_pct",
+            label: "Min % Alpha",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "alpha_max_pct",
+            label: "Max % Alpha",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "beta_pct", label: "% Beta", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "beta_min_pct",
+            label: "Min % Beta",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "beta_max_pct",
+            label: "Max % Beta",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "caryophyllene_pct",
+            label: "Caryophyllene",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "cohumulone_pct",
+            label: "Cohumulone",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "form",
             label: "Form",
@@ -1948,18 +2697,26 @@ impl HopRow {
                 ("leaf (wet)", "WetLeaf"),
                 ("powder", "Powder"),
             ],
+            references: None,
         },
         Editable {
             column: "sixMonthAlphaLoss_pct",
             label: "Six Month Alpha Loss",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "humulene_pct", label: "Humulene", kind: BaseType::Double, choices: &[] },
-        Editable { column: "myrcene_pct", label: "Myrcene", kind: BaseType::Double, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "origin", label: "Origin", kind: BaseType::String, choices: &[] },
-        Editable { column: "substitutes", label: "Substitutes", kind: BaseType::String, choices: &[] },
+        Editable { column: "humulene_pct", label: "Humulene", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "myrcene_pct", label: "Myrcene", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "origin", label: "Origin", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "substitutes",
+            label: "Substitutes",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "htype",
             label: "Type",
@@ -1973,22 +2730,56 @@ impl HopRow {
                 ("aroma/flavor", "Aroma & Flavor"),
                 ("aroma/bittering/flavor", "Aroma, Bittering & Flavor"),
             ],
+            references: None,
         },
-        Editable { column: "producer", label: "Producer", kind: BaseType::String, choices: &[] },
-        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[] },
-        Editable { column: "year", label: "Year", kind: BaseType::String, choices: &[] },
-        Editable { column: "total_oil_ml_per_100g", label: "Total Oil", kind: BaseType::Double, choices: &[] },
-        Editable { column: "farnesene_pct", label: "Farnesene", kind: BaseType::Double, choices: &[] },
-        Editable { column: "geraniol_pct", label: "Geraniol", kind: BaseType::Double, choices: &[] },
-        Editable { column: "b_pinene_pct", label: "Î²-Pinene", kind: BaseType::Double, choices: &[] },
-        Editable { column: "linalool_pct", label: "Linalool", kind: BaseType::Double, choices: &[] },
-        Editable { column: "limonene_pct", label: "Limonene", kind: BaseType::Double, choices: &[] },
-        Editable { column: "nerol_pct", label: "Nerol", kind: BaseType::Double, choices: &[] },
-        Editable { column: "pinene_pct", label: "Pinene", kind: BaseType::Double, choices: &[] },
-        Editable { column: "polyphenols_pct", label: "Polyphenols", kind: BaseType::Double, choices: &[] },
-        Editable { column: "xanthohumol_pct", label: "Xanthohumol", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "producer", label: "Producer", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "year", label: "Year", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "total_oil_ml_per_100g",
+            label: "Total Oil",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "farnesene_pct",
+            label: "Farnesene",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "geraniol_pct", label: "Geraniol", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "b_pinene_pct", label: "Î²-Pinene", kind: BaseType::Double, choices: &[], references: None
+        },
+        Editable { column: "linalool_pct", label: "Linalool", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "limonene_pct", label: "Limonene", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "nerol_pct", label: "Nerol", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "pinene_pct", label: "Pinene", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "polyphenols_pct",
+            label: "Polyphenols",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "xanthohumol_pct",
+            label: "Xanthohumol",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_hop"),
+        },
     ];
 }
 
@@ -2075,11 +2866,11 @@ impl HopInRecipeRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 10] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
+    pub const EDITABLE: [Editable; 12] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "stage",
             label: "Stage",
@@ -2090,12 +2881,33 @@ impl HopInRecipeRow {
                 ("add_to_fermentation", "Fermentation"),
                 ("add_to_package", "Package"),
             ],
+            references: None,
         },
-        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[] },
-        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_gravity_sg", label: "Add At Gravity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_acidity_ph", label: "Add At Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[] },
+        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "add_at_gravity_sg",
+            label: "Add At Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "add_at_acidity_ph",
+            label: "Add At Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "recipe_id",
+            label: "Recipe",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("recipe"),
+        },
+        Editable { column: "hop_id", label: "Hop", kind: BaseType::Int, choices: &[], references: Some("hop") },
     ];
 }
 
@@ -2203,8 +3015,8 @@ impl HopStockPurchaseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 19] = [
-        Editable { column: "alpha_pct", label: "Alpha Acid", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 20] = [
+        Editable { column: "alpha_pct", label: "Alpha Acid", kind: BaseType::Double, choices: &[], references: None },
         Editable {
             column: "form",
             label: "Form",
@@ -2218,24 +3030,86 @@ impl HopStockPurchaseRow {
                 ("aroma/flavor", "Aroma & Flavor"),
                 ("aroma/bittering/flavor", "Aroma, Bittering & Flavor"),
             ],
+            references: None,
         },
-        Editable { column: "year", label: "Year", kind: BaseType::String, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_ordered", label: "Quantity Ordered", kind: BaseType::Double, choices: &[] },
-        Editable { column: "date_received", label: "Date Received", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_ordered", label: "Date Ordered", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_best_before", label: "Best Before Date", kind: BaseType::Date, choices: &[] },
-        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[] },
-        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price_currency", label: "Purchase Price", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price", label: "Purchase Price", kind: BaseType::Int, choices: &[] },
-        Editable { column: "purchase_tax_currency", label: "Purchase Tax", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[] },
-        Editable { column: "shipping_cost_currency", label: "Shipping Cost", kind: BaseType::String, choices: &[] },
-        Editable { column: "shipping_cost", label: "Shipping Cost", kind: BaseType::Int, choices: &[] },
+        Editable { column: "year", label: "Year", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_ordered",
+            label: "Quantity Ordered",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_received",
+            label: "Date Received",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_ordered",
+            label: "Date Ordered",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_best_before",
+            label: "Best Before Date",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "purchase_price_currency",
+            label: "Purchase Price",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_price",
+            label: "Purchase Price",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_tax_currency",
+            label: "Purchase Tax",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[], references: None },
+        Editable {
+            column: "shipping_cost_currency",
+            label: "Shipping Cost",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "shipping_cost",
+            label: "Shipping Cost",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "hop_id",
+            label: "Ingredient ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("hop"),
+        },
     ];
 }
 
@@ -2298,19 +3172,40 @@ impl HopStockUseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 7] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[] },
+    pub const EDITABLE: [Editable; 9] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[], references: None },
         Editable {
             column: "reason",
             label: "Reason",
             kind: BaseType::String,
             choices: &[("used", "Used"), ("lost", "Lost"), ("disposed", "Disposed")],
+            references: None,
         },
-        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_used", label: "Quantity Used", kind: BaseType::Double, choices: &[] },
+        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_used",
+            label: "Quantity Used",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "hop_purchase_id",
+            label: "Owner ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("hop_stock_purchase"),
+        },
+        Editable {
+            column: "brew_log_id",
+            label: "Brew Log",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("brew_log"),
+        },
     ];
 }
 
@@ -2376,15 +3271,28 @@ impl InstructionRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 8] = [
-        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "directions", label: "Directions", kind: BaseType::String, choices: &[] },
-        Editable { column: "has_timer", label: "Has Timer", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "timer_value", label: "Timer Value", kind: BaseType::String, choices: &[] },
-        Editable { column: "completed", label: "Completed ", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "interval_mins", label: "Interval", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 9] = [
+        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "directions", label: "Directions", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "has_timer", label: "Has Timer", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "timer_value",
+            label: "Timer Value",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "completed", label: "Completed ", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "interval_mins", label: "Interval", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "recipe_id",
+            label: "Owner ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("recipe"),
+        },
     ];
 }
 
@@ -2448,24 +3356,68 @@ impl MashRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 12] = [
-        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "auto_adjust", label: "Automatically Adjust", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "equip_adjust", label: "Adjust For Equipment", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "grain_temp", label: "Initial Grain Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "ph", label: "pH", kind: BaseType::Double, choices: &[] },
-        Editable { column: "sparge_temp", label: "Sparge Temperature", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 13] = [
+        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "auto_adjust",
+            label: "Automatically Adjust",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "equip_adjust",
+            label: "Adjust For Equipment",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "grain_temp",
+            label: "Initial Grain Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "ph", label: "pH", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "sparge_temp",
+            label: "Sparge Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "tun_specific_heat_calgc",
             label: "Mash Tun Specific Heat",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "initial_tun_temp_c", label: "Tun Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "tun_weight_kg", label: "Mash Tun Weight", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable {
+            column: "initial_tun_temp_c",
+            label: "Tun Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "tun_weight_kg",
+            label: "Mash Tun Weight",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_mash"),
+        },
     ];
 }
 
@@ -2541,9 +3493,21 @@ impl MashStepRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 16] = [
-        Editable { column: "end_temp_c", label: "End Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "infuse_temp_c", label: "Infuse Temperature", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 17] = [
+        Editable {
+            column: "end_temp_c",
+            label: "End Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "infuse_temp_c",
+            label: "Infuse Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "mstype",
             label: "Type",
@@ -2557,20 +3521,76 @@ impl MashStepRow {
                 ("souring mash", "Souring Mash"),
                 ("souring wort", "Souring Wort"),
             ],
+            references: None,
         },
-        Editable { column: "ramp_time_mins", label: "Ramp Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "step_temp_c", label: "Start Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "step_time_mins", label: "Step Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "amount_l", label: "Amount", kind: BaseType::Double, choices: &[] },
-        Editable { column: "description", label: "Description", kind: BaseType::String, choices: &[] },
-        Editable { column: "liquor_to_grist_ratio_lkg", label: "Water:Grain", kind: BaseType::Double, choices: &[] },
-        Editable { column: "start_acidity_ph", label: "Start Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "end_acidity_ph", label: "End Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "amount_fixed", label: "Amount Fixed", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "infuse_temp_fixed", label: "Infuse Temperature Fixed", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable {
+            column: "ramp_time_mins",
+            label: "Ramp Time",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "step_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable {
+            column: "step_temp_c",
+            label: "Start Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "step_time_mins",
+            label: "Step Time",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "amount_l", label: "Amount", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "description",
+            label: "Description",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "liquor_to_grist_ratio_lkg",
+            label: "Water:Grain",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "start_acidity_ph",
+            label: "Start Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "end_acidity_ph",
+            label: "End Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "amount_fixed",
+            label: "Amount Fixed",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "infuse_temp_fixed",
+            label: "Infuse Temperature Fixed",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "mash_id", label: "Owner ID", kind: BaseType::Int, choices: &[], references: Some("mash") },
     ];
 }
 
@@ -2639,7 +3659,7 @@ impl MiscRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 9] = [
+    pub const EDITABLE: [Editable; 10] = [
         Editable {
             column: "mtype",
             label: "Type",
@@ -2653,11 +3673,12 @@ impl MiscRow {
                 ("other", "Other"),
                 ("wood", "Wood"),
             ],
+            references: None,
         },
-        Editable { column: "use_for", label: "Use For", kind: BaseType::String, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "producer", label: "Producer", kind: BaseType::String, choices: &[] },
-        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[] },
+        Editable { column: "use_for", label: "Use For", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "producer", label: "Producer", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "water_agent_type",
             label: "Water Agent Type",
@@ -2678,15 +3699,24 @@ impl MiscRow {
                 ("hydrochloric acid", "hydrochloric acid"),
                 ("other", "Other"),
             ],
+            references: None,
         },
         Editable {
             column: "water_agent_percent_acid",
             label: "Water Agent %% Acid",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_misc"),
+        },
     ];
 }
 
@@ -2773,11 +3803,11 @@ impl MiscInRecipeRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 10] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
+    pub const EDITABLE: [Editable; 12] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "stage",
             label: "Stage",
@@ -2788,12 +3818,33 @@ impl MiscInRecipeRow {
                 ("add_to_fermentation", "Fermentation"),
                 ("add_to_package", "Package"),
             ],
+            references: None,
         },
-        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[] },
-        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_gravity_sg", label: "Add At Gravity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_acidity_ph", label: "Add At Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[] },
+        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "add_at_gravity_sg",
+            label: "Add At Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "add_at_acidity_ph",
+            label: "Add At Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "recipe_id",
+            label: "Recipe",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("recipe"),
+        },
+        Editable { column: "misc_id", label: "Misc", kind: BaseType::Int, choices: &[], references: Some("misc") },
     ];
 }
 
@@ -2892,23 +3943,84 @@ impl MiscStockPurchaseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 16] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_ordered", label: "Quantity Ordered", kind: BaseType::Double, choices: &[] },
-        Editable { column: "date_received", label: "Date Received", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_ordered", label: "Date Ordered", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_best_before", label: "Best Before Date", kind: BaseType::Date, choices: &[] },
-        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[] },
-        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price_currency", label: "Purchase Price", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price", label: "Purchase Price", kind: BaseType::Int, choices: &[] },
-        Editable { column: "purchase_tax_currency", label: "Purchase Tax", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[] },
-        Editable { column: "shipping_cost_currency", label: "Shipping Cost", kind: BaseType::String, choices: &[] },
-        Editable { column: "shipping_cost", label: "Shipping Cost", kind: BaseType::Int, choices: &[] },
+    pub const EDITABLE: [Editable; 17] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_ordered",
+            label: "Quantity Ordered",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_received",
+            label: "Date Received",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_ordered",
+            label: "Date Ordered",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_best_before",
+            label: "Best Before Date",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "purchase_price_currency",
+            label: "Purchase Price",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_price",
+            label: "Purchase Price",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_tax_currency",
+            label: "Purchase Tax",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[], references: None },
+        Editable {
+            column: "shipping_cost_currency",
+            label: "Shipping Cost",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "shipping_cost",
+            label: "Shipping Cost",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "misc_id",
+            label: "Ingredient ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("misc"),
+        },
     ];
 }
 
@@ -2971,19 +4083,40 @@ impl MiscStockUseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 7] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[] },
+    pub const EDITABLE: [Editable; 9] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[], references: None },
         Editable {
             column: "reason",
             label: "Reason",
             kind: BaseType::String,
             choices: &[("used", "Used"), ("lost", "Lost"), ("disposed", "Disposed")],
+            references: None,
         },
-        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_used", label: "Quantity Used", kind: BaseType::Double, choices: &[] },
+        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_used",
+            label: "Quantity Used",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "misc_purchase_id",
+            label: "Owner ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("misc_stock_purchase"),
+        },
+        Editable {
+            column: "brew_log_id",
+            label: "Brew Log",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("brew_log"),
+        },
     ];
 }
 
@@ -3139,30 +4272,79 @@ impl RecipeRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 30] = [
-        Editable { column: "age", label: "Age", kind: BaseType::Double, choices: &[] },
-        Editable { column: "age_temp", label: "Age Temp", kind: BaseType::Double, choices: &[] },
-        Editable { column: "assistant_brewer", label: "Assistant Brewer", kind: BaseType::String, choices: &[] },
-        Editable { column: "batch_size", label: "BatchSize", kind: BaseType::Double, choices: &[] },
-        Editable { column: "brewer", label: "Brewer", kind: BaseType::String, choices: &[] },
-        Editable { column: "carb_volume", label: "Carbonation", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 39] = [
+        Editable { column: "age", label: "Age", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "age_temp", label: "Age Temp", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "assistant_brewer",
+            label: "Assistant Brewer",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "batch_size", label: "BatchSize", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "brewer", label: "Brewer", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "carb_volume",
+            label: "Carbonation",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "carbonationtemp_c",
             label: "Carbonation Temperature",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "date", label: "Date Created", kind: BaseType::Date, choices: &[] },
-        Editable { column: "efficiency", label: "Efficiency", kind: BaseType::Double, choices: &[] },
-        Editable { column: "fg", label: "FG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "forced_carb", label: "Forced Carbonation", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "keg_priming_factor", label: "Keg Priming Factor", kind: BaseType::Double, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "og", label: "OG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "priming_sugar_equiv", label: "Priming Sugar Equiv", kind: BaseType::Double, choices: &[] },
-        Editable { column: "priming_sugar_name", label: "Priming Sugar Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "taste_notes", label: "Taste Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "taste_rating", label: "Taste Rating", kind: BaseType::Double, choices: &[] },
+        Editable { column: "date", label: "Date Created", kind: BaseType::Date, choices: &[], references: None },
+        Editable { column: "efficiency", label: "Efficiency", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "fg", label: "FG", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "forced_carb",
+            label: "Forced Carbonation",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "keg_priming_factor",
+            label: "Keg Priming Factor",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "og", label: "OG", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "priming_sugar_equiv",
+            label: "Priming Sugar Equiv",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "priming_sugar_name",
+            label: "Priming Sugar Name",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "taste_notes",
+            label: "Taste Notes",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "taste_rating",
+            label: "Taste Rating",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "type",
             label: "Type",
@@ -3178,34 +4360,57 @@ impl RecipeRow {
                 ("mead", "Mead"),
                 ("wine", "Wine"),
             ],
+            references: None,
         },
-        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "beer_acidity_ph", label: "Beer Acidity", kind: BaseType::Double, choices: &[] },
+        Editable { column: "locked", label: "Locked", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "beer_acidity_ph",
+            label: "Beer Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "apparent_attenuation_pct",
             label: "Apparent Attenuation",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "ro_water_mash_pct",
             label: "Percentage reverse-osmosis water in mash",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "ro_water_sparge_pct",
             label: "Percentage reverse-osmosis water in sparge",
             kind: BaseType::Double,
             choices: &[],
+            references: None,
         },
-        Editable { column: "target_mash_ph", label: "Target Mash pH", kind: BaseType::Double, choices: &[] },
-        Editable { column: "water_kept_in_sync", label: "Keep Water in Sync", kind: BaseType::Bool, choices: &[] },
+        Editable {
+            column: "target_mash_ph",
+            label: "Target Mash pH",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "water_kept_in_sync",
+            label: "Keep Water in Sync",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "fg_calc_uses_mash",
             label: "Use Mash Profile in FG Calculation",
             kind: BaseType::Bool,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "wort_clarity",
@@ -3221,9 +4426,55 @@ impl RecipeRow {
                 ("very cloudy", "Very Cloudy"),
                 ("extremely cloudy", "Extremely Cloudy"),
             ],
+            references: None,
         },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_recipe"),
+        },
+        Editable {
+            column: "equipment_id",
+            label: "Equipment",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("equipment"),
+        },
+        Editable { column: "mash_id", label: "Mash", kind: BaseType::Int, choices: &[], references: Some("mash") },
+        Editable { column: "style_id", label: "Style", kind: BaseType::Int, choices: &[], references: Some("style") },
+        Editable {
+            column: "ancestor_id",
+            label: "Ancestor ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("recipe"),
+        },
+        Editable { column: "boil_id", label: "Boil", kind: BaseType::Int, choices: &[], references: Some("boil") },
+        Editable {
+            column: "fermentation_id",
+            label: "Fermentation",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("fermentation"),
+        },
+        Editable {
+            column: "water_base",
+            label: "Base Water Profile",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("water"),
+        },
+        Editable {
+            column: "water_target",
+            label: "Target Water Profile",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("water"),
+        },
     ];
 }
 
@@ -3358,26 +4609,32 @@ impl StyleRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 27] = [
-        Editable { column: "abv_max", label: "Max ABV", kind: BaseType::Double, choices: &[] },
-        Editable { column: "abv_min", label: "Min ABV", kind: BaseType::Double, choices: &[] },
-        Editable { column: "carb_max", label: "Max Carb", kind: BaseType::Double, choices: &[] },
-        Editable { column: "carb_min", label: "Min Carb", kind: BaseType::Double, choices: &[] },
-        Editable { column: "category", label: "Category", kind: BaseType::String, choices: &[] },
-        Editable { column: "category_number", label: "Number", kind: BaseType::String, choices: &[] },
-        Editable { column: "color_max", label: "Max Color", kind: BaseType::Double, choices: &[] },
-        Editable { column: "color_min", label: "Min Color", kind: BaseType::Double, choices: &[] },
-        Editable { column: "examples", label: "Examples", kind: BaseType::String, choices: &[] },
-        Editable { column: "fg_max", label: "Max FG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "fg_min", label: "Min FG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "ibu_max", label: "Max IBU", kind: BaseType::Double, choices: &[] },
-        Editable { column: "ibu_min", label: "Min IBU", kind: BaseType::Double, choices: &[] },
-        Editable { column: "ingredients", label: "Ingredients", kind: BaseType::String, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "og_max", label: "Max OG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "og_min", label: "Min OG", kind: BaseType::Double, choices: &[] },
-        Editable { column: "style_guide", label: "Guide", kind: BaseType::String, choices: &[] },
-        Editable { column: "style_letter", label: "Letter", kind: BaseType::String, choices: &[] },
+    pub const EDITABLE: [Editable; 28] = [
+        Editable { column: "abv_max", label: "Max ABV", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "abv_min", label: "Min ABV", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "carb_max", label: "Max Carb", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "carb_min", label: "Min Carb", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "category", label: "Category", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "category_number", label: "Number", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "color_max", label: "Max Color", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "color_min", label: "Min Color", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "examples", label: "Examples", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "fg_max", label: "Max FG", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "fg_min", label: "Min FG", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "ibu_max", label: "Max IBU", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "ibu_min", label: "Min IBU", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "ingredients",
+            label: "Ingredients",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "og_max", label: "Max OG", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "og_min", label: "Min OG", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "style_guide", label: "Guide", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "style_letter", label: "Letter", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "stype",
             label: "Type",
@@ -3391,14 +4648,28 @@ impl StyleRow {
                 ("wine", "Wine"),
                 ("other", "Other"),
             ],
+            references: None,
         },
-        Editable { column: "aroma", label: "Aroma", kind: BaseType::String, choices: &[] },
-        Editable { column: "appearance", label: "Appearance", kind: BaseType::String, choices: &[] },
-        Editable { column: "flavor", label: "Flavor", kind: BaseType::String, choices: &[] },
-        Editable { column: "mouthfeel", label: "Mouthfeel", kind: BaseType::String, choices: &[] },
-        Editable { column: "overall_impression", label: "Overall Impression", kind: BaseType::String, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable { column: "aroma", label: "Aroma", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "appearance", label: "Appearance", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "flavor", label: "Flavor", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "mouthfeel", label: "Mouthfeel", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "overall_impression",
+            label: "Overall Impression",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_style"),
+        },
     ];
 }
 
@@ -3494,25 +4765,56 @@ impl WaterRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 18] = [
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "calcium", label: "Calcium", kind: BaseType::Double, choices: &[] },
-        Editable { column: "bicarbonate", label: "Bicarbonate", kind: BaseType::Double, choices: &[] },
-        Editable { column: "sulfate", label: "Sulfate", kind: BaseType::Double, choices: &[] },
-        Editable { column: "sodium", label: "Sodium", kind: BaseType::Double, choices: &[] },
-        Editable { column: "chloride", label: "Chloride", kind: BaseType::Double, choices: &[] },
-        Editable { column: "magnesium", label: "Magnesium", kind: BaseType::Double, choices: &[] },
-        Editable { column: "ph", label: "pH", kind: BaseType::Double, choices: &[] },
-        Editable { column: "alkalinity", label: "Alkalinity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "as_hco3", label: "Alkalinity As HCO3", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "carbonate_ppm", label: "Carbonate", kind: BaseType::Double, choices: &[] },
-        Editable { column: "potassium_ppm", label: "Potassium", kind: BaseType::Double, choices: &[] },
-        Editable { column: "iron_ppm", label: "Iron", kind: BaseType::Double, choices: &[] },
-        Editable { column: "nitrate_ppm", label: "Nitrate", kind: BaseType::Double, choices: &[] },
-        Editable { column: "nitrite_ppm", label: "Nitrite", kind: BaseType::Double, choices: &[] },
-        Editable { column: "fluoride_ppm", label: "Fluoride", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+    pub const EDITABLE: [Editable; 19] = [
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "calcium", label: "Calcium", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "bicarbonate",
+            label: "Bicarbonate",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "sulfate", label: "Sulfate", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "sodium", label: "Sodium", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "chloride", label: "Chloride", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "magnesium", label: "Magnesium", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "ph", label: "pH", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "alkalinity", label: "Alkalinity", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "as_hco3",
+            label: "Alkalinity As HCO3",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "carbonate_ppm",
+            label: "Carbonate",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "potassium_ppm",
+            label: "Potassium",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "iron_ppm", label: "Iron", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "nitrate_ppm", label: "Nitrate", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "nitrite_ppm", label: "Nitrite", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "fluoride_ppm", label: "Fluoride", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_water"),
+        },
     ];
 }
 
@@ -3606,9 +4908,21 @@ impl YeastRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 22] = [
-        Editable { column: "max_temperature", label: "Max Temperature", kind: BaseType::Double, choices: &[] },
-        Editable { column: "min_temperature", label: "Min Temperature", kind: BaseType::Double, choices: &[] },
+    pub const EDITABLE: [Editable; 23] = [
+        Editable {
+            column: "max_temperature",
+            label: "Max Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "min_temperature",
+            label: "Min Temperature",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "flocculation",
             label: "Flocculation",
@@ -3622,6 +4936,7 @@ impl YeastRow {
                 ("high", "High"),
                 ("very high", "Very High"),
             ],
+            references: None,
         },
         Editable {
             column: "form",
@@ -3634,6 +4949,7 @@ impl YeastRow {
                 ("culture", "Culture"),
                 ("dregs", "Dregs"),
             ],
+            references: None,
         },
         Editable {
             column: "ytype",
@@ -3654,54 +4970,92 @@ impl YeastRow {
                 ("pedio", "Pedio"),
                 ("spontaneous", "Spontaneous"),
             ],
+            references: None,
         },
-        Editable { column: "max_reuse", label: "Max Reuse", kind: BaseType::Int, choices: &[] },
-        Editable { column: "best_for", label: "Best For", kind: BaseType::String, choices: &[] },
-        Editable { column: "laboratory", label: "Laboratory", kind: BaseType::String, choices: &[] },
-        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[] },
-        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[] },
-        Editable { column: "alcohol_tolerance_pct", label: "Alcohol Tolerance", kind: BaseType::Double, choices: &[] },
-        Editable { column: "attenuation_min_pct", label: "Min Attenuation", kind: BaseType::Double, choices: &[] },
-        Editable { column: "attenuation_max_pct", label: "Max Attenuation", kind: BaseType::Double, choices: &[] },
+        Editable { column: "max_reuse", label: "Max Reuse", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "best_for", label: "Best For", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "laboratory", label: "Laboratory", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "notes", label: "Notes", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "product_id", label: "Product ID", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "alcohol_tolerance_pct",
+            label: "Alcohol Tolerance",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "attenuation_min_pct",
+            label: "Min Attenuation",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "attenuation_max_pct",
+            label: "Max Attenuation",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
         Editable {
             column: "phenolic_off_flavor_positive",
             label: "Phenolic Off Flavor Positive",
             kind: BaseType::Bool,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "glucoamylase_positive",
             label: "Glucoamylase Positive",
             kind: BaseType::Bool,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "killer_producing_k1_toxin",
             label: "Killer Producing K1 Toxin",
             kind: BaseType::Bool,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "killer_producing_k2_toxin",
             label: "Killer Producing K2 Toxin",
             kind: BaseType::Bool,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "killer_producing_k28_toxin",
             label: "Killer Producing K28 Toxin",
             kind: BaseType::Bool,
             choices: &[],
+            references: None,
         },
         Editable {
             column: "killer_producing_klus_toxin",
             label: "Killer Producing Klus Toxin",
             kind: BaseType::Bool,
             choices: &[],
+            references: None,
         },
-        Editable { column: "killer_neutral", label: "Killer Neutral", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
+        Editable {
+            column: "killer_neutral",
+            label: "Killer Neutral",
+            kind: BaseType::Bool,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable {
+            column: "contained_in_folder_id",
+            label: "Contained in Folder",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("folder_for_yeast"),
+        },
     ];
 }
 
@@ -3809,14 +5163,32 @@ impl YeastInRecipeRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 13] = [
-        Editable { column: "attenuation_pct", label: "Attenuation", kind: BaseType::Double, choices: &[] },
-        Editable { column: "times_cultured", label: "Times Cultured", kind: BaseType::Int, choices: &[] },
-        Editable { column: "cell_count_billions", label: "Cell Count", kind: BaseType::Double, choices: &[] },
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
+    pub const EDITABLE: [Editable; 15] = [
+        Editable {
+            column: "attenuation_pct",
+            label: "Attenuation",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "times_cultured",
+            label: "Times Cultured",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "cell_count_billions",
+            label: "Cell Count",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
         Editable {
             column: "stage",
             label: "Stage",
@@ -3827,12 +5199,33 @@ impl YeastInRecipeRow {
                 ("add_to_fermentation", "Fermentation"),
                 ("add_to_package", "Package"),
             ],
+            references: None,
         },
-        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[] },
-        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_gravity_sg", label: "Add At Gravity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "add_at_acidity_ph", label: "Add At Acidity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[] },
+        Editable { column: "step", label: "Step", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "add_at_time_mins", label: "Time", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "add_at_gravity_sg",
+            label: "Add At Gravity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "add_at_acidity_ph",
+            label: "Add At Acidity",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "duration_mins", label: "Duration", kind: BaseType::Double, choices: &[], references: None },
+        Editable {
+            column: "recipe_id",
+            label: "Recipe",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("recipe"),
+        },
+        Editable { column: "yeast_id", label: "Yeast", kind: BaseType::Int, choices: &[], references: Some("yeast") },
     ];
 }
 
@@ -3931,23 +5324,84 @@ impl YeastStockPurchaseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 16] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[] },
-        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_ordered", label: "Quantity Ordered", kind: BaseType::Double, choices: &[] },
-        Editable { column: "date_received", label: "Date Received", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_ordered", label: "Date Ordered", kind: BaseType::Date, choices: &[] },
-        Editable { column: "date_best_before", label: "Best Before Date", kind: BaseType::Date, choices: &[] },
-        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[] },
-        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price_currency", label: "Purchase Price", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_price", label: "Purchase Price", kind: BaseType::Int, choices: &[] },
-        Editable { column: "purchase_tax_currency", label: "Purchase Tax", kind: BaseType::String, choices: &[] },
-        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[] },
-        Editable { column: "shipping_cost_currency", label: "Shipping Cost", kind: BaseType::String, choices: &[] },
-        Editable { column: "shipping_cost", label: "Shipping Cost", kind: BaseType::Int, choices: &[] },
+    pub const EDITABLE: [Editable; 17] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "quantity", label: "Quantity", kind: BaseType::Double, choices: &[], references: None },
+        Editable { column: "unit", label: "Unit", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_ordered",
+            label: "Quantity Ordered",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_received",
+            label: "Date Received",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_ordered",
+            label: "Date Ordered",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "date_best_before",
+            label: "Best Before Date",
+            kind: BaseType::Date,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "supplier", label: "Supplier", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "note", label: "Note", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "purchase_price_currency",
+            label: "Purchase Price",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_price",
+            label: "Purchase Price",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "purchase_tax_currency",
+            label: "Purchase Tax",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable { column: "purchase_tax", label: "Purchase Tax", kind: BaseType::Int, choices: &[], references: None },
+        Editable {
+            column: "shipping_cost_currency",
+            label: "Shipping Cost",
+            kind: BaseType::String,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "shipping_cost",
+            label: "Shipping Cost",
+            kind: BaseType::Int,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "yeast_id",
+            label: "Ingredient ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("yeast"),
+        },
     ];
 }
 
@@ -4010,19 +5464,40 @@ impl YeastStockUseRow {
     ];
 
     /// The columns an editor offers, in the order the schema declares them.
-    pub const EDITABLE: [Editable; 7] = [
-        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[] },
-        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[] },
-        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[] },
-        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[] },
+    pub const EDITABLE: [Editable; 9] = [
+        Editable { column: "name", label: "Name", kind: BaseType::String, choices: &[], references: None },
+        Editable { column: "deleted", label: "Deleted", kind: BaseType::Bool, choices: &[], references: None },
+        Editable { column: "sequence_number", label: "Number", kind: BaseType::Int, choices: &[], references: None },
+        Editable { column: "date", label: "Date", kind: BaseType::Date, choices: &[], references: None },
         Editable {
             column: "reason",
             label: "Reason",
             kind: BaseType::String,
             choices: &[("used", "Used"), ("lost", "Lost"), ("disposed", "Disposed")],
+            references: None,
         },
-        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[] },
-        Editable { column: "quantity_used", label: "Quantity Used", kind: BaseType::Double, choices: &[] },
+        Editable { column: "comment", label: "Comment", kind: BaseType::String, choices: &[], references: None },
+        Editable {
+            column: "quantity_used",
+            label: "Quantity Used",
+            kind: BaseType::Double,
+            choices: &[],
+            references: None,
+        },
+        Editable {
+            column: "yeast_purchase_id",
+            label: "Owner ID",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("yeast_stock_purchase"),
+        },
+        Editable {
+            column: "brew_log_id",
+            label: "Brew Log",
+            kind: BaseType::Int,
+            choices: &[],
+            references: Some("brew_log"),
+        },
     ];
 }
 
@@ -4777,12 +6252,16 @@ pub struct Editable {
     /// For an enumerated column, every value it may hold, as (stored, shown) pairs.
     /// Empty for every other kind.
     pub choices: &'static [(&'static str, &'static str)],
+    /// For a foreign key, the table it names a row of.  The choice is a row of that
+    /// table rather than something typed, so an editor has to go and fetch them.
+    pub references: Option<&'static str>,
 }
 
 /// Every column of a table that is worth editing, in the order the schema declares them.
 ///
-/// The primary key is left out -- the database assigns it -- as are the foreign keys,
-/// which name other rows and need a way of choosing one rather than a text box.
+/// The primary key is left out, because the database assigns it.  Everything else is in,
+/// foreign keys included -- those name a row of another table, so they are offered as a
+/// choice from it rather than as something to type.
 pub fn editable_columns(table: &str) -> &'static [Editable] {
     match table {
         "boil" => &BoilRow::EDITABLE,
