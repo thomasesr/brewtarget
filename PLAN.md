@@ -270,9 +270,22 @@ cases, this mirrors the ones that pin down the numbers; `testUndo`,
 `testStepChangesAutoAdjust` and `testAffectsAdjustment` test that plumbing rather than
 the schedule.
 
-`WaterAutoAdjusterTests.cpp` was listed here and does not exist in the C++ at all. The
-water chemistry in `src/model/Water.cpp` is still unported -- which is what the Water
-tab's "Actual" panel needs -- but there is no such test file to mirror.
+`WaterAutoAdjusterTests.cpp` **does** exist -- 13 cases against the 1,121 lines of
+`src/WaterAutoAdjuster.cpp`, which holds the salt model, the acid model and the mash pH
+model. I claimed here that it did not, having listed the test directory with a `head`
+that cut the listing off before the W's.
+
+`bt-calc/src/water.rs` has the forward half: what the water comes to given a base
+profile, how much of it is reverse osmosis and what salts go in; residual alkalinity by
+Kolbach; and the mash pH by Troester's model. Checked against the figures the C++ tests
+work out by hand -- 232.788 ppm of calcium from a gram of gypsum per litre, a distilled
+water mash pH of 5.495, 5.640714 with alkaline water, 5.395 with 25 mEq of acid.
+
+Not ported: the optimiser that goes the other way -- which salts, and how much of each, to
+get from a base profile to a target. That is a non-negative least squares over six ions,
+solved by trying every subset of the salts, and it is what the auto-adjust button does.
+There is no such button here yet, so the forward model is what the Water tab needs and the
+optimiser can wait for the screen that would use it.
 
 ### Phase 6 — `bt-format`
 
