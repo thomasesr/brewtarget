@@ -263,7 +263,7 @@ def generate_accessors(table: dict) -> list[str]:
     return [f"impl {struct} {{", *out[:-1], "}", ""]
 
 
-def generate_tables(schema: dict, labels: dict, enums: dict) -> str:
+def generate_tables(schema: dict, labels: dict, enums: dict, editors: dict) -> str:
     """One Rust struct per table, mirroring its columns exactly."""
     out = [
         HEADER.format(file="tables.rs", sources="schema/v23.json"),
@@ -485,6 +485,94 @@ def generate_tables(schema: dict, labels: dict, enums: dict) -> str:
     for table in schema["tables"]:
         out.append(f'        "{table["name"]}" => &{pascal_case(table["name"])}Row::EDITABLE,')
     out += ["        _ => &[],", "    }", "}", ""]
+
+    # The editor dialogs, as the Qt application arranges them: which tabs, which groups,
+    # which fields in which order.  See tools/extract-editors.py.
+    table_of_type = {table["cpp_type"]: table["name"] for table in schema["tables"]}
+    column_of = {}
+    for table in schema["tables"]:
+        entries = [(table["primary_key"]["name"], table["primary_key"].get("property"))]
+        entries += [(column["name"], column["property"]) for column in table["columns"]]
+        entries += [(key["column"], key["property"]) for key in table["foreign_keys"]]
+        for column, property_name in entries:
+            if property_name:
+                column_of.setdefault((table["name"], property_name), column)
+
+    forms = {}
+    for editor in editors["editors"].values():
+        table = table_of_type.get(editor["cpp_type"] or "")
+        if table is None:
+            continue
+        tabs = []
+        for tab in editor["tabs"]:
+            fields = []
+            for field in tab["fields"]:
+                column = column_of.get((table, field["property"]))
+                if column is None:
+                    # A property the dialog shows that no column holds -- a computed
+                    # inventory, a folder path.  Nothing to edit, so nothing to show.
+                    continue
+                label = field["label"] or labels["labels"].get(field["property"]) or column
+                fields.append((column, label, field["group"], field["control"], field["precision"], field["read_only"]))
+            if fields:
+                tabs.append((tab["title"], fields))
+        if tabs:
+            forms[table] = tabs
+
+    out += [
+        "/// A field on an editor, as the Qt dialog arranges it.",
+        "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
+        "pub struct FormField {",
+        "    pub column: &'static str,",
+        "    /// What the dialog labels it.  Not always what the column is called elsewhere:",
+        "    /// `alpha_pct` is \"Actual\" on the hop editor, under an \"Alpha Acid\" heading.",
+        "    pub label: &'static str,",
+        "    /// The heading it sits under, where the dialog groups it with others.",
+        "    pub group: Option<&'static str>,",
+        "    /// How many decimal places the dialog shows.",
+        "    pub precision: Option<u8>,",
+        "    /// Shown but never written back.",
+        "    pub read_only: bool,",
+        "}",
+        "",
+        "/// One tab of an editor.",
+        "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
+        "pub struct FormTab {",
+        "    pub title: &'static str,",
+        "    pub fields: &'static [FormField],",
+        "}",
+        "",
+        "/// How the Qt application arranges this table's editor.",
+        "///",
+        "/// Extracted from `ui/*Editor.ui` and `src/editors/*Editor.cpp`: the tabs, the groups,",
+        "/// the order and the labels, but not the grid coordinates -- those are Qt's way of",
+        "/// arranging a dialog, and the web interface arranges the same information its own way.",
+        "///",
+        "/// `None` for a table the Qt application has no editor for, which then falls back to",
+        "/// [`editable_columns`].",
+        "pub fn form_for(table: &str) -> Option<&'static [FormTab]> {",
+        "    let found = match table {",
+    ]
+    for table in sorted(forms):
+        out.append(f'        "{table}" => {pascal_case(table)}Row::FORM.as_slice(),')
+    out += ["        _ => return None,", "    };", "    Some(found)", "}", ""]
+
+    for table in sorted(forms):
+        struct = pascal_case(table) + "Row"
+        out += [f"impl {struct} {{", "    /// The editor for this table, as the Qt dialog arranges it.", "    pub const FORM: [FormTab; %d] = [" % len(forms[table])]
+        for title, fields in forms[table]:
+            escaped_title = title.replace("\\", "\\\\").replace('"', '\\"')
+            out.append(f'        FormTab {{ title: "{escaped_title}", fields: &[')
+            for column, label, group, _control, precision, read_only in fields:
+                escaped = label.replace("\\", "\\\\").replace('"', '\\"')
+                group_text = "None" if not group else 'Some("%s")' % group.replace('"', '\\"')
+                out.append(
+                    f'            FormField {{ column: "{column}", label: "{escaped}", group: {group_text}, '
+                    f"precision: {'Some(%d)' % precision if precision is not None else 'None'}, "
+                    f"read_only: {str(read_only).lower()} }},"
+                )
+            out.append("        ] },")
+        out += ["    ];", "}", ""]
 
     out += [
         "/// What a column is called when it is shown to a person.",
@@ -828,9 +916,10 @@ def main() -> int:
     schema = json.loads((REPO / "schema" / "v23.json").read_text(encoding="utf-8"))
     enums = json.loads((REPO / "schema" / "enums.json").read_text(encoding="utf-8"))
     labels = json.loads((REPO / "schema" / "labels.json").read_text(encoding="utf-8"))
+    editors = json.loads((REPO / "schema" / "editors.json").read_text(encoding="utf-8"))
 
     args.out.mkdir(parents=True, exist_ok=True)
-    files = {"enums.rs": generate_enums(enums, labels), "tables.rs": generate_tables(schema, labels, enums)}
+    files = {"enums.rs": generate_enums(enums, labels), "tables.rs": generate_tables(schema, labels, enums, editors)}
     files["mod.rs"] = (
         HEADER.format(file="mod.rs", sources="schema/v23.json and schema/enums.json")
         + "\n//! Generated model code.  See `tools/generate-model.py`.\n\npub mod enums;\npub mod tables;\n"

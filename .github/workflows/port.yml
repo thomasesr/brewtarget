@@ -86,6 +86,10 @@ jobs:
         run: |
           python3 tools/extract-labels.py --out /tmp/labels.json
           diff -u schema/labels.json /tmp/labels.json
+      - name: Editor extraction is reproducible
+        run: |
+          python3 tools/extract-editors.py --out /tmp/editors.json
+          diff -u schema/editors.json /tmp/editors.json
       - name: Generated model code is reproducible
         run: |
           python3 tools/generate-model.py --out /tmp/generated --store-out /tmp/generated-store --api-out /tmp/generated-api

@@ -6307,6 +6307,1628 @@ pub fn editable_columns(table: &str) -> &'static [Editable] {
     }
 }
 
+/// A field on an editor, as the Qt dialog arranges it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FormField {
+    pub column: &'static str,
+    /// What the dialog labels it.  Not always what the column is called elsewhere:
+    /// `alpha_pct` is "Actual" on the hop editor, under an "Alpha Acid" heading.
+    pub label: &'static str,
+    /// The heading it sits under, where the dialog groups it with others.
+    pub group: Option<&'static str>,
+    /// How many decimal places the dialog shows.
+    pub precision: Option<u8>,
+    /// Shown but never written back.
+    pub read_only: bool,
+}
+
+/// One tab of an editor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FormTab {
+    pub title: &'static str,
+    pub fields: &'static [FormField],
+}
+
+/// How the Qt application arranges this table's editor.
+///
+/// Extracted from `ui/*Editor.ui` and `src/editors/*Editor.cpp`: the tabs, the groups,
+/// the order and the labels, but not the grid coordinates -- those are Qt's way of
+/// arranging a dialog, and the web interface arranges the same information its own way.
+///
+/// `None` for a table the Qt application has no editor for, which then falls back to
+/// [`editable_columns`].
+pub fn form_for(table: &str) -> Option<&'static [FormTab]> {
+    let found = match table {
+        "boil" => BoilRow::FORM.as_slice(),
+        "boil_step" => BoilStepRow::FORM.as_slice(),
+        "equipment" => EquipmentRow::FORM.as_slice(),
+        "fermentable" => FermentableRow::FORM.as_slice(),
+        "fermentable_stock_purchase" => FermentableStockPurchaseRow::FORM.as_slice(),
+        "fermentable_stock_use" => FermentableStockUseRow::FORM.as_slice(),
+        "fermentation" => FermentationRow::FORM.as_slice(),
+        "fermentation_step" => FermentationStepRow::FORM.as_slice(),
+        "hop" => HopRow::FORM.as_slice(),
+        "hop_stock_purchase" => HopStockPurchaseRow::FORM.as_slice(),
+        "mash" => MashRow::FORM.as_slice(),
+        "mash_step" => MashStepRow::FORM.as_slice(),
+        "misc" => MiscRow::FORM.as_slice(),
+        "misc_stock_purchase" => MiscStockPurchaseRow::FORM.as_slice(),
+        "style" => StyleRow::FORM.as_slice(),
+        "water" => WaterRow::FORM.as_slice(),
+        "yeast" => YeastRow::FORM.as_slice(),
+        "yeast_stock_purchase" => YeastStockPurchaseRow::FORM.as_slice(),
+        _ => return None,
+    };
+    Some(found)
+}
+
+impl BoilRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 1] = [FormTab {
+        title: "Main",
+        fields: &[
+            FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+            FormField { column: "description", label: "Description", group: None, precision: None, read_only: false },
+            FormField {
+                column: "pre_boil_size_l",
+                label: "Pre-Boil Size",
+                group: None,
+                precision: Some(2),
+                read_only: false,
+            },
+            FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false },
+        ],
+    }];
+}
+
+impl BoilStepRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 1] = [FormTab {
+        title: "Main",
+        fields: &[
+            FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+            FormField {
+                column: "start_temp_c",
+                label: "Start temp.",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField { column: "step_time_mins", label: "Time", group: None, precision: Some(0), read_only: false },
+            FormField {
+                column: "ramp_time_mins",
+                label: "Temp. lag time",
+                group: None,
+                precision: Some(0),
+                read_only: false,
+            },
+            FormField { column: "end_temp_c", label: "End temp.", group: None, precision: Some(1), read_only: false },
+            FormField {
+                column: "chilling_type",
+                label: "Chilling Type",
+                group: None,
+                precision: None,
+                read_only: false,
+            },
+            FormField {
+                column: "start_acidity_ph",
+                label: "Start Acidity",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField {
+                column: "start_gravity_sg",
+                label: "Start Gravity",
+                group: None,
+                precision: Some(3),
+                read_only: false,
+            },
+            FormField {
+                column: "end_acidity_ph",
+                label: "End Acidity",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField {
+                column: "end_gravity_sg",
+                label: "End Gravity",
+                group: None,
+                precision: Some(3),
+                read_only: false,
+            },
+            FormField { column: "description", label: "Description", group: None, precision: None, read_only: false },
+        ],
+    }];
+}
+
+impl EquipmentRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 9] = [
+        FormTab {
+            title: "General",
+            fields: &[
+                FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "fv_batch_size_l",
+                    label: "Default Batch Size",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "top_up_water",
+                    label: "Default final top-up water",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettle_boil_size_l",
+                    label: "Default Pre-boil Volume",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "top_up_kettle",
+                    label: "Default Kettle top-up water",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "hop_utilization",
+                    label: "Hop % Utilization",
+                    group: None,
+                    precision: Some(0),
+                    read_only: false,
+                },
+                FormField {
+                    column: "boiling_point",
+                    label: "Boiling Point of Water",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Hot Liquor Tank",
+            fields: &[
+                FormField {
+                    column: "hlt_type",
+                    label: "Hot Liquor Tank Type",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField { column: "hlt_volume_l", label: "Volume", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "hlt_loss_l",
+                    label: "Evaporation Loss",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField { column: "hlt_weight_kg", label: "Weight", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "hlt_specific_heat_calgc",
+                    label: "Specific Heat Capacity",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Mash Tun",
+            fields: &[
+                FormField {
+                    column: "mash_tun_type",
+                    label: "Mash Tun Type",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "mash_tun_weight_kg",
+                    label: "Weight",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "mash_tun_volume_l",
+                    label: "Total Capacity",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "mash_tun_loss_l",
+                    label: "Mash Tun Loss (not recovered)",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "mash_tun_specific_heat_calgc",
+                    label: "Specific Heat Capacity",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Lauter Tun",
+            fields: &[
+                FormField {
+                    column: "lauter_tun_type",
+                    label: "Lauter Tun Type",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "lauter_tun_volume_l",
+                    label: "Lauter Tun Volume",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "lauter_tun_weight_kg",
+                    label: "Weight",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "lauter_tun_specific_heat_calgc",
+                    label: "Specific Heat Capacity",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "lauter_tun_deadspace_loss_l",
+                    label: "Lauter Tun Loss (not recovered)",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Boil Kettle",
+            fields: &[
+                FormField {
+                    column: "kettle_type",
+                    label: "Boil Kettle Type",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettle_volume_l",
+                    label: "Total Capacity",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettle_evaporation_per_hour_l",
+                    label: "Evaporation rate per hour",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettle_trub_chiller_loss_l",
+                    label: "Kettle to Fermentor Loss",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettle_weight_kg",
+                    label: "Weight",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettle_specific_heat_calgc",
+                    label: "Specific Heat Capacity",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettle_outflow_per_minute_l",
+                    label: "Outflow per minute",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettleInternalDiameter_cm",
+                    label: "Internal Diameter",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "kettleOpeningDiameter_cm",
+                    label: "Opening Diameter",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Fermentor",
+            fields: &[
+                FormField {
+                    column: "fv_type",
+                    label: "Fermentor Type",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "fv_volume_l",
+                    label: "Total Capacity",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "fv_loss_l",
+                    label: "Deadspace Losses",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Aging Vessel",
+            fields: &[
+                FormField {
+                    column: "agingvessel_type",
+                    label: "Aging Vessel Type",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "aging_vessel_volume_l",
+                    label: "Volume",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "aging_vessel_loss_l",
+                    label: "Losses",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Packaging Vessel",
+            fields: &[
+                FormField {
+                    column: "packaging_vessel_type",
+                    label: "Packaging Vessel Type",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "packaging_vessel_volume_l",
+                    label: "Volume",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "packaging_vessel_loss_l",
+                    label: "Losses",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Mash",
+            fields: &[
+                FormField {
+                    column: "foundation_volume_l",
+                    label: "Foundation Water (recovered)",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "grain_absorption_lkg",
+                    label: "Grain absorption",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+    ];
+}
+
+impl FermentableRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 3] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+                FormField { column: "ftype", label: "Type", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "grain_group",
+                    label: "Grain Group",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "protein",
+                    label: "Protein (%)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField { column: "origin", label: "Origin", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "max_in_batch",
+                    label: "Max In Batch (%)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField { column: "supplier", label: "Supplier", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "coarse_fine_diff",
+                    label: "Coarse/Fine Diff (%)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "moisture",
+                    label: "Moisture (%)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "diastatic_power",
+                    label: "Diastatic power",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "ibu_gal_per_lb",
+                    label: "Bitterness (IBU*gal/lb)",
+                    group: None,
+                    precision: Some(0),
+                    read_only: false,
+                },
+                FormField { column: "producer", label: "Producer", group: None, precision: None, read_only: false },
+                FormField { column: "product_id", label: "Product ID", group: None, precision: None, read_only: false },
+            ],
+        },
+        FormTab {
+            title: "Extras",
+            fields: &[
+                FormField {
+                    column: "fine_grind_yield_pct",
+                    label: "Extract Yield Dry Basis Fine Grind",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "coarse_grind_yield_pct",
+                    label: "Extract Yield Dry Basis Coarse Grind",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "potential_yield_sg",
+                    label: "Potential yield",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "alpha_amylase_dext_units",
+                    label: "Total alpha-amylase in malted grain",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "kolbach_index_pct",
+                    label: "Kolbach Index",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "hardness_prp_glassy_pct",
+                    label: "Percentage of malt that is \"glassy\"",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "hardness_prp_half_pct",
+                    label: "Percentage of malt that is \"half glassy\"",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "hardness_prp_mealy_pct",
+                    label: "Percentage of malt that is \"mealy\"",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "kernel_size_prp_plump_pct",
+                    label: "Percentage of grain that is \"plump\"",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "kernel_size_prp_thin_pct",
+                    label: "Percentage of grain that is \"tine\"",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "friability_pct",
+                    label: "Friability",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField { column: "di_ph", label: "DI pH", group: None, precision: Some(1), read_only: false },
+                FormField {
+                    column: "viscosity_cp",
+                    label: "Viscosity of this malt in a \"congress mash\"",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "fermentability_pct",
+                    label: "Fermentability",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "dmsp_ppm",
+                    label: "DMS precursors",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "lactic_acid_by_weight_pct",
+                    label: "% Lactic Acid (by weight)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "fan_ppm",
+                    label: "Free Amino Nitrogen (FAN)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "fermentable_fraction_pct",
+                    label: "% Fermentable by yeast",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "beta_glucan_ppm",
+                    label: "Beta-glucans",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Notes",
+            fields: &[FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false }],
+        },
+    ];
+}
+
+impl FermentableStockPurchaseRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 2] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "supplier", label: "Supplier", group: None, precision: None, read_only: false },
+                FormField { column: "note", label: "Note", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "date_ordered",
+                    label: "Date",
+                    group: Some("Ordered"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_received",
+                    label: "Date",
+                    group: Some("Received"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_best_before",
+                    label: "Best Before",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Extras",
+            fields: &[
+                FormField {
+                    column: "purchase_price_currency",
+                    label: "Purchase Price",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "purchase_tax_currency",
+                    label: "Purchase Tax",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "shipping_cost_currency",
+                    label: "Shipping Cost",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+    ];
+}
+
+impl FermentableStockUseRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 1] = [FormTab {
+        title: "Main",
+        fields: &[
+            FormField { column: "date", label: "Date", group: None, precision: None, read_only: false },
+            FormField { column: "reason", label: "Reason", group: None, precision: None, read_only: false },
+            FormField { column: "date", label: "Date", group: None, precision: None, read_only: false },
+            FormField { column: "reason", label: "Reason", group: None, precision: None, read_only: false },
+            FormField { column: "date", label: "Date", group: None, precision: None, read_only: false },
+            FormField { column: "reason", label: "Reason", group: None, precision: None, read_only: false },
+            FormField { column: "date", label: "Date", group: None, precision: None, read_only: false },
+            FormField { column: "reason", label: "Reason", group: None, precision: None, read_only: false },
+            FormField { column: "comment", label: "Comment", group: None, precision: None, read_only: false },
+            FormField { column: "comment", label: "Comment", group: None, precision: None, read_only: false },
+            FormField { column: "comment", label: "Comment", group: None, precision: None, read_only: false },
+            FormField { column: "comment", label: "Comment", group: None, precision: None, read_only: false },
+        ],
+    }];
+}
+
+impl FermentationRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 1] = [FormTab {
+        title: "Main",
+        fields: &[
+            FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+            FormField { column: "description", label: "Description", group: None, precision: None, read_only: false },
+            FormField { column: "krausen_handling", label: "Krausen", group: None, precision: None, read_only: false },
+            FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false },
+        ],
+    }];
+}
+
+impl FermentationStepRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 1] = [FormTab {
+        title: "Main",
+        fields: &[
+            FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+            FormField {
+                column: "start_temp_c",
+                label: "Target temp.",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField { column: "step_time_mins", label: "Time", group: None, precision: Some(0), read_only: false },
+            FormField { column: "end_temp_c", label: "End temp.", group: None, precision: Some(1), read_only: false },
+            FormField { column: "free_rise", label: "Free rise", group: None, precision: None, read_only: false },
+            FormField {
+                column: "start_gravity_sg",
+                label: "Start Gravity",
+                group: None,
+                precision: Some(3),
+                read_only: false,
+            },
+            FormField {
+                column: "end_gravity_sg",
+                label: "End Gravity",
+                group: None,
+                precision: Some(3),
+                read_only: false,
+            },
+            FormField {
+                column: "start_acidity_ph",
+                label: "Start Acidity",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField {
+                column: "end_acidity_ph",
+                label: "End Acidity",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField { column: "vessel", label: "Vessel", group: None, precision: None, read_only: false },
+            FormField { column: "description", label: "Description", group: None, precision: None, read_only: false },
+        ],
+    }];
+}
+
+impl HopRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 3] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+                FormField { column: "form", label: "Form", group: None, precision: None, read_only: false },
+                FormField { column: "year", label: "Year", group: None, precision: None, read_only: false },
+                FormField { column: "origin", label: "Origin", group: None, precision: None, read_only: false },
+                FormField { column: "htype", label: "Type", group: None, precision: None, read_only: false },
+                FormField { column: "producer", label: "Producer", group: None, precision: None, read_only: false },
+                FormField { column: "product_id", label: "Product ID", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "alpha_pct",
+                    label: "Actual",
+                    group: Some("Alpha Acid"),
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "alpha_min_pct",
+                    label: "Typical Range",
+                    group: Some("Alpha Acid"),
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "alpha_max_pct",
+                    label: "-",
+                    group: Some("Alpha Acid"),
+                    precision: Some(1),
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Extras",
+            fields: &[
+                FormField {
+                    column: "sixMonthAlphaLoss_pct",
+                    label: "6 Month Alpha Loss",
+                    group: None,
+                    precision: Some(0),
+                    read_only: false,
+                },
+                FormField {
+                    column: "humulene_pct",
+                    label: "Humulene %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "linalool_pct",
+                    label: "Linalool %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "caryophyllene_pct",
+                    label: "Caryophyllene %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "limonene_pct",
+                    label: "Limonene %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "cohumulone_pct",
+                    label: "Cohumulone %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField { column: "nerol_pct", label: "Nerol %", group: None, precision: Some(2), read_only: false },
+                FormField {
+                    column: "myrcene_pct",
+                    label: "Myrcene %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "pinene_pct",
+                    label: "α-Pinene %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "farnesene_pct",
+                    label: "Farnesene %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "polyphenols_pct",
+                    label: "Polyphenols %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "geraniol_pct",
+                    label: "Geraniol %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "xanthohumol_pct",
+                    label: "Xanthohumol %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "total_oil_ml_per_100g",
+                    label: "Total Oil ml/100g",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "b_pinene_pct",
+                    label: "β-pinene %",
+                    group: None,
+                    precision: Some(2),
+                    read_only: false,
+                },
+                FormField {
+                    column: "beta_pct",
+                    label: "Actual",
+                    group: Some("Beta Acid"),
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "beta_min_pct",
+                    label: "Typical Range",
+                    group: Some("Beta Acid"),
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "beta_max_pct",
+                    label: "-",
+                    group: Some("Beta Acid"),
+                    precision: Some(1),
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Notes",
+            fields: &[FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false }],
+        },
+    ];
+}
+
+impl HopStockPurchaseRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 2] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "supplier", label: "Supplier", group: None, precision: None, read_only: false },
+                FormField { column: "note", label: "Note", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "date_ordered",
+                    label: "Date",
+                    group: Some("Ordered"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_received",
+                    label: "Date",
+                    group: Some("Received"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_best_before",
+                    label: "Best Before",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField { column: "year", label: "Year", group: None, precision: None, read_only: false },
+                FormField { column: "alpha_pct", label: "Alpha Acid", group: None, precision: None, read_only: false },
+                FormField { column: "form", label: "Form", group: None, precision: None, read_only: false },
+            ],
+        },
+        FormTab {
+            title: "Extras",
+            fields: &[
+                FormField {
+                    column: "purchase_price_currency",
+                    label: "Purchase Price",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "purchase_tax_currency",
+                    label: "Purchase Tax",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "shipping_cost_currency",
+                    label: "Shipping Cost",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+    ];
+}
+
+impl MashRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 3] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "grain_temp",
+                    label: "Initial grain temp",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Legacy",
+            fields: &[
+                FormField {
+                    column: "initial_tun_temp_c",
+                    label: "Initial tun temp",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "sparge_temp",
+                    label: "Sparge temp",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField { column: "ph", label: "Sparge pH", group: None, precision: Some(0), read_only: false },
+                FormField {
+                    column: "tun_weight_kg",
+                    label: "Tun mass",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "tun_specific_heat_calgc",
+                    label: "Tun specific heat",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Notes",
+            fields: &[FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false }],
+        },
+    ];
+}
+
+impl MashStepRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 1] = [FormTab {
+        title: "Main",
+        fields: &[
+            FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+            FormField { column: "step_number", label: "Step Number", group: None, precision: None, read_only: false },
+            FormField { column: "mstype", label: "Type", group: None, precision: None, read_only: false },
+            FormField {
+                column: "step_temp_c",
+                label: "Target temp.",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField { column: "step_time_mins", label: "Time", group: None, precision: Some(0), read_only: false },
+            FormField { column: "amount_l", label: "Amount", group: None, precision: None, read_only: false },
+            FormField {
+                column: "ramp_time_mins",
+                label: "Temp. lag time",
+                group: None,
+                precision: Some(0),
+                read_only: false,
+            },
+            FormField { column: "amount_fixed", label: "Pinned", group: None, precision: None, read_only: false },
+            FormField { column: "end_temp_c", label: "End temp.", group: None, precision: Some(1), read_only: false },
+            FormField {
+                column: "infuse_temp_c",
+                label: "Infuse temp.",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField { column: "infuse_temp_fixed", label: "Pinned", group: None, precision: None, read_only: false },
+            FormField {
+                column: "liquor_to_grist_ratio_lkg",
+                label: "Thickness",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField {
+                column: "start_acidity_ph",
+                label: "Start Acidity",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField {
+                column: "end_acidity_ph",
+                label: "End Acidity",
+                group: None,
+                precision: Some(1),
+                read_only: false,
+            },
+            FormField { column: "description", label: "Description", group: None, precision: None, read_only: false },
+        ],
+    }];
+}
+
+impl MiscRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 3] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "water_agent_type",
+                    label: "Type",
+                    group: Some("Water Agent Properties"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField { column: "mtype", label: "Type", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "water_agent_percent_acid",
+                    label: "Percent Acid",
+                    group: Some("Water Agent Properties"),
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField { column: "producer", label: "Producer", group: None, precision: None, read_only: false },
+                FormField { column: "product_id", label: "Product ID", group: None, precision: None, read_only: false },
+            ],
+        },
+        FormTab {
+            title: "Use for",
+            fields: &[FormField {
+                column: "use_for",
+                label: "Use For",
+                group: None,
+                precision: None,
+                read_only: false,
+            }],
+        },
+        FormTab {
+            title: "Notes",
+            fields: &[FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false }],
+        },
+    ];
+}
+
+impl MiscStockPurchaseRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 2] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "supplier", label: "Supplier", group: None, precision: None, read_only: false },
+                FormField { column: "note", label: "Note", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "date_ordered",
+                    label: "Date",
+                    group: Some("Ordered"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_received",
+                    label: "Date",
+                    group: Some("Received"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_best_before",
+                    label: "Best Before",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Extras",
+            fields: &[
+                FormField {
+                    column: "purchase_price_currency",
+                    label: "Purchase Price",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "purchase_tax_currency",
+                    label: "Purchase Tax",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "shipping_cost_currency",
+                    label: "Shipping Cost",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+    ];
+}
+
+impl StyleRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 10] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+                FormField { column: "category", label: "Category", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "category_number",
+                    label: "Category number",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "style_letter",
+                    label: "Style letter",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "style_guide",
+                    label: "Style guide",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField { column: "stype", label: "Type", group: None, precision: None, read_only: false },
+            ],
+        },
+        FormTab {
+            title: "Ranges",
+            fields: &[
+                FormField { column: "og_min", label: "OG", group: None, precision: None, read_only: false },
+                FormField { column: "og_max", label: "OG", group: None, precision: None, read_only: false },
+                FormField { column: "fg_min", label: "FG", group: None, precision: None, read_only: false },
+                FormField { column: "fg_max", label: "FG", group: None, precision: None, read_only: false },
+                FormField { column: "ibu_min", label: "IBUs", group: None, precision: Some(0), read_only: false },
+                FormField { column: "ibu_max", label: "IBUs", group: None, precision: Some(0), read_only: false },
+                FormField { column: "color_min", label: "Color (SRM)", group: None, precision: None, read_only: false },
+                FormField { column: "color_max", label: "Color (SRM)", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "carb_min",
+                    label: "Carb (vols)",
+                    group: None,
+                    precision: Some(0),
+                    read_only: false,
+                },
+                FormField {
+                    column: "carb_max",
+                    label: "Carb (vols)",
+                    group: None,
+                    precision: Some(0),
+                    read_only: false,
+                },
+                FormField { column: "abv_min", label: "ABV (pct)", group: None, precision: Some(1), read_only: false },
+                FormField { column: "abv_max", label: "ABV (pct)", group: None, precision: Some(1), read_only: false },
+            ],
+        },
+        FormTab {
+            title: "Aroma",
+            fields: &[FormField { column: "aroma", label: "Aroma", group: None, precision: None, read_only: false }],
+        },
+        FormTab {
+            title: "Appearance",
+            fields: &[FormField {
+                column: "appearance",
+                label: "Appearance",
+                group: None,
+                precision: None,
+                read_only: false,
+            }],
+        },
+        FormTab {
+            title: "Flavor",
+            fields: &[FormField { column: "flavor", label: "Flavor", group: None, precision: None, read_only: false }],
+        },
+        FormTab {
+            title: "Mouthfeel",
+            fields: &[FormField {
+                column: "mouthfeel",
+                label: "Mouthfeel",
+                group: None,
+                precision: None,
+                read_only: false,
+            }],
+        },
+        FormTab {
+            title: "Overall Impression",
+            fields: &[FormField {
+                column: "overall_impression",
+                label: "Overall Impression",
+                group: None,
+                precision: None,
+                read_only: false,
+            }],
+        },
+        FormTab {
+            title: "Ingredients",
+            fields: &[FormField {
+                column: "ingredients",
+                label: "Ingredients",
+                group: None,
+                precision: None,
+                read_only: false,
+            }],
+        },
+        FormTab {
+            title: "Examples",
+            fields: &[FormField {
+                column: "examples",
+                label: "Examples",
+                group: None,
+                precision: None,
+                read_only: false,
+            }],
+        },
+        FormTab {
+            title: "Notes",
+            fields: &[FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false }],
+        },
+    ];
+}
+
+impl WaterRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 1] = [FormTab {
+        title: "Main",
+        fields: &[
+            FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+            FormField { column: "calcium", label: "Ca", group: None, precision: Some(2), read_only: false },
+            FormField { column: "chloride", label: "Cl", group: None, precision: Some(2), read_only: false },
+            FormField { column: "magnesium", label: "Mg", group: None, precision: Some(2), read_only: false },
+            FormField { column: "sulfate", label: "SO<sub>4</sub>", group: None, precision: Some(2), read_only: false },
+            FormField { column: "sodium", label: "Na", group: None, precision: Some(2), read_only: false },
+            FormField { column: "alkalinity", label: "Alkalinity", group: None, precision: Some(2), read_only: false },
+            FormField { column: "ph", label: "pH", group: None, precision: Some(2), read_only: false },
+            FormField {
+                column: "as_hco3",
+                label: "Alkalinity measured as",
+                group: None,
+                precision: None,
+                read_only: false,
+            },
+            FormField {
+                column: "carbonate_ppm",
+                label: "Carbonate",
+                group: None,
+                precision: Some(2),
+                read_only: false,
+            },
+            FormField {
+                column: "potassium_ppm",
+                label: "Potassium",
+                group: None,
+                precision: Some(2),
+                read_only: false,
+            },
+            FormField { column: "iron_ppm", label: "Iron", group: None, precision: Some(2), read_only: false },
+            FormField { column: "fluoride_ppm", label: "Flouride", group: None, precision: Some(2), read_only: false },
+            FormField { column: "nitrate_ppm", label: "Nitrate", group: None, precision: Some(2), read_only: false },
+            FormField { column: "nitrite_ppm", label: "Nitrite", group: None, precision: Some(2), read_only: false },
+            FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false },
+        ],
+    }];
+}
+
+impl YeastRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 4] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "name", label: "Name", group: None, precision: None, read_only: false },
+                FormField { column: "ytype", label: "Type", group: None, precision: None, read_only: false },
+                FormField { column: "form", label: "Form", group: None, precision: None, read_only: false },
+                FormField { column: "laboratory", label: "Lab", group: None, precision: None, read_only: false },
+                FormField { column: "product_id", label: "Product ID", group: None, precision: None, read_only: false },
+            ],
+        },
+        FormTab {
+            title: "Extras",
+            fields: &[
+                FormField {
+                    column: "flocculation",
+                    label: "Flocculation",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "attenuation_min_pct",
+                    label: "Min Attenuation (%)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "attenuation_max_pct",
+                    label: "Max Attenuation (%)",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "min_temperature",
+                    label: "Min Temp",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "max_reuse",
+                    label: "Max Recultures",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "max_temperature",
+                    label: "Max Temp",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "alcohol_tolerance_pct",
+                    label: "Alcohol Tolerance",
+                    group: None,
+                    precision: Some(1),
+                    read_only: false,
+                },
+                FormField {
+                    column: "phenolic_off_flavor_positive",
+                    label: "Phenolic Off-Flavor Positive",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "glucoamylase_positive",
+                    label: "Glucoamylase Positive",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "killer_producing_k1_toxin",
+                    label: "K1 Killer",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "killer_producing_k2_toxin",
+                    label: "K2 Killer",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "killer_producing_k28_toxin",
+                    label: "K28 Killer",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "killer_producing_klus_toxin",
+                    label: "Klus Killer",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "killer_neutral",
+                    label: "Killer Neutral",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Best For",
+            fields: &[FormField {
+                column: "best_for",
+                label: "Best For",
+                group: None,
+                precision: None,
+                read_only: false,
+            }],
+        },
+        FormTab {
+            title: "Notes",
+            fields: &[FormField { column: "notes", label: "Notes", group: None, precision: None, read_only: false }],
+        },
+    ];
+}
+
+impl YeastStockPurchaseRow {
+    /// The editor for this table, as the Qt dialog arranges it.
+    pub const FORM: [FormTab; 2] = [
+        FormTab {
+            title: "Main",
+            fields: &[
+                FormField { column: "supplier", label: "Supplier", group: None, precision: None, read_only: false },
+                FormField { column: "note", label: "Note", group: None, precision: None, read_only: false },
+                FormField {
+                    column: "date_ordered",
+                    label: "Date",
+                    group: Some("Ordered"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_received",
+                    label: "Date",
+                    group: Some("Received"),
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "date_best_before",
+                    label: "Best Before",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+        FormTab {
+            title: "Extras",
+            fields: &[
+                FormField {
+                    column: "purchase_price_currency",
+                    label: "Purchase Price",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "purchase_tax_currency",
+                    label: "Purchase Tax",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+                FormField {
+                    column: "shipping_cost_currency",
+                    label: "Shipping Cost",
+                    group: None,
+                    precision: None,
+                    read_only: false,
+                },
+            ],
+        },
+    ];
+}
+
 /// What a column is called when it is shown to a person.
 ///
 /// From the `localisedName_*` functions in `src/model/`.  Not derivable from the column

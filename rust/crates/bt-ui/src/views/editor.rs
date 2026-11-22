@@ -21,7 +21,7 @@
 
 use std::collections::BTreeMap;
 
-use bt_model::tables::{BaseType, Editable, editable_columns};
+use bt_model::tables::{BaseType, Editable, FormTab, editable_columns, form_for};
 use dioxus::prelude::*;
 use serde_json::{Map, Value};
 
@@ -124,11 +124,14 @@ pub fn Editor(
     on_done: EventHandler<Option<i32>>,
 ) -> Element {
     let client = use_context::<Client>();
-    let fields: Vec<Editable> = editable_columns(&table)
-        .iter()
-        .filter(|field| !fixed.iter().any(|(column, _)| column == field.column))
-        .copied()
-        .collect();
+
+    // How the Qt application arranges this editor: which tabs, which groups, what order,
+    // what each field is called there.  A table it has no dialog for -- the recipe
+    // additions, say -- falls back to the schema's own order.
+    let form = arrangement(&table, &fixed);
+    let fields: Vec<Editable> =
+        form.iter().flat_map(|tab| tab.fields.iter()).filter_map(|field| field.editable).collect();
+    let mut tab = use_signal(usize::default);
 
     let choosable = use_resource({
         let (client, fields) = (client.clone(), fields.clone());
@@ -194,8 +197,16 @@ pub fn Editor(
         }
     };
 
+    let read_only_columns: Vec<&'static str> = form
+        .iter()
+        .flat_map(|page| page.fields.iter())
+        .filter(|shown| shown.read_only)
+        .filter_map(|shown| shown.editable.map(|field| field.column))
+        .collect();
+
     let save = {
         let fields = fields.clone();
+        let read_only_columns = read_only_columns.clone();
         move |event: FormEvent| {
             // Without this the browser navigates away and the whole application reloads.
             event.prevent_default();
@@ -204,6 +215,11 @@ pub fn Editor(
             let mut row = loaded();
             let mut rejected = None;
             for field in fields.iter() {
+                if read_only_columns.contains(&field.column) {
+                    // `WhenToWriteField::Never` on the Qt dialog: shown so it can be read,
+                    // never written back, because something else works it out.
+                    continue;
+                }
                 let text = typed().get(field.column).cloned().unwrap_or_default();
                 match parse(field.kind, &text) {
                     Ok(value) => {
@@ -245,16 +261,54 @@ pub fn Editor(
             if let Some(message) = problem() {
                 p { class: "bt-error", role: "alert", "{message}" }
             }
-            div { class: "bt-fields",
-                for field in fields.iter().copied() {
-                    Field {
-                        key: "{field.column}",
-                        field,
-                        value: typed().get(field.column).cloned().unwrap_or_default(),
-                        choices: choosable().unwrap_or_default().of(field.references.unwrap_or_default()).to_vec(),
-                        on_change: move |text| {
-                            typed.write().insert(field.column.to_owned(), text);
-                        },
+            if form.len() > 1 {
+                div { class: "bt-tabs", role: "tablist",
+                    for (index, page) in form.iter().enumerate() {
+                        button {
+                            key: "{page.title}",
+                            r#type: "button",
+                            role: "tab",
+                            class: if index == tab() { "bt-tab bt-chosen" } else { "bt-tab" },
+                            aria_selected: "{index == tab()}",
+                            onclick: move |_| tab.set(index),
+                            "{page.title}"
+                        }
+                    }
+                }
+            }
+
+            for (index, page) in form.iter().enumerate() {
+                // Every tab stays in the document, hidden rather than removed, so that what
+                // was typed on one survives looking at another before saving.
+                div {
+                    key: "{page.title}",
+                    role: "tabpanel",
+                    aria_label: "{page.title}",
+                    hidden: index != tab(),
+                    for section in page.sections() {
+                        if let Some(heading) = section.heading {
+                            h3 { class: "bt-group", "{heading}" }
+                        }
+                        div { class: "bt-fields",
+                            for shown in section.fields.iter().copied() {
+                                if let Some(field) = shown.editable {
+                                    Field {
+                                        key: "{field.column}",
+                                        field,
+                                        label: shown.label,
+                                        read_only: shown.read_only,
+                                        value: typed().get(field.column).cloned().unwrap_or_default(),
+                                        choices: choosable()
+                                            .unwrap_or_default()
+                                            .of(field.references.unwrap_or_default())
+                                            .to_vec(),
+                                        on_change: move |text| {
+                                            typed.write().insert(field.column.to_owned(), text);
+                                        },
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -295,6 +349,10 @@ pub fn Editor(
 #[component]
 fn Field(
     field: Editable,
+    /// What the dialog calls this field, which is not always what the column is called.
+    label: &'static str,
+    /// Shown but never written back.
+    read_only: bool,
     value: String,
     /// The rows this field may name, where it names a row of another table.
     choices: Vec<(i32, String)>,
@@ -304,8 +362,12 @@ fn Field(
 
     rsx! {
         div { class: if is_long_text(&field) { "bt-field bt-wide" } else { "bt-field" },
-            label { r#for: "{id}", "{field.label}" }
-            if field.references.is_some() {
+            label { r#for: "{id}", "{label}" }
+            if read_only {
+                // Disabled rather than absent: the dialog shows these, and what they say is
+                // worth reading even though it cannot be changed here.
+                input { id: "{id}", value: "{value}", disabled: true, readonly: true }
+            } else if field.references.is_some() {
                 // A row of another table: chosen by its name, stored as its key.
                 select {
                     id: "{id}",
@@ -379,4 +441,111 @@ pub fn Screen(which: super::Which, editing: Editing) -> Element {
             },
         }
     }
+}
+
+/// One field as the editor shows it: the dialog's label and the column behind it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Shown {
+    pub label: &'static str,
+    pub group: Option<&'static str>,
+    pub read_only: bool,
+    /// `None` where the dialog shows something no column holds, which is nothing to edit.
+    pub editable: Option<Editable>,
+}
+
+/// A run of consecutive fields under one heading.
+pub struct Section {
+    pub heading: Option<&'static str>,
+    pub fields: Vec<Shown>,
+}
+
+/// One tab of an editor.
+pub struct Page {
+    pub title: &'static str,
+    pub fields: Vec<Shown>,
+}
+
+impl Page {
+    /// The tab's fields, split where the heading above them changes.
+    ///
+    /// Consecutive rather than gathered: the dialog's order is what is being reproduced, and
+    /// collecting every field of a group together would reorder the ones between them.
+    pub fn sections(&self) -> Vec<Section> {
+        let mut sections: Vec<Section> = Vec::new();
+        for field in &self.fields {
+            match sections.last_mut() {
+                Some(section) if section.heading == field.group => section.fields.push(*field),
+                _ => sections.push(Section { heading: field.group, fields: vec![*field] }),
+            }
+        }
+        sections
+    }
+}
+
+/// How to arrange this table's editor.
+///
+/// The Qt dialog's arrangement where there is one, and the schema's own order where there is
+/// not -- the recipe addition tables have no dialog of their own, because the Qt application
+/// edits those in the recipe's ingredient tables rather than in a window.
+fn arrangement(table: &str, fixed: &[(String, Value)]) -> Vec<Page> {
+    let is_fixed = |column: &str| fixed.iter().any(|(fixed, _)| fixed == column);
+    let editable = |column: &str| editable_columns(table).iter().find(|field| field.column == column).copied();
+
+    match form_for(table) {
+        Some(form) => from_dialog(table, form, &is_fixed, &editable),
+        None => vec![Page {
+            title: "Details",
+            fields: editable_columns(table)
+                .iter()
+                .filter(|field| !is_fixed(field.column))
+                .map(|field| Shown { label: field.label, group: None, read_only: false, editable: Some(*field) })
+                .collect(),
+        }],
+    }
+}
+
+/// The Qt dialog's tabs, with anything it does not cover added on the end.
+fn from_dialog(
+    table: &str,
+    form: &'static [FormTab],
+    is_fixed: &impl Fn(&str) -> bool,
+    editable: &impl Fn(&str) -> Option<Editable>,
+) -> Vec<Page> {
+    let mut pages: Vec<Page> = form
+        .iter()
+        .map(|tab| Page {
+            title: tab.title,
+            fields: tab
+                .fields
+                .iter()
+                .filter(|field| !is_fixed(field.column))
+                .map(|field| Shown {
+                    label: field.label,
+                    group: field.group,
+                    read_only: field.read_only,
+                    editable: editable(field.column),
+                })
+                .collect(),
+        })
+        .filter(|page| !page.fields.is_empty())
+        .collect();
+
+    // A column the dialog does not show is still a column, and this is still the only way to
+    // change one.  They go on a tab of their own rather than among the ones the dialog
+    // arranged, so that what the dialog does show reads as the dialog has it.
+    let shown: Vec<&str> = form.iter().flat_map(|tab| tab.fields.iter()).map(|field| field.column).collect();
+    let rest: Vec<Shown> = leftovers(table, &shown, is_fixed);
+    if !rest.is_empty() {
+        pages.push(Page { title: "Other", fields: rest });
+    }
+    pages
+}
+
+/// Every editable column of the table that the dialog leaves out.
+fn leftovers(table: &str, shown: &[&str], is_fixed: &impl Fn(&str) -> bool) -> Vec<Shown> {
+    editable_columns(table)
+        .iter()
+        .filter(|field| !shown.contains(&field.column) && !is_fixed(field.column))
+        .map(|field| Shown { label: field.label, group: None, read_only: false, editable: Some(*field) })
+        .collect()
 }

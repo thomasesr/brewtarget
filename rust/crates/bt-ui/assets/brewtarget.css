@@ -389,3 +389,27 @@ body {
    border-left: 3px solid var(--bt-wort);
    background: var(--bt-wort-pale);
 }
+
+/*
+ * The headings a Qt group box gives a run of fields -- "Alpha Acid", "Received".  A rule
+ * rather than a box: the grouping is what matters, and a modern form says it with space.
+ */
+.bt-group {
+   grid-column: 1 / -1;
+   margin: 0.75rem 0 0;
+   padding-bottom: 0.3rem;
+   border-bottom: 1px solid var(--bt-rule);
+   font-size: 0.75rem;
+   font-weight: 600;
+   color: var(--bt-wort);
+   text-transform: uppercase;
+   letter-spacing: 0.06em;
+}
+
+.bt-editor .bt-tabs { margin-bottom: 1rem; }
+
+.bt-field input[disabled] {
+   background: color-mix(in srgb, var(--bt-rule) 25%, transparent);
+   color: var(--bt-quiet);
+   cursor: not-allowed;
+}

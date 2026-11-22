@@ -1,0 +1,3200 @@
+{
+  "generated_by": "tools/extract-editors.py",
+  "source_files": [
+    "src/editors/BoilEditor.cpp",
+    "src/editors/BoilStepEditor.cpp",
+    "src/editors/EquipmentEditor.cpp",
+    "src/editors/FermentableEditor.cpp",
+    "src/editors/FermentationEditor.cpp",
+    "src/editors/FermentationStepEditor.cpp",
+    "src/editors/HopEditor.cpp",
+    "src/editors/MashEditor.cpp",
+    "src/editors/MashStepEditor.cpp",
+    "src/editors/MiscEditor.cpp",
+    "src/editors/StockPurchaseFermentableEditor.cpp",
+    "src/editors/StockPurchaseHopEditor.cpp",
+    "src/editors/StockPurchaseMiscEditor.cpp",
+    "src/editors/StockPurchaseYeastEditor.cpp",
+    "src/editors/StockUseIngredientEditor.cpp",
+    "src/editors/StyleEditor.cpp",
+    "src/editors/WaterEditor.cpp",
+    "src/editors/YeastEditor.cpp"
+  ],
+  "editors": {
+    "BoilEditor": {
+      "editor": "BoilEditor",
+      "cpp_type": "Boil",
+      "ui": "ui/boilEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Required",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Boil::description",
+              "label": "Description",
+              "help": "Required",
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Boil::preBoilSize_l",
+              "label": "Pre-Boil Size",
+              "help": "Pre-Boil Size",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Boil::notes",
+              "label": "Notes",
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "BoilStepEditor": {
+      "editor": "BoilStepEditor",
+      "cpp_type": "BoilStep",
+      "ui": "ui/boilStepEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Name",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::startTemp_c",
+              "label": "Start temp.",
+              "help": "Temperature at the start of this step.  If not set, the wort is assumed to be boiling.  Steps are classified as pre-boil, boil proper or post-boil by their temperatures.  For IBU formulae that model isomerization after flameout (eg mIBU and SMPH), a post-boil step that starts at boiling and ends below it is modelled as the wort cooling naturally (down to, but not below, the end temperature); any other post-boil step is modelled as the temperature changing linearly from the start temperature to the end temperature (so eg a hop stand held at 80\u00b0C (176\u00b0F) has start and end temperatures of 80\u00b0C).",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::stepTime_mins",
+              "label": "Time",
+              "help": "How long this step lasts, not including any ramp time.  For a post-boil step (eg whirlpool or hop stand), hops added to this step with no time set steep for this long (plus the time of any subsequent steps).",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::rampTime_mins",
+              "label": "Temp. lag time",
+              "help": "Ramp time: how long it takes, before this step begins, to get from the end temperature of the previous step to the start temperature of this one.  Eg, for a hop stand at 80\u00b0C (176\u00b0F), the time taken to chill the wort from boiling to that temperature.  For post-boil steps, the temperature is modelled as changing linearly during the ramp, and hops added to the step with no time set are added at the end of the ramp.  If not set, any temperature change between steps is treated as instantaneous.",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Step::endTemp_c",
+              "label": "End temp.",
+              "help": "Temperature at the end of this step.  If not set, the wort is assumed to be boiling.",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "BoilStep::chillingType",
+              "label": "Chilling Type",
+              "help": "Chilling Type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Step::startAcidity_pH",
+              "label": "Start Acidity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StepExtended::startGravity_sg",
+              "label": "Start Gravity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 3,
+              "read_only": false
+            },
+            {
+              "property": "Step::endAcidity_pH",
+              "label": "End Acidity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StepExtended::endGravity_sg",
+              "label": "End Gravity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 3,
+              "read_only": false
+            },
+            {
+              "property": "Step::description",
+              "label": "Description",
+              "help": "Optional description of this boil step",
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "EquipmentEditor": {
+      "editor": "EquipmentEditor",
+      "cpp_type": "Equipment",
+      "ui": "ui/equipmentEditor.ui",
+      "tabs": [
+        {
+          "title": "General",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Required",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::fvBatchSize_l",
+              "label": "Default Batch Size",
+              "help": "Volume into the fermentor that new recipes using this equipment start with",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::topUpWater_l",
+              "label": "Default final top-up water",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleBoilSize_l",
+              "label": "Default Pre-boil Volume",
+              "help": "Volume in the kettle at the start of the boil that new recipes using this equipment start with",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::topUpKettle_l",
+              "label": "Default Kettle top-up water",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::hopUtilization_pct",
+              "label": "Hop % Utilization",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::boilingPoint_c",
+              "label": "Boiling Point of Water",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Hot Liquor Tank",
+          "fields": [
+            {
+              "property": "Equipment::hltType",
+              "label": "Hot Liquor Tank Type",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::hltVolume_l",
+              "label": "Volume",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::hltLoss_l",
+              "label": "Evaporation Loss",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::hltWeight_kg",
+              "label": "Weight",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::hltSpecificHeat_calGC",
+              "label": "Specific Heat Capacity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Mash Tun",
+          "fields": [
+            {
+              "property": "Equipment::mashTunType",
+              "label": "Mash Tun Type",
+              "help": "Mash Tun Type",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::mashTunWeight_kg",
+              "label": "Weight",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::mashTunVolume_l",
+              "label": "Total Capacity",
+              "help": "Total usable capacity of the mash tun, including any space below the false bottom or malt pipe",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::mashTunLoss_l",
+              "label": "Mash Tun Loss (not recovered)",
+              "help": "Liquid that stays behind in the mash tun and is never recovered",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::mashTunSpecificHeat_calGC",
+              "label": "Specific Heat Capacity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Lauter Tun",
+          "fields": [
+            {
+              "property": "Equipment::lauterTunType",
+              "label": "Lauter Tun Type",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::lauterTunVolume_l",
+              "label": "Lauter Tun Volume",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::lauterTunWeight_kg",
+              "label": "Weight",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::lauterTunSpecificHeat_calGC",
+              "label": "Specific Heat Capacity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::lauterTunDeadspaceLoss_l",
+              "label": "Lauter Tun Loss (not recovered)",
+              "help": "Wort that stays behind in the lauter tun and is never recovered",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Boil Kettle",
+          "fields": [
+            {
+              "property": "Equipment::kettleType",
+              "label": "Boil Kettle Type",
+              "help": "Boil Kettle Type",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleVolume_l",
+              "label": "Total Capacity",
+              "help": "The most the kettle can hold (not the pre-boil volume, which is on the General tab).  If there is no separate mash tun, this is also the space available for the mash.",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleEvaporationPerHour_l",
+              "label": "Evaporation rate per hour",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleTrubChillerLoss_l",
+              "label": "Kettle to Fermentor Loss",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleWeight_kg",
+              "label": "Weight",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleSpecificHeat_calGC",
+              "label": "Specific Heat Capacity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleOutflowPerMinute_l",
+              "label": "Outflow per minute",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleInternalDiameter_cm",
+              "label": "Internal Diameter",
+              "help": "Internal diameter of the kettle at the surface of the wort.  Used, along with the opening diameter and the volume of wort in the kettle, to estimate how quickly the wort cools naturally after flameout, for IBU formulae that model isomerization after flameout (eg mIBU and SMPH).  If not set, 45 cm (about 18 inches) is assumed.",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::kettleOpeningDiameter_cm",
+              "label": "Opening Diameter",
+              "help": "Internal diameter of the opening in the kettle through which steam can escape -- eg the same as the internal diameter if the kettle is uncovered, or smaller if it is partly covered.  Used, along with the internal diameter and the volume of wort in the kettle, to estimate how quickly the wort cools naturally after flameout, for IBU formulae that model isomerization after flameout (eg mIBU and SMPH).  If not set, 45 cm (about 18 inches) is assumed.",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Fermentor",
+          "fields": [
+            {
+              "property": "Equipment::fvType",
+              "label": "Fermentor Type",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::fvVolume_l",
+              "label": "Total Capacity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::fvLoss_l",
+              "label": "Deadspace Losses",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Aging Vessel",
+          "fields": [
+            {
+              "property": "Equipment::agingVesselType",
+              "label": "Aging Vessel Type",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::agingVesselVolume_l",
+              "label": "Volume",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::agingVesselLoss_l",
+              "label": "Losses",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Packaging Vessel",
+          "fields": [
+            {
+              "property": "Equipment::packagingVesselType",
+              "label": "Packaging Vessel Type",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::packagingVesselVolume_l",
+              "label": "Volume",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::packagingVesselLoss_l",
+              "label": "Losses",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Mash",
+          "fields": [
+            {
+              "property": "Equipment::foundationVolume_l",
+              "label": "Foundation Water (recovered)",
+              "help": "Water below the false bottom or malt pipe that drains out with the wort",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Equipment::grainAbsorption_LKg",
+              "label": "Grain absorption",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "FermentableEditor": {
+      "editor": "FermentableEditor",
+      "cpp_type": "Fermentable",
+      "ui": "ui/fermentableEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Required",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::type",
+              "label": "Type",
+              "help": "Required",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::color_srm",
+              "label": "Color",
+              "help": "Required",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::grainGroup",
+              "label": "Grain Group",
+              "help": "Required",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Ingredient::totalInventory",
+              "label": "Total Inventory",
+              "help": "Total amount in inventory",
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": true
+            },
+            {
+              "property": "Fermentable::protein_pct",
+              "label": "Protein (%)",
+              "help": "Protein percentage by mass",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::origin",
+              "label": "Origin",
+              "help": "Origin",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::maxInBatch_pct",
+              "label": "Max In Batch (%)",
+              "help": "Maximum recommended percentage of total grist",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::supplier",
+              "label": "Supplier",
+              "help": "Supplier",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::coarseFineDiff_pct",
+              "label": "Coarse/Fine Diff (%)",
+              "help": "Yield difference between coarse and fine grind",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::moisture_pct",
+              "label": "Moisture (%)",
+              "help": "Moisture percentage by mass",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::diastaticPower_lintner",
+              "label": "Diastatic power",
+              "help": "Diastatic power",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::ibuGalPerLb",
+              "label": "Bitterness (IBU*gal/lb)",
+              "help": "Bitterness of pre-hopped extracts",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::producer",
+              "label": "Producer",
+              "help": "Producer",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::productId",
+              "label": "Product ID",
+              "help": "Product ID",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Extras",
+          "fields": [
+            {
+              "property": "Fermentable::fineGrindYield_pct",
+              "label": "Extract Yield Dry Basis Fine Grind",
+              "help": "Extract Yield Dry Basis Fine Grind (DBFG)",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::coarseGrindYield_pct",
+              "label": "Extract Yield Dry Basis Coarse Grind",
+              "help": "Extract Yield Dry Basis Coarse Grind (DBCG)",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::potentialYield_sg",
+              "label": "Potential yield",
+              "help": "Potential yield",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::alphaAmylase_dextUnits",
+              "label": "Total alpha-amylase in malted grain",
+              "help": "Total alpha-amylase in the malted grain",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::kolbachIndex_pct",
+              "label": "Kolbach Index",
+              "help": "Kolbach Index",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::hardnessPrpGlassy_pct",
+              "label": "Percentage of malt that is \"glassy\"",
+              "help": "Percentage of malt that is \"glassy\"",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::hardnessPrpHalf_pct",
+              "label": "Percentage of malt that is \"half glassy\"",
+              "help": "Percentage of malt that is \"half glassy\"",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::hardnessPrpMealy_pct",
+              "label": "Percentage of malt that is \"mealy\"",
+              "help": "Percentage of malt that is \"mealy\"",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::kernelSizePrpPlump_pct",
+              "label": "Percentage of grain that is \"plump\"",
+              "help": "Percentage of grain that is \"plump\"",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::kernelSizePrpThin_pct",
+              "label": "Percentage of grain that is \"tine\"",
+              "help": "Percentage of grain that is \"tine\"",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::friability_pct",
+              "label": "Friability",
+              "help": "Friability",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::di_ph",
+              "label": "DI pH",
+              "help": "DI pH",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::viscosity_cP",
+              "label": "Viscosity of this malt in a \"congress mash\"",
+              "help": "Viscosity of this malt in a \"congress mash\"",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::fermentability_pct",
+              "label": "Fermentability",
+              "help": "Fermentability",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::dmsP_ppm",
+              "label": "DMS precursors",
+              "help": "DMS precursors",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::lacticAcidByWeight_pct",
+              "label": "% Lactic Acid (by weight)",
+              "help": "For aciduated malts (aka acid malts)",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::fan_ppm",
+              "label": "Free Amino Nitrogen (FAN)",
+              "help": "Free Amino Nitrogen (FAN)",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::fermentableFraction_pct",
+              "label": "% Fermentable by yeast",
+              "help": "Percentage of this ingredient's extract that brewing yeast can ferment.  Leave blank for 100%.  Set to 0 for lactose, or about 10 for maltodextrin.  Not normally needed for malts.",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Fermentable::betaGlucan_ppm",
+              "label": "Beta-glucans",
+              "help": "Beta-glucans",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Notes",
+          "fields": [
+            {
+              "property": "Fermentable::notes",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "FermentationEditor": {
+      "editor": "FermentationEditor",
+      "cpp_type": "Fermentation",
+      "ui": "ui/fermentationEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Required",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentation::description",
+              "label": "Description",
+              "help": "Required",
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentation::krausenHandling",
+              "label": "Krausen",
+              "help": "What happens to the krausen (the foam on top of the fermenting beer), which carries away some bitterness.  Only used by the SMPH IBU formula.",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Fermentation::notes",
+              "label": "Notes",
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "FermentationStepEditor": {
+      "editor": "FermentationStepEditor",
+      "cpp_type": "FermentationStep",
+      "ui": "ui/fermentationStepEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Name",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::startTemp_c",
+              "label": "Target temp.",
+              "help": "Target temp. of this step",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::stepTime_mins",
+              "label": "Time",
+              "help": "Time to conduct the step",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Step::endTemp_c",
+              "label": "End temp.",
+              "help": "Final temp. of this step",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "FermentationStep::freeRise",
+              "label": "Free rise",
+              "help": "Free rise is used to indicate a fermentation step where the exothermic fermentation is allowed to raise the temperature without restriction",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StepExtended::startGravity_sg",
+              "label": "Start Gravity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 3,
+              "read_only": false
+            },
+            {
+              "property": "StepExtended::endGravity_sg",
+              "label": "End Gravity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 3,
+              "read_only": false
+            },
+            {
+              "property": "Step::startAcidity_pH",
+              "label": "Start Acidity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Step::endAcidity_pH",
+              "label": "End Acidity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "FermentationStep::vessel",
+              "label": "Vessel",
+              "help": "Vessel",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Step::description",
+              "label": "Description",
+              "help": "Optional description of this fermentation step",
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "HopEditor": {
+      "editor": "HopEditor",
+      "cpp_type": "Hop",
+      "ui": "ui/hopEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Required",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Hop::form",
+              "label": "Form",
+              "help": "Hop Form",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Hop::year",
+              "label": "Year",
+              "help": "Year",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Hop::origin",
+              "label": "Origin",
+              "help": "Origin",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Hop::type",
+              "label": "Type",
+              "help": "Hop Type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Hop::producer",
+              "label": "Producer",
+              "help": "Producer",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Hop::productId",
+              "label": "Product ID",
+              "help": "Product ID",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Ingredient::totalInventory",
+              "label": "Total Inventory",
+              "help": "Total amount in inventory",
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": true
+            },
+            {
+              "property": "Hop::alpha_pct",
+              "label": "Actual",
+              "help": "Required",
+              "group": "Alpha Acid",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Hop::alphaMin_pct",
+              "label": "Typical Range",
+              "help": "Min alpha acids as percent by mass",
+              "group": "Alpha Acid",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Hop::alphaMax_pct",
+              "label": "-",
+              "help": "Max alpha acids as percent by mass",
+              "group": "Alpha Acid",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Extras",
+          "fields": [
+            {
+              "property": "Hop::sixMonthAlphaLoss_pct",
+              "label": "6 Month Alpha Loss",
+              "help": "6 Month Alpha Loss",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Hop::humulene_pct",
+              "label": "Humulene %",
+              "help": "Humulene",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::linalool_pct",
+              "label": "Linalool %",
+              "help": "Linalool",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::caryophyllene_pct",
+              "label": "Caryophyllene %",
+              "help": "Caryophyllene %",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::limonene_pct",
+              "label": "Limonene %",
+              "help": "Limonene",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::cohumulone_pct",
+              "label": "Cohumulone %",
+              "help": "Cohumulone",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::nerol_pct",
+              "label": "Nerol %",
+              "help": "Nerol",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::myrcene_pct",
+              "label": "Myrcene %",
+              "help": "Myrcene",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::pinene_pct",
+              "label": "\u03b1-Pinene %",
+              "help": "\u03b1-Pinene",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::farnesene_pct",
+              "label": "Farnesene %",
+              "help": "Farnesene",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::polyphenols_pct",
+              "label": "Polyphenols %",
+              "help": "Polyphenols",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::geraniol_pct",
+              "label": "Geraniol %",
+              "help": "Geraniol",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::xanthohumol_pct",
+              "label": "Xanthohumol %",
+              "help": "Xanthohumol",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::totalOil_mlPer100g",
+              "label": "Total Oil ml/100g",
+              "help": "Total Oil ml/100g",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Hop::bPinene_pct",
+              "label": "\u03b2-pinene %",
+              "help": "\u03b2-pinene",
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Hop::beta_pct",
+              "label": "Actual",
+              "help": "Required",
+              "group": "Beta Acid",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Hop::betaMin_pct",
+              "label": "Typical Range",
+              "help": "Min beta acids as percent by mass",
+              "group": "Beta Acid",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Hop::betaMax_pct",
+              "label": "-",
+              "help": "Max beta acids as percent by mass",
+              "group": "Beta Acid",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Notes",
+          "fields": [
+            {
+              "property": "Hop::notes",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "MashEditor": {
+      "editor": "MashEditor",
+      "cpp_type": "Mash",
+      "ui": "ui/mashEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Name",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Mash::grainTemp_c",
+              "label": "Initial grain temp",
+              "help": "Initial grain temp",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Mash::totalMashWater_l",
+              "label": "Total Mash Water",
+              "help": null,
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Mash::totalTime_mins",
+              "label": "Total Time",
+              "help": null,
+              "group": null,
+              "control": "calculated",
+              "precision": 0,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Legacy",
+          "fields": [
+            {
+              "property": "Mash::initialTunTemp_c",
+              "label": "Initial tun temp",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Mash::spargeTemp_c",
+              "label": "Sparge temp",
+              "help": "Sparge temp target",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Mash::ph",
+              "label": "Sparge pH",
+              "help": "Sparge pH",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Mash::tunWeight_kg",
+              "label": "Tun mass",
+              "help": "Tun mass",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Mash::tunSpecificHeat_calGC",
+              "label": "Tun specific heat",
+              "help": "Tun specific heat (cal/(g*K))",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Notes",
+          "fields": [
+            {
+              "property": "Mash::notes",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "MashStepEditor": {
+      "editor": "MashStepEditor",
+      "cpp_type": "MashStep",
+      "ui": "ui/mashStepEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Name",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "EnumeratedBase::sequenceNumber",
+              "label": "Step Number",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "MashStep::type",
+              "label": "Type",
+              "help": "Type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::startTemp_c",
+              "label": "Target temp.",
+              "help": "Target temp. of this step",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::stepTime_mins",
+              "label": "Time",
+              "help": "Time to conduct the step",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "MashStep::amount_l",
+              "label": "Amount",
+              "help": "Amount of water to infuse",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StepBase::rampTime_mins",
+              "label": "Temp. lag time",
+              "help": "Lag time",
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "MashStep::amountFixed",
+              "label": "Pinned",
+              "help": "If ticked, adjusting the mash (in the Mash Editor) will not change this amount (but will use it to work out other values, eg the water temperature).",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Step::endTemp_c",
+              "label": "End temp.",
+              "help": "Final temp. of this step",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "MashStep::infuseTemp_c",
+              "label": "Infuse temp.",
+              "help": "Temperature of infusion water",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "MashStep::infuseTempFixed",
+              "label": "Pinned",
+              "help": "If ticked, adjusting the mash (in the Mash Editor) will not change this temperature (but will use it to work out other values, eg the amount of water).",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "MashStep::liquorToGristRatio_lKg",
+              "label": "Thickness",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Step::startAcidity_pH",
+              "label": "Start Acidity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Step::endAcidity_pH",
+              "label": "End Acidity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Step::description",
+              "label": "Description",
+              "help": "Optional description of this mash step",
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "MiscEditor": {
+      "editor": "MiscEditor",
+      "cpp_type": "Misc",
+      "ui": "ui/miscEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Misc::waterAgentType",
+              "label": "Type",
+              "help": "Type",
+              "group": "Water Agent Properties",
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Misc::type",
+              "label": "Type",
+              "help": "Type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Misc::waterAgentPercentAcid",
+              "label": "Percent Acid",
+              "help": "Percent Acid",
+              "group": "Water Agent Properties",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Ingredient::totalInventory",
+              "label": "Total Inventory",
+              "help": "Total amount in inventory",
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": true
+            },
+            {
+              "property": "Misc::producer",
+              "label": "Producer",
+              "help": "Producer",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Misc::productId",
+              "label": "Product ID",
+              "help": "Product ID",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Use for",
+          "fields": [
+            {
+              "property": "Misc::useFor",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Notes",
+          "fields": [
+            {
+              "property": "Misc::notes",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "StockPurchaseFermentableEditor": {
+      "editor": "StockPurchaseFermentableEditor",
+      "cpp_type": "StockPurchaseFermentable",
+      "ui": "ui/stockPurchaseIngredientEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "StockPurchase::supplier",
+              "label": "Supplier",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::note",
+              "label": "Note",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateOrdered",
+              "label": "Date",
+              "help": null,
+              "group": "Ordered",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateReceived",
+              "label": "Date",
+              "help": null,
+              "group": "Received",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountOrdered",
+              "label": "Amount",
+              "help": "Amount ordered",
+              "group": "Ordered",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount",
+              "help": "Amount received",
+              "group": "Received",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount Type",
+              "help": "Whether the amount is weight or volume",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": true
+            },
+            {
+              "property": "StockPurchaseBase::amountRemaining",
+              "label": "Amount Remaining",
+              "help": null,
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateBestBefore",
+              "label": "Best Before",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseFermentable::fermentable",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseFermentable::color_srm",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Extras",
+          "fields": [
+            {
+              "property": "StockPurchase::purchasePrice",
+              "label": "Purchase Price",
+              "help": "Purchase Price",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::purchaseTax",
+              "label": "Purchase Tax",
+              "help": "Purchase Tax",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::shippingCost",
+              "label": "Shipping Cost",
+              "help": "Shipping Cost",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "StockPurchaseHopEditor": {
+      "editor": "StockPurchaseHopEditor",
+      "cpp_type": "StockPurchaseHop",
+      "ui": "ui/stockPurchaseIngredientEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "StockPurchase::supplier",
+              "label": "Supplier",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::note",
+              "label": "Note",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateOrdered",
+              "label": "Date",
+              "help": null,
+              "group": "Ordered",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateReceived",
+              "label": "Date",
+              "help": null,
+              "group": "Received",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountOrdered",
+              "label": "Amount",
+              "help": "Amount ordered",
+              "group": "Ordered",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount",
+              "help": "Amount received",
+              "group": "Received",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount Type",
+              "help": "Whether the amount is weight or volume",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": true
+            },
+            {
+              "property": "StockPurchaseBase::amountRemaining",
+              "label": "Amount Remaining",
+              "help": null,
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateBestBefore",
+              "label": "Best Before",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseHop::hop",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseHop::year",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseHop::alpha_pct",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseHop::form",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Extras",
+          "fields": [
+            {
+              "property": "StockPurchase::purchasePrice",
+              "label": "Purchase Price",
+              "help": "Purchase Price",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::purchaseTax",
+              "label": "Purchase Tax",
+              "help": "Purchase Tax",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::shippingCost",
+              "label": "Shipping Cost",
+              "help": "Shipping Cost",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "StockPurchaseMiscEditor": {
+      "editor": "StockPurchaseMiscEditor",
+      "cpp_type": "StockPurchaseMisc",
+      "ui": "ui/stockPurchaseIngredientEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "StockPurchase::supplier",
+              "label": "Supplier",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::note",
+              "label": "Note",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateOrdered",
+              "label": "Date",
+              "help": null,
+              "group": "Ordered",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateReceived",
+              "label": "Date",
+              "help": null,
+              "group": "Received",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountOrdered",
+              "label": "Amount",
+              "help": "Amount ordered",
+              "group": "Ordered",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount",
+              "help": "Amount received",
+              "group": "Received",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount Type",
+              "help": "Whether the amount is weight or volume",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": true
+            },
+            {
+              "property": "StockPurchaseBase::amountRemaining",
+              "label": "Amount Remaining",
+              "help": null,
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateBestBefore",
+              "label": "Best Before",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseMisc::misc",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Extras",
+          "fields": [
+            {
+              "property": "StockPurchase::purchasePrice",
+              "label": "Purchase Price",
+              "help": "Purchase Price",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::purchaseTax",
+              "label": "Purchase Tax",
+              "help": "Purchase Tax",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::shippingCost",
+              "label": "Shipping Cost",
+              "help": "Shipping Cost",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "StockPurchaseYeastEditor": {
+      "editor": "StockPurchaseYeastEditor",
+      "cpp_type": "StockPurchaseYeast",
+      "ui": "ui/stockPurchaseIngredientEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "StockPurchase::supplier",
+              "label": "Supplier",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::note",
+              "label": "Note",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateOrdered",
+              "label": "Date",
+              "help": null,
+              "group": "Ordered",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateReceived",
+              "label": "Date",
+              "help": null,
+              "group": "Received",
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountOrdered",
+              "label": "Amount",
+              "help": "Amount ordered",
+              "group": "Ordered",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount",
+              "help": "Amount received",
+              "group": "Received",
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseBase::amountReceived",
+              "label": "Amount Type",
+              "help": "Whether the amount is weight or volume",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": true
+            },
+            {
+              "property": "StockPurchaseBase::amountRemaining",
+              "label": "Amount Remaining",
+              "help": null,
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::dateBestBefore",
+              "label": "Best Before",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchaseYeast::yeast",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Extras",
+          "fields": [
+            {
+              "property": "StockPurchase::purchasePrice",
+              "label": "Purchase Price",
+              "help": "Purchase Price",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::purchaseTax",
+              "label": "Purchase Tax",
+              "help": "Purchase Tax",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockPurchase::shippingCost",
+              "label": "Shipping Cost",
+              "help": "Shipping Cost",
+              "group": null,
+              "control": "money",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "StockUseIngredientEditor": {
+      "editor": "StockUseIngredientEditor",
+      "cpp_type": "StockUseFermentable",
+      "ui": "ui/stockUseIngredientEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "StockUse::date",
+              "label": "Date",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::reason",
+              "label": "Reason",
+              "help": "Change type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::date",
+              "label": "Date",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::reason",
+              "label": "Reason",
+              "help": "Change type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::date",
+              "label": "Date",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::reason",
+              "label": "Reason",
+              "help": "Change type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::date",
+              "label": "Date",
+              "help": null,
+              "group": null,
+              "control": "date",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::reason",
+              "label": "Reason",
+              "help": "Change type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUseBase::amountUsed",
+              "label": "Amount",
+              "help": "Amount used",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockUseBase::amountUsed",
+              "label": "Amount",
+              "help": "Amount used",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockUseBase::amountUsed",
+              "label": "Amount",
+              "help": "Amount used",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockUseBase::amountUsed",
+              "label": "Amount",
+              "help": "Amount used",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::comment",
+              "label": "Comment",
+              "help": "Comment",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::comment",
+              "label": "Comment",
+              "help": "Comment",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::comment",
+              "label": "Comment",
+              "help": "Comment",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "StockUse::comment",
+              "label": "Comment",
+              "help": "Comment",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "FolderPropertyBase::containedInFolderPath",
+              "label": "Recipe",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "FolderPropertyBase::containedInFolderPath",
+              "label": "Recipe",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "FolderPropertyBase::containedInFolderPath",
+              "label": "Recipe",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "FolderPropertyBase::containedInFolderPath",
+              "label": "Recipe",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "StyleEditor": {
+      "editor": "StyleEditor",
+      "cpp_type": "Style",
+      "ui": "ui/styleEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Required",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::category",
+              "label": "Category",
+              "help": "Required",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::categoryNumber",
+              "label": "Category number",
+              "help": "Required",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::styleLetter",
+              "label": "Style letter",
+              "help": "Required",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::styleGuide",
+              "label": "Style guide",
+              "help": "Required",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::type",
+              "label": "Type",
+              "help": "Required",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Ranges",
+          "fields": [
+            {
+              "property": "Style::ogMin",
+              "label": "OG",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::ogMax",
+              "label": "OG",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::fgMin",
+              "label": "FG",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::fgMax",
+              "label": "FG",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::ibuMin",
+              "label": "IBUs",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Style::ibuMax",
+              "label": "IBUs",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Style::colorMin_srm",
+              "label": "Color (SRM)",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::colorMax_srm",
+              "label": "Color (SRM)",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Style::carbMin_vol",
+              "label": "Carb (vols)",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Style::carbMax_vol",
+              "label": "Carb (vols)",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 0,
+              "read_only": false
+            },
+            {
+              "property": "Style::abvMin_pct",
+              "label": "ABV (pct)",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Style::abvMax_pct",
+              "label": "ABV (pct)",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Aroma",
+          "fields": [
+            {
+              "property": "Style::aroma",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Appearance",
+          "fields": [
+            {
+              "property": "Style::appearance",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Flavor",
+          "fields": [
+            {
+              "property": "Style::flavor",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Mouthfeel",
+          "fields": [
+            {
+              "property": "Style::mouthfeel",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Overall Impression",
+          "fields": [
+            {
+              "property": "Style::overallImpression",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Ingredients",
+          "fields": [
+            {
+              "property": "Style::ingredients",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Examples",
+          "fields": [
+            {
+              "property": "Style::examples",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Notes",
+          "fields": [
+            {
+              "property": "Style::notes",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "WaterEditor": {
+      "editor": "WaterEditor",
+      "cpp_type": "Water",
+      "ui": "ui/waterEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": null,
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Water::calcium_ppm",
+              "label": "Ca",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::chloride_ppm",
+              "label": "Cl",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::magnesium_ppm",
+              "label": "Mg",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::sulfate_ppm",
+              "label": "SO<sub>4</sub>",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::sodium_ppm",
+              "label": "Na",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::alkalinity_ppm",
+              "label": "Alkalinity",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::ph",
+              "label": "pH",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::alkalinityAsHCO3",
+              "label": "Alkalinity measured as",
+              "help": null,
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Water::carbonate_ppm",
+              "label": "Carbonate",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::potassium_ppm",
+              "label": "Potassium",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::iron_ppm",
+              "label": "Iron",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::fluoride_ppm",
+              "label": "Flouride",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::nitrate_ppm",
+              "label": "Nitrate",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::nitrite_ppm",
+              "label": "Nitrite",
+              "help": null,
+              "group": null,
+              "control": "measured",
+              "precision": 2,
+              "read_only": false
+            },
+            {
+              "property": "Water::notes",
+              "label": "Notes",
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    },
+    "YeastEditor": {
+      "editor": "YeastEditor",
+      "cpp_type": "Yeast",
+      "ui": "ui/yeastEditor.ui",
+      "tabs": [
+        {
+          "title": "Main",
+          "fields": [
+            {
+              "property": "NamedEntity::name",
+              "label": "Name",
+              "help": "Name",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::type",
+              "label": "Type",
+              "help": "Type",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::form",
+              "label": "Form",
+              "help": "Form",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Ingredient::totalInventory",
+              "label": "Total Inventory",
+              "help": "Total amount in inventory",
+              "group": null,
+              "control": "calculated",
+              "precision": 1,
+              "read_only": true
+            },
+            {
+              "property": "Yeast::laboratory",
+              "label": "Lab",
+              "help": "Lab",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::productId",
+              "label": "Product ID",
+              "help": "Product ID",
+              "group": null,
+              "control": "text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Extras",
+          "fields": [
+            {
+              "property": "Yeast::flocculation",
+              "label": "Flocculation",
+              "help": "Flocculation",
+              "group": null,
+              "control": "choice",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::attenuationMin_pct",
+              "label": "Min Attenuation (%)",
+              "help": "Minimum apparent attenuation as percentage of OG points",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::attenuationMax_pct",
+              "label": "Max Attenuation (%)",
+              "help": "Maximum apparent attenuation as percentage of OG points",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::minTemperature_c",
+              "label": "Min Temp",
+              "help": "Min temp",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::maxReuse",
+              "label": "Max Recultures",
+              "help": "Max recultures",
+              "group": null,
+              "control": "measured",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::maxTemperature_c",
+              "label": "Max Temp",
+              "help": "Max temp",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::alcoholTolerance_pct",
+              "label": "Alcohol Tolerance",
+              "help": "Recommended limit of ABV by the culture producer before attenuation stops",
+              "group": null,
+              "control": "measured",
+              "precision": 1,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::phenolicOffFlavorPositive",
+              "label": "Phenolic Off-Flavor Positive",
+              "help": "Whether culture is capable of producing phenols, which is a common distinctive property of saison, and brett yeasts",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::glucoamylasePositive",
+              "label": "Glucoamylase Positive",
+              "help": "A glucoamylase positive culture is capable of producing glucoamylase, the enzyme produced through expression of the diastatic gene, which allows yeast to attenuate dextrins and starches leading to a very low FG. This is positive in some saison/brett yeasts as well as the new gulo hybrid by Omega yeast labs.",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::killerProducingK1Toxin",
+              "label": "K1 Killer",
+              "help": "Produces K1 killer toxin",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::killerProducingK2Toxin",
+              "label": "K2 Killer",
+              "help": "Produces K2 killer toxin",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::killerProducingK28Toxin",
+              "label": "K28 Killer",
+              "help": "Produces K28 killer toxin",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::killerProducingKlusToxin",
+              "label": "Klus Killer",
+              "help": "Produces Klus killer toxin",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            },
+            {
+              "property": "Yeast::killerNeutral",
+              "label": "Killer Neutral",
+              "help": "Neutral strains do not produce toxins, nor are they killed by them",
+              "group": null,
+              "control": "boolean",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Best For",
+          "fields": [
+            {
+              "property": "Yeast::bestFor",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        },
+        {
+          "title": "Notes",
+          "fields": [
+            {
+              "property": "Yeast::notes",
+              "label": null,
+              "help": null,
+              "group": null,
+              "control": "long_text",
+              "precision": null,
+              "read_only": false
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

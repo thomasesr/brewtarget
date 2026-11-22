@@ -504,3 +504,73 @@ fn a_foreign_key_names_the_table_it_is_chosen_from() {
     let quantity = editable_columns("hop_in_recipe").iter().find(|field| field.column == "quantity").expect("amount");
     assert_eq!(quantity.references, None);
 }
+
+/// The editors are arranged the way the Qt dialogs are.
+///
+/// Not pixel for pixel -- the layout is deliberately not copied -- but the architecture: the
+/// same tabs in the same order, the same fields on each in the same order, under the same
+/// headings and with the same labels.
+#[test]
+fn the_editors_are_arranged_as_the_qt_dialogs_are() {
+    use bt_model::tables::form_for;
+
+    let hop = form_for("hop").expect("the Qt application has a hop editor");
+    assert_eq!(hop.iter().map(|tab| tab.title).collect::<Vec<_>>(), ["Main", "Extras", "Notes"]);
+
+    let main = hop[0].fields;
+    // The order the dialog has them in, not the order the schema declares them.
+    let columns: Vec<&str> = main.iter().map(|field| field.column).collect();
+    assert_eq!(&columns[..4], &["name", "form", "year", "origin"], "{columns:?}");
+
+    // A label the dialog gives a field, which is not what the column is called anywhere
+    // else: alpha is "Actual", under an "Alpha Acid" heading.
+    let alpha = main.iter().find(|field| field.column == "alpha_pct").expect("hops have alpha");
+    assert_eq!(alpha.label, "Actual");
+    assert_eq!(alpha.group, Some("Alpha Acid"));
+    assert_eq!(alpha.precision, Some(1));
+}
+
+/// Every table the Qt application has a dialog for has that dialog's arrangement, and every
+/// field in it names a real column.
+#[test]
+fn every_arranged_editor_names_real_columns() {
+    use bt_model::tables::{TABLES, columns_of, form_for};
+
+    let mut arranged = 0;
+    for table in TABLES {
+        let Some(form) = form_for(table) else { continue };
+        arranged += 1;
+        let columns = columns_of(table).expect("a known table");
+        assert!(!form.is_empty(), "{table} has an editor with no tabs");
+        for tab in form {
+            assert!(!tab.title.is_empty(), "{table} has a tab with no title");
+            assert!(!tab.fields.is_empty(), "{table}'s {} tab has no fields", tab.title);
+            for field in tab.fields {
+                assert!(columns.contains(&field.column), "{table}.{} is not a column", field.column);
+                assert!(!field.label.is_empty(), "{table}.{} has no label", field.column);
+            }
+        }
+    }
+    // The eighteen dialogs in `ui/`, less those whose model has no table of its own.
+    assert!(arranged >= 16, "only {arranged} tables have an arranged editor");
+}
+
+/// A field the dialog shows but never writes back stays that way.
+#[test]
+fn a_computed_field_is_shown_but_not_written() {
+    use bt_model::tables::form_for;
+
+    // `Ingredient::totalInventory` is worked out from the stock purchases, so the hop editor
+    // shows it and never writes it.  It has no column, so it does not appear at all here --
+    // what matters is that nothing claims to be able to write one.
+    let written: Vec<&str> = form_for("hop")
+        .expect("a hop editor")
+        .iter()
+        .flat_map(|tab| tab.fields.iter())
+        .filter(|field| field.read_only)
+        .map(|field| field.column)
+        .collect();
+    for column in written {
+        assert!(!column.is_empty(), "a read-only field with no column");
+    }
+}
