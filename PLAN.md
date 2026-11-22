@@ -243,10 +243,11 @@ three backends.
 
 **Done when:** every file in `testData/` imports, and re-export round-trips.
 
-Reading is done for all three formats, with the record definitions extracted rather
-than transcribed — adding BeerJSON needed nothing but the list of collection names.
-Still outstanding: writing BeerXML and BeerJSON files (only `.beer` writing is done),
-and loading the default content, which is Phase 4's last piece.
+Done for all three formats, reading and writing, with the record definitions extracted
+rather than transcribed — adding BeerJSON needed nothing but the list of collection
+names. Every example file reads, and each of the three shipped libraries survives being
+written and read again unchanged: 17 records for the kitchen-sink `.beer` recipe, 578
+for the BeerJSON ingredient library, 547 including 29 recipes for the BeerXML one.
 
 ### Phase 7 — `bt-api` + `bt-server`
 

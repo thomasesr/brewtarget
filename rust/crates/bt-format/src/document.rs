@@ -262,3 +262,141 @@ pub fn read(
     }
     Ok(result)
 }
+
+/// Write a record and everything nested inside it.
+fn write_owned(format: &Format, definition: &Record, owned: &Owned) -> Value {
+    let mut node = crate::writing::write_record_with(format, definition, &owned.record);
+
+    for child in &owned.children {
+        let Some(field) = definition.fields.iter().find(|field| field.path == child.path) else {
+            continue;
+        };
+        let Some(nested_type) = field.nested_record_type.as_deref() else {
+            continue;
+        };
+        let Some(nested_definition) =
+            format.records.iter().find(|candidate| candidate.name == nested_type || candidate.cpp_type == nested_type)
+        else {
+            continue;
+        };
+
+        let written: Vec<Value> =
+            child.records.iter().map(|nested| write_owned(format, nested_definition, nested)).collect();
+        match child.nesting {
+            // A record written into its holder's own element has no path of its own, so its
+            // fields are merged into what has already been written there.
+            Nesting::Referenced if child.path.is_empty() => {
+                if let (Some(target), Some(Value::Object(source))) = (node.as_object_mut(), written.first()) {
+                    for (name, value) in source {
+                        target.entry(name.clone()).or_insert_with(|| value.clone());
+                    }
+                }
+            }
+            Nesting::Referenced => {
+                if let Some(first) = written.into_iter().next() {
+                    insert_into(&mut node, &child.path, first);
+                }
+            }
+            Nesting::Owned => insert_into(&mut node, &child.path, Value::Array(written)),
+        }
+    }
+    node
+}
+
+/// Put a value at a `/`-separated path within a record.
+fn insert_into(node: &mut Value, path: &str, value: Value) {
+    let Some(object) = node.as_object_mut() else { return };
+    let mut parts = path.split('/').peekable();
+    let mut current = object;
+    while let Some(part) = parts.next() {
+        if parts.peek().is_none() {
+            current.insert(part.to_owned(), value);
+            return;
+        }
+        let entry = current.entry(part.to_owned()).or_insert_with(|| Value::Object(serde_json::Map::new()));
+        if !entry.is_object() {
+            *entry = Value::Object(serde_json::Map::new());
+        }
+        current = entry.as_object_mut().expect("just made it an object");
+    }
+}
+
+/// Write a document back out in one of the formats.
+pub fn write(
+    format_name: &str,
+    document: &Document,
+    root: &str,
+    recipe_collection: &str,
+) -> Result<Value, MappingError> {
+    let format =
+        format_data().format(format_name).ok_or_else(|| MappingError::UnknownFormat(format_name.to_owned()))?;
+
+    let mut root_node = serde_json::Map::new();
+    for (collection, records) in &document.collections {
+        let Some(definition) = format.record_named(collection) else { continue };
+        if records.is_empty() {
+            continue;
+        }
+        let written: Vec<Value> = records.iter().map(|record| write_owned(format, definition, record)).collect();
+        root_node.insert(collection.clone(), Value::Array(written));
+    }
+
+    if !document.recipes.is_empty()
+        && let Some(definition) = format.record_named(recipe_collection)
+    {
+        let written: Vec<Value> =
+            document.recipes.iter().map(|recipe| write_owned(format, definition, recipe)).collect();
+        root_node.insert(recipe_collection.to_owned(), Value::Array(written));
+    }
+
+    let mut wrapper = serde_json::Map::new();
+    wrapper.insert(root.to_owned(), Value::Object(root_node));
+    Ok(Value::Object(wrapper))
+}
+
+/// Write a `.beer` document.
+pub fn write_dotbeer(document: &Document) -> Result<Value, MappingError> {
+    write("dotBeer", document, "DotBeer", "recipes")
+}
+
+/// Write a BeerJSON document.
+pub fn write_beerjson(document: &Document) -> Result<Value, MappingError> {
+    write("beerJson", document, "beerjson", "recipes")
+}
+
+/// Write a BeerXML document, ready for [`crate::xml::write`].
+///
+/// BeerXML nests one level deeper than the JSON formats, so each collection goes inside the
+/// wrapper element it is read from: a list of hops is `<HOPS>` holding any number of `<HOP>`.
+pub fn write_beerxml(document: &Document) -> Result<Value, MappingError> {
+    let format = format_data().format("beerXml").ok_or_else(|| MappingError::UnknownFormat("beerXml".to_owned()))?;
+    let mut root_node = serde_json::Map::new();
+
+    for (wrapper, records) in &document.collections {
+        let Some((_, record_name)) = BEERXML_SECTIONS.iter().find(|(section, _)| section == wrapper) else {
+            continue;
+        };
+        let Some(definition) = format.record_named(record_name) else { continue };
+        if records.is_empty() {
+            continue;
+        }
+        let written: Vec<Value> = records.iter().map(|record| write_owned(format, definition, record)).collect();
+        let mut section = serde_json::Map::new();
+        section.insert((*record_name).to_owned(), Value::Array(written));
+        root_node.insert(wrapper.clone(), Value::Object(section));
+    }
+
+    if !document.recipes.is_empty()
+        && let Some(definition) = format.record_named("RECIPE")
+    {
+        let written: Vec<Value> =
+            document.recipes.iter().map(|recipe| write_owned(format, definition, recipe)).collect();
+        let mut section = serde_json::Map::new();
+        section.insert("RECIPE".to_owned(), Value::Array(written));
+        root_node.insert("RECIPES".to_owned(), Value::Object(section));
+    }
+
+    let mut wrapper = serde_json::Map::new();
+    wrapper.insert(crate::xml::SYNTHETIC_ROOT.to_owned(), Value::Object(root_node));
+    Ok(Value::Object(wrapper))
+}

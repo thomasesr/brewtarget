@@ -29,7 +29,7 @@
 use serde_json::{Map, Value};
 
 use crate::data::{Field, Format, Record, format_data};
-use crate::mapping::MappingError;
+use crate::mapping::{MappedRecord, MappingError};
 
 /// Put a value at a `/`-separated path, creating the objects on the way.
 fn insert_at(target: &mut Map<String, Value>, path: &str, value: Value) {
@@ -103,7 +103,23 @@ fn write_field(
     }
 
     match field.field_type.as_str() {
-        "String" | "Enum" | "Date" | "DateTimeOffset" | "DateOrDateTimeLocal" | "Bool" | "Int" | "UInt" | "Double" => {
+        // An enum goes back out in whatever spelling the format uses, which for BeerXML is not
+        // the one the database stores.
+        "Enum" => {
+            let Some(text) = value.as_str() else { return };
+            let spelled = match field.decoder.as_deref() {
+                Some(mapping) => match crate::enums::from_database(mapping, text) {
+                    Some(spelled) => spelled,
+                    // A value this format has no word for is left out rather than written
+                    // wrongly: a reader would rather see nothing than a lie.
+                    None => return,
+                },
+                None => text.to_owned(),
+            };
+            insert_at(target, &field.path, Value::String(spelled));
+        }
+        // A unit column holds the unit's own name, which is what BeerXML writes.
+        "String" | "Unit" | "Date" | "DateTimeOffset" | "DateOrDateTimeLocal" | "Bool" | "Int" | "UInt" | "Double" => {
             insert_at(target, &field.path, value.clone());
         }
         "MeasurementWithUnits" | "OneOfMeasurementsWithUnits" => {
@@ -153,50 +169,43 @@ fn canonical_unit_for(format: &Format, mapping_name: &str) -> Option<bt_measure:
     }
 }
 
-/// Write a row back out in the shape the format expects.
-///
-/// `local_id` and `folder_path` are passed in rather than read from the row, because neither is
-/// a column: one exists only within a file and the other is a folder row in the database.
-pub fn write_record(
-    format_name: &str,
-    record_name: &str,
-    table: &str,
-    columns: &Map<String, Value>,
-    local_id: Option<&str>,
-    folder_path: Option<&str>,
-) -> Result<Value, MappingError> {
+/// Write a record back out in the shape the format expects.
+pub fn write_record(format_name: &str, record_name: &str, record: &MappedRecord) -> Result<Value, MappingError> {
     let format =
         format_data().format(format_name).ok_or_else(|| MappingError::UnknownFormat(format_name.to_owned()))?;
     let definition = format.record_named(record_name).ok_or_else(|| MappingError::UnknownRecord {
         format: format_name.to_owned(),
         record: record_name.to_owned(),
     })?;
-    Ok(write_record_with(format, definition, table, columns, local_id, folder_path))
+    Ok(write_record_with(format, definition, record))
 }
 
-/// Write a row against a definition already in hand.
-pub fn write_record_with(
-    format: &Format,
-    definition: &Record,
-    table: &str,
-    columns: &Map<String, Value>,
-    local_id: Option<&str>,
-    folder_path: Option<&str>,
-) -> Value {
+/// Write a record against a definition already in hand.
+///
+/// The local ID, the folder path and the references all come from the record rather than from its
+/// columns, because none of them is one: an identifier exists only within a file, a folder path
+/// is a folder row in the database, and a reference is a foreign key there.
+pub fn write_record_with(format: &Format, definition: &Record, record: &MappedRecord) -> Value {
     let mut target = Map::new();
     for field in &definition.fields {
         match field.field_type.as_str() {
             "LocalId" if field.path == "local_id" => {
-                if let Some(local_id) = local_id {
-                    target.insert("local_id".to_owned(), Value::String(local_id.to_owned()));
+                if let Some(local_id) = &record.local_id {
+                    target.insert("local_id".to_owned(), Value::String(local_id.clone()));
+                }
+            }
+            // Every other LocalId field names another record in the same file.
+            "LocalId" => {
+                if let Some(reference) = record.references.get(&field.path) {
+                    insert_at(&mut target, &field.path, Value::String(reference.clone()));
                 }
             }
             "FolderPath" => {
-                if let Some(folder_path) = folder_path {
-                    insert_at(&mut target, &field.path, Value::String(folder_path.to_owned()));
+                if let Some(folder_path) = &record.folder_path {
+                    insert_at(&mut target, &field.path, Value::String(folder_path.clone()));
                 }
             }
-            _ => write_field(format, table, columns, field, &mut target),
+            _ => write_field(format, record.table, &record.columns, field, &mut target),
         }
     }
     Value::Object(target)

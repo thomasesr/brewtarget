@@ -117,3 +117,72 @@ fn add_child(parent: &mut Map<String, Value>, name: String, value: Value) {
 pub fn read(source: &str) -> Result<Value, XmlError> {
     to_value(&wrap(source)?)
 }
+
+/// Write a value back out as BeerXML.
+///
+/// The synthetic root is unwrapped again, since it is not part of the document the user asked
+/// for and the C++ is careful to keep it hidden.  Booleans are written as `TRUE` and `FALSE`,
+/// which the standard specifies and XML does not allow.
+pub fn write(document: &Value) -> String {
+    let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    match document.get(SYNTHETIC_ROOT).unwrap_or(document) {
+        Value::Object(root) => {
+            for (name, value) in root {
+                write_element(&mut out, name, value, 0);
+            }
+        }
+        other => write_element(&mut out, SYNTHETIC_ROOT, other, 0),
+    }
+    out
+}
+
+fn write_element(out: &mut String, name: &str, value: &Value, depth: usize) {
+    let indent = "  ".repeat(depth);
+    match value {
+        // A list is written as the element repeated, which is the only way XML has of saying it.
+        Value::Array(items) => {
+            for item in items {
+                write_element(out, name, item, depth);
+            }
+        }
+        Value::Object(fields) => {
+            out.push_str(&format!("{indent}<{name}>\n"));
+            for (child, value) in fields {
+                write_element(out, child, value, depth + 1);
+            }
+            out.push_str(&format!("{indent}</{name}>\n"));
+        }
+        Value::Null => {}
+        leaf => {
+            out.push_str(&format!("{indent}<{name}>{}</{name}>\n", escape(&leaf_text(leaf))));
+        }
+    }
+}
+
+/// How a scalar is written.
+fn leaf_text(value: &Value) -> String {
+    match value {
+        // BeerXML writes booleans in capitals, which its standard specifies even though XML does
+        // not allow it.
+        Value::Bool(true) => "TRUE".to_owned(),
+        Value::Bool(false) => "FALSE".to_owned(),
+        Value::String(text) => text.clone(),
+        other => other.to_string(),
+    }
+}
+
+/// Escape the five characters XML reserves.
+fn escape(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for character in text.chars() {
+        match character {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&apos;"),
+            other => out.push(other),
+        }
+    }
+    out
+}

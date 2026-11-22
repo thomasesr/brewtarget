@@ -32,15 +32,7 @@ fn round_trip(document: &serde_json::Value, collection: &str) -> usize {
     let checked = first.len();
 
     for record in first {
-        let written = write_record(
-            "dotBeer",
-            collection,
-            record.table,
-            &record.columns,
-            record.local_id.as_deref(),
-            record.folder_path.as_deref(),
-        )
-        .expect("write");
+        let written = write_record("dotBeer", collection, &record).expect("write");
 
         let again = map_record("dotBeer", collection, &written).expect("read back");
         assert_eq!(again.table, record.table);
@@ -98,15 +90,7 @@ fn every_example_recipe_survives_a_round_trip() {
 fn measurements_are_written_in_canonical_units() {
     let document = example("AmericanPaleAle.beer");
     let equipments = map_collection("dotBeer", &document, "DotBeer", "equipments").expect("equipments");
-    let written = write_record(
-        "dotBeer",
-        "equipments",
-        equipments[0].table,
-        &equipments[0].columns,
-        equipments[0].local_id.as_deref(),
-        equipments[0].folder_path.as_deref(),
-    )
-    .expect("write");
+    let written = write_record("dotBeer", "equipments", &equipments[0]).expect("write");
 
     // Volumes are litres, not the barrels the C++ would reach for.
     let volumes: Vec<&str> = find_units(&written, &mut Vec::new());
