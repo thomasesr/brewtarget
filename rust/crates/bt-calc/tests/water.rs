@@ -158,3 +158,117 @@ fn a_mash_with_nothing_in_it_has_no_ph() {
     assert_eq!(mash_ph(&MashWater { grains: Vec::new(), ..simple_mash() }), None);
     assert_eq!(mash_ph(&MashWater { mash_water_l: 0.0, ..simple_mash() }), None, "no water");
 }
+
+/// The ions a salt contributes are worked out from its formula and the molar masses, not
+/// transcribed.  These are the figures the C++ test file lists for comparison with the usual
+/// brewing references.
+#[test]
+fn each_salt_contributes_what_its_formula_says() {
+    use bt_calc::water::WaterAgent;
+
+    let gypsum = WaterAgent::CalciumSulfateDihydrate.ions_ppm_per_gram_per_litre();
+    assert!(close(gypsum[&Ion::Calcium], 232.788, 0.001), "{:?}", gypsum);
+    assert!(close(gypsum[&Ion::Sulfate], 557.937, 0.001), "{:?}", gypsum);
+
+    // `cacl2Flake` in the C++ tests: the dihydrate.
+    let flake = WaterAgent::CalciumChlorideDihydrate.ions_ppm_per_gram_per_litre();
+    assert!(close(flake[&Ion::Calcium], 272.626, 0.001), "{:?}", flake);
+    assert!(close(flake[&Ion::Chloride], 482.284, 0.001), "{:?}", flake);
+
+    let epsom = WaterAgent::MagnesiumSulfateHeptahydrate.ions_ppm_per_gram_per_litre();
+    assert!(close(epsom[&Ion::Magnesium], 98.613, 0.001), "{:?}", epsom);
+
+    // Two chlorides per calcium, so the chloride is far more than the calcium by mass.
+    assert!(flake[&Ion::Chloride] > flake[&Ion::Calcium]);
+    // The water of crystallisation adds mass and no ions, so the anhydrous is stronger.
+    let anhydrous = WaterAgent::CalciumChlorideAnhydrous.ions_ppm_per_gram_per_litre();
+    assert!(anhydrous[&Ion::Calcium] > flake[&Ion::Calcium]);
+
+    // An acid contributes no mineral ions.
+    assert!(WaterAgent::LacticAcid.ions_ppm_per_gram_per_litre().is_empty());
+}
+
+/// The stored strings are the ones the database holds.
+#[test]
+fn a_water_agent_is_read_from_what_the_column_stores() {
+    use bt_calc::water::WaterAgent;
+    assert_eq!(WaterAgent::from_stored("calcium carbonate"), Some(WaterAgent::CalciumCarbonate));
+    // A type whose chemistry the application does not model has no contribution to work out.
+    assert_eq!(WaterAgent::from_stored("other"), None);
+    assert_eq!(WaterAgent::from_stored("not a salt"), None);
+}
+
+/// A recipe's water, end to end: base profile, reverse osmosis, salts, and the pH that
+/// follows.  This is what the Water tab shows.
+#[test]
+fn a_recipe_with_no_mash_water_has_nothing_to_predict() {
+    use bt_model::recipe::Recipe;
+    // Nothing to work out is `None`, which is a different thing from a profile of zeroes.
+    assert_eq!(bt_calc::water::predict(&Recipe::default()), None);
+}
+
+/// Adding gypsum to a recipe raises its calcium and sulfate, and lowers its mash pH.
+#[test]
+fn a_water_agent_changes_what_the_water_comes_to() {
+    use bt_model::enums::{MiscType, MiscWaterAgentType};
+    use bt_model::recipe::{Addition, Recipe};
+    use bt_model::tables::*;
+
+    let mash_step = MashStepRow {
+        mstype: Some("infusion".to_owned()),
+        step_temp_c: Some(66.0),
+        amount_l: Some(20.0),
+        step_time_mins: Some(60.0),
+        ..MashStepRow::default()
+    };
+    let malt = Addition {
+        addition: FermentableInRecipeRow {
+            quantity: Some(5.0),
+            unit: Some("kilograms".to_owned()),
+            stage: Some("add_to_mash".to_owned()),
+            ..FermentableInRecipeRow::default()
+        },
+        ingredient: Some(FermentableRow {
+            name: Some("Pale".to_owned()),
+            ftype: Some("grain".to_owned()),
+            grain_group: Some("base".to_owned()),
+            color_lovibond: Some(3.0),
+            fine_grind_yield_pct: Some(80.0),
+            ..FermentableRow::default()
+        }),
+    };
+    let plain = Recipe {
+        row: RecipeRow { batch_size: Some(20.0), efficiency: Some(75.0), ..RecipeRow::default() },
+        fermentables: vec![malt.clone()],
+        mash: Some((MashRow::default(), vec![mash_step.clone()])),
+        ..Recipe::default()
+    };
+
+    let before = bt_calc::water::predict(&plain).expect("there is water in the mash");
+    assert!(close(before.ions_ppm[&Ion::Calcium], 0.0, 1e-9), "no salts, no calcium");
+
+    let mut salted = plain.clone();
+    salted.miscs = vec![Addition {
+        addition: MiscInRecipeRow {
+            // 5 grams.
+            quantity: Some(0.005),
+            unit: Some("kilograms".to_owned()),
+            stage: Some("add_to_mash".to_owned()),
+            ..MiscInRecipeRow::default()
+        },
+        ingredient: Some(MiscRow {
+            name: Some("Gypsum".to_owned()),
+            mtype: Some(MiscType::WaterAgent.as_str().to_owned()),
+            water_agent_type: Some(MiscWaterAgentType::CalciumSulfateDihydrate.as_str().to_owned()),
+            ..MiscRow::default()
+        }),
+    }];
+
+    let after = bt_calc::water::predict(&salted).expect("there is water in the mash");
+    assert!(after.ions_ppm[&Ion::Calcium] > 0.0, "gypsum brings calcium: {:?}", after.ions_ppm);
+    assert!(after.ions_ppm[&Ion::Sulfate] > after.ions_ppm[&Ion::Calcium], "and more sulfate than calcium");
+
+    // Calcium lowers the mash pH, so the salted recipe finishes below the plain one.
+    let (plain_ph, salted_ph) = (before.mash_ph.expect("a pH"), after.mash_ph.expect("a pH"));
+    assert!(salted_ph < plain_ph, "{salted_ph} should be below {plain_ph}");
+}

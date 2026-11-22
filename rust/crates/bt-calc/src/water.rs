@@ -228,3 +228,206 @@ pub fn mash_ph(water: &MashWater) -> Option<f64> {
     let net_meq = residual * water.mash_water_l - water.acid_meq;
     Some(distilled_ph + net_meq / (MASH_BUFFER_CAPACITY_MEQ_PER_KG_PH * grain_kg))
 }
+
+/// The salts and acids a brewer adds to water.
+///
+/// `Misc::WaterAgentType`; the stored strings come from `Misc::waterAgentTypeStringMapping`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum WaterAgent {
+    CalciumChlorideAnhydrous,
+    CalciumChlorideDihydrate,
+    CalciumCarbonate,
+    CalciumSulfateDihydrate,
+    CalciumHydroxide,
+    MagnesiumSulfateHeptahydrate,
+    MagnesiumChlorideHexahydrate,
+    SodiumChloride,
+    SodiumBicarbonate,
+    LacticAcid,
+    PhosphoricAcid,
+    SulfuricAcid,
+    HydrochloricAcid,
+}
+
+impl WaterAgent {
+    /// What it is called in `PhysicalConstants.h`, where its molar mass is.
+    fn constant_name(self) -> &'static str {
+        match self {
+            Self::CalciumChlorideAnhydrous => "CalciumChloride_Anhydrous",
+            Self::CalciumChlorideDihydrate => "CalciumChloride_Dihydrate",
+            Self::CalciumCarbonate => "CalciumCarbonate",
+            Self::CalciumSulfateDihydrate => "CalciumSulfate_Dihydrate",
+            Self::CalciumHydroxide => "CalciumHydroxide",
+            Self::MagnesiumSulfateHeptahydrate => "MagnesiumSulfate_Heptahydrate",
+            Self::MagnesiumChlorideHexahydrate => "MagnesiumChloride_Hexahydrate",
+            Self::SodiumChloride => "SodiumChloride",
+            Self::SodiumBicarbonate => "SodiumBicarbonate",
+            Self::LacticAcid => "LacticAcid",
+            Self::PhosphoricAcid => "PhosphoricAcid",
+            Self::SulfuricAcid => "SulfuricAcid",
+            Self::HydrochloricAcid => "HydrochloricAcid",
+        }
+    }
+
+    /// Which ions the salt is made of, and how many of each per formula unit.
+    ///
+    /// Calcium chloride is CaCl₂, so one calcium and *two* chlorides; gypsum is CaSO₄·2H₂O,
+    /// so one of each.  The water of crystallisation counts towards the mass and contributes
+    /// no ions, which is why the dihydrate gives less calcium per gram than the anhydrous.
+    fn formula(self) -> &'static [(Ion, f64)] {
+        match self {
+            Self::CalciumChlorideAnhydrous | Self::CalciumChlorideDihydrate => {
+                &[(Ion::Calcium, 1.0), (Ion::Chloride, 2.0)]
+            }
+            Self::CalciumCarbonate => &[(Ion::Calcium, 1.0), (Ion::Carbonate, 1.0)],
+            Self::CalciumSulfateDihydrate => &[(Ion::Calcium, 1.0), (Ion::Sulfate, 1.0)],
+            Self::CalciumHydroxide => &[(Ion::Calcium, 1.0)],
+            Self::MagnesiumSulfateHeptahydrate => &[(Ion::Magnesium, 1.0), (Ion::Sulfate, 1.0)],
+            Self::MagnesiumChlorideHexahydrate => &[(Ion::Magnesium, 1.0), (Ion::Chloride, 2.0)],
+            Self::SodiumChloride => &[(Ion::Sodium, 1.0), (Ion::Chloride, 1.0)],
+            Self::SodiumBicarbonate => &[(Ion::Sodium, 1.0), (Ion::Bicarbonate, 1.0)],
+            // The acids contribute no mineral ions worth showing.
+            Self::LacticAcid | Self::PhosphoricAcid | Self::SulfuricAcid | Self::HydrochloricAcid => &[],
+        }
+    }
+
+    /// What one gram of this in one litre of water adds, in parts per million.
+    ///
+    /// Ported from `Misc::concentrationPerGramPerLiter_massConcPpm`, which is stoichiometry:
+    /// the ion's share of the salt's mass, times a million milligrams per kilogram.  Worked
+    /// out from the molar masses rather than transcribed, because that is what the C++ does.
+    pub fn ions_ppm_per_gram_per_litre(self) -> Ions {
+        let salt_molar_mass = constant(self.constant_name());
+        self.formula().iter().map(|(ion, count)| (*ion, ion.molar_mass() * count / salt_molar_mass * 1000.0)).collect()
+    }
+
+    /// Read the type as the `misc.water_agent_type` column stores it.
+    pub fn from_stored(value: &str) -> Option<Self> {
+        use bt_model::enums::MiscWaterAgentType;
+        let stored: MiscWaterAgentType = value.parse().ok()?;
+        Some(match stored {
+            MiscWaterAgentType::CalciumChlorideAnhydrous => Self::CalciumChlorideAnhydrous,
+            MiscWaterAgentType::CalciumChlorideDihydrate => Self::CalciumChlorideDihydrate,
+            MiscWaterAgentType::CalciumCarbonate => Self::CalciumCarbonate,
+            MiscWaterAgentType::CalciumSulfateDihydrate => Self::CalciumSulfateDihydrate,
+            MiscWaterAgentType::CalciumHydroxide => Self::CalciumHydroxide,
+            MiscWaterAgentType::MagnesiumSulfateHeptahydrate => Self::MagnesiumSulfateHeptahydrate,
+            MiscWaterAgentType::MagnesiumChlorideHexahydrate => Self::MagnesiumChlorideHexahydrate,
+            MiscWaterAgentType::SodiumChloride => Self::SodiumChloride,
+            MiscWaterAgentType::SodiumBicarbonate => Self::SodiumBicarbonate,
+            MiscWaterAgentType::LacticAcid => Self::LacticAcid,
+            MiscWaterAgentType::PhosphoricAcid => Self::PhosphoricAcid,
+            MiscWaterAgentType::SulfuricAcid => Self::SulfuricAcid,
+            MiscWaterAgentType::HydrochloricAcid => Self::HydrochloricAcid,
+            // Something the application does not model the chemistry of.
+            MiscWaterAgentType::Other => return None,
+        })
+    }
+}
+
+/// What the water in a recipe comes to, and what pH its mash will reach.
+///
+/// Ported from `WaterAutoAdjuster::predict`, which is what the Water tab shows.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Prediction {
+    /// The ions in the water, after the base profile, the reverse osmosis and the salts.
+    pub ions_ppm: Ions,
+    /// What the mash will reach, where there is a grist and water to work it out from.
+    pub mash_ph: Option<f64>,
+}
+
+/// Work out what a recipe's water comes to.
+///
+/// The salts are the water agents among its miscellaneous additions; anything else in that
+/// list is not a salt and contributes nothing here.  `None` where there is no water in the
+/// mash to work anything out about.
+pub fn predict(recipe: &bt_model::recipe::Recipe) -> Option<Prediction> {
+    use bt_model::enums::{FermentableGrainGroup, FermentableType, MiscType};
+    use bt_model::recipe::IngredientAmount;
+
+    let figures = crate::recipe::calculate_recipe(recipe, Default::default(), Default::default());
+    let mash_water_l: f64 = recipe.mash_steps().iter().filter_map(|step| step.amount_l).sum();
+    if mash_water_l <= 0.0 {
+        return None;
+    }
+    // Salts go into all the water, not just the mash.
+    let total_water_l = if figures.boil_volume_l > 0.0 { figures.boil_volume_l } else { mash_water_l };
+
+    let base = recipe
+        .water_base
+        .as_ref()
+        .map(|water| Profile {
+            ions_ppm: [
+                (Ion::Calcium, water.calcium),
+                (Ion::Magnesium, water.magnesium),
+                (Ion::Sodium, water.sodium),
+                (Ion::Chloride, water.chloride),
+                (Ion::Sulfate, water.sulfate),
+                (Ion::Bicarbonate, water.bicarbonate),
+                (Ion::Carbonate, water.carbonate_ppm),
+            ]
+            .into_iter()
+            .filter_map(|(ion, ppm)| Some((ion, ppm?)))
+            .collect(),
+            alkalinity_meq_per_l: water.alkalinity,
+        })
+        .unwrap_or_default();
+
+    // How much of the mash water is the base profile rather than reverse osmosis.
+    let base_fraction = 1.0 - recipe.row.ro_water_mash_pct.unwrap_or(0.0) / 100.0;
+
+    let salts: Vec<Salt> = recipe
+        .miscs
+        .iter()
+        .filter_map(|addition| {
+            let misc = addition.ingredient.as_ref()?;
+            if misc.mtype().ok().flatten() != Some(MiscType::WaterAgent) {
+                return None;
+            }
+            let agent = WaterAgent::from_stored(misc.water_agent_type.as_deref()?)?;
+            // Salts are weighed, and the model works in grams.
+            let amount = addition.addition.canonical_amount()?;
+            Some(Salt {
+                ions_ppm_per_gram_per_litre: agent.ions_ppm_per_gram_per_litre(),
+                grams: amount.quantity * 1000.0,
+            })
+        })
+        .collect();
+
+    let ions_ppm = actual_ions_ppm(&base, base_fraction, &salts, total_water_l);
+
+    // The grist, for the pH model.  A specialty malt is a crystal or roasted one; the schema
+    // records that as the grain group rather than as a flag.
+    let grains: Vec<Grain> = recipe
+        .fermentables
+        .iter()
+        .filter_map(|addition| {
+            let malt = addition.ingredient.as_ref()?;
+            let amount = addition.addition.canonical_amount()?;
+            let color_srm = malt.color_lovibond.map(|lovibond| 1.3546 * lovibond - 0.76).unwrap_or(0.0);
+            let is_specialty = malt.ftype().ok().flatten() != Some(FermentableType::Grain)
+                || !matches!(malt.grain_group().ok().flatten(), Some(FermentableGrainGroup::Base) | None);
+            Some(Grain { amount_kg: amount.quantity, color_srm, is_specialty })
+        })
+        .collect();
+
+    // The alkalinity of the water as it ends up: the base water's share of its own, plus
+    // whatever the salts brought.
+    let added = |ion: Ion| (ions_ppm.get(&ion).copied().unwrap_or(0.0) - base_fraction * base.ppm(ion)).max(0.0);
+    let alkalinity_meq_per_l = base_fraction * base.alkalinity()
+        + Ion::Bicarbonate.milliequivalents_per_litre(added(Ion::Bicarbonate))
+        + Ion::Carbonate.milliequivalents_per_litre(added(Ion::Carbonate));
+
+    let mash_ph = mash_ph(&MashWater {
+        grains,
+        beer_color_srm: figures.color_srm,
+        og_plato: crate::algorithms::sg_20c20c_to_plato(figures.og),
+        mash_water_l,
+        ions_ppm: ions_ppm.clone(),
+        alkalinity_meq_per_l,
+        // Acid additions are not modelled here yet; see PLAN.
+        acid_meq: 0.0,
+    });
+
+    Some(Prediction { ions_ppm, mash_ph })
+}

@@ -59,10 +59,33 @@ pub fn Water(recipe: Recipe) -> Element {
             Ions { water: target.clone() }
         }
 
-        p { class: "bt-note",
-            "What the water in the kettle actually comes to, and the water agents and acid malts
-             that get it there, are not ported yet: they need the water chemistry from
-             src/model/Water.cpp."
+        match bt_calc::water::predict(&recipe) {
+            Some(prediction) => rsx! {
+                h3 { class: "bt-group", "Actual" }
+                dl { class: "bt-facts bt-ions",
+                    for ion in bt_calc::water::Ion::SHOWN {
+                        Entry {
+                            key: "{ion:?}",
+                            label: ion_label(ion),
+                            value: number(prediction.ions_ppm.get(&ion).copied(), 2),
+                        }
+                    }
+                    Entry { label: "pH", value: number(prediction.mash_ph, 2) }
+                }
+                p { class: "bt-note",
+                    "What the mash water comes to: the base profile, less whatever share of it is
+                     reverse osmosis, plus the water agents added to the recipe.  The pH is Kai
+                     Troester's model.  Acid additions are not counted yet."
+                }
+            },
+            // No water in the mash means nothing to work out, which is a different thing from
+            // a profile of zeroes.
+            None => rsx! {
+                p { class: "bt-note",
+                    "There is no water in this recipe's mash steps, so what it comes to cannot be
+                     worked out.  Set the mash up first."
+                }
+            },
         }
     }
 }
@@ -90,5 +113,19 @@ fn Entry(label: &'static str, value: String) -> Element {
             dt { "{label}" }
             dd { "{value}" }
         }
+    }
+}
+
+/// What each ion is called on the Water tab, as `ui/recipeWaterWidget.ui` labels them.
+fn ion_label(ion: bt_calc::water::Ion) -> &'static str {
+    use bt_calc::water::Ion;
+    match ion {
+        Ion::Calcium => "Ca",
+        Ion::Magnesium => "Mg",
+        Ion::Sodium => "Na",
+        Ion::Chloride => "Cl",
+        Ion::Sulfate => "SO₄",
+        Ion::Bicarbonate => "HCO₃",
+        Ion::Carbonate => "CO₃",
     }
 }
