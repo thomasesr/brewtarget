@@ -86,9 +86,10 @@ async fn the_api_describes_itself() {
     assert!(paths.contains_key("/api/inventory/{kind}/{id}"));
     assert!(paths.contains_key("/api/import"));
     assert!(paths.contains_key("/api/usage/{table}"));
-    // One group per table (list and read), plus the recipe, inventory, usage and transfer
-    // routes written by hand.
-    assert_eq!(paths.len(), 39 * 2 + 3 + 3 + 1 + 2, "one group per table, plus the hand-written routes");
+    assert!(paths.contains_key("/api/preferences"));
+    // One group per table (list and read), plus the recipe, inventory, usage, transfer and
+    // preference routes written by hand.
+    assert_eq!(paths.len(), 39 * 2 + 3 + 3 + 1 + 2 + 1, "one group per table, plus the hand-written routes");
 
     // The schemas the routes mention are described, not left as bare objects.
     let schemas = document["components"]["schemas"].as_object().expect("the schemas");

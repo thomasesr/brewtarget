@@ -283,6 +283,19 @@ impl Client {
         self.get(&format!("/{table}")).await
     }
 
+    /// What the brewer has chosen.
+    pub async fn preferences(&self) -> Result<serde_json::Map<String, Value>, ApiError> {
+        self.get("/preferences").await
+    }
+
+    /// Store what the brewer has chosen.
+    pub async fn set_preferences(
+        &self,
+        preferences: &serde_json::Map<String, Value>,
+    ) -> Result<serde_json::Map<String, Value>, ApiError> {
+        self.send(reqwest::Method::PUT, "/preferences", preferences).await
+    }
+
     /// How many recipes use each row of a table, keyed by that row's id.
     pub async fn usage(&self, table: &str) -> Result<std::collections::BTreeMap<i32, i64>, ApiError> {
         let found: std::collections::BTreeMap<String, i64> = self.get(&format!("/usage/{table}")).await?;

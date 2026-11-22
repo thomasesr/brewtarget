@@ -33,7 +33,12 @@ async fn serving(label: &str) -> Client {
     let store = Store::connect(&format!("sqlite://{}", path.display())).await.expect("connect");
     store.prepare(&Namespace::Default).await.expect("prepare");
     let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../data");
-    let app = api().with_state(AppState::new(store, data));
+    // Somewhere of its own to write preferences: the content directory is part of the
+    // repository, and a test must not leave anything in it.
+    let state = std::env::temp_dir().join(format!("bt-ui-state-{label}"));
+    let _ = std::fs::remove_dir_all(&state);
+    std::fs::create_dir_all(&state).expect("a state directory");
+    let app = api().with_state(AppState::with_state_directory(store, data, state));
 
     let listener = tokio::net::TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, 0))).await.expect("bind");
     let address = listener.local_addr().expect("the address it got");
@@ -53,7 +58,10 @@ async fn serving_with_content(label: &str) -> Client {
     store.prepare(&Namespace::Default).await.expect("prepare");
     let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../data");
     bt_store::default_content::load(&store, &data).await.expect("load the shipped content");
-    let app = api().with_state(AppState::new(store, data));
+    let state = std::env::temp_dir().join(format!("bt-ui-state-{label}"));
+    let _ = std::fs::remove_dir_all(&state);
+    std::fs::create_dir_all(&state).expect("a state directory");
+    let app = api().with_state(AppState::with_state_directory(store, data, state));
 
     let listener = tokio::net::TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, 0))).await.expect("bind");
     let address = listener.local_addr().expect("the address it got");
@@ -713,4 +721,60 @@ async fn the_shipped_ingredients_are_used_by_the_shipped_recipes() {
     // Styles are named by a recipe rather than added to it, and are counted the same way.
     let styles = client.usage("style").await.expect("style counts");
     assert!(!styles.is_empty(), "the shipped recipes name styles");
+}
+
+/// Preferences round-trip, and a choice naming nothing is refused rather than stored.
+#[tokio::test]
+async fn preferences_are_stored_and_checked() {
+    use serde_json::{Map, json};
+
+    let client = serving("preferences").await;
+
+    // The defaults are what the C++ defaults to.
+    let defaults = client.preferences().await.expect("the defaults");
+    assert_eq!(defaults["ibu_formula"], "tinseth");
+    assert_eq!(defaults["color_formula"], "morey");
+
+    let mut chosen = defaults.clone();
+    chosen.insert("ibu_formula".to_owned(), json!("rager"));
+    chosen.insert("units".to_owned(), json!({"Mass": "UsCustomary", "Temperature": "UsCustomary"}));
+    let stored = client.set_preferences(&chosen).await.expect("store them");
+    assert_eq!(stored["ibu_formula"], "rager");
+
+    // ...and they are still there on the next request.
+    let again = client.preferences().await.expect("read them back");
+    assert_eq!(again["ibu_formula"], "rager");
+    assert_eq!(again["units"]["Mass"], "UsCustomary");
+
+    // A system of measurement that does not measure that quantity is refused.
+    let mut wrong = Map::new();
+    wrong.insert("units".to_owned(), json!({"Mass": "Lovibond"}));
+    let failure = client.set_preferences(&wrong).await.expect_err("mass is not measured in Lovibond");
+    assert!(failure.to_string().contains("Lovibond"), "{failure}");
+
+    // So is a formula that does not exist.
+    let mut nonsense = Map::new();
+    nonsense.insert("ibu_formula".to_owned(), json!("vibes"));
+    let failure = client.set_preferences(&nonsense).await.expect_err("not a formula");
+    assert!(failure.to_string().contains("vibes"), "{failure}");
+}
+
+/// Choosing a different bitterness formula changes what the server reckons a recipe comes to.
+///
+/// The preferences are not decoration: they feed the calculation.
+#[tokio::test]
+async fn the_chosen_formula_is_the_one_used() {
+    use serde_json::json;
+
+    let client = serving_with_content("preferences-formula").await;
+    let id = client.recipe_rows().await.expect("the recipes")[0].id;
+
+    let tinseth = client.calculated(id).await.expect("the figures").ibus;
+
+    let mut chosen = client.preferences().await.expect("the defaults");
+    chosen.insert("ibu_formula".to_owned(), json!("rager"));
+    client.set_preferences(&chosen).await.expect("store them");
+
+    let rager = client.calculated(id).await.expect("the figures again").ibus;
+    assert!((tinseth - rager).abs() > 1.0, "Rager and Tinseth should not agree this closely: {tinseth} vs {rager}");
 }

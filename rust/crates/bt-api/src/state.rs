@@ -38,29 +38,36 @@ pub struct AppState {
 
 struct Inner {
     store: Store,
-    preferences: Preferences,
-    /// Where the files that ship with the application live.
+    /// Where the files that ship with the application live.  Read, never written.
     data_directory: std::path::PathBuf,
+    /// Where what the brewer has chosen is kept.  Written, so it must not be the content
+    /// directory -- that is part of the installation, and in a container it is read-only.
+    state_directory: std::path::PathBuf,
 }
 
 impl AppState {
+    /// Everything the routes share, with the shipped content and the state in one place.
+    ///
+    /// Convenient for a test; `with_state_directory` is what a server wants, since the two are
+    /// not the same thing.
     pub fn new(store: Store, data_directory: impl Into<std::path::PathBuf>) -> Self {
+        let data_directory = data_directory.into();
+        Self::with_state_directory(store, data_directory.clone(), data_directory)
+    }
+
+    /// As [`AppState::new`], but keeping what the brewer has chosen somewhere writable.
+    pub fn with_state_directory(
+        store: Store,
+        data_directory: impl Into<std::path::PathBuf>,
+        state_directory: impl Into<std::path::PathBuf>,
+    ) -> Self {
         Self {
             inner: Arc::new(Inner {
                 store,
-                preferences: Preferences::default(),
                 data_directory: data_directory.into(),
+                state_directory: state_directory.into(),
             }),
         }
-    }
-
-    pub fn with_preferences(self, preferences: Preferences) -> Self {
-        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|shared| Inner {
-            store: shared.store.clone(),
-            preferences: shared.preferences,
-            data_directory: shared.data_directory.clone(),
-        });
-        Self { inner: Arc::new(Inner { preferences, ..inner }) }
     }
 
     /// The store this request should act on.
@@ -71,11 +78,22 @@ impl AppState {
         &self.inner.store
     }
 
+    /// What the brewer has chosen, read fresh.
+    ///
+    /// Read each time rather than cached, so that changing a preference takes effect on the
+    /// next request without the server being restarted.  It is one small file.
     pub fn preferences(&self) -> Preferences {
-        self.inner.preferences
+        let chosen = crate::preferences::Preferences::load(self.state_directory());
+        Preferences { color_formula: chosen.color(), ibu: chosen.ibu() }
     }
 
+    /// Where the files that ship with the application are.
     pub fn data_directory(&self) -> &std::path::Path {
         &self.inner.data_directory
+    }
+
+    /// Where what the brewer has chosen is kept.
+    pub fn state_directory(&self) -> &std::path::Path {
+        &self.inner.state_directory
     }
 }

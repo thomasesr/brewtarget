@@ -28,6 +28,9 @@ pub enum ApiError {
     Store(#[from] bt_store::StoreError),
     #[error(transparent)]
     Format(#[from] bt_format::mapping::MappingError),
+    /// Something that went wrong here rather than in the request.
+    #[error("{0}")]
+    Internal(String),
 }
 
 /// The body of a failed request.
@@ -44,6 +47,11 @@ impl IntoResponse for ApiError {
             ApiError::NotFound(what) => (StatusCode::NOT_FOUND, "not_found", what.clone()),
             ApiError::BadRequest(why) => (StatusCode::BAD_REQUEST, "bad_request", why.clone()),
             ApiError::Format(error) => (StatusCode::BAD_REQUEST, "bad_request", error.to_string()),
+            ApiError::Internal(why) => {
+                // Ours rather than the caller's, so it is logged in full and reported plainly.
+                tracing::error!(%why, "a request failed");
+                (StatusCode::INTERNAL_SERVER_ERROR, "internal", why.clone())
+            }
             ApiError::Store(error) => {
                 // A database failure is ours, not the caller's, so it is logged in full and
                 // reported in outline.  The detail can name tables and columns.

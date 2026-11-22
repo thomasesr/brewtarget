@@ -54,7 +54,7 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let state = AppState::new(store, &config.data_directory);
+    let state = AppState::with_state_directory(store, &config.data_directory, &config.state_directory);
     let app = api().with_state(state).merge(frontend(&config)).layer(TraceLayer::new_for_http());
 
     let address = SocketAddr::new(config.bind, config.port);

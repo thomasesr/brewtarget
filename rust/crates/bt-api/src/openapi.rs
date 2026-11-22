@@ -40,5 +40,6 @@ pub fn document() -> Document {
     document.merge(crate::recipes::RecipeApi::openapi());
     document.merge(crate::inventory::InventoryApi::openapi());
     document.merge(crate::transfer::TransferApi::openapi());
+    document.merge(crate::preferences::PreferencesApi::openapi());
     document
 }

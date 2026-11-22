@@ -19,8 +19,12 @@ use std::path::PathBuf;
 pub struct Config {
     /// Where the brewing data lives.
     pub database_url: String,
-    /// Where the files that ship with the application are.
+    /// Where the files that ship with the application are.  Read, never written -- in a
+    /// container this is part of the image.
     pub data_directory: PathBuf,
+    /// Where what the brewer has chosen is kept.  Written, so it is somewhere that outlives
+    /// the image: beside the database by default.
+    pub state_directory: PathBuf,
     /// Where the built frontend is.
     pub assets_directory: PathBuf,
     pub bind: IpAddr,
@@ -34,6 +38,7 @@ impl Default for Config {
         Self {
             database_url: "sqlite://brewtarget.sqlite".to_owned(),
             data_directory: PathBuf::from("data"),
+            state_directory: PathBuf::from("."),
             // Where the Docker image puts the built interface.  Building it here instead
             // leaves it under `rust/target/dx/bt-web/<profile>/web/public`, which is what
             // `BT_ASSETS_DIR` is for.
@@ -55,6 +60,7 @@ impl Config {
         Self {
             database_url: std::env::var("BT_DB_URL").unwrap_or(default.database_url),
             data_directory: std::env::var("BT_DATA_DIR").map(PathBuf::from).unwrap_or(default.data_directory),
+            state_directory: std::env::var("BT_STATE_DIR").map(PathBuf::from).unwrap_or(default.state_directory),
             assets_directory: std::env::var("BT_ASSETS_DIR").map(PathBuf::from).unwrap_or(default.assets_directory),
             bind: std::env::var("BT_BIND").ok().and_then(|value| value.parse().ok()).unwrap_or(default.bind),
             port: std::env::var("BT_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(default.port),

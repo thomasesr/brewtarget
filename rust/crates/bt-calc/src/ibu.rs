@@ -553,3 +553,35 @@ fn m_ibu(parameters: &Parameters) -> Breakdown {
         non_iaa_ibus: 0.0,
     }
 }
+
+impl Formula {
+    /// The string this is stored as, from `IbuMethods::formulaStringMapping`.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Tinseth => "tinseth",
+            Self::Rager => "rager",
+            Self::Noonan => "noonan",
+            Self::Garetz => "garetz",
+            Self::Daniels => "daniels",
+            Self::MIbu => "mibu",
+            Self::Smph => "smph",
+        }
+    }
+
+    /// Every formula, in the order the C++ declares them.
+    pub const ALL: [Self; 7] =
+        [Self::Tinseth, Self::Rager, Self::Noonan, Self::Garetz, Self::Daniels, Self::MIbu, Self::Smph];
+}
+
+/// A string that names no bitterness formula.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("{0:?} is not a bitterness formula")]
+pub struct NoSuchFormula(String);
+
+impl std::str::FromStr for Formula {
+    type Err = NoSuchFormula;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL.into_iter().find(|formula| formula.as_str() == value).ok_or_else(|| NoSuchFormula(value.to_owned()))
+    }
+}

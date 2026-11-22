@@ -146,6 +146,11 @@ impl UnitSystem {
         unit_data().unit_system(name).map(|def| Self { def })
     }
 
+    /// Every unit system, in declaration order.
+    pub fn all() -> impl Iterator<Item = Self> {
+        unit_data().unit_systems.iter().map(|def| Self { def })
+    }
+
     pub fn name(&self) -> &'static str {
         &self.def.name
     }

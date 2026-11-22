@@ -16,6 +16,7 @@ pub mod editor;
 pub mod extras;
 pub mod format;
 pub mod inventory;
+pub mod options;
 pub mod recipe;
 pub mod recipes;
 pub mod steps;
@@ -316,6 +317,13 @@ pub fn Shell() -> Element {
                             to: Route::Transfer {},
                             class: if matches!(route, Route::Transfer {}) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
                             "Import / Export"
+                        }
+                    }
+                    li {
+                        Link {
+                            to: Route::Options {},
+                            class: if matches!(route, Route::Options {}) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
+                            "Options"
                         }
                     }
                 }
