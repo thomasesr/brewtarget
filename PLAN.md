@@ -7,7 +7,7 @@ Status: **draft, not yet started.** No code under `rust/`, `web/` or `tools/` ex
 Run Brewtarget as a server-rendered web application:
 
 - **No Qt6, no Boost** anywhere in the shipped artefact.
-- **Rust** backend, **Bun/TypeScript** frontend.
+- **Rust** throughout: an axum backend and a Dioxus interface. No Node, no npm.
 - **Same database schema** as the C++ application — an existing Brewtarget SQLite or
   PostgreSQL database opens unchanged, and MariaDB is added as a third backend.
 - Behaviour ported **as-is**: same brewing maths, same units, same import/export
@@ -44,7 +44,7 @@ Dependencies to eliminate and their Rust replacements:
 | --- | --- | --- |
 | Qt6 Core | containers, strings, `QVariant`, i18n | std, `serde`, `fluent`/`rust-i18n` |
 | Qt6 Sql | DB access, SQLite + Postgres drivers | `sqlx` (sqlite, postgres, mysql) |
-| Qt6 Widgets / Gui / Svg / PrintSupport | desktop UI | Bun + TypeScript web UI |
+| Qt6 Widgets / Gui / Svg / PrintSupport | desktop UI | Dioxus, rendered to a browser (and, later, to a desktop window) |
 | Qt6 Network | release check | `reqwest` (or drop in v1) |
 | Qt6 Multimedia | timer sounds | browser `Audio` |
 | Boost.JSON, Blaze/sourcemeta | BeerJSON parse + schema validation | `serde_json` + `jsonschema` |
@@ -57,19 +57,24 @@ Dependencies to eliminate and their Rust replacements:
 ## 3. Target architecture
 
 ```
-browser  ──HTTP/JSON──>  bt-server (Rust, axum)  ──sqlx──>  SQLite | PostgreSQL | MariaDB
-   ▲                            │
-   └── static assets ───────────┘   (bundled by Bun at build time, served by Rust)
+browser (bt-ui, wasm)  ──HTTP/JSON──>  bt-server (Rust, axum)  ──sqlx──>  SQLite | PostgreSQL | MariaDB
+         ▲                                     │
+         └── static assets ────────────────────┘   (built by `dx`, served by Rust)
 ```
 
 **One process, one container.** The Rust binary serves both the JSON API and the
-Bun-built static frontend. Bun is the frontend toolchain (bundler, type checker, test
-runner, dev server with proxy) — it is not a runtime dependency of the shipped image.
-This keeps the production image a single static Rust binary plus an assets directory.
+interface. `dx` is the frontend toolchain — bundler, dev server, hot reload — and is not
+a runtime dependency of the shipped image, which stays a single static Rust binary plus
+an assets directory.
 
-*Alternative considered:* a Bun SSR sidecar process. Rejected for v1 — it doubles the
-runtime surface for no benefit, since the screens are data-dense SPA views, not
-content pages needing SEO.
+Because the interface is Rust, it depends on `bt-model` and `bt-calc` directly. Nothing
+about the model or the arithmetic is described twice, and no client is generated from
+the OpenAPI document — that document is for anyone else's client, not ours.
+
+*Alternative considered:* server-rendered HTML. Rejected for v1 — the screens are
+data-dense editing views, not content pages needing SEO, and rendering client-side is
+what lets the same components become the desktop application. Dioxus can render either
+way later without the components changing.
 
 ### Rust workspace
 
@@ -94,9 +99,23 @@ with the layer doing the storing.
 
 ### Frontend
 
-Bun + TypeScript + **React** + TanStack Query/Table. The UI is dense tabular editing
-(ingredient tables, recipe trees, tab stacks) which maps directly onto TanStack
-Table, and React has the deepest ecosystem for that shape. Styling: Tailwind.
+**Dioxus**, in Rust, built with `dx`. The deciding reason is sharing: `bt-ui` depends on
+`bt-model` and `bt-calc`, so a recipe's figures move as it is edited, worked out by the
+same code the mirrored C++ tests cover. A TypeScript interface would have meant every
+row type and every formula described a second time, with nothing to keep the two honest.
+The same components build as a desktop application — which, with `bt-server` embedded
+and a SQLite file, is a replacement for the Qt application rather than an alternative to
+it.
+
+The costs are real and worth stating. Dioxus is young (0.7, with 0.8 in alpha) and its
+ecosystem is small: there is no equivalent of TanStack Table, and Brewtarget is very
+table-heavy, so tables are written by hand. The desktop build needs a system WebView
+(`webkit2gtk-4.1` on Linux), so "no Qt" becomes "a WebView for desktop"; browser builds
+need nothing. Mobile is the least mature target and is treated as Phase 9b, not a
+promise.
+
+Styling: plain CSS. A utility framework would mean a Node toolchain, which is the thing
+this avoids.
 
 Screens mirror the Qt `mainWindow.ui` structure: left tree (Recipes, Styles,
 Equipment, Mash/Boil/Fermentation Profiles, Fermentables, Hops, Miscs, Yeasts, Water)
@@ -143,8 +162,8 @@ Nothing in a later phase starts before the previous phase's acceptance criteria 
 
 ### Phase 0 — Scaffolding
 
-- `rust/` cargo workspace with the eight crates above, `web/` Bun project, `tools/`.
-- CI: `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`, `bun test`.
+- `rust/` cargo workspace with the crates above, `tools/`.
+- CI: `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`.
 - GPLv3 headers, `rustfmt.toml`, `clippy.toml`.
 
 **Done when:** empty workspace builds and CI is green.
@@ -286,7 +305,18 @@ both since fixed: keys and integer columns are 32-bit in this schema and were mo
 `i64`, and `SELECT *` on PostgreSQL returns the three mixed-case columns folded to lower
 case, so every read of `hop` or `equipment` failed to find them.
 
-### Phase 8 — Web UI
+### Phase 8 — The interface
+
+Written in **Dioxus**, in Rust, rather than in TypeScript. The deciding reason is not
+taste: the interface shares `bt-model` and `bt-calc` with the server, so a recipe's
+figures are worked out by the same code that the mirrored C++ tests cover, and no type
+is restated in a second language. The same components build as a desktop application —
+which, with `bt-server` embedded and a SQLite file, is what this fork set out to
+produce. There is no Node and no npm in the build.
+
+`bt-ui` holds the components; `bt-web` is the browser entry point and is four lines.
+`bt-ui` builds for `wasm32-unknown-unknown`, which is why it may not depend on
+`bt-store` or `bt-format`.
 
 Ported screen by screen, in this order (each independently useful):
 
@@ -304,16 +334,29 @@ Ported screen by screen, in this order (each independently useful):
 **Done when:** every tab and dialog in `ui/` has a web equivalent, or is listed as a
 deliberate v1 omission in this file.
 
+Step 1 is read-only so far: the ten catalogues, with the columns the Qt tables show, in
+the order they show them. Two columns are not shown yet because the API does not offer
+what they need — the "N° Recipes" count every Qt table ends with, and the "Inventory"
+column on the four ingredient tables, which needs the holdings joined to the rows.
+
+The release bundle is 1.16 MB of wasm, 405 KB gzipped, with the whole brewing model and
+every calculation in it.
+
+Deliberate: the browser renders client-side rather than the server rendering HTML.
+Dioxus can do either, the components are the same under both, and client-side keeps
+`bt-api` as the single contract — which is the boundary Stage 2's session layer wraps,
+and the same one the desktop build will use.
+
 ### Phase 9 — Packaging
 
 Multi-stage Dockerfile:
 
 ```
-FROM oven/bun          AS web     # bun install && bun run build  -> /web/dist
+FROM rust:slim         AS web     # dx build --package bt-web --release -> /assets
 FROM rust:slim         AS backend # cargo build --release --locked
 FROM gcr.io/distroless/cc-debian12
 COPY --from=backend /app/bt-server /bt-server
-COPY --from=web     /web/dist      /assets
+COPY --from=web     /assets        /assets
 VOLUME /data
 ENV BT_DB_URL=sqlite:///data/brewtarget.sqlite \
     BT_DATA_DIR=/data \
@@ -392,10 +435,13 @@ Appendix B, and move into this table when Stage 2 starts.
 
 ### Needed for Stage 1
 
-1. **Frontend framework** — React assumed above. Svelte or Solid would also fit.
-   *Gates Phase 8.*
+1. ~~**Frontend framework**~~ — decided: **Dioxus**, for the sharing and the desktop
+   build. See §3 Frontend for what that costs.
 2. **Translations** — port the 20 existing locales from `translations/*.ts`, or ship
-   English-only first? *Gates Phase 8.*
+   English-only first? English only so far. Related: the display names for enumerated
+   values (`EnumDisplayNameMapping` in `src/model/`) are not extracted yet, so the
+   catalogues tidy the stored strings instead. Both want the same extractor.
+   *Gates Phase 8.*
 3. **Legacy tree** — keep `src/` in the repo as reference indefinitely, or delete it
    once the port is green? Keeping it costs nothing and preserves the oracle.
 
@@ -410,9 +456,8 @@ content.
 ## 8. Immediate next steps
 
 - [x] **Phase 0 scaffolding** — `rust/` workspace (8 crates, all three sqlx backends
-  compiled in), `web/` Bun + React + TypeScript project, `.github/workflows/port.yml`.
-  `cargo fmt`/`clippy -D warnings`/`test`/`build` and `bun typecheck`/`test`/`build`
-  all green.
+  compiled in), `.github/workflows/port.yml`.
+  `cargo fmt`/`clippy -D warnings`/`test`/`build` all green.
 - [x] **`tools/extract-schema.py` → `schema/v23.json`** (Phase 1 step 1). Parses the
   `PRIMARY_TABLE<T>` declarations, resolves the `*_COMMON_FIELDS` vectors, expands the
   `TABLE_FOLDER_DEFN` macro, and emits 39 tables / 530 columns / 55 foreign keys at

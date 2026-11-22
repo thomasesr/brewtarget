@@ -9,6 +9,8 @@ members = [
    "crates/bt-format",
    "crates/bt-api",
    "crates/bt-server",
+   "crates/bt-ui",
+   "crates/bt-web",
 ]
 
 [workspace.package]
@@ -28,6 +30,7 @@ bt-schema  = { path = "crates/bt-schema"  }
 bt-store   = { path = "crates/bt-store"   }
 bt-format  = { path = "crates/bt-format"  }
 bt-api     = { path = "crates/bt-api"     }
+bt-ui      = { path = "crates/bt-ui"      }
 
 # Errors and logging
 thiserror     = "2"
@@ -49,6 +52,14 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "signal"
 axum  = "0.8"
 tower = "0.5"
 utoipa = { version = "6", features = ["axum_extras", "chrono"] }
+
+# Frontend.  Dioxus renders the same components to a browser, a desktop window and a
+# phone, which is why the UI is Rust rather than TypeScript: it shares `bt-model` and
+# `bt-calc` with the server instead of restating them.
+dioxus = { version = "0.7.10" }
+# `reqwest` is the one HTTP client that works both natively and in a browser, so the
+# API client is written once.
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
 tower-http = { version = "0.6", features = ["fs", "trace", "compression-gzip"] }
 
 # Domain support

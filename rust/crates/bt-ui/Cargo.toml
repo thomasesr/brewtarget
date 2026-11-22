@@ -1,0 +1,31 @@
+[package]
+name        = "bt-ui"
+description = "Brewtarget user interface, rendered by Dioxus"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+authors.workspace      = true
+
+[dependencies]
+# No `bt-store` and no `bt-format`: the interface never touches a database or parses a
+# file.  It asks `bt-api` to, over HTTP, which is also what keeps this crate able to
+# build for a browser.
+bt-measure.workspace = true
+bt-model.workspace = true
+bt-calc.workspace = true
+dioxus.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# The client is tested against the real server rather than a stand-in: the risk worth
+# covering is the two disagreeing, and a stand-in would agree with whatever it was told.
+bt-api.workspace = true
+bt-schema.workspace = true
+bt-store.workspace = true
+axum.workspace = true
+tokio.workspace = true

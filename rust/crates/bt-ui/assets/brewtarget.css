@@ -1,0 +1,151 @@
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * bt-ui/assets/brewtarget.css is part of Brewtarget, and is copyright the following authors 2026:
+ *   • The Brewtarget contributors
+ *
+ * Brewtarget is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.  See <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Plain CSS, deliberately.  A utility framework would mean a Node toolchain, and the point of
+ * writing this interface in Rust was to need one build tool rather than two.
+ */
+
+:root {
+   --bt-ink: #221c16;
+   --bt-paper: #fbf8f3;
+   --bt-rule: #ddd4c6;
+   --bt-wort: #a8641b;
+   --bt-wort-pale: #f3e6d3;
+   --bt-quiet: #6d6358;
+   --bt-alarm: #a32a1e;
+   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+   color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+   :root {
+      --bt-ink: #ece5db;
+      --bt-paper: #1b1714;
+      --bt-rule: #3a332c;
+      --bt-wort: #d79a4e;
+      --bt-wort-pale: #2e2419;
+      --bt-quiet: #9b9084;
+      --bt-alarm: #e2705f;
+   }
+}
+
+* { box-sizing: border-box; }
+
+body {
+   margin: 0;
+   background: var(--bt-paper);
+   color: var(--bt-ink);
+}
+
+.bt-header {
+   padding: 0.75rem 1.25rem;
+   border-bottom: 1px solid var(--bt-rule);
+}
+
+.bt-header h1 {
+   margin: 0;
+   font-size: 1.125rem;
+   font-weight: 600;
+   letter-spacing: 0.01em;
+}
+
+/* The catalogue list beside the table it chooses.  One column on a narrow screen. */
+.bt-catalogue {
+   display: grid;
+   grid-template-columns: minmax(12rem, 16rem) 1fr;
+   align-items: start;
+   min-height: calc(100vh - 3.25rem);
+}
+
+@media (max-width: 48rem) {
+   .bt-catalogue { grid-template-columns: 1fr; }
+   .bt-nav { border-right: none; border-bottom: 1px solid var(--bt-rule); }
+}
+
+.bt-nav {
+   border-right: 1px solid var(--bt-rule);
+   padding: 0.75rem 0;
+   height: 100%;
+}
+
+.bt-nav ul { list-style: none; margin: 0; padding: 0; }
+
+.bt-nav-item {
+   display: block;
+   width: 100%;
+   padding: 0.4rem 1.25rem;
+   border: 0;
+   background: none;
+   font: inherit;
+   color: inherit;
+   text-align: left;
+   cursor: pointer;
+}
+
+.bt-nav-item:hover { background: var(--bt-wort-pale); }
+
+.bt-nav-item.bt-chosen {
+   background: var(--bt-wort-pale);
+   /* A bar rather than only a colour, so the choice is visible without relying on hue. */
+   box-shadow: inset 3px 0 0 var(--bt-wort);
+   font-weight: 600;
+}
+
+.bt-pane { padding: 1rem 1.25rem 3rem; min-width: 0; }
+
+.bt-pane h2 {
+   margin: 0 0 0.75rem;
+   font-size: 1rem;
+   font-weight: 600;
+   color: var(--bt-quiet);
+   text-transform: uppercase;
+   letter-spacing: 0.06em;
+}
+
+/* A wide table scrolls inside its own pane rather than pushing the page sideways. */
+.bt-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-variant-numeric: tabular-nums;
+}
+
+.bt-table th,
+.bt-table td {
+   padding: 0.35rem 0.6rem;
+   border-bottom: 1px solid var(--bt-rule);
+   white-space: nowrap;
+}
+
+.bt-table th {
+   position: sticky;
+   top: 0;
+   background: var(--bt-paper);
+   font-size: 0.8125rem;
+   font-weight: 600;
+   color: var(--bt-quiet);
+   text-align: left;
+}
+
+.bt-table tbody tr:hover { background: var(--bt-wort-pale); }
+
+.bt-cell { text-align: left; }
+.bt-number { text-align: right; }
+
+.bt-empty,
+.bt-loading { color: var(--bt-quiet); font-style: italic; }
+
+.bt-error {
+   padding: 0.6rem 0.8rem;
+   border-left: 3px solid var(--bt-alarm);
+   background: color-mix(in srgb, var(--bt-alarm) 8%, transparent);
+   color: var(--bt-alarm);
+}

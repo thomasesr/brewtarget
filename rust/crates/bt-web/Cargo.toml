@@ -1,0 +1,13 @@
+[package]
+name        = "bt-web"
+description = "Brewtarget in a browser"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+authors.workspace      = true
+
+[dependencies]
+bt-ui.workspace = true
+dioxus = { workspace = true, features = ["web"] }

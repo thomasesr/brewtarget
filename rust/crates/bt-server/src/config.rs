@@ -34,7 +34,10 @@ impl Default for Config {
         Self {
             database_url: "sqlite://brewtarget.sqlite".to_owned(),
             data_directory: PathBuf::from("data"),
-            assets_directory: PathBuf::from("web/dist"),
+            // Where the Docker image puts the built interface.  Building it here instead
+            // leaves it under `rust/target/dx/bt-web/<profile>/web/public`, which is what
+            // `BT_ASSETS_DIR` is for.
+            assets_directory: PathBuf::from("assets"),
             // Loopback, deliberately.  Stage 1 has no authentication at all, so anything that can
             // reach the port has full control of the database -- see PLAN.md §3.3 and the
             // security posture in CLAUDE.md.  Binding anywhere else has to be asked for.

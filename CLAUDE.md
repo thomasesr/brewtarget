@@ -6,11 +6,13 @@ Guidance for Claude Code working in this repository.
 
 A fork of [Brewtarget](https://github.com/Brewtarget/brewtarget), a Qt6/C++ desktop
 brewing-recipe application. **The fork's objective is to port it to a
-server-rendered web application with no Qt and no Boost dependency**, keeping the
+web application with no Qt and no Boost dependency**, keeping the
 existing database schema byte-compatible so existing user databases open unchanged.
 
-Target stack: **Rust** backend (HTTP + JSON API + persistence) and **Bun/TypeScript**
-frontend, shipped as a Docker container.
+Target stack: **Rust** throughout — an axum backend (HTTP + JSON API + persistence) and
+a **Dioxus** interface, shipped as a Docker container. The interface renders to a
+browser, and the same components build as a desktop or mobile application. There is no
+Node and no npm anywhere in the build.
 
 **Current stage: Stage 1 — port the application.** Single-user, no authentication, no
 per-user isolation. Those are designed but deferred to Stage 2 (`PLAN.md` §5 and
@@ -24,7 +26,8 @@ phase order, and acceptance criteria. **Read `PLAN.md` before starting any port 
 | --- | --- | --- |
 | `src/`, `ui/`, `CMakeLists.txt`, `meson.build` | **Legacy / reference** | Read freely. Do **not** add features. Edit only to fix a porting-blocker or to extract canonical data. |
 | `rust/` | New backend | All new server code. |
-| `web/` | New frontend | All new UI code. |
+| `rust/crates/bt-ui/` | New frontend | All new UI code. Builds for `wasm32`, so it must not depend on `bt-store` or `bt-format`. |
+| `rust/crates/bt-web/` | Browser entry point | Four lines; `dx build --platform web`. |
 | `tools/` | Port tooling | Extractors/codegen that read `src/` and emit Rust/SQL/TS. |
 | `data/`, `schemas/`, `testData/` | **Shared, authoritative** | Used by both trees. Do not rewrite; both trees must agree with these. |
 
@@ -49,9 +52,27 @@ disagree, the C++ is right unless `PLAN.md` says otherwise.
 - **Behavioural oracle** — `src/unitTests/`. Every ported module must have a Rust
   test mirroring the corresponding C++ test, with the same expected values.
 
+## The interface
+
+`bt-ui` is Dioxus. Three things follow from that and are easy to get wrong:
+
+- **It builds for `wasm32-unknown-unknown`.** So it may depend on `bt-measure`,
+  `bt-model` and `bt-calc`, and must not depend on `bt-store` or `bt-format` — both pull
+  in `getrandom`, which refuses to build for that target. Reading files and touching the
+  database are the server's job; the interface asks over HTTP.
+- **The model and the arithmetic are shared, not restated.** A recipe's figures are
+  worked out by `bt-calc` in the browser as it is edited. Never write a second copy of a
+  formula or a struct for the interface to use.
+- **Styling is plain CSS** in `bt-ui/assets/`. A utility framework would mean a Node
+  toolchain, which is the thing this avoids.
+
+Desktop and mobile builds render the same components and are not yet written. Desktop
+needs a system WebView (`webkit2gtk-4.1` on Linux), which is **not** installed here, so
+those targets cannot be built or verified in this environment — only the web one can.
+
 ## Toolchain available in this environment
 
-`bun`, `node`, `cargo`, `rustc`, `g++`, `psql`, `python3`.
+`cargo`, `rustc`, `dx` (the Dioxus CLI), `g++`, `psql`, `python3`.
 **Missing: `cmake`, `meson`, Qt6, `sqlite3` CLI.** The legacy C++ app therefore
 **cannot be built or run here** — do not attempt it or propose it as a verification
 step. To inspect `.sqlite` files use `python3 -c "import sqlite3; ..."`.
@@ -67,14 +88,15 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all
 ```
 
-Frontend (once `web/` exists):
+Frontend:
 
 ```
-bun install
-bun run dev
-bun test
-bun run build
+dx serve  --package bt-web            # with hot reload, proxying to a running bt-server
+dx build  --package bt-web --release  # -> rust/target/dx/bt-web/release/web/public
+cargo test -p bt-ui
 ```
+
+Point the server at the result with `BT_ASSETS_DIR`.
 
 Full stack:
 
@@ -115,7 +137,7 @@ docker compose --profile mariadb  up   # external mariadb
    `public` or a fixed database name — even though Stage 1 always passes the default.
    Likewise, keep `bt-api` routes grouped so a session layer can wrap them later
    without touching handlers.
-10. **Licence.** Brewtarget is GPLv3. New files in `rust/` and `web/` carry a GPLv3
+10. **Licence.** Brewtarget is GPLv3. New files in `rust/` carry a GPLv3
    header and preserve the upstream copyright line when the file is a port of a
    specific C++ file; name that file in the header.
 

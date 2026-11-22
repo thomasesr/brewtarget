@@ -4,9 +4,9 @@ name: port
 
 on:
   push:
-    paths: ['rust/**', 'web/**', 'tools/**', 'schema/**', '.github/workflows/port.yml']
+    paths: ['rust/**', 'tools/**', 'schema/**', '.github/workflows/port.yml']
   pull_request:
-    paths: ['rust/**', 'web/**', 'tools/**', 'schema/**', '.github/workflows/port.yml']
+    paths: ['rust/**', 'tools/**', 'schema/**', '.github/workflows/port.yml']
 
 jobs:
   rust:

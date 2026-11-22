@@ -1,0 +1,9 @@
+[application]
+
+[web.app]
+title = "Brewtarget"
+
+[web.watcher]
+# `dx serve` proxies to the API during development, so the page and the API share an origin
+# exactly as they do once `bt-server` is serving both.
+index_on_404 = true
