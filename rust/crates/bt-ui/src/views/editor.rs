@@ -86,6 +86,7 @@ pub fn Editor(table: String, editing: Editing, on_done: EventHandler<Option<i32>
     let mut loaded = use_signal(Map::<String, Value>::new);
     let mut problem = use_signal(|| Option::<String>::None);
     let mut saving = use_signal(|| false);
+    let mut confirming = use_signal(|| false);
 
     let existing = use_resource({
         let client = client.clone();
@@ -115,6 +116,25 @@ pub fn Editor(table: String, editing: Editing, on_done: EventHandler<Option<i32>
         Some(Err(error)) => return rsx! { Failed { message: error.to_string() } },
         Some(Ok(_)) => {}
     }
+
+    let remove = {
+        // Each handler gets its own copy, since both outlive the body of this function.
+        let (client, table) = (client.clone(), table.clone());
+        move |_| {
+            let Editing::Existing(id) = editing else { return };
+            let (client, table) = (client.clone(), table.clone());
+            problem.set(None);
+            saving.set(true);
+            spawn(async move {
+                let deleted = client.delete_row(&table, id).await;
+                saving.set(false);
+                match deleted {
+                    Ok(()) => on_done.call(None),
+                    Err(error) => problem.set(Some(error.to_string())),
+                }
+            });
+        }
+    };
 
     let save = move |event: FormEvent| {
         // Without this the browser navigates away and the whole application reloads.
@@ -181,6 +201,29 @@ pub fn Editor(table: String, editing: Editing, on_done: EventHandler<Option<i32>
                     if saving() { "Saving…" } else { "Save" }
                 }
                 button { r#type: "button", class: "bt-secondary", onclick: move |_| on_done.call(None), "Cancel" }
+                if matches!(editing, Editing::Existing(_)) {
+                    // Asked for twice, because this is the one action here that cannot be
+                    // undone from this screen.
+                    if confirming() {
+                        span { class: "bt-confirm",
+                            "Delete this?"
+                            button { r#type: "button", class: "bt-danger", onclick: remove, "Yes, delete" }
+                            button {
+                                r#type: "button",
+                                class: "bt-secondary",
+                                onclick: move |_| confirming.set(false),
+                                "No"
+                            }
+                        }
+                    } else {
+                        button {
+                            r#type: "button",
+                            class: "bt-danger bt-push",
+                            onclick: move |_| confirming.set(true),
+                            "Delete"
+                        }
+                    }
+                }
             }
         }
     }

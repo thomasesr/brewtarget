@@ -30,16 +30,16 @@ fn a_whole_file_becomes_a_graph_of_records() {
     assert_eq!(document.len(), 17, "sixteen standalone records and one recipe");
 
     for (collection, expected) in [
-        ("fermentables", 3),
-        ("hops", 3),
-        ("miscs", 2),
-        ("cultures", 1),
-        ("waters", 2),
-        ("styles", 1),
-        ("equipments", 1),
-        ("mashes", 1),
-        ("boils", 1),
-        ("fermentations", 1),
+        ("fermentable", 3),
+        ("hop", 3),
+        ("misc", 2),
+        ("yeast", 1),
+        ("water", 2),
+        ("style", 1),
+        ("equipment", 1),
+        ("mash", 1),
+        ("boil", 1),
+        ("fermentation", 1),
     ] {
         let found = document.collections.iter().find(|(name, _)| name == collection).map(|(_, records)| records.len());
         assert_eq!(found, Some(expected), "{collection}");
@@ -91,9 +91,9 @@ fn a_recipe_owns_its_additions_instructions_and_brew_logs() {
 fn step_owners_carry_their_steps() {
     let document = read("recipes", "AmericanPaleAle.beer");
     for (collection, field, table, expected) in [
-        ("mashes", "mash_steps", "mash_step", 3),
-        ("boils", "boil_steps", "boil_step", 4),
-        ("fermentations", "fermentation_steps", "fermentation_step", 2),
+        ("mash", "mash_steps", "mash_step", 3),
+        ("boil", "boil_steps", "boil_step", 4),
+        ("fermentation", "fermentation_steps", "fermentation_step", 2),
     ] {
         let (_, records) = document.collections.iter().find(|(name, _)| name == collection).expect(collection);
         let steps = &records[0].children.iter().find(|child| child.path == field).expect(field).records;
@@ -102,7 +102,7 @@ fn step_owners_carry_their_steps() {
     }
 
     // And the steps deserialise with their values.
-    let (_, mashes) = document.collections.iter().find(|(name, _)| name == "mashes").expect("mashes");
+    let (_, mashes) = document.collections.iter().find(|(name, _)| name == "mash").expect("mashes");
     let first: MashStepRow =
         mashes[0].children[0].records[0].record.clone().into_row().expect("deserialise a mash step");
     assert!(first.step_temp_c.is_some(), "a mash step should have a temperature");

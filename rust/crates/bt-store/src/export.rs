@@ -24,19 +24,10 @@ use serde_json::{Map, Value};
 
 use crate::{Store, StoreError, dispatch, folders};
 
-/// The collections a file carries, and the table each comes from.
-const COLLECTIONS: [(&str, &str); 10] = [
-    ("fermentables", "fermentable"),
-    ("hops", "hop"),
-    ("miscs", "misc"),
-    ("cultures", "yeast"),
-    ("waters", "water"),
-    ("styles", "style"),
-    ("equipments", "equipment"),
-    ("mashes", "mash"),
-    ("boils", "boil"),
-    ("fermentations", "fermentation"),
-];
+/// The tables a file carries, in the order they have to be stored: a recipe refers to a style
+/// and a mash, so those come first.
+const COLLECTIONS: [&str; 10] =
+    ["fermentable", "hop", "misc", "yeast", "water", "style", "equipment", "mash", "boil", "fermentation"];
 
 /// What a record owns, and the field a file writes it under.
 const OWNED: [(&str, &str, &str, &str); 3] = [
@@ -179,7 +170,7 @@ pub async fn export(store: &Store) -> Result<Document, StoreError> {
     let mut document = Document::default();
     let mut folder_trees = BTreeMap::new();
 
-    for (collection, table) in COLLECTIONS {
+    for table in COLLECTIONS {
         let mut records = Vec::new();
         for columns in rows_of(store, table).await? {
             let key = key_in(&columns, "id").unwrap_or_default();
@@ -203,7 +194,7 @@ pub async fn export(store: &Store) -> Result<Document, StoreError> {
             records.push(Owned { record, children });
         }
         if !records.is_empty() {
-            document.collections.push((collection.to_owned(), records));
+            document.collections.push((table.to_owned(), records));
         }
     }
 

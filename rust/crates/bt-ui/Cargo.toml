@@ -34,4 +34,5 @@ bt-calc.workspace = true
 bt-schema.workspace = true
 bt-store.workspace = true
 axum.workspace = true
+reqwest.workspace = true
 tokio.workspace = true

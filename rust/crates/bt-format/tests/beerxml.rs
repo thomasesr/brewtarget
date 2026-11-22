@@ -57,7 +57,9 @@ fn the_shipped_library_reads() {
         ("STYLES", "style", 98),
         ("EQUIPMENTS", "equipment", 4),
     ] {
-        let (_, records) = document.collections.iter().find(|(name, _)| name == section).expect(section);
+        // Keyed by table: the document is format-neutral, so `<FERMENTABLES>` and `.beer`'s
+        // `fermentables` both arrive as `fermentable`.
+        let (_, records) = document.collections.iter().find(|(name, _)| name == table).expect(section);
         assert_eq!(records.len(), expected, "{section}");
         assert!(records.iter().all(|record| record.record.table == table));
     }
@@ -70,7 +72,7 @@ fn the_shipped_library_reads() {
 #[test]
 fn beerxml_enum_values_are_translated_to_the_ones_the_database_stores() {
     let document = read_beerxml(&default_content()).expect("read");
-    let (_, hops) = document.collections.iter().find(|(name, _)| name == "HOPS").expect("hops");
+    let (_, hops) = document.collections.iter().find(|(name, _)| name == "hop").expect("hops");
 
     let row: HopRow = hops[0].record.clone().into_row().expect("deserialise");
     assert_eq!(row.name.as_deref(), Some("Agnus"));
@@ -106,7 +108,7 @@ fn the_translation_goes_both_ways() {
 #[test]
 fn every_hop_in_the_library_deserialises() {
     let document = read_beerxml(&default_content()).expect("read");
-    let (_, hops) = document.collections.iter().find(|(name, _)| name == "HOPS").expect("hops");
+    let (_, hops) = document.collections.iter().find(|(name, _)| name == "hop").expect("hops");
     for hop in hops {
         let row: HopRow = hop.record.clone().into_row().expect("deserialise");
         assert!(row.name.is_some());

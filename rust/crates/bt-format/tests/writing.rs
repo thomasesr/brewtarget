@@ -120,3 +120,42 @@ fn xml_escaping_is_applied() {
     let parsed = xml::read(&text).expect("parse");
     assert_eq!(parsed["BEER_XML"]["NOTES"], "hops & \"malt\" <here>");
 }
+
+/// A library read in one format and written in another keeps everything.
+///
+/// This is the bug these tests did not have: every round trip was within one format, where the
+/// collection names happen to match whatever read them.  Across formats they do not -- a hop is
+/// in `hops` in a `.beer` file, `hop_varieties` in BeerJSON and `<HOPS>` in BeerXML -- and the
+/// writer silently wrote nothing for every collection it could not find under its own name.
+/// Exporting a library as BeerXML produced recipes and no ingredients at all.
+#[test]
+fn a_library_survives_being_written_in_a_different_format() {
+    let parsed =
+        jsonc::value_from_str(&read_text("data/DefaultContent003-Ingredients-Hops-Yeasts.json")).expect("parse");
+    let document = read_beerjson(&parsed).expect("read");
+
+    let counts = |document: &bt_format::document::Document| {
+        let mut counts: Vec<(String, usize)> =
+            document.collections.iter().map(|(table, records)| (table.clone(), records.len())).collect();
+        counts.sort();
+        counts
+    };
+    let before = counts(&document);
+    assert!(before.iter().any(|(table, count)| table == "hop" && *count > 0), "{before:?}");
+
+    // BeerJSON in, `.beer` out, and back again.
+    let as_dotbeer = read_dotbeer(&write_dotbeer(&document).expect("write .beer")).expect("read it back");
+    assert_eq!(counts(&as_dotbeer), before, "a .beer file lost records BeerJSON had");
+
+    // And BeerXML, which names its collections differently again.
+    let written = xml::write(&write_beerxml(&document).expect("write BeerXML"));
+    let as_beerxml = read_beerxml(&xml::read(&written).expect("parse")).expect("read it back");
+    for (table, count) in &before {
+        // BeerXML has no section for some of what the other two carry; what it does carry, it
+        // has to carry all of.
+        if let Some(found) = as_beerxml.records_of(table) {
+            assert_eq!(found.len(), *count, "BeerXML lost {table} records");
+        }
+    }
+    assert!(as_beerxml.records_of("hop").is_some_and(|hops| !hops.is_empty()), "BeerXML wrote no hops at all");
+}

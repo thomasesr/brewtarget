@@ -31,6 +31,8 @@ pub enum Route {
         Recipes {},
         #[route("/recipes/:id")]
         Recipe { id: i32 },
+        #[route("/transfer")]
+        Transfer {},
         #[route("/catalogue/:which")]
         Catalogue { which: views::Which },
         #[route("/catalogue/:which/new")]
@@ -62,6 +64,11 @@ pub fn Recipe(id: i32) -> Element {
 #[component]
 pub fn Catalogue(which: views::Which) -> Element {
     rsx! { views::catalogues::Catalogue { which } }
+}
+
+#[component]
+pub fn Transfer() -> Element {
+    rsx! { views::transfer::Transfer {} }
 }
 
 #[component]

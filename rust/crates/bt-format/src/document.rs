@@ -56,8 +56,13 @@ pub struct Owned {
 /// Everything read out of one file.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Document {
-    /// The standalone records, by the collection they came from: `hops`, `fermentables`, and the
+    /// The standalone records, by the **table** they belong to -- `hop`, `fermentable`, and the
     /// rest.  Anything in here may be referred to by local ID.
+    ///
+    /// Keyed by table rather than by what any one format calls the collection, because the three
+    /// formats disagree: a hop is in `hops` in a `.beer` file, `hop_varieties` in BeerJSON and
+    /// `<HOPS>` in BeerXML.  Keying by the format that happened to read it meant a document could
+    /// only be written back in the format it came from; anything else silently wrote nothing.
     pub collections: Vec<(String, Vec<Owned>)>,
     /// The recipes, which refer to the above and own their additions.
     pub recipes: Vec<Owned>,
@@ -67,6 +72,11 @@ impl Document {
     /// Every standalone record in the file, flattened.
     pub fn all_records(&self) -> impl Iterator<Item = &Owned> {
         self.collections.iter().flat_map(|(_, records)| records)
+    }
+
+    /// The records belonging to one table, if the document has any.
+    pub fn records_of(&self, table: &str) -> Option<&[Owned]> {
+        self.collections.iter().find(|(name, _)| name == table).map(|(_, records)| records.as_slice())
     }
 
     /// Look up a record by the local ID it declares.
@@ -217,7 +227,8 @@ pub fn read_beerxml(document: &Value) -> Result<Document, MappingError> {
         let Some(nodes) = records_in(root_node, wrapper, record_name) else { continue };
         let records: Result<Vec<Owned>, MappingError> =
             nodes.iter().map(|node| read_owned(format, definition, node)).collect();
-        result.collections.push((wrapper.to_owned(), records?));
+        let Some(table) = bt_model::tables::table_for_cpp_type(&definition.cpp_type) else { continue };
+        result.collections.push((table.to_owned(), records?));
     }
 
     if let Some(definition) = format.record_named("RECIPE")
@@ -264,7 +275,10 @@ pub fn read(
         };
         let records: Result<Vec<Owned>, MappingError> =
             nodes.iter().map(|node| read_owned(format, definition, node)).collect();
-        result.collections.push(((*collection).to_owned(), records?));
+        // Keyed by the table, not by what this format happens to call the collection, so that a
+        // document read from one format can be written in another.
+        let Some(table) = bt_model::tables::table_for_cpp_type(&definition.cpp_type) else { continue };
+        result.collections.push((table.to_owned(), records?));
     }
 
     if let Some(definition) = format.record_named(recipe_collection)
@@ -342,19 +356,23 @@ pub fn write(
     format_name: &str,
     document: &Document,
     root: &str,
+    collections: &[&str],
     recipe_collection: &str,
 ) -> Result<Value, MappingError> {
     let format =
         format_data().format(format_name).ok_or_else(|| MappingError::UnknownFormat(format_name.to_owned()))?;
 
     let mut root_node = serde_json::Map::new();
-    for (collection, records) in &document.collections {
+    // In the order this format lists them, which is the order its schema expects.
+    for collection in collections {
         let Some(definition) = format.record_named(collection) else { continue };
+        let Some(table) = bt_model::tables::table_for_cpp_type(&definition.cpp_type) else { continue };
+        let Some(records) = document.records_of(table) else { continue };
         if records.is_empty() {
             continue;
         }
         let written: Vec<Value> = records.iter().map(|record| write_owned(format, definition, record)).collect();
-        root_node.insert(collection.clone(), Value::Array(written));
+        root_node.insert((*collection).to_owned(), Value::Array(written));
     }
 
     if !document.recipes.is_empty()
@@ -372,12 +390,12 @@ pub fn write(
 
 /// Write a `.beer` document.
 pub fn write_dotbeer(document: &Document) -> Result<Value, MappingError> {
-    write("dotBeer", document, "DotBeer", "recipes")
+    write("dotBeer", document, "DotBeer", &DOTBEER_COLLECTIONS, "recipes")
 }
 
 /// Write a BeerJSON document.
 pub fn write_beerjson(document: &Document) -> Result<Value, MappingError> {
-    write("beerJson", document, "beerjson", "recipes")
+    write("beerJson", document, "beerjson", &BEERJSON_COLLECTIONS, "recipes")
 }
 
 /// Write a BeerXML document, ready for [`crate::xml::write`].
@@ -388,18 +406,17 @@ pub fn write_beerxml(document: &Document) -> Result<Value, MappingError> {
     let format = format_data().format("beerXml").ok_or_else(|| MappingError::UnknownFormat("beerXml".to_owned()))?;
     let mut root_node = serde_json::Map::new();
 
-    for (wrapper, records) in &document.collections {
-        let Some((_, record_name)) = BEERXML_SECTIONS.iter().find(|(section, _)| section == wrapper) else {
-            continue;
-        };
+    for (wrapper, record_name) in BEERXML_SECTIONS {
         let Some(definition) = format.record_named(record_name) else { continue };
+        let Some(table) = bt_model::tables::table_for_cpp_type(&definition.cpp_type) else { continue };
+        let Some(records) = document.records_of(table) else { continue };
         if records.is_empty() {
             continue;
         }
         let written: Vec<Value> = records.iter().map(|record| write_owned(format, definition, record)).collect();
         let mut section = serde_json::Map::new();
-        section.insert((*record_name).to_owned(), Value::Array(written));
-        root_node.insert(wrapper.clone(), Value::Object(section));
+        section.insert(record_name.to_owned(), Value::Array(written));
+        root_node.insert(wrapper.to_owned(), Value::Object(section));
     }
 
     if !document.recipes.is_empty()

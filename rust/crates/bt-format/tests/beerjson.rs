@@ -23,11 +23,11 @@ fn the_shipped_ingredient_library_reads() {
     let document = read_beerjson(&content("DefaultContent003-Ingredients-Hops-Yeasts.json")).expect("read");
     assert_eq!(document.len(), 578);
 
-    let hops = document.collections.iter().find(|(name, _)| name == "hop_varieties").expect("hops");
+    let hops = document.collections.iter().find(|(name, _)| name == "hop").expect("hops");
     assert_eq!(hops.1.len(), 282);
     assert!(hops.1.iter().all(|hop| hop.record.table == "hop"));
 
-    let cultures = document.collections.iter().find(|(name, _)| name == "cultures").expect("cultures");
+    let cultures = document.collections.iter().find(|(name, _)| name == "yeast").expect("cultures");
     assert_eq!(cultures.1.len(), 296);
     assert!(cultures.1.iter().all(|culture| culture.record.table == "yeast"));
 }
@@ -35,7 +35,7 @@ fn the_shipped_ingredient_library_reads() {
 #[test]
 fn a_hop_from_the_library_has_its_values() {
     let document = read_beerjson(&content("DefaultContent003-Ingredients-Hops-Yeasts.json")).expect("read");
-    let (_, hops) = document.collections.iter().find(|(name, _)| name == "hop_varieties").expect("hops");
+    let (_, hops) = document.collections.iter().find(|(name, _)| name == "hop").expect("hops");
 
     let row: HopRow = hops[0].record.clone().into_row().expect("deserialise");
     assert_eq!(row.name.as_deref(), Some("Adeena"));
@@ -51,7 +51,7 @@ fn a_hop_from_the_library_has_its_values() {
 #[test]
 fn every_culture_and_style_deserialises() {
     let ingredients = read_beerjson(&content("DefaultContent003-Ingredients-Hops-Yeasts.json")).expect("read");
-    let (_, cultures) = ingredients.collections.iter().find(|(name, _)| name == "cultures").expect("cultures");
+    let (_, cultures) = ingredients.collections.iter().find(|(name, _)| name == "yeast").expect("cultures");
     for culture in cultures {
         let row: YeastRow = culture.record.clone().into_row().expect("deserialise a culture");
         assert!(row.name.is_some(), "every culture has a name");
@@ -60,7 +60,7 @@ fn every_culture_and_style_deserialises() {
     }
 
     let styles = read_beerjson(&content("DefaultContent002-BJCP_2021_Styles.json")).expect("read");
-    let (_, styles) = styles.collections.iter().find(|(name, _)| name == "styles").expect("styles");
+    let (_, styles) = styles.collections.iter().find(|(name, _)| name == "style").expect("styles");
     assert_eq!(styles.len(), 110);
     for style in styles {
         let row: StyleRow = style.record.clone().into_row().expect("deserialise a style");
@@ -71,7 +71,7 @@ fn every_culture_and_style_deserialises() {
 #[test]
 fn the_second_yeast_file_reads_too() {
     let document = read_beerjson(&content("DefaultContent004-MoreYeasts.json")).expect("read");
-    let (_, cultures) = document.collections.iter().find(|(name, _)| name == "cultures").expect("cultures");
+    let (_, cultures) = document.collections.iter().find(|(name, _)| name == "yeast").expect("cultures");
     assert_eq!(cultures.len(), 275);
     let forms: Vec<YeastForm> =
         cultures.iter().filter_map(|c| c.record.clone().into_row::<YeastRow>().ok()?.form().ok()?).collect();

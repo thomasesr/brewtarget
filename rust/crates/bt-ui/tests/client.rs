@@ -334,10 +334,7 @@ fn every_table_has_an_editor_covering_its_columns() {
 
         // The key is the database's to assign and the foreign keys name other rows, so neither
         // is offered; everything else is.
-        assert!(
-            !editable.iter().any(|field| field.column == "id"),
-            "{table} offers its primary key for editing"
-        );
+        assert!(!editable.iter().any(|field| field.column == "id"), "{table} offers its primary key for editing");
     }
 }
 
@@ -346,10 +343,8 @@ fn every_table_has_an_editor_covering_its_columns() {
 fn an_enumerated_column_offers_the_values_it_accepts() {
     use bt_model::tables::editable_columns;
 
-    let ftype = editable_columns("fermentable")
-        .iter()
-        .find(|field| field.column == "ftype")
-        .expect("fermentables have a type");
+    let ftype =
+        editable_columns("fermentable").iter().find(|field| field.column == "ftype").expect("fermentables have a type");
     assert_eq!(ftype.label, "Type");
     assert!(ftype.choices.contains(&("dry extract", "Dry Extract")), "{:?}", ftype.choices);
 
@@ -362,4 +357,57 @@ fn an_enumerated_column_offers_the_values_it_accepts() {
     // A column that is not enumerated offers nothing, rather than an empty dropdown.
     let alpha = editable_columns("hop").iter().find(|field| field.column == "alpha_pct").expect("hops have alpha");
     assert!(alpha.choices.is_empty());
+}
+
+/// Deleting through the untyped path the editor uses.
+#[tokio::test]
+async fn a_row_can_be_deleted_through_the_untyped_path() {
+    use serde_json::{Map, json};
+
+    let client = serving("untyped-delete").await;
+    let mut row = Map::new();
+    row.insert("name".to_owned(), json!("Doomed"));
+    let stored = client.post_row("hop", &row).await.expect("store it");
+    let id = stored["id"].as_i64().expect("a key") as i32;
+
+    client.delete_row("hop", id).await.expect("delete it");
+
+    // Soft, because `hop` records it: the row stays so that recipes using it still resolve,
+    // and the catalogue stops listing it.
+    let after = client.row("hop", id).await.expect("still readable");
+    assert_eq!(after["deleted"], true);
+}
+
+/// A whole library goes in through the same route the interface uses, and comes back out.
+#[tokio::test]
+async fn a_file_can_be_imported_and_the_library_exported() {
+    let client = serving("transfer").await;
+
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../data/DefaultContent006-MashAndWaterProfiles.beer");
+    let document = std::fs::read_to_string(&path).expect("the shipped profiles");
+    let summary = client.import(&document).await.expect("import it");
+    assert_eq!(summary.format, "dot_beer", "the format is worked out from the contents");
+    assert!(summary.rows_written > 0, "nothing was stored");
+
+    // What went in is there.
+    assert!(!client.mashes().await.expect("the mashes").is_empty());
+
+    // The export address is one a browser can be pointed at, and the server answers it.
+    for format in ["dot_beer", "beer_json", "beer_xml"] {
+        let url = client.export_url(format);
+        assert!(url.ends_with(&format!("/api/export?format={format}")), "{url}");
+        let response = reqwest::get(&url).await.expect("fetch the export");
+        assert!(response.status().is_success(), "{format}: {}", response.status());
+        assert!(!response.text().await.expect("read it").is_empty(), "{format} exported nothing");
+    }
+}
+
+/// A file that is not any of the three formats is refused, and says so.
+#[tokio::test]
+async fn something_that_is_not_a_brewing_file_is_refused() {
+    let client = serving("transfer-nonsense").await;
+    let failure = client.import("this is not a recipe").await.expect_err("not a brewing file");
+    assert!(!failure.is_not_found(), "{failure:?}");
+    assert!(failure.to_string().contains("not a"), "{failure}");
 }

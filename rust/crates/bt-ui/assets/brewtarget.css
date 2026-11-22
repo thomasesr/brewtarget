@@ -347,3 +347,45 @@ body {
    clip-path: inset(50%);
    white-space: nowrap;
 }
+
+.bt-danger {
+   border: 1px solid var(--bt-alarm);
+   border-radius: 4px;
+   padding: 0.35rem 0.9rem;
+   background: none;
+   color: var(--bt-alarm);
+   font: inherit;
+   cursor: pointer;
+}
+
+.bt-danger:hover { background: color-mix(in srgb, var(--bt-alarm) 10%, transparent); }
+
+/* Pushed to the far end, away from Save, so it is not reached for by accident. */
+.bt-push { margin-left: auto; }
+
+.bt-confirm {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+   margin-left: auto;
+   color: var(--bt-alarm);
+}
+
+/* Import/Export is not a catalogue, so it sits apart from them. */
+.bt-nav-apart {
+   margin-top: 0.75rem;
+   padding-top: 0.75rem;
+   border-top: 1px solid var(--bt-rule);
+}
+
+.bt-transfer { margin-bottom: 2rem; max-width: 40rem; }
+
+.bt-transfer h3 { margin: 0 0 0.25rem; font-size: 0.95rem; }
+
+.bt-note { margin: 0 0 0.75rem; color: var(--bt-quiet); font-size: 0.875rem; }
+
+.bt-done {
+   padding: 0.6rem 0.8rem;
+   border-left: 3px solid var(--bt-wort);
+   background: var(--bt-wort-pale);
+}

@@ -16,6 +16,7 @@ pub mod format;
 pub mod recipe;
 pub mod recipes;
 pub mod table;
+pub mod transfer;
 
 use std::fmt;
 use std::str::FromStr;
@@ -177,6 +178,13 @@ pub fn Shell() -> Element {
                                 class: if open_catalogue == Some(which) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
                                 "{which.title()}"
                             }
+                        }
+                    }
+                    li { class: "bt-nav-apart",
+                        Link {
+                            to: Route::Transfer {},
+                            class: if matches!(route, Route::Transfer {}) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
+                            "Import / Export"
                         }
                     }
                 }

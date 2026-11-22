@@ -12,7 +12,7 @@ fn probe2() {
                         println!("   {c}: {} -> table {}", rs.len(), rs[0].record.table);
                     }
                 }
-                if let Some((_, rs)) = doc.collections.iter().find(|(c, _)| c == "hop_varieties") {
+                if let Some((_, rs)) = doc.collections.iter().find(|(c, _)| c == "hop") {
                     let mut cols: Vec<_> = rs[0].record.columns.iter().map(|(k, v)| format!("{k}={v}")).collect();
                     cols.sort();
                     println!("   first hop: {}", cols.join(", "));

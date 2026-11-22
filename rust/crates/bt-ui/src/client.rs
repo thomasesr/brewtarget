@@ -81,6 +81,15 @@ fn default_base() -> String {
     }
 }
 
+/// What an import did.  Mirrors `bt_api::transfer::ImportSummary`.
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct Imported {
+    /// Which of the three formats the file turned out to be.
+    pub format: String,
+    pub rows_written: usize,
+    pub recipe_ids: Vec<i32>,
+}
+
 /// A connection to a Brewtarget server.
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -246,6 +255,52 @@ impl Client {
         row: &serde_json::Map<String, Value>,
     ) -> Result<serde_json::Map<String, Value>, ApiError> {
         self.send(reqwest::Method::POST, &format!("/{table}"), row).await
+    }
+
+    /// Delete a row of any table.
+    ///
+    /// Soft where the table records it: the row stays so that anything referring to it still
+    /// resolves, and stops being listed.  That is the server's decision, not this one's.
+    pub async fn delete_row(&self, table: &str, id: i32) -> Result<(), ApiError> {
+        self.check_base()?;
+        let url = self.url(&format!("/{table}/{id}"));
+        let response = self.http.delete(&url).send().await.map_err(|error| unreachable(&url, error))?;
+        let status = response.status();
+        if status.is_success() {
+            return Ok(());
+        }
+        Err(ApiError::Refused {
+            status: status.as_u16(),
+            kind: "unknown".to_owned(),
+            message: format!("the server answered {status}"),
+        })
+    }
+
+    /// Read a file and store everything in it.
+    ///
+    /// The whole file goes in the body: that is what a browser already has after reading one,
+    /// and wrapping it in a form buys nothing.  The server works out which of the three formats
+    /// it is from the contents rather than the name.
+    pub async fn import(&self, document: &str) -> Result<Imported, ApiError> {
+        self.check_base()?;
+        let url = self.url("/import");
+        let response = self
+            .http
+            .post(&url)
+            .header("content-type", "text/plain")
+            .body(document.to_owned())
+            .send()
+            .await
+            .map_err(|error| unreachable(&url, error))?;
+        Self::read(response).await
+    }
+
+    /// Where the whole database can be downloaded from, in one of the three formats.
+    ///
+    /// An address rather than a request: the browser does the downloading, so it gets a real
+    /// file with a name rather than something held in memory.
+    pub fn export_url(&self, format: &str) -> String {
+        format!("{}?format={format}", self.url("/export"))
     }
 
     /// A recipe with its additions and the ingredients they name.
