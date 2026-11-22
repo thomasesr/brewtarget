@@ -244,3 +244,16 @@ body {
    color: var(--bt-ink);
    font-weight: 600;
 }
+
+/* The title is a link home, but should not look like one. */
+.bt-title {
+   color: inherit;
+   text-decoration: none;
+}
+
+/* The nav entries are links now rather than buttons, so they need the same reset. */
+.bt-nav-item {
+   display: block;
+   text-decoration: none;
+   color: inherit;
+}

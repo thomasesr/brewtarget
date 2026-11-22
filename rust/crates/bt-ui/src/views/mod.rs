@@ -16,12 +16,16 @@ pub mod recipe;
 pub mod recipes;
 pub mod table;
 
+use std::fmt;
+use std::str::FromStr;
+
 use dioxus::prelude::*;
+
+use crate::route::Route;
 
 /// Which catalogue is being looked at.
 ///
-/// Replaces the left-hand tree in `ui/mainWindow.ui`, which is a tree because Qt gave it one for
-/// free; these are a flat list of ten things, so they are shown as one.
+/// Part of the address, so it has to survive being written down and read back.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Which {
     Fermentables,
@@ -39,7 +43,7 @@ pub enum Which {
 impl Which {
     /// Every catalogue, in the order the Qt tabs have them: the four ingredients a recipe is
     /// made of, then the things it is made with.
-    const ALL: [Self; 10] = [
+    pub const ALL: [Self; 10] = [
         Self::Fermentables,
         Self::Hops,
         Self::Miscs,
@@ -52,7 +56,7 @@ impl Which {
         Self::Fermentations,
     ];
 
-    fn title(self) -> &'static str {
+    pub fn title(self) -> &'static str {
         match self {
             Self::Fermentables => "Fermentables",
             Self::Hops => "Hops",
@@ -66,89 +70,85 @@ impl Which {
             Self::Fermentations => "Fermentation Profiles",
         }
     }
-}
 
-/// What is being looked at.
-///
-/// Held in one place so that the day this gains real URLs, a route maps onto one of these and
-/// nothing else has to change.  Replaces the left-hand tree in `ui/mainWindow.ui` and the stack
-/// of tabs beside it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Screen {
-    /// Every recipe there is.
-    Recipes,
-    /// One recipe, by its key.
-    Recipe(i32),
-    /// One of the catalogues.
-    Catalogue(Which),
-}
-
-impl Screen {
-    fn title(self) -> String {
+    /// What this catalogue is called in an address.  Lower case and stable: these end up in
+    /// links people keep, so they are not to be renamed lightly.
+    pub fn slug(self) -> &'static str {
         match self {
-            Self::Recipes | Self::Recipe(_) => "Recipes".to_owned(),
-            Self::Catalogue(which) => which.title().to_owned(),
+            Self::Fermentables => "fermentables",
+            Self::Hops => "hops",
+            Self::Miscs => "miscs",
+            Self::Yeasts => "yeasts",
+            Self::Waters => "water",
+            Self::Styles => "styles",
+            Self::Equipments => "equipment",
+            Self::Mashes => "mashes",
+            Self::Boils => "boils",
+            Self::Fermentations => "fermentations",
         }
     }
+}
 
-    /// Whether the nav entry for this screen should read as the current one.  A recipe being
-    /// looked at still belongs to Recipes.
-    fn is(self, entry: Self) -> bool {
-        matches!((self, entry), (Self::Recipe(_) | Self::Recipes, Self::Recipes)) || self == entry
+impl fmt::Display for Which {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.slug())
     }
 }
 
-/// Where the interface can be asked to go.
-pub type Navigation = Signal<Screen>;
+/// An address naming a catalogue that does not exist.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("there is no catalogue called {0:?}")]
+pub struct NoSuchCatalogue(String);
 
-/// The main screen: a list of what there is, and whatever is chosen from it.
+impl FromStr for Which {
+    type Err = NoSuchCatalogue;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::ALL.into_iter().find(|which| which.slug() == value).ok_or_else(|| NoSuchCatalogue(value.to_owned()))
+    }
+}
+
+/// The frame every screen sits in: the title, the list of sections, and whichever screen the
+/// address names.
 #[component]
-pub fn Catalogue() -> Element {
-    let mut screen = use_context_provider(|| Signal::new(Screen::Recipes));
-    let chosen = screen();
+pub fn Shell() -> Element {
+    let route = use_route::<Route>();
 
-    let entries: Vec<Screen> = std::iter::once(Screen::Recipes).chain(Which::ALL.map(Screen::Catalogue)).collect();
+    // A recipe being looked at still belongs under Recipes.
+    let on_recipes = matches!(route, Route::Home {} | Route::Recipes {} | Route::Recipe { .. });
+    let open_catalogue = match route {
+        Route::Catalogue { which } => Some(which),
+        _ => None,
+    };
 
     rsx! {
+        header { class: "bt-header",
+            h1 {
+                Link { to: Route::Recipes {}, class: "bt-title", "Brewtarget" }
+            }
+        }
         div { class: "bt-catalogue",
             nav { class: "bt-nav", aria_label: "Sections",
                 ul {
-                    for entry in entries {
-                        li { key: "{entry:?}",
-                            button {
-                                class: if chosen.is(entry) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
-                                aria_current: if chosen.is(entry) { "page" },
-                                onclick: move |_| screen.set(entry),
-                                "{entry.title()}"
+                    li {
+                        Link {
+                            to: Route::Recipes {},
+                            class: if on_recipes { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
+                            "Recipes"
+                        }
+                    }
+                    for which in Which::ALL {
+                        li { key: "{which}",
+                            Link {
+                                to: Route::Catalogue { which },
+                                class: if open_catalogue == Some(which) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
+                                "{which.title()}"
                             }
                         }
                     }
                 }
             }
-            section { class: "bt-pane", aria_label: "{chosen.title()}",
-                match chosen {
-                    Screen::Recipes => rsx! {
-                        h2 { "Recipes" }
-                        recipes::Recipes {}
-                    },
-                    Screen::Recipe(id) => rsx! { recipe::RecipeView { id } },
-                    Screen::Catalogue(which) => rsx! {
-                        h2 { "{which.title()}" }
-                        match which {
-                            Which::Fermentables => rsx! { catalogues::Fermentables {} },
-                            Which::Hops => rsx! { catalogues::Hops {} },
-                            Which::Miscs => rsx! { catalogues::Miscs {} },
-                            Which::Yeasts => rsx! { catalogues::Yeasts {} },
-                            Which::Waters => rsx! { catalogues::Waters {} },
-                            Which::Styles => rsx! { catalogues::Styles {} },
-                            Which::Equipments => rsx! { catalogues::Equipments {} },
-                            Which::Mashes => rsx! { catalogues::Mashes {} },
-                            Which::Boils => rsx! { catalogues::Boils {} },
-                            Which::Fermentations => rsx! { catalogues::Fermentations {} },
-                        }
-                    },
-                }
-            }
+            section { class: "bt-pane", Outlet::<Route> {} }
         }
     }
 }

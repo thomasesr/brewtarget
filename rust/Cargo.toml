@@ -56,7 +56,7 @@ utoipa = { version = "6", features = ["axum_extras", "chrono"] }
 # Frontend.  Dioxus renders the same components to a browser, a desktop window and a
 # phone, which is why the UI is Rust rather than TypeScript: it shares `bt-model` and
 # `bt-calc` with the server instead of restating them.
-dioxus = { version = "0.7.10" }
+dioxus = { version = "0.7.10", features = ["router"] }
 # `reqwest` is the one HTTP client that works both natively and in a browser, so the
 # API client is written once.
 reqwest = { version = "0.12", default-features = false, features = ["json"] }

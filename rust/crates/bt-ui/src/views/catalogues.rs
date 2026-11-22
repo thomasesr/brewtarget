@@ -133,3 +133,24 @@ catalogue!(Fermentations, fermentations, FermentationRow, [
     Column::text("Description") => |row| text(row.description.as_deref()),
     Column::text("Notes") => |row| text(row.notes.as_deref()),
 ]);
+
+/// Whichever catalogue the address names.
+#[component]
+pub fn Catalogue(which: super::Which) -> Element {
+    use super::Which;
+    rsx! {
+        h2 { "{which.title()}" }
+        match which {
+            Which::Fermentables => rsx! { Fermentables {} },
+            Which::Hops => rsx! { Hops {} },
+            Which::Miscs => rsx! { Miscs {} },
+            Which::Yeasts => rsx! { Yeasts {} },
+            Which::Waters => rsx! { Waters {} },
+            Which::Styles => rsx! { Styles {} },
+            Which::Equipments => rsx! { Equipments {} },
+            Which::Mashes => rsx! { Mashes {} },
+            Which::Boils => rsx! { Boils {} },
+            Which::Fermentations => rsx! { Fermentations {} },
+        }
+    }
+}

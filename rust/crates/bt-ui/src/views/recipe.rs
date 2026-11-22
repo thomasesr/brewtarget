@@ -23,8 +23,8 @@ use dioxus::prelude::*;
 use super::additions;
 use super::format::{NOTHING, number, percent, text};
 use super::table::{Failed, Loading};
-use super::{Navigation, Screen};
 use crate::Client;
+use crate::route::Route;
 
 /// Which ingredient tab is open.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,7 +66,6 @@ pub fn RecipeView(id: i32) -> Element {
 /// A recipe that has arrived.
 #[component]
 fn Loaded(recipe: Recipe) -> Element {
-    let mut screen = use_context::<Navigation>();
     let mut tab = use_signal(|| Tab::Fermentables);
     let open = tab();
 
@@ -76,7 +75,7 @@ fn Loaded(recipe: Recipe) -> Element {
 
     rsx! {
         header { class: "bt-recipe-header",
-            button { class: "bt-link bt-back", onclick: move |_| screen.set(Screen::Recipes), "← Recipes" }
+            Link { to: Route::Recipes {}, class: "bt-link bt-back", "← Recipes" }
             h2 { "{text(recipe.row.name.as_deref())}" }
             dl { class: "bt-facts",
                 Fact { label: "Brewer", value: text(recipe.row.brewer.as_deref()) }

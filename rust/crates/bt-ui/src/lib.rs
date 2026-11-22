@@ -20,9 +20,11 @@
 //! language.
 
 pub mod client;
+pub mod route;
 pub mod views;
 
 pub use client::{ApiError, Client};
+pub use route::Route;
 
 use dioxus::prelude::*;
 
@@ -35,10 +37,9 @@ pub fn App() -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("/assets/brewtarget.css") }
         main { class: "bt-app",
-            header { class: "bt-header",
-                h1 { "Brewtarget" }
-            }
-            views::Catalogue {}
+            // Every screen has its own address, so the Back button, a reload and a link
+            // someone was sent all work.  See `route`.
+            Router::<Route> {}
         }
     }
 }

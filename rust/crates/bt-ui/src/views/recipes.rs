@@ -20,8 +20,8 @@ use dioxus::prelude::*;
 
 use super::format::{NOTHING, text};
 use super::table::{Failed, Loading};
-use super::{Navigation, Screen};
 use crate::Client;
+use crate::route::Route;
 
 /// A batch size with its unit, or a dash.
 fn batch_size(litres: Option<f64>) -> String {
@@ -34,7 +34,6 @@ fn batch_size(litres: Option<f64>) -> String {
 #[component]
 pub fn Recipes() -> Element {
     let client = use_context::<Client>();
-    let mut screen = use_context::<Navigation>();
     let recipes = use_resource({
         let client = client.clone();
         move || {
@@ -82,13 +81,12 @@ pub fn Recipes() -> Element {
                     }
                     tbody {
                         for row in rows {
-                            tr { key: "{row.id}", class: "bt-clickable",
-                                // The whole row opens the recipe, but the name is the button:
-                                // a row that is only clickable cannot be reached by keyboard.
+                            tr { key: "{row.id}",
+                                // The name is a link rather than the whole row being clickable:
+                                // a row that only responds to a click cannot be reached by
+                                // keyboard, and a link can be opened in a new tab.
                                 td { class: "bt-cell",
-                                    button {
-                                        class: "bt-link",
-                                        onclick: move |_| screen.set(Screen::Recipe(row.id)),
+                                    Link { to: Route::Recipe { id: row.id }, class: "bt-link",
                                         "{text(row.name.as_deref())}"
                                     }
                                 }

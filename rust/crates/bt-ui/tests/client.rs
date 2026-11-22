@@ -258,3 +258,26 @@ async fn a_failed_request_names_the_address_it_tried() {
     let failure = Client::new("http://127.0.0.1:1").hops().await.expect_err("nothing is listening");
     assert!(failure.to_string().contains("http://127.0.0.1:1/api/hop"), "{failure}");
 }
+
+/// Catalogue names appear in addresses people keep, so they have to survive being written down
+/// and read back, and nothing may share a name with anything else.
+#[test]
+fn every_catalogue_has_an_address_that_round_trips() {
+    use std::collections::BTreeSet;
+    use std::str::FromStr;
+
+    use bt_ui::views::Which;
+
+    let mut seen = BTreeSet::new();
+    for which in Which::ALL {
+        let slug = which.slug();
+        assert!(seen.insert(slug), "two catalogues are both called {slug:?}");
+        assert_eq!(Which::from_str(slug).expect("reads back"), which);
+        assert_eq!(slug, slug.to_lowercase(), "{slug:?} should be lower case");
+        assert!(
+            slug.chars().all(|character| character.is_ascii_lowercase()),
+            "{slug:?} should be plain letters, so that it needs no escaping"
+        );
+    }
+    assert!(Which::from_str("sausages").is_err(), "an address naming nothing is an error");
+}
