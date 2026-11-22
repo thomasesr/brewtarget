@@ -117,3 +117,236 @@ fn a_temperature_outside_water_is_refused() {
     assert!(altitude.temperature_makes_sense(90.0));
     assert!(!altitude.temperature_makes_sense(95.0));
 }
+
+// ---------------------------------------------------------------------------------------
+// The scheduler, against the figures `MashAutoAdjusterTests.cpp` works out in its comments.
+// ---------------------------------------------------------------------------------------
+
+use bt_calc::mash_adjust::{
+    DEFAULT_THICKNESS_L_KG, Inputs, Options, Severity, SpargeMethod, Step, calculate, set_sparge,
+};
+use bt_model::enums::MashStepType;
+
+/// `makeInputs` in the C++ tests.
+fn inputs() -> Inputs {
+    Inputs {
+        mashing: mashing(),
+        grain_absorption_l_kg: 1.0,
+        strike_water_allowance_l: 1.0,
+        target_total_water_l: 30.0,
+        mash_vessel_volume_l: Some(40.0),
+        target_collected_wort_l: None,
+    }
+}
+
+/// `thickness(x)` in the C++ tests.
+fn thickness(l_kg: f64) -> Options {
+    Options { thickness_l_kg: Some(l_kg), ..Options::default() }
+}
+
+fn saccharification() -> Step {
+    Step::new("Saccharification", MashStepType::Infusion, 66.0)
+}
+
+fn warnings(outcome: &bt_calc::mash_adjust::Outcome) -> usize {
+    outcome.problems.iter().filter(|problem| problem.severity == Severity::Warning).count()
+}
+
+/// `testStrikeWater`, whose comment reads:
+/// "Strike water = 3 L/kg × 5 kg + 1 L allowance = 16 L; Heat needed = 184 kcal;
+///  Water temp = 66 + 184 / 16 = 77.5 °C"
+#[test]
+fn the_strike_water_is_the_thickness_asked_for_at_the_temperature_that_reaches_the_rest() {
+    let mut steps = vec![saccharification()];
+    set_sparge(&mut steps, SpargeMethod::Batch, 1, 76.0);
+    assert_eq!(steps.len(), 2, "a mash step and a batch sparge");
+
+    let outcome = calculate(&inputs(), &steps, &thickness(3.0));
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert_eq!(warnings(&outcome), 0, "{:?}", outcome.problems);
+
+    let strike = &outcome.steps[0];
+    assert!(close(strike.amount_l, 16.0), "{}", strike.amount_l);
+    assert!(close(strike.infuse_temp_c.expect("a strike temperature"), 77.5));
+    // The thickness it worked out to is recorded on the step.
+    assert!(close(strike.liquor_to_grist_ratio_l_kg.expect("a ratio"), 3.0));
+}
+
+/// Same test: the step's own ratio is used when no thickness was asked for, then the thickness
+/// the existing strike water implies, and only then the default.
+#[test]
+fn the_thickness_falls_back_through_what_the_mash_already_says() {
+    let mut steps = vec![saccharification()];
+    set_sparge(&mut steps, SpargeMethod::Batch, 1, 76.0);
+
+    steps[0].liquor_to_grist_ratio_l_kg = Some(2.5);
+    let outcome = calculate(&inputs(), &steps, &Options::default());
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert!(close(outcome.steps[0].amount_l, 13.5), "{}", outcome.steps[0].amount_l);
+
+    steps[0].liquor_to_grist_ratio_l_kg = None;
+    steps[0].amount_l = 11.0; // 2 L/kg × 5 kg + 1 L
+    let outcome = calculate(&inputs(), &steps, &Options::default());
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert!(close(outcome.steps[0].amount_l, 11.0), "{}", outcome.steps[0].amount_l);
+
+    steps[0].amount_l = 0.0;
+    let outcome = calculate(&inputs(), &steps, &Options::default());
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert!(close(outcome.steps[0].amount_l, DEFAULT_THICKNESS_L_KG * 5.0 + 1.0), "{}", outcome.steps[0].amount_l);
+}
+
+/// Same test: "with the tun pre-heated to 66 °C, it doesn't need any heat, so
+/// water temp = 66 + 92 / 16 = 71.75 °C".
+#[test]
+fn a_preheated_tun_needs_cooler_strike_water() {
+    let mut steps = vec![saccharification()];
+    set_sparge(&mut steps, SpargeMethod::Batch, 1, 76.0);
+
+    let mut inputs = inputs();
+    inputs.mashing.tun_temp_c = 66.0;
+    let outcome = calculate(&inputs, &steps, &thickness(3.0));
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert!(close(outcome.steps[0].infuse_temp_c.expect("a strike temperature"), 71.75));
+}
+
+/// `testFixedValues`: "Amount fixed at 20 L (so thickness ignored): water temp =
+/// 66 + 184 / 20 = 75.2 °C", and "Sparge gets the rest of the water".
+#[test]
+fn a_pinned_amount_decides_the_temperature_and_the_sparge_takes_what_is_left() {
+    let mut steps = vec![saccharification()];
+    steps[0].amount_l = 20.0;
+    steps[0].amount_fixed = true;
+    set_sparge(&mut steps, SpargeMethod::Fly, 1, 76.0);
+
+    let outcome = calculate(&inputs(), &steps, &thickness(3.0));
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert_eq!(outcome.steps[0].amount_l, 20.0, "a pinned amount is not moved");
+    assert!(close(outcome.steps[0].infuse_temp_c.expect("a strike temperature"), 75.2));
+    // 30 L in total, 20 of them in the mash.
+    assert!(close(outcome.steps[1].amount_l, 10.0), "{}", outcome.steps[1].amount_l);
+}
+
+/// Same test: "Temp fixed at 74 °C: amount = 184 / (74 - 66) = 23 L".
+#[test]
+fn a_pinned_temperature_decides_the_amount() {
+    let mut steps = vec![saccharification()];
+    steps[0].infuse_temp_c = Some(74.0);
+    steps[0].infuse_temp_fixed = true;
+    set_sparge(&mut steps, SpargeMethod::Fly, 1, 76.0);
+
+    let outcome = calculate(&inputs(), &steps, &thickness(3.0));
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert!(close(outcome.steps[0].amount_l, 23.0), "{}", outcome.steps[0].amount_l);
+}
+
+/// `testNoSparge`: with no sparge, the mash water has to be all the water.
+///
+/// "Single infusion: all 30 L of water goes in as strike water, regardless of thickness.
+///  Water temp = 66 + 184 / 30"
+#[test]
+fn with_no_sparge_a_single_infusion_carries_all_the_water() {
+    let steps = vec![saccharification()];
+    let outcome = calculate(&inputs(), &steps, &thickness(3.0));
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert!(close(outcome.steps[0].amount_l, 30.0), "{}", outcome.steps[0].amount_l);
+    assert!(close(outcome.steps[0].infuse_temp_c.expect("a temperature"), 66.0 + 184.0 / 30.0));
+}
+
+/// Same test: "the strike water comes from the thickness (16 L) and the second infusion makes
+/// up the rest (14 L).  Its temperature = 66 + 20 × (66 - 50) / 14".
+#[test]
+fn with_no_sparge_the_last_unpinned_infusion_makes_up_the_rest() {
+    let steps = vec![Step::new("Protein rest", MashStepType::Infusion, 50.0), saccharification()];
+    let outcome = calculate(&inputs(), &steps, &thickness(3.0));
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    assert!(close(outcome.steps[0].amount_l, 16.0), "{}", outcome.steps[0].amount_l);
+    assert!(close(outcome.steps[1].amount_l, 14.0), "{}", outcome.steps[1].amount_l);
+    // The tun, grain and 16 L of water are all at 50 °C: heat capacity 2 + 16 + 2 = 20.
+    assert!(close(outcome.steps[1].infuse_temp_c.expect("a temperature"), 66.0 + 20.0 * 16.0 / 14.0));
+}
+
+/// A mash with no grain in it cannot be worked out, and says so rather than dividing by it.
+#[test]
+fn a_mash_with_nothing_in_it_is_refused() {
+    let mut without_grain = inputs();
+    without_grain.mashing.grain_kg = 0.0;
+    let outcome = calculate(&without_grain, &[saccharification()], &Options::default());
+    assert!(!outcome.ok());
+    assert!(outcome.problems[0].message.contains("no grains"), "{:?}", outcome.problems);
+
+    let outcome = calculate(&inputs(), &[], &Options::default());
+    assert!(!outcome.ok());
+    assert!(outcome.problems[0].message.contains("no mash steps"), "{:?}", outcome.problems);
+}
+
+/// A step asking for more heat than boiling water can give is refused, with advice.
+///
+/// Which advice depends on what the brewer can actually change.  Thinning the mash only helps
+/// where the strike water amount is the adjuster's to choose -- with no sparge it is not,
+/// because that step has to make the water up to the total.
+#[test]
+fn a_step_that_cannot_be_reached_says_why_and_what_to_try() {
+    // With a sparge, the strike water is the adjuster's to choose, so a thinner mash would help.
+    let mut steps = vec![Step::new("Too hot", MashStepType::Infusion, 95.0)];
+    set_sparge(&mut steps, SpargeMethod::Fly, 1, 76.0);
+    let outcome = calculate(&inputs(), &steps, &thickness(1.0));
+    assert!(!outcome.ok(), "{:?}", outcome.problems);
+    let message = &outcome.problems[0].message;
+    assert!(message.contains("above boiling point"), "{message}");
+    assert!(message.contains("thinner mash"), "{message}");
+
+    // Without one, that step has to carry all the water, so the advice is the other one.
+    let outcome = calculate(&inputs(), &[Step::new("Too hot", MashStepType::Infusion, 95.0)], &thickness(1.0));
+    assert!(!outcome.ok(), "{:?}", outcome.problems);
+    let message = &outcome.problems[0].message;
+    assert!(message.contains("above boiling point"), "{message}");
+    assert!(message.contains("lower step temperature"), "{message}");
+}
+
+/// `set_sparge` leaves a mash alone when it already has the sparge asked for.
+#[test]
+fn setting_the_sparge_twice_changes_nothing_the_second_time() {
+    let mut steps = vec![saccharification()];
+    set_sparge(&mut steps, SpargeMethod::Batch, 2, 76.0);
+    assert_eq!(steps.len(), 3, "one mash step and two batches");
+    assert_eq!(steps[1].name, "Batch Sparge 1");
+    assert_eq!(steps[2].name, "Batch Sparge 2");
+
+    let before = steps.clone();
+    set_sparge(&mut steps, SpargeMethod::Batch, 2, 76.0);
+    assert_eq!(steps, before, "asking for what is already there should change nothing");
+
+    // Changing method replaces them.
+    set_sparge(&mut steps, SpargeMethod::Fly, 1, 76.0);
+    assert_eq!(steps.len(), 2);
+    assert_eq!(steps[1].step_type, MashStepType::FlySparge);
+
+    set_sparge(&mut steps, SpargeMethod::None, 0, 76.0);
+    assert_eq!(steps.len(), 1, "no sparge leaves only the mash");
+}
+
+/// A decoction takes part of the mash, boils it and returns it; it cannot cool the mash.
+#[test]
+fn a_decoction_raises_the_mash_and_cannot_lower_it() {
+    let steps = vec![
+        Step::new("Protein rest", MashStepType::Infusion, 50.0),
+        Step::new("Saccharification", MashStepType::Decoction, 66.0),
+    ];
+    let outcome = calculate(&inputs(), &steps, &thickness(3.0));
+    assert!(outcome.ok(), "{:?}", outcome.problems);
+    // Some of the mash, but not all of it.
+    let taken = outcome.steps[1].amount_l;
+    let mash_volume_l = outcome.steps[0].mash_volume_l.expect("a mash volume");
+    assert!(taken > 0.0 && taken < mash_volume_l, "{taken} of {mash_volume_l}");
+    // A decoction adds no water, so the mash is no bigger afterwards.
+    assert!(close(outcome.steps[1].mash_volume_l.expect("a mash volume"), mash_volume_l));
+
+    let cooling = vec![
+        Step::new("Saccharification", MashStepType::Infusion, 66.0),
+        Step::new("Cool down", MashStepType::Decoction, 50.0),
+    ];
+    let outcome = calculate(&inputs(), &cooling, &thickness(3.0));
+    assert!(!outcome.ok());
+    assert!(outcome.problems[0].message.contains("cannot lower"), "{:?}", outcome.problems);
+}

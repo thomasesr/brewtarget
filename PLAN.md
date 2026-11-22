@@ -257,15 +257,18 @@ Partly. The gravity, colour, bitterness and fermentability work is done and mirr
 working out strike water, infusion volumes and temperatures, sparge and decoction, and
 its test file is another 1,554 across 17 cases. This phase was marked done in error.
 
-`bt-calc/src/mash_adjust.rs` has the heat model it is all built on -- what is in the tun,
-what temperature water has to be, how much of it, and whether a temperature is one water
-can be at -- checked against the figures `testStrikeWater` works out in its comments.
-That is enough for the strike water tool and for the first step of an infusion mash.
+`bt-calc/src/mash_adjust.rs` now has it: the heat model, infusions, decoctions, both
+sparge methods, pinned amounts and temperatures, the balancing step that makes the water
+add up when there is no sparge, mash volume limits, and the problems reported with them.
+Checked against the figures the C++ tests work out in their own comments -- 77.5 °C of
+strike water, 71.75 °C into a pre-heated tun, 23 L at a pinned 74 °C, 14 L to balance a
+two-step mash.
 
-Still to do, and each of them a branch of `calculate`: sparge (both methods), decoction,
-pinned amounts and temperatures, the balancing step that makes the water add up to the
-target, mash volume limits, and the warnings and errors that go with them. Scheduling, in
-other words -- the thermodynamics is done.
+Not ported from that file: `apply`, `affectsAdjustment` and the undo plumbing, which are
+about writing the result back into a Qt model and are not arithmetic. Of the 17 C++ test
+cases, this mirrors the ones that pin down the numbers; `testUndo`,
+`testStepChangesAutoAdjust` and `testAffectsAdjustment` test that plumbing rather than
+the schedule.
 
 `WaterAutoAdjusterTests.cpp` was listed here and does not exist in the C++ at all. The
 water chemistry in `src/model/Water.cpp` is still unported -- which is what the Water
