@@ -229,7 +229,7 @@ three backends.
 - Mirror `RecipeCalcTests.cpp`, `MashFermentabilityTests.cpp`,
   `MashAutoAdjusterTests.cpp`, `WaterAutoAdjusterTests.cpp`.
 
-**Done when:** all mirrored calculation tests pass at the C++ tolerances.
+**Done when:** all mirrored calculation tests pass at the C++ tolerances. ✅
 
 ### Phase 6 — `bt-format`
 
@@ -241,7 +241,7 @@ three backends.
 - Mirror `SerializationTests.cpp`; add round-trip property tests
   (import → export → import is a fixpoint) over `testData/`.
 
-**Done when:** every file in `testData/` imports, and re-export round-trips.
+**Done when:** every file in `testData/` imports, and re-export round-trips. ✅
 
 Done for all three formats, reading and writing, with the record definitions extracted
 rather than transcribed — adding BeerJSON needed nothing but the list of collection
@@ -266,6 +266,25 @@ for the BeerJSON ingredient library, 547 including 29 recipes for the BeerXML on
 
 **Done when:** every Phase 4–6 capability is reachable over HTTP, with an integration
 test suite driving the API against all three backends.
+
+Done. 86 paths: five routes for each of the 39 tables, generated from the schema so a
+table cannot be added without them; the recipe aggregate, its calculated figures and its
+brew day sheet; inventory totals; import and export; and the OpenAPI description of all
+of it. `bt-server` reads its settings from the environment, migrates on boot, seeds the
+shipped content into an empty database and serves the built frontend with a single-page
+fallback, bound to loopback unless told otherwise.
+
+`bt-api/tests/backends.rs` drives the whole API against PostgreSQL and MariaDB, each run
+inside a namespace it makes and drops; it is skipped unless `BT_TEST_POSTGRES_URL` or
+`BT_TEST_MYSQL_URL` is set. **The PostgreSQL arm has been run and passes. The MariaDB arm
+has not: no MariaDB server was available.** Running it is the one piece of Phase 7 still
+outstanding, and it is where the next backend difference would surface — `TINYINT`
+booleans and backtick-quoted identifiers are the two the code already allows for.
+
+Two things SQLite was too forgiving to catch turned up when the PostgreSQL arm first ran,
+both since fixed: keys and integer columns are 32-bit in this schema and were modelled as
+`i64`, and `SELECT *` on PostgreSQL returns the three mixed-case columns folded to lower
+case, so every read of `hop` or `equipment` failed to find them.
 
 ### Phase 8 — Web UI
 
