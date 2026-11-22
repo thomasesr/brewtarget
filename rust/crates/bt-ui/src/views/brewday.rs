@@ -23,8 +23,29 @@ use bt_calc::recipe::Calculated;
 
 #[component]
 pub fn Brewday(recipe: Recipe, figures: Calculated) -> Element {
-    let instructions: Vec<_> =
-        recipe.instructions.iter().filter(|step| !step.deleted.unwrap_or(false)).cloned().collect();
+    // The instructions the recipe carries, or the ones it implies.  The Qt application writes
+    // these from the recipe on demand; a recipe read from a file usually has none of its own.
+    let stored: Vec<(i32, String, String)> = recipe
+        .instructions
+        .iter()
+        .filter(|step| !step.deleted.unwrap_or(false))
+        .map(|step| {
+            (
+                step.step_number.unwrap_or_default(),
+                step.name.clone().unwrap_or_default(),
+                step.directions.clone().unwrap_or_default(),
+            )
+        })
+        .collect();
+    let generated = stored.is_empty();
+    let instructions: Vec<(i32, String, String)> = if generated {
+        bt_calc::instructions::generate(&recipe)
+            .into_iter()
+            .map(|step| (step.step_number, step.name, step.directions))
+            .collect()
+    } else {
+        stored
+    };
 
     rsx! {
         dl { class: "bt-facts",
@@ -38,17 +59,19 @@ pub fn Brewday(recipe: Recipe, figures: Calculated) -> Element {
 
         h3 { class: "bt-group", "Steps" }
         if instructions.is_empty() {
-            p { class: "bt-empty",
-                "This recipe has no instructions.  The Qt application writes them from the recipe
-                 on demand; that is not ported yet, so a recipe only has instructions if the file
-                 it came from carried them."
-            }
+            p { class: "bt-empty", "There is nothing to do: this recipe has no mash, boil or fermentation." }
         } else {
+            if generated {
+                p { class: "bt-note",
+                    "Written from the recipe.  The recipe carries no instructions of its own, so
+                     these follow from its mash, boil and additions."
+                }
+            }
             ol { class: "bt-steps",
-                for step in instructions.iter() {
-                    li { key: "{step.id}",
-                        strong { "{text(step.name.as_deref())}" }
-                        p { class: "bt-prose", "{text(step.directions.as_deref())}" }
+                for (number, name, directions) in instructions.iter() {
+                    li { key: "{number}",
+                        strong { "{text(Some(name.as_str()))}" }
+                        p { class: "bt-prose", "{text(Some(directions.as_str()))}" }
                     }
                 }
             }

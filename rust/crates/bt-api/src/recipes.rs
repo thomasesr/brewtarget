@@ -97,7 +97,10 @@ async fn brewday(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResul
     let recipe = load(&state, id).await?;
     let preferences = state.preferences();
 
-    let steps = recipe
+    // The instructions the recipe carries, where it carries any; otherwise the ones the
+    // recipe implies.  `Recipe::generateInstructions` is how the Qt application fills a brew
+    // day sheet, and a recipe imported from a file usually has none until it is asked for.
+    let stored: Vec<BrewdayStep> = recipe
         .instructions
         .iter()
         .filter(|instruction| !instruction.deleted.unwrap_or(false))
@@ -108,6 +111,19 @@ async fn brewday(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResul
             stage: None,
         })
         .collect();
+    let steps = if stored.is_empty() {
+        bt_calc::instructions::generate(&recipe)
+            .into_iter()
+            .map(|instruction| BrewdayStep {
+                number: instruction.step_number,
+                name: instruction.name,
+                directions: instruction.directions,
+                stage: None,
+            })
+            .collect()
+    } else {
+        stored
+    };
 
     Ok(Json(Brewday {
         recipe_id: recipe.id(),

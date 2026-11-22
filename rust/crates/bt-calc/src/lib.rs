@@ -26,6 +26,7 @@ pub mod algorithms;
 pub mod color;
 pub mod data;
 pub mod ibu;
+pub mod instructions;
 pub mod mash;
 pub mod mash_adjust;
 pub mod recipe;

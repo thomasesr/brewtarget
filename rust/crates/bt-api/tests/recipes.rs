@@ -146,9 +146,18 @@ async fn there_is_a_sheet_to_brew_from() {
     // BeerXML has no boil: it has a BOIL_TIME, and reading one builds a boil whose middle step
     // lasts that long.
     assert_eq!(sheet["boil_time_mins"], 60.0);
-    // The file carried no INSTRUCTIONS, and the sheet shows the instructions the recipe holds
-    // rather than inventing any.
-    assert_eq!(sheet["steps"].as_array().expect("a list of steps").len(), 0);
+    // The file carried no INSTRUCTIONS, so the sheet is written from the recipe -- which is
+    // what the Qt application does when asked for a brew day sheet.
+    let steps = sheet["steps"].as_array().expect("a list of steps");
+    assert!(!steps.is_empty(), "a recipe with a boil has something to do");
+    for (index, step) in steps.iter().enumerate() {
+        assert_eq!(step["number"], index as i64 + 1, "numbered from one, in order");
+        assert!(step["name"].as_str().is_some_and(|name| !name.trim().is_empty()), "{step}");
+        assert!(step["directions"].as_str().is_some_and(|text| !text.trim().is_empty()), "{step}");
+    }
+    // The hop goes into the boil, and the sheet says so.
+    let directions: Vec<&str> = steps.iter().filter_map(|step| step["directions"].as_str()).collect();
+    assert!(directions.iter().any(|text| text.contains("Fuggle")), "{directions:?}");
 }
 
 #[tokio::test]
