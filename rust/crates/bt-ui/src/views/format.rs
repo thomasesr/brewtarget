@@ -61,6 +61,14 @@ pub fn label<T>(value: Result<Option<T>, UnknownValue>, display_name: impl Fn(&T
     }
 }
 
+/// What a property is called when it is shown.
+///
+/// For the things the interface shows that no column holds -- the inventory a catalogue ends
+/// with is worked out from the stock purchases, not stored.
+pub fn property_label(property: &'static str) -> &'static str {
+    bt_model::tables::label_for_property(property).unwrap_or(property)
+}
+
 /// What a column is called when it is shown.
 ///
 /// Falls back to the column name, which is at least true, for the few columns the C++ never

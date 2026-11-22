@@ -650,3 +650,67 @@ fn every_tool_has_an_address_that_round_trips() {
     }
     assert!(Tool::from_str("hammer").is_err());
 }
+
+/// The "N° Recipes" column counts distinct recipes, not additions.
+///
+/// A recipe that uses the same hop three times still uses it once, which is what
+/// `Recipe::numRecipesUsing` counts and why its C++ gathers the recipe ids into a set.
+#[tokio::test]
+async fn usage_counts_recipes_not_additions() {
+    use bt_model::tables::HopRow;
+    use serde_json::{Map, json};
+
+    let client = serving("usage").await;
+    let hop = client
+        .create_hop(&HopRow { name: Some("Counted".to_owned()), alpha_pct: Some(5.0), ..HopRow::default() })
+        .await
+        .expect("a hop");
+
+    // Nothing uses it yet.
+    assert_eq!(client.usage("hop").await.expect("counts").get(&hop.id), None);
+
+    let mut recipe = Map::new();
+    recipe.insert("name".to_owned(), json!("Counted Recipe"));
+    let stored = client.post_row("recipe", &recipe).await.expect("a recipe");
+    let recipe_id = stored["id"].as_i64().expect("a key") as i32;
+
+    // Three additions of the same hop to the same recipe.
+    for at_time in [60.0, 15.0, 5.0] {
+        let mut addition = Map::new();
+        addition.insert("recipe_id".to_owned(), json!(recipe_id));
+        addition.insert("hop_id".to_owned(), json!(hop.id));
+        addition.insert("quantity".to_owned(), json!(0.02));
+        addition.insert("unit".to_owned(), json!("kilograms"));
+        addition.insert("add_at_time_mins".to_owned(), json!(at_time));
+        client.post_row("hop_in_recipe", &addition).await.expect("an addition");
+    }
+
+    let counts = client.usage("hop").await.expect("counts");
+    assert_eq!(counts.get(&hop.id), Some(&1), "three additions, one recipe");
+
+    // Deleting the recipe stops it counting.
+    client.delete_row("recipe", recipe_id).await.expect("delete it");
+    assert_eq!(client.usage("hop").await.expect("counts").get(&hop.id), None);
+}
+
+/// Usage is counted for a whole table at once, and a table that is not one says so.
+#[tokio::test]
+async fn usage_is_refused_for_something_that_is_not_a_table() {
+    let client = serving("usage-unknown").await;
+    let failure = client.usage("sausages").await.expect_err("not a table");
+    assert!(failure.to_string().contains("not a table"), "{failure}");
+}
+
+/// The shipped library has recipes using its ingredients, so the counts are not all zero.
+#[tokio::test]
+async fn the_shipped_ingredients_are_used_by_the_shipped_recipes() {
+    let client = serving_with_content("usage-library").await;
+
+    let hops = client.usage("hop").await.expect("hop counts");
+    assert!(!hops.is_empty(), "the shipped recipes use hops");
+    assert!(hops.values().all(|used| *used > 0), "a count of zero should be absent, not stored");
+
+    // Styles are named by a recipe rather than added to it, and are counted the same way.
+    let styles = client.usage("style").await.expect("style counts");
+    assert!(!styles.is_empty(), "the shipped recipes name styles");
+}

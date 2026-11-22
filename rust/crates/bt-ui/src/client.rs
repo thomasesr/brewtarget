@@ -283,6 +283,17 @@ impl Client {
         self.get(&format!("/{table}")).await
     }
 
+    /// How many recipes use each row of a table, keyed by that row's id.
+    pub async fn usage(&self, table: &str) -> Result<std::collections::BTreeMap<i32, i64>, ApiError> {
+        let found: std::collections::BTreeMap<String, i64> = self.get(&format!("/usage/{table}")).await?;
+        Ok(found.into_iter().filter_map(|(id, used)| Some((id.parse().ok()?, used))).collect())
+    }
+
+    /// What is on hand of every ingredient of one kind.
+    pub async fn holdings(&self, kind: &str) -> Result<Vec<serde_json::Map<String, Value>>, ApiError> {
+        self.get(&format!("/inventory/{kind}")).await
+    }
+
     /// Read a file and store everything in it.
     ///
     /// The whole file goes in the body: that is what a browser already has after reading one,

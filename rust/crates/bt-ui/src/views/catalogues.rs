@@ -36,12 +36,44 @@ macro_rules! catalogue {
         #[component]
         pub fn $component(which: super::Which) -> Element {
             let client = use_context::<Client>();
-            let rows = use_resource(move || {
+            let rows = use_resource({
                 let client = client.clone();
-                async move { client.$fetch().await }
+                move || {
+                    let client = client.clone();
+                    async move { client.$fetch().await }
+                }
             });
 
-            let columns: Vec<Column> = vec![$(Column::of($table, $column, $align)),+];
+            // The two columns every Qt catalogue ends with.  Fetched alongside the rows rather
+            // than joined into them, because each is worked out a different way: one counts
+            // recipes, the other sums what is left of each lot.
+            let usage = use_resource({
+                let client = client.clone();
+                move || {
+                    let client = client.clone();
+                    async move { client.usage($table).await.unwrap_or_default() }
+                }
+            });
+            let holdings = use_resource({
+                let client = client.clone();
+                move || {
+                    let client = client.clone();
+                    async move {
+                        match super::Which::stocked($table) {
+                            Some(kind) => client.holdings(kind).await.unwrap_or_default(),
+                            None => Vec::new(),
+                        }
+                    }
+                }
+            });
+            let used = usage().unwrap_or_default();
+            let on_hand = super::by_ingredient(&holdings().unwrap_or_default());
+
+            let mut columns: Vec<Column> = vec![$(Column::of($table, $column, $align)),+];
+            if super::Which::stocked($table).is_some() {
+                columns.push(Column::number(super::format::property_label("Ingredient::totalInventory")));
+            }
+            columns.push(Column::number("N° Recipes"));
             match &*rows.read_unchecked() {
                 None => rsx! { Loading {} },
                 Some(Err(error)) => rsx! { Failed { message: error.to_string() } },
@@ -51,7 +83,14 @@ macro_rules! catalogue {
                         // A row marked deleted is kept so that recipes referring to it still
                         // resolve, and is hidden from the catalogue -- as `BtTableModel` hides it.
                         .filter(|row: &&$row| !row.deleted.unwrap_or(false))
-                        .map(|row| (row.id, vec![$({ let cell: fn(&$row) -> String = $cell; cell(row) }),+]))
+                        .map(|row| {
+                            let mut cells = vec![$({ let cell: fn(&$row) -> String = $cell; cell(row) }),+];
+                            if super::Which::stocked($table).is_some() {
+                                cells.push(super::format::number(on_hand.get(&row.id).copied(), 3));
+                            }
+                            cells.push(used.get(&row.id).copied().unwrap_or(0).to_string());
+                            (row.id, cells)
+                        })
                         .collect();
                     rsx! { CatalogueTable { which, columns, rows } }
                 }

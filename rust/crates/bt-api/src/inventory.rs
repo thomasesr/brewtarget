@@ -27,6 +27,32 @@ pub fn routes() -> Router<AppState> {
     Router::new().route("/", get(everything)).route("/{kind}", get(of_kind)).route("/{kind}/{id}", get(one))
 }
 
+/// How many recipes use each row of a table.
+pub fn usage_routes() -> Router<AppState> {
+    Router::new().route("/{table}", get(usage))
+}
+
+#[utoipa::path(
+    get, path = "/api/usage/{table}", tag = "usage",
+    params(("table" = String, Path, description = "The table to count usage of")),
+    responses((status = 200, description = "How many recipes use each row, by its key")),
+)]
+/// How many recipes use each row of a table, keyed by that row's id.
+///
+/// The "N° Recipes" column every catalogue ends with.  Counted for the whole table at once,
+/// because a catalogue of 826 hops asked one at a time would be 826 requests.
+async fn usage(
+    State(state): State<AppState>,
+    Path(table): Path<String>,
+) -> ApiResult<Json<std::collections::BTreeMap<String, i64>>> {
+    if bt_model::tables::columns_of(&table).is_none() {
+        return Err(ApiError::BadRequest(format!("{table:?} is not a table in this schema")));
+    }
+    let counts = bt_store::usage::recipe_counts(state.store(), &table).await?;
+    // JSON object keys are strings, so the ids are rendered as such.
+    Ok(Json(counts.into_iter().map(|(id, used)| (id.to_string(), used)).collect()))
+}
+
 /// Which holdings to list.
 #[derive(Debug, Deserialize, utoipa::IntoParams)]
 pub struct Filter {
@@ -101,5 +127,5 @@ async fn one(State(state): State<AppState>, Path((kind, id)): Path<(String, i32)
 
 /// The inventory routes, for the API description.
 #[derive(utoipa::OpenApi)]
-#[openapi(paths(everything, of_kind, one), components(schemas(Holding, Lot, Kind)))]
+#[openapi(paths(everything, of_kind, one, usage), components(schemas(Holding, Lot, Kind)))]
 pub struct InventoryApi;

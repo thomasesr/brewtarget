@@ -599,6 +599,22 @@ def generate_tables(schema: dict, labels: dict, enums: dict, editors: dict) -> s
             out.append(f'        ("{table["name"]}", "{column}") => "{escaped}",')
     out += ["        _ => return None,", "    };", "    Some(found)", "}", ""]
 
+    # Some things the interface shows are properties no column holds -- a computed inventory,
+    # a folder path -- so their names cannot be looked up by column.
+    out += [
+        "/// What a property is called when it is shown to a person.",
+        "///",
+        "/// For the things the interface shows that no column holds: `Ingredient::totalInventory`",
+        "/// is worked out from the stock purchases and is shown as \"Total Inventory\".  Keyed by",
+        "/// property rather than by column for exactly that reason.",
+        "pub fn label_for_property(property: &str) -> Option<&'static str> {",
+        "    let found = match property {",
+    ]
+    for property_name, label in sorted(labels["labels"].items()):
+        escaped = label.replace("\\", "\\\\").replace('"', '\\"')
+        out.append(f'        "{property_name}" => "{escaped}",')
+    out += ["        _ => return None,", "    };", "    Some(found)", "}", ""]
+
     out += [
         "/// What a column holds, as the schema declares it.",
         "///",

@@ -42,6 +42,7 @@ pub fn data_routes() -> Router<AppState> {
         .merge(crate::generated::routes::table_routes())
         .nest("/recipes", crate::recipes::routes())
         .nest("/inventory", crate::inventory::routes())
+        .nest("/usage", crate::inventory::usage_routes())
         // The description of the API is part of the API, so it sits inside the group a session
         // layer will eventually wrap: what you may call is what you may read about.
         .route("/openapi.json", get(describe))

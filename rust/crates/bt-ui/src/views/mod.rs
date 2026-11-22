@@ -15,6 +15,7 @@ pub mod catalogues;
 pub mod editor;
 pub mod extras;
 pub mod format;
+pub mod inventory;
 pub mod recipe;
 pub mod recipes;
 pub mod steps;
@@ -23,6 +24,7 @@ pub mod tools;
 pub mod transfer;
 pub mod water;
 
+use std::collections::BTreeMap;
 use std::fmt;
 use std::str::FromStr;
 
@@ -222,6 +224,36 @@ impl FromStr for Which {
     }
 }
 
+impl Which {
+    /// Which kind of thing this table is stocked as, where it is stocked at all.
+    ///
+    /// Only the four ingredients a recipe is made of are bought and used up; a style or a mash
+    /// profile is not something there is a quantity of.
+    pub fn stocked(table: &str) -> Option<&'static str> {
+        match table {
+            "fermentable" => Some("fermentable"),
+            "hop" => Some("hop"),
+            "misc" => Some("misc"),
+            "yeast" => Some("yeast"),
+            _ => None,
+        }
+    }
+}
+
+/// What is on hand of each ingredient, by the ingredient's key.
+///
+/// `/api/inventory/{kind}` answers with a holding per ingredient; the catalogue wants to look
+/// one up by key as it renders each row.
+pub fn by_ingredient(holdings: &[serde_json::Map<String, serde_json::Value>]) -> BTreeMap<i32, f64> {
+    holdings
+        .iter()
+        .filter_map(|holding| {
+            let id = i32::try_from(holding.get("ingredient_id")?.as_i64()?).ok()?;
+            Some((id, holding.get("quantity")?.as_f64()?))
+        })
+        .collect()
+}
+
 /// The frame every screen sits in: the title, the list of sections, and whichever screen the
 /// address names.
 #[component]
@@ -258,6 +290,13 @@ pub fn Shell() -> Element {
                                 class: if open_catalogue == Some(which) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
                                 "{which.title()}"
                             }
+                        }
+                    }
+                    li { class: "bt-nav-apart",
+                        Link {
+                            to: Route::Inventory {},
+                            class: if matches!(route, Route::Inventory {}) { "bt-nav-item bt-chosen" } else { "bt-nav-item" },
+                            "Inventory"
                         }
                     }
                     li { class: "bt-nav-apart",

@@ -31,6 +31,7 @@ pub mod inventory;
 pub mod recipes;
 pub mod rows;
 pub mod store;
+pub mod usage;
 
 pub use generated::tables;
 pub use store::{Backend, Connection, Store, StoreError};
