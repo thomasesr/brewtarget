@@ -42,6 +42,14 @@ impl ApiError {
     }
 }
 
+/// A request that never got anywhere, said with the address it was trying.
+///
+/// `reqwest`'s own message for a URL it cannot parse is "builder error", which says nothing
+/// about what was wrong with it.
+pub(crate) fn unreachable(url: &str, error: reqwest::Error) -> ApiError {
+    ApiError::Unreachable(format!("{error} ({url})"))
+}
+
 /// The shape `bt_api::error::ErrorBody` arrives in.
 #[derive(Debug, serde::Deserialize)]
 struct Refusal {
@@ -49,18 +57,40 @@ struct Refusal {
     message: String,
 }
 
+/// Where the API is when nothing has said otherwise.
+///
+/// In a browser that is wherever the page came from, because `bt-server` serves both the page
+/// and the API.  It has to be asked for and written out in full: `reqwest` builds on `Url`,
+/// which cannot parse `/api/hop` without a base, and the failure is an opaque "builder error"
+/// rather than anything that points at the cause.
+fn default_base() -> String {
+    #[cfg(target_arch = "wasm32")]
+    {
+        web_sys::window()
+            .and_then(|window| window.location().origin().ok())
+            // A page with no origin is a `file://` one or a sandboxed frame.  There is nothing
+            // useful to guess, so this leaves the base empty and lets the first request say so.
+            .unwrap_or_default()
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        // Nothing to ask.  `bt-server`'s own default port, so a desktop build pointed at a
+        // local server works without being told; anything else passes its own base.
+        "http://127.0.0.1:8080".to_owned()
+    }
+}
+
 /// A connection to a Brewtarget server.
 #[derive(Debug, Clone)]
 pub struct Client {
-    /// Where the API is, with no trailing slash.  Empty means "wherever this page came from",
-    /// which is the usual case in a browser: the server that served the page serves the API.
+    /// Where the API is, with no trailing slash.  Always absolute: see [`default_base`].
     base: String,
     http: reqwest::Client,
 }
 
 impl Default for Client {
     fn default() -> Self {
-        Self::new("")
+        Self::new(default_base())
     }
 }
 
@@ -69,8 +99,25 @@ impl Client {
         Self { base: base.into().trim_end_matches('/').to_owned(), http: reqwest::Client::new() }
     }
 
+    /// Where the API is.
+    pub fn base(&self) -> &str {
+        &self.base
+    }
+
     fn url(&self, path: &str) -> String {
         format!("{}/api{path}", self.base)
+    }
+
+    /// Say plainly that the base is unusable, rather than letting `reqwest` fail to build a
+    /// request and report only that it failed to build a request.
+    fn check_base(&self) -> Result<(), ApiError> {
+        if self.base.starts_with("http://") || self.base.starts_with("https://") {
+            return Ok(());
+        }
+        Err(ApiError::Unreachable(format!(
+            "{:?} is not a usable address for the server; it needs a scheme and a host",
+            self.base
+        )))
     }
 
     /// Read the answer, turning a refusal into an error rather than a value.
@@ -87,8 +134,9 @@ impl Client {
     }
 
     async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T, ApiError> {
-        let response =
-            self.http.get(self.url(path)).send().await.map_err(|error| ApiError::Unreachable(error.to_string()))?;
+        self.check_base()?;
+        let url = self.url(path);
+        let response = self.http.get(&url).send().await.map_err(|error| unreachable(&url, error))?;
         Self::read(response).await
     }
 
@@ -98,13 +146,10 @@ impl Client {
         path: &str,
         body: &B,
     ) -> Result<T, ApiError> {
-        let response = self
-            .http
-            .request(method, self.url(path))
-            .json(body)
-            .send()
-            .await
-            .map_err(|error| ApiError::Unreachable(error.to_string()))?;
+        self.check_base()?;
+        let url = self.url(path);
+        let response =
+            self.http.request(method, &url).json(body).send().await.map_err(|error| unreachable(&url, error))?;
         Self::read(response).await
     }
 }
@@ -139,12 +184,10 @@ macro_rules! table_calls {
 
                 #[doc = concat!("Delete a row of `", $table, "`.")]
                 pub async fn $delete(&self, id: i32) -> Result<(), ApiError> {
-                    let response = self
-                        .http
-                        .delete(self.url(&format!("/{}/{id}", $table)))
-                        .send()
-                        .await
-                        .map_err(|error| ApiError::Unreachable(error.to_string()))?;
+                    self.check_base()?;
+                    let url = self.url(&format!("/{}/{id}", $table));
+                    let response =
+                        self.http.delete(&url).send().await.map_err(|error| $crate::client::unreachable(&url, error))?;
                     let status = response.status();
                     if status.is_success() {
                         return Ok(());

@@ -222,3 +222,39 @@ async fn a_recipe_arrives_with_everything_the_screen_shows() {
     use bt_model::recipe::IngredientAmount;
     assert!(recipe.fermentables.iter().all(|addition| addition.addition.amount().is_some()));
 }
+
+/// The address the interface uses when nothing has told it one must be usable.
+///
+/// This is the bug that shipped: the base was empty, meaning "the page's own origin", but
+/// `reqwest` builds on `Url` and `Url` cannot parse `/api/hop` without one.  Every request in
+/// the browser failed with "builder error", which names neither the URL nor the problem.
+#[test]
+fn the_default_address_is_one_a_request_can_be_built_from() {
+    let client = Client::default();
+    let base = client.base();
+    assert!(
+        base.starts_with("http://") || base.starts_with("https://"),
+        "the default address {base:?} has no scheme, so no request can be built from it"
+    );
+    assert!(!base.ends_with('/'), "a trailing slash would double up against the path: {base:?}");
+}
+
+/// An address that cannot be used is reported as such, naming what was wrong with it, rather
+/// than surfacing whatever `reqwest` says about failing to build a request.
+#[tokio::test]
+async fn an_unusable_address_says_what_is_wrong_with_it() {
+    for base in ["", "/", "127.0.0.1:8080", "localhost"] {
+        let failure = Client::new(base).hops().await.expect_err("{base} is not an address");
+        let message = failure.to_string();
+        assert!(matches!(failure, bt_ui::ApiError::Unreachable(_)), "{base:?}: {failure:?}");
+        assert!(message.contains("scheme"), "{base:?} should say what it is missing, said {message:?}");
+    }
+}
+
+/// A request that gets nowhere names the address it tried, so the next failure of this shape
+/// is one line to diagnose rather than a guess.
+#[tokio::test]
+async fn a_failed_request_names_the_address_it_tried() {
+    let failure = Client::new("http://127.0.0.1:1").hops().await.expect_err("nothing is listening");
+    assert!(failure.to_string().contains("http://127.0.0.1:1/api/hop"), "{failure}");
+}

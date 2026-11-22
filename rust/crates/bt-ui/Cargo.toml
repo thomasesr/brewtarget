@@ -21,6 +21,11 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 
+# Only in a browser, and only to ask the page where it came from.  `reqwest` will not
+# build a request from a relative URL, so the origin has to be found and prefixed.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["Window", "Location"] }
+
 [dev-dependencies]
 # The client is tested against the real server rather than a stand-in: the risk worth
 # covering is the two disagreeing, and a stand-in would agree with whatever it was told.
