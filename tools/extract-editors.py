@@ -128,6 +128,24 @@ def string_property(widget: ElementTree.Element, name: str) -> str | None:
     return None
 
 
+def tab_titles(node: ElementTree.Element) -> list[str]:
+    """The titles of a tab widget's pages, in order.
+
+    The tree tabs carry an icon and no title, so their tool tip is what names them -- which is
+    also what a person hovering one sees.
+    """
+    titles = []
+    for page in node.findall("widget"):
+        title = None
+        for attribute in page.findall("attribute"):
+            if attribute.get("name") in {"title", "toolTip"}:
+                string = attribute.find("string")
+                if string is not None and string.text:
+                    title = title or string.text
+        titles.append(title or page.get("name") or "")
+    return titles
+
+
 def walk(node: ElementTree.Element, page: str | None, group: str | None, order: list[int], into: dict) -> None:
     """Record which tab and group every widget belongs to, and what comes before what.
 
@@ -137,14 +155,11 @@ def walk(node: ElementTree.Element, page: str | None, group: str | None, order: 
     for child in node:
         if child.tag == "widget":
             name, cls = child.get("name"), child.get("class")
-            if cls == "QTabWidget":
-                for tab in child.findall("widget"):
-                    title = None
-                    for attribute in tab.findall("attribute"):
-                        if attribute.get("name") == "title":
-                            string = attribute.find("string")
-                            title = (string.text or "") if string is not None else None
-                    walk(tab, title, None, order, into)
+            # `BtTabWidget` is Brewtarget's own subclass, and the main window uses it for the
+            # tabs that matter most.  Treating only `QTabWidget` as a tab widget misses them.
+            if cls in {"QTabWidget", "BtTabWidget"}:
+                for tab, title in zip(child.findall("widget"), tab_titles(child)):
+                    walk(tab, title or None, None, order, into)
                 continue
             if cls == "QGroupBox":
                 walk(child, page, string_property(child, "title") or group, order, into)
@@ -251,6 +266,96 @@ def build(editor: str, source: pathlib.Path) -> dict | None:
     }
 
 
+# The main window binds its fields the same way the dialogs do, under another name:
+# `SMART_FIELD_INIT(MainWindow, label_boilTime, value_boilTime, Boil, PropertyNames::Boil::boilTime_mins, 0)`.
+SMART_FIELD_RE = re.compile(r"SMART_FIELD_INIT(_NO_SF|_FIXED)?\s*(?=\()")
+
+
+def main_window_fields(text: str) -> dict[str, dict]:
+    """Every field the main window binds, by the widget that shows it."""
+    found = {}
+    for match in SMART_FIELD_RE.finditer(text):
+        begin, end = match_balanced(text, match.end(), "(", ")")
+        arguments = split_arguments(text[begin + 1 : end - 1])
+        if match.group(1) == "_NO_SF":
+            # No separate field: the label is the display.  These are the figures the recipe
+            # is reckoned to come to -- OG, FG, colour -- which are shown and never typed.
+            if len(arguments) < 4:
+                continue
+            _owner, label, model, property_name = arguments[:4]
+            widget = label
+            rest = arguments[4:]
+        else:
+            if len(arguments) < 5:
+                continue
+            _owner, label, widget, model, property_name = arguments[:5]
+            rest = arguments[5:]
+        precision = int(rest[0]) if rest and re.fullmatch(r"\d+", rest[0]) else None
+        found[widget] = {
+            "label_widget": label,
+            "model": model,
+            "property": property_name.replace("PropertyNames::", "").strip(),
+            "precision": precision,
+            "shown_only": match.group(1) == "_NO_SF",
+        }
+    return found
+
+
+def main_window() -> dict:
+    """How the main window is arranged.
+
+    Three lists and a form.  The left-hand tab strip is the trees; the right is a recipe above
+    its ingredients.  This is the shape of the application, and the part of it this port had
+    invented for itself rather than taken from here.
+    """
+    source = REPO / "src" / "MainWindow.cpp"
+    bindings = main_window_fields(strip_comments(source.read_text(encoding="utf-8", errors="replace")))
+
+    path = REPO / "ui" / "mainWindow.ui"
+    root = ElementTree.parse(path).getroot()
+    layout: dict = {}
+    for widget in root.findall("widget"):
+        walk(widget, None, None, [1000], layout)
+
+    strips = {}
+    for node in root.iter("widget"):
+        if node.get("class") in {"QTabWidget", "BtTabWidget"}:
+            strips[node.get("name") or ""] = tab_titles(node)
+
+    # The fields on the Recipe tab, in the order the dialog has them.
+    fields = []
+    for widget, binding in bindings.items():
+        where = layout.get(widget, {})
+        if where.get("page") != "Recipe":
+            continue
+        label = layout.get(binding["label_widget"], {})
+        fields.append(
+            {
+                "property": binding["property"],
+                "model": binding["model"],
+                # `&Name` is Qt's way of marking the keyboard shortcut; the ampersand is not
+                # part of what is shown.
+                "label": (label.get("text") or "").replace("&", "") or None,
+                "group": where.get("group"),
+                "control": CONTROLS.get(where.get("class") or "", "text"),
+                "precision": binding["precision"],
+                "shown_only": binding["shown_only"],
+                "order": where.get("order", 10_000),
+            }
+        )
+    fields.sort(key=lambda field: field["order"])
+    for field in fields:
+        field.pop("order")
+
+    return {
+        "ui": str(path.relative_to(REPO)),
+        "trees": strips.get("tabWidget_Trees", []),
+        "recipe_tabs": strips.get("tabWidget_recipeView", []),
+        "ingredient_tabs": strips.get("tabWidget_ingredients", []),
+        "recipe_fields": fields,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", type=pathlib.Path, help="write JSON here instead of stdout")
@@ -266,9 +371,13 @@ def main() -> int:
         editors[editor] = built
         sources.append(str(source.relative_to(REPO)))
 
+    shell = main_window()
+    sources.append("src/MainWindow.cpp")
     document = {
         "generated_by": "tools/extract-editors.py",
         "source_files": sources,
+        # How the application itself is arranged, as distinct from its dialogs.
+        "main_window": shell,
         "editors": dict(sorted(editors.items())),
     }
     text = json.dumps(document, indent=2) + "\n"

@@ -15,6 +15,7 @@ pub mod editor;
 pub mod format;
 pub mod recipe;
 pub mod recipes;
+pub mod steps;
 pub mod table;
 pub mod transfer;
 
@@ -115,26 +116,29 @@ pub enum Which {
 }
 
 impl Which {
-    /// Every catalogue, in the order the Qt tabs have them: the four ingredients a recipe is
-    /// made of, then the things it is made with.
+    /// Every catalogue, in the order the application's own tab strip has them.
+    ///
+    /// Taken from `tabWidget_Trees` in `ui/mainWindow.ui`: recipes, then the things a recipe
+    /// refers to, then the things it is made of.  Not an order worth second-guessing -- it is
+    /// what anyone who has used Brewtarget will reach for.
     pub const ALL: [Self; 10] = [
-        Self::Fermentables,
-        Self::Hops,
-        Self::Miscs,
-        Self::Yeasts,
-        Self::Waters,
         Self::Styles,
         Self::Equipments,
         Self::Mashes,
         Self::Boils,
         Self::Fermentations,
+        Self::Fermentables,
+        Self::Hops,
+        Self::Miscs,
+        Self::Yeasts,
+        Self::Waters,
     ];
 
     pub fn title(self) -> &'static str {
         match self {
             Self::Fermentables => "Fermentables",
             Self::Hops => "Hops",
-            Self::Miscs => "Miscellaneous",
+            Self::Miscs => "Miscs",
             Self::Yeasts => "Yeasts",
             Self::Waters => "Water",
             Self::Styles => "Styles",

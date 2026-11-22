@@ -574,3 +574,29 @@ fn a_computed_field_is_shown_but_not_written() {
         assert!(!column.is_empty(), "a read-only field with no column");
     }
 }
+
+/// The interface is arranged the way the application is.
+///
+/// Not the layout -- the architecture.  The tab strips in `ui/mainWindow.ui` say what the
+/// sections are and what order they come in, and that order is what anyone who has used
+/// Brewtarget will reach for.  This had been invented rather than taken.
+#[test]
+fn the_sections_are_the_ones_the_application_has_in_its_order() {
+    use bt_ui::views::Which;
+
+    // `tabWidget_Trees`, less Recipes, which has a place of its own above them.
+    let expected = [
+        "Styles",
+        "Equipment",
+        "Mash Profiles",
+        "Boil Profiles",
+        "Fermentation Profiles",
+        "Fermentables",
+        "Hops",
+        "Miscs",
+        "Yeasts",
+        "Water",
+    ];
+    let titles: Vec<&str> = Which::ALL.iter().map(|which| which.title()).collect();
+    assert_eq!(titles, expected);
+}
