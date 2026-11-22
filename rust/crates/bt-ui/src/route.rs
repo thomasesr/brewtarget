@@ -33,6 +33,10 @@ pub enum Route {
         Recipe { id: i32 },
         #[route("/catalogue/:which")]
         Catalogue { which: views::Which },
+        #[route("/catalogue/:which/new")]
+        NewEntry { which: views::Which },
+        #[route("/catalogue/:which/:id")]
+        EditEntry { which: views::Which, id: i32 },
     // Anything else is a mistyped or outdated address, which is worth saying rather than
     // showing an empty screen.
     #[route("/:..segments")]
@@ -58,6 +62,16 @@ pub fn Recipe(id: i32) -> Element {
 #[component]
 pub fn Catalogue(which: views::Which) -> Element {
     rsx! { views::catalogues::Catalogue { which } }
+}
+
+#[component]
+pub fn NewEntry(which: views::Which) -> Element {
+    rsx! { views::editor::Screen { which, editing: views::editor::Editing::New } }
+}
+
+#[component]
+pub fn EditEntry(which: views::Which, id: i32) -> Element {
+    rsx! { views::editor::Screen { which, editing: views::editor::Editing::Existing(id) } }
 }
 
 /// An address that names nothing.

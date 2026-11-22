@@ -281,3 +281,85 @@ fn every_catalogue_has_an_address_that_round_trips() {
     }
     assert!(Which::from_str("sausages").is_err(), "an address naming nothing is an error");
 }
+
+/// The editor works in columns rather than in typed structs, because it is built from the
+/// schema and cannot know the type at compile time.  That path has to store what it is given
+/// and give back what it stored.
+#[tokio::test]
+async fn a_row_can_be_made_and_changed_through_the_untyped_path() {
+    use serde_json::{Map, Value, json};
+
+    let client = serving("untyped").await;
+
+    let mut row = Map::new();
+    row.insert("name".to_owned(), json!("Citra"));
+    row.insert("alpha_pct".to_owned(), json!(12.0));
+    row.insert("form".to_owned(), json!("pellet"));
+
+    let stored = client.post_row("hop", &row).await.expect("store it");
+    let id = stored["id"].as_i64().expect("a key") as i32;
+    assert_eq!(stored["name"], "Citra");
+    assert_eq!(stored["alpha_pct"], 12.0);
+
+    // An empty box clears a column rather than writing a zero or an empty string into it:
+    // almost every column in this schema is nullable, and most of them are null.
+    let mut changed = stored.clone();
+    changed.insert("alpha_pct".to_owned(), Value::Null);
+    changed.insert("notes".to_owned(), json!("tastes of grapefruit"));
+    let after = client.put_row("hop", id, &changed).await.expect("change it");
+    assert_eq!(after["alpha_pct"], Value::Null, "clearing a column should clear it");
+    assert_eq!(after["notes"], "tastes of grapefruit");
+    assert_eq!(after["form"], "pellet", "a column nobody touched should be left alone");
+
+    let read = client.row("hop", id).await.expect("read it back");
+    assert_eq!(read, after);
+}
+
+/// Every table has an editor, and every editor has every column of its table that is worth
+/// editing.  This is the point of building them from the schema: a new column cannot appear
+/// without a way to edit it appearing too.
+#[test]
+fn every_table_has_an_editor_covering_its_columns() {
+    use bt_model::tables::{TABLES, columns_of, editable_columns};
+
+    for table in TABLES {
+        let editable = editable_columns(table);
+        assert!(!editable.is_empty(), "{table} has no editable columns");
+
+        let columns = columns_of(table).expect("a known table");
+        for field in editable {
+            assert!(columns.contains(&field.column), "{table}.{} is not a column of it", field.column);
+            assert!(!field.label.is_empty(), "{table}.{} has no label", field.column);
+        }
+
+        // The key is the database's to assign and the foreign keys name other rows, so neither
+        // is offered; everything else is.
+        assert!(
+            !editable.iter().any(|field| field.column == "id"),
+            "{table} offers its primary key for editing"
+        );
+    }
+}
+
+/// An enumerated column offers what may go in it, by the name it is shown by.
+#[test]
+fn an_enumerated_column_offers_the_values_it_accepts() {
+    use bt_model::tables::editable_columns;
+
+    let ftype = editable_columns("fermentable")
+        .iter()
+        .find(|field| field.column == "ftype")
+        .expect("fermentables have a type");
+    assert_eq!(ftype.label, "Type");
+    assert!(ftype.choices.contains(&("dry extract", "Dry Extract")), "{:?}", ftype.choices);
+
+    // What is stored and what is shown are different strings, and both are needed: one goes
+    // into the column, the other onto the screen.
+    for (stored, shown) in ftype.choices {
+        assert!(!stored.is_empty() && !shown.is_empty());
+    }
+
+    // A column that is not enumerated offers nothing, rather than an empty dropdown.
+    let alpha = editable_columns("hop").iter().find(|field| field.column == "alpha_pct").expect("hops have alpha");
+    assert!(alpha.choices.is_empty());
+}

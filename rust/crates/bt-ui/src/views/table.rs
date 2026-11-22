@@ -15,6 +15,8 @@
 
 use dioxus::prelude::*;
 
+use crate::route::Route;
+
 /// How a column's values should sit in their cells.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Align {
@@ -60,12 +62,13 @@ impl Column {
 /// A row, already turned into the text that will be shown.
 pub type Cells = Vec<String>;
 
-/// Show a table, or say why there is not one.
+/// Show a table of cells, or say there are none.
+///
+/// Plain: no links, no way in.  The ingredient tabs on a recipe use this, because an addition
+/// is edited on the recipe rather than on its own.
 #[component]
 pub fn DataTable(columns: Vec<Column>, rows: Vec<Cells>) -> Element {
     if rows.is_empty() {
-        // An empty catalogue is a normal state, not a failure: a fresh database has none of
-        // anything until the default content is loaded or a file is imported.
         return rsx! { p { class: "bt-empty", "Nothing here yet." } };
     }
 
@@ -83,6 +86,52 @@ pub fn DataTable(columns: Vec<Column>, rows: Vec<Cells>) -> Element {
                     tr { key: "{index}",
                         for (column, cell) in columns.iter().zip(cells) {
                             td { class: column.class(), "{cell}" }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Show a catalogue: the same table, with a way into each row and a way to add one.
+///
+/// Every row is keyed by what it is, so the link into its editor is part of the table rather
+/// than something each of the ten catalogues has to remember to add.
+#[component]
+pub fn CatalogueTable(which: super::Which, columns: Vec<Column>, rows: Vec<(i32, Cells)>) -> Element {
+    let add = rsx! {
+        Link { to: Route::NewEntry { which }, class: "bt-primary bt-add", "New {which.singular()}" }
+    };
+
+    if rows.is_empty() {
+        // An empty catalogue is a normal state, not a failure: a fresh database has none of
+        // anything until the default content is loaded or a file is imported.
+        return rsx! {
+            p { class: "bt-empty", "Nothing here yet." }
+            div { class: "bt-toolbar", {add} }
+        };
+    }
+
+    rsx! {
+        div { class: "bt-toolbar", {add} }
+        table { class: "bt-table",
+            thead {
+                tr {
+                    for column in columns.iter() {
+                        th { class: column.class(), "{column.header}" }
+                    }
+                    th { class: "bt-cell", span { class: "bt-hidden", "Edit" } }
+                }
+            }
+            tbody {
+                for (id, cells) in rows.iter() {
+                    tr { key: "{id}",
+                        for (column, cell) in columns.iter().zip(cells) {
+                            td { class: column.class(), "{cell}" }
+                        }
+                        td { class: "bt-cell",
+                            Link { to: Route::EditEntry { which, id: *id }, class: "bt-link", "Edit" }
                         }
                     }
                 }

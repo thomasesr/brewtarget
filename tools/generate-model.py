@@ -263,7 +263,7 @@ def generate_accessors(table: dict) -> list[str]:
     return [f"impl {struct} {{", *out[:-1], "}", ""]
 
 
-def generate_tables(schema: dict, labels: dict) -> str:
+def generate_tables(schema: dict, labels: dict, enums: dict) -> str:
     """One Rust struct per table, mirroring its columns exactly."""
     out = [
         HEADER.format(file="tables.rs", sources="schema/v23.json"),
@@ -335,6 +335,37 @@ def generate_tables(schema: dict, labels: dict) -> str:
             f"    pub const COLUMNS: [&'static str; {len(columns)}] = [",
         ]
         out += [f'        "{column}",' for column in columns]
+        out += ["    ];", ""]
+
+        # The columns an editor offers: the ordinary ones only.  The key is the database's to
+        # assign, and a foreign key names another row, which wants a way to choose one rather
+        # than a box to type a number into.
+        base_types = {"bool": "Bool", "int": "Int", "uint": "Int", "double": "Double", "string": "String", "date": "Date"}
+        editable = []
+        for column in table["columns"]:
+            label = labels["labels"].get(column["property"] or "", column["name"])
+            escaped = label.replace("\\", "\\\\").replace('"', '\\"')
+            mapping = enums["mappings"].get(column["string_mapping"] or "", None)
+            choices = "&[]"
+            if mapping and not mapping.get("by_object_address"):
+                shown = labels["display_names"].get((column["string_mapping"] or "").replace("StringMapping", "DisplayNames"), {})
+                pairs = ", ".join(
+                    '("{}", "{}")'.format(
+                        value["string"],
+                        shown.get(value["member"], value["string"]).replace("\\", "\\\\").replace('"', '\\"'),
+                    )
+                    for value in mapping["values"]
+                )
+                choices = f"&[{pairs}]"
+            editable.append(
+                f'        Editable {{ column: "{column["name"]}", label: "{escaped}", '
+                f'kind: BaseType::{base_types[column["base_type"]]}, choices: {choices} }},'
+            )
+        out += [
+            f"    /// The columns an editor offers, in the order the schema declares them.",
+            f"    pub const EDITABLE: [Editable; {len(editable)}] = [",
+        ]
+        out += editable
         out += ["    ];", "}", ""]
         out += generate_accessors(table)
 
@@ -398,6 +429,37 @@ def generate_tables(schema: dict, labels: dict) -> str:
 
     # What each column is called when shown to a person.  Not derivable from the column name:
     # `fine_grind_yield_pct` is "Yield (DBFG) %" and `color_lovibond` is simply "Color".
+    # What an editor needs to put a control on the screen for each column: what it is called,
+    # what it holds, and -- for an enumerated column -- what may be chosen.
+    out += [
+        "/// A column, as something to be edited.",
+        "///",
+        "/// What an editor needs in order to put a control on the screen: what the column is",
+        "/// called, what it holds, and for an enumerated one what may be chosen.  Built from the",
+        "/// schema so that a column cannot exist without a way to edit it.",
+        "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
+        "pub struct Editable {",
+        "    /// The column, as the API names it.",
+        "    pub column: &'static str,",
+        "    /// What it is called when shown.",
+        "    pub label: &'static str,",
+        "    pub kind: BaseType,",
+        "    /// For an enumerated column, every value it may hold, as (stored, shown) pairs.",
+        "    /// Empty for every other kind.",
+        "    pub choices: &'static [(&'static str, &'static str)],",
+        "}",
+        "",
+        "/// Every column of a table that is worth editing, in the order the schema declares them.",
+        "///",
+        "/// The primary key is left out -- the database assigns it -- as are the foreign keys,",
+        "/// which name other rows and need a way of choosing one rather than a text box.",
+        "pub fn editable_columns(table: &str) -> &'static [Editable] {",
+        "    match table {",
+    ]
+    for table in schema["tables"]:
+        out.append(f'        "{table["name"]}" => &{pascal_case(table["name"])}Row::EDITABLE,')
+    out += ["        _ => &[],", "    }", "}", ""]
+
     out += [
         "/// What a column is called when it is shown to a person.",
         "///",
@@ -742,7 +804,7 @@ def main() -> int:
     labels = json.loads((REPO / "schema" / "labels.json").read_text(encoding="utf-8"))
 
     args.out.mkdir(parents=True, exist_ok=True)
-    files = {"enums.rs": generate_enums(enums, labels), "tables.rs": generate_tables(schema, labels)}
+    files = {"enums.rs": generate_enums(enums, labels), "tables.rs": generate_tables(schema, labels, enums)}
     files["mod.rs"] = (
         HEADER.format(file="mod.rs", sources="schema/v23.json and schema/enums.json")
         + "\n//! Generated model code.  See `tools/generate-model.py`.\n\npub mod enums;\npub mod tables;\n"

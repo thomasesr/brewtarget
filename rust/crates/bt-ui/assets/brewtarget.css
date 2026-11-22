@@ -257,3 +257,93 @@ body {
    text-decoration: none;
    color: inherit;
 }
+
+/* ---- Editing ------------------------------------------------------------ */
+
+.bt-toolbar {
+   display: flex;
+   justify-content: flex-end;
+   margin-bottom: 0.6rem;
+}
+
+.bt-primary,
+.bt-secondary {
+   border: 1px solid var(--bt-rule);
+   border-radius: 4px;
+   padding: 0.35rem 0.9rem;
+   font: inherit;
+   cursor: pointer;
+   text-decoration: none;
+}
+
+.bt-primary {
+   border-color: var(--bt-wort);
+   background: var(--bt-wort);
+   color: #fff;
+}
+
+.bt-primary:hover { filter: brightness(1.08); }
+
+.bt-primary[disabled] { opacity: 0.6; cursor: default; }
+
+.bt-secondary {
+   background: none;
+   color: inherit;
+}
+
+.bt-secondary:hover { background: var(--bt-wort-pale); }
+
+/*
+ * Every column of the table, so a wide one gets several per row and a narrow screen gets
+ * one.  The Qt dialogs group related fields; these are in schema order, which is at least
+ * a stable order rather than an invented one.
+ */
+.bt-fields {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+   gap: 0.75rem 1.25rem;
+   margin-bottom: 1.25rem;
+}
+
+.bt-field { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+
+/* Notes and descriptions get the full width, since people write sentences in them. */
+.bt-wide { grid-column: 1 / -1; }
+
+.bt-field label {
+   font-size: 0.75rem;
+   color: var(--bt-quiet);
+   text-transform: uppercase;
+   letter-spacing: 0.05em;
+}
+
+.bt-field input,
+.bt-field select,
+.bt-field textarea {
+   border: 1px solid var(--bt-rule);
+   border-radius: 3px;
+   padding: 0.3rem 0.45rem;
+   background: var(--bt-paper);
+   color: inherit;
+   font: inherit;
+   min-width: 0;
+}
+
+.bt-field input:focus-visible,
+.bt-field select:focus-visible,
+.bt-field textarea:focus-visible {
+   outline: 2px solid var(--bt-wort);
+   outline-offset: 1px;
+}
+
+.bt-actions { display: flex; gap: 0.5rem; }
+
+/* Present for a screen reader, absent for everyone else. */
+.bt-hidden {
+   position: absolute;
+   width: 1px;
+   height: 1px;
+   overflow: hidden;
+   clip-path: inset(50%);
+   white-space: nowrap;
+}

@@ -11,6 +11,7 @@
 
 pub mod additions;
 pub mod catalogues;
+pub mod editor;
 pub mod format;
 pub mod recipe;
 pub mod recipes;
@@ -68,6 +69,38 @@ impl Which {
             Self::Mashes => "Mash Profiles",
             Self::Boils => "Boil Profiles",
             Self::Fermentations => "Fermentation Profiles",
+        }
+    }
+
+    /// The table this catalogue lists.
+    pub fn table(self) -> &'static str {
+        match self {
+            Self::Fermentables => "fermentable",
+            Self::Hops => "hop",
+            Self::Miscs => "misc",
+            Self::Yeasts => "yeast",
+            Self::Waters => "water",
+            Self::Styles => "style",
+            Self::Equipments => "equipment",
+            Self::Mashes => "mash",
+            Self::Boils => "boil",
+            Self::Fermentations => "fermentation",
+        }
+    }
+
+    /// What one of these is called on its own, for the heading over its editor.
+    pub fn singular(self) -> &'static str {
+        match self {
+            Self::Fermentables => "Fermentable",
+            Self::Hops => "Hop",
+            Self::Miscs => "Miscellaneous Ingredient",
+            Self::Yeasts => "Yeast",
+            Self::Waters => "Water",
+            Self::Styles => "Style",
+            Self::Equipments => "Equipment",
+            Self::Mashes => "Mash Profile",
+            Self::Boils => "Boil Profile",
+            Self::Fermentations => "Fermentation Profile",
         }
     }
 

@@ -20,6 +20,7 @@ use bt_model::recipe::Recipe;
 use bt_model::tables::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde_json::Value;
 
 /// Something that went wrong between asking and being answered.
 #[derive(Debug, Clone, thiserror::Error)]
@@ -218,6 +219,35 @@ table_calls! {
 }
 
 impl Client {
+    /// Read one row of any table, as the columns it holds rather than as a typed struct.
+    ///
+    /// The editor works this way because it is built from the schema: it is handed a list of
+    /// columns and has to show a control for each, which a struct known only at compile time
+    /// cannot give it.
+    pub async fn row(&self, table: &str, id: i32) -> Result<serde_json::Map<String, Value>, ApiError> {
+        self.get(&format!("/{table}/{id}")).await
+    }
+
+    /// Store a row of any table, replacing what was there.
+    pub async fn put_row(
+        &self,
+        table: &str,
+        id: i32,
+        row: &serde_json::Map<String, Value>,
+    ) -> Result<serde_json::Map<String, Value>, ApiError> {
+        self.send(reqwest::Method::PUT, &format!("/{table}/{id}"), row).await
+    }
+
+    /// Store a new row of any table, and read back what was stored -- including the key the
+    /// database gave it.
+    pub async fn post_row(
+        &self,
+        table: &str,
+        row: &serde_json::Map<String, Value>,
+    ) -> Result<serde_json::Map<String, Value>, ApiError> {
+        self.send(reqwest::Method::POST, &format!("/{table}"), row).await
+    }
+
     /// A recipe with its additions and the ingredients they name.
     pub async fn recipe(&self, id: i32) -> Result<Recipe, ApiError> {
         self.get(&format!("/recipes/{id}/full")).await

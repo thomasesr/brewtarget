@@ -24,7 +24,7 @@ use bt_model::tables::*;
 use dioxus::prelude::*;
 
 use super::format::{color_srm, label, number, percent, text};
-use super::table::{Align, Cells, Column, DataTable, Failed, Loading};
+use super::table::{Align, CatalogueTable, Cells, Column, Failed, Loading};
 use crate::Client;
 
 /// Build a component that fetches one catalogue and shows it as a table.
@@ -34,7 +34,7 @@ use crate::Client;
 macro_rules! catalogue {
     ($component:ident, $fetch:ident, $row:ty, $table:literal, [$($column:literal: $align:expr => $cell:expr),+ $(,)?]) => {
         #[component]
-        pub fn $component() -> Element {
+        pub fn $component(which: super::Which) -> Element {
             let client = use_context::<Client>();
             let rows = use_resource(move || {
                 let client = client.clone();
@@ -46,14 +46,14 @@ macro_rules! catalogue {
                 None => rsx! { Loading {} },
                 Some(Err(error)) => rsx! { Failed { message: error.to_string() } },
                 Some(Ok(found)) => {
-                    let cells: Vec<Cells> = found
+                    let rows: Vec<(i32, Cells)> = found
                         .iter()
                         // A row marked deleted is kept so that recipes referring to it still
                         // resolve, and is hidden from the catalogue -- as `BtTableModel` hides it.
                         .filter(|row: &&$row| !row.deleted.unwrap_or(false))
-                        .map(|row| vec![$({ let cell: fn(&$row) -> String = $cell; cell(row) }),+])
+                        .map(|row| (row.id, vec![$({ let cell: fn(&$row) -> String = $cell; cell(row) }),+]))
                         .collect();
-                    rsx! { DataTable { columns, rows: cells } }
+                    rsx! { CatalogueTable { which, columns, rows } }
                 }
             }
         }
@@ -141,16 +141,16 @@ pub fn Catalogue(which: super::Which) -> Element {
     rsx! {
         h2 { "{which.title()}" }
         match which {
-            Which::Fermentables => rsx! { Fermentables {} },
-            Which::Hops => rsx! { Hops {} },
-            Which::Miscs => rsx! { Miscs {} },
-            Which::Yeasts => rsx! { Yeasts {} },
-            Which::Waters => rsx! { Waters {} },
-            Which::Styles => rsx! { Styles {} },
-            Which::Equipments => rsx! { Equipments {} },
-            Which::Mashes => rsx! { Mashes {} },
-            Which::Boils => rsx! { Boils {} },
-            Which::Fermentations => rsx! { Fermentations {} },
+            Which::Fermentables => rsx! { Fermentables { which } },
+            Which::Hops => rsx! { Hops { which } },
+            Which::Miscs => rsx! { Miscs { which } },
+            Which::Yeasts => rsx! { Yeasts { which } },
+            Which::Waters => rsx! { Waters { which } },
+            Which::Styles => rsx! { Styles { which } },
+            Which::Equipments => rsx! { Equipments { which } },
+            Which::Mashes => rsx! { Mashes { which } },
+            Which::Boils => rsx! { Boils { which } },
+            Which::Fermentations => rsx! { Fermentations { which } },
         }
     }
 }
