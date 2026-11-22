@@ -20,7 +20,7 @@ use bt_format::document::{self, Document};
 use bt_format::{jsonc, xml};
 use serde::{Deserialize, Serialize};
 
-use crate::error::{ApiError, ApiResult};
+use crate::error::{ApiError, ApiResult, ErrorBody};
 use crate::state::AppState;
 
 /// How big a file may be to import.
@@ -37,7 +37,7 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// Which interchange format a document is in.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 // Every row the API returns is named after its columns, which are snake_case, so everything
 // alongside them is too rather than making the caller switch conventions halfway through a
 // response.
@@ -84,7 +84,7 @@ pub fn read(source: &str) -> ApiResult<(Format, Document)> {
 }
 
 /// What an import did.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct ImportSummary {
     pub format: Format,
@@ -92,6 +92,14 @@ pub struct ImportSummary {
     pub recipe_ids: Vec<i32>,
 }
 
+#[utoipa::path(
+    post, path = "/api/import", tag = "transfer",
+    request_body(content = String, description = "A .beer, BeerJSON or BeerXML document"),
+    responses(
+        (status = 200, description = "What was read and stored", body = ImportSummary),
+        (status = 400, description = "The file could not be read", body = ErrorBody),
+    ),
+)]
 /// Read a file and store everything in it.
 ///
 /// The body is the file itself rather than a form, because that is what a client already has and
@@ -103,7 +111,7 @@ async fn import(State(state): State<AppState>, body: String) -> ApiResult<Json<I
 }
 
 /// What to export.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
 #[serde(rename_all = "snake_case")]
 pub struct ExportQuery {
     /// Which format to write; `.beer` by default, as the most expressive of the three.
@@ -111,6 +119,11 @@ pub struct ExportQuery {
     pub format: Option<Format>,
 }
 
+#[utoipa::path(
+    get, path = "/api/export", tag = "transfer",
+    params(ExportQuery),
+    responses((status = 200, description = "The whole database as a file", body = String)),
+)]
 /// Write out everything in the database.
 ///
 /// Stage 2 exports one account's store, which is this same call against a different store.
@@ -135,3 +148,8 @@ async fn export(
     };
     Ok(([(axum::http::header::CONTENT_TYPE, content_type)], body).into_response())
 }
+
+/// The import and export routes, for the API description.
+#[derive(utoipa::OpenApi)]
+#[openapi(paths(import, export), components(schemas(ImportSummary, Format)))]
+pub struct TransferApi;

@@ -69,3 +69,30 @@ async fn asking_for_something_that_is_not_there_says_so() {
     let (status, _) = request(&app, "PUT", "/api/hop/9999", body(json!({"name": "ghost"}))).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
 }
+
+/// The API describes itself, so a client can be generated from it rather than hand-written.
+#[tokio::test]
+async fn the_api_describes_itself() {
+    let app = app("openapi").await;
+    let (status, document) = request(&app, "GET", "/api/openapi.json", None).await;
+    assert_eq!(status, StatusCode::OK);
+
+    assert_eq!(document["info"]["title"], "Brewtarget");
+    let paths = document["paths"].as_object().expect("the paths");
+    // Every table has a resource group, and the hand-written routes are in there too.
+    assert!(paths.contains_key("/api/hop"), "no hops");
+    assert!(paths.contains_key("/api/hop/{id}"));
+    assert!(paths.contains_key("/api/recipes/{id}/calculated"));
+    assert!(paths.contains_key("/api/inventory/{kind}/{id}"));
+    assert!(paths.contains_key("/api/import"));
+    assert_eq!(paths.len(), 39 * 2 + 3 + 3 + 2, "one group per table, plus the hand-written routes");
+
+    // The schemas the routes mention are described, not left as bare objects.
+    let schemas = document["components"]["schemas"].as_object().expect("the schemas");
+    for named in ["HopRow", "RecipeRow", "Calculated", "Holding", "ErrorBody"] {
+        assert!(schemas.contains_key(named), "{named} is not described");
+    }
+    // A nullable column is described as nullable: almost every column in this schema is.
+    assert_eq!(schemas["HopRow"]["properties"]["alpha_pct"]["type"], serde_json::json!(["number", "null"]));
+    assert_eq!(schemas["HopRow"]["properties"]["id"]["type"], "integer");
+}

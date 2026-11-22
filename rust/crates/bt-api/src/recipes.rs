@@ -20,7 +20,7 @@ use bt_calc::recipe::Calculated;
 use bt_model::recipe::Recipe;
 use serde::Serialize;
 
-use crate::error::{ApiError, ApiResult};
+use crate::error::{ApiError, ApiResult, ErrorBody};
 use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
@@ -36,11 +36,27 @@ async fn load(state: &AppState, id: i32) -> ApiResult<Recipe> {
         .ok_or_else(|| ApiError::NotFound(format!("no recipe with id {id}")))
 }
 
+#[utoipa::path(
+    get, path = "/api/recipes/{id}/full", tag = "recipes",
+    params(("id" = i32, Path, description = "The key of the recipe")),
+    responses(
+        (status = 200, description = "The recipe, its additions and its profiles", body = Recipe),
+        (status = 404, description = "No recipe with that key", body = ErrorBody),
+    ),
+)]
 /// The whole recipe: its row, its additions with the ingredients they name, and its profiles.
 async fn full(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<Recipe>> {
     Ok(Json(load(&state, id).await?))
 }
 
+#[utoipa::path(
+    get, path = "/api/recipes/{id}/calculated", tag = "recipes",
+    params(("id" = i32, Path, description = "The key of the recipe")),
+    responses(
+        (status = 200, description = "What the recipe works out to", body = Calculated),
+        (status = 404, description = "No recipe with that key", body = ErrorBody),
+    ),
+)]
 /// Everything the recipe screen shows: gravity, colour, bitterness, alcohol, volumes.
 async fn calculated(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<Calculated>> {
     let recipe = load(&state, id).await?;
@@ -84,7 +100,7 @@ fn step_kind(step: &bt_model::tables::MashStepRow) -> mash::StepType {
 }
 
 /// One thing to do on brew day.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct BrewdayStep {
     pub number: i32,
     pub name: String,
@@ -94,7 +110,7 @@ pub struct BrewdayStep {
 }
 
 /// The brew day sheet.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct Brewday {
     pub recipe_id: i32,
     pub recipe_name: String,
@@ -104,6 +120,14 @@ pub struct Brewday {
     pub steps: Vec<BrewdayStep>,
 }
 
+#[utoipa::path(
+    get, path = "/api/recipes/{id}/brewday", tag = "recipes",
+    params(("id" = i32, Path, description = "The key of the recipe")),
+    responses(
+        (status = 200, description = "The sheet to brew from", body = Brewday),
+        (status = 404, description = "No recipe with that key", body = ErrorBody),
+    ),
+)]
 /// The instruction sheet for brewing a recipe.
 async fn brewday(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<Brewday>> {
     let recipe = load(&state, id).await?;
@@ -130,3 +154,8 @@ async fn brewday(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResul
         steps,
     }))
 }
+
+/// The recipe routes, for the API description.
+#[derive(utoipa::OpenApi)]
+#[openapi(paths(full, calculated, brewday), components(schemas(Brewday, BrewdayStep)))]
+pub struct RecipeApi;

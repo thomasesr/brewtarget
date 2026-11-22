@@ -38,7 +38,7 @@ const DEFAULT_TOP_UP_WATER_L: f64 = 0.0;
 const DEFAULT_ATTENUATION_PCT: f64 = 75.0;
 
 /// Everything a recipe works out to.
-#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct Calculated {
     pub grains_kg: f64,
     pub grains_in_mash_kg: f64,
@@ -66,7 +66,7 @@ pub struct Calculated {
 /// Ported from `Recipe::sugarTotals`.  Sugar that came with the ingredient -- in an extract, in
 /// honey -- goes into the wort whatever the mash does, so it is not affected by mash efficiency.
 /// Sugar that has to be converted from starch is.
-#[derive(Debug, Clone, Copy, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct Sugars {
     pub existing_sugars_all_kg: f64,
     pub existing_sugars_non_fermentable_kg: f64,

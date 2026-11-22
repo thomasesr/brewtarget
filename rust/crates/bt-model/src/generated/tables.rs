@@ -24,6 +24,7 @@ use std::str::FromStr;
 use bt_measure::Unit;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use crate::enums::*;
 
@@ -31,7 +32,7 @@ use crate::enums::*;
 // differs from the column name carry an explicit rename, so the two cannot drift.
 
 /// A row of `boil`, which stores `Boil`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct BoilRow {
     /// `id`, which the database assigns.
     ///
@@ -64,7 +65,7 @@ impl BoilRow {
 }
 
 /// A row of `boil_step`, which stores `BoilStep`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct BoilStepRow {
     /// `id`, which the database assigns.
     ///
@@ -140,7 +141,7 @@ impl BoilStepRow {
 }
 
 /// A row of `brew_log`, which stores `BrewLog`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct BrewLogRow {
     /// `id`, which the database assigns.
     ///
@@ -273,7 +274,7 @@ impl BrewLogRow {
 }
 
 /// A row of `equipment`, which stores `Equipment`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct EquipmentRow {
     /// `id`, which the database assigns.
     ///
@@ -453,7 +454,7 @@ impl EquipmentRow {
 }
 
 /// A row of `fermentable`, which stores `Fermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FermentableRow {
     /// `id`, which the database assigns.
     ///
@@ -610,7 +611,7 @@ impl FermentableRow {
 }
 
 /// A row of `fermentable_in_recipe`, which stores `RecipeAdditionFermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FermentableInRecipeRow {
     /// `id`, which the database assigns.
     ///
@@ -689,7 +690,7 @@ impl FermentableInRecipeRow {
 }
 
 /// A row of `fermentable_stock_purchase`, which stores `StockPurchaseFermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FermentableStockPurchaseRow {
     /// `id`, which the database assigns.
     ///
@@ -774,7 +775,7 @@ impl FermentableStockPurchaseRow {
 }
 
 /// A row of `fermentable_stock_use`, which stores `StockUseFermentable`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FermentableStockUseRow {
     /// `id`, which the database assigns.
     ///
@@ -835,7 +836,7 @@ impl FermentableStockUseRow {
 }
 
 /// A row of `fermentation`, which stores `Fermentation`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FermentationRow {
     /// `id`, which the database assigns.
     ///
@@ -882,7 +883,7 @@ impl FermentationRow {
 }
 
 /// A row of `fermentation_step`, which stores `FermentationStep`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FermentationStepRow {
     /// `id`, which the database assigns.
     ///
@@ -944,7 +945,7 @@ impl FermentationStepRow {
 }
 
 /// A row of `folder_for_boil`, which stores `Folder<Boil>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForBoilRow {
     /// `id`, which the database assigns.
     ///
@@ -968,7 +969,7 @@ impl FolderForBoilRow {
 }
 
 /// A row of `folder_for_equipment`, which stores `Folder<Equipment>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForEquipmentRow {
     /// `id`, which the database assigns.
     ///
@@ -992,7 +993,7 @@ impl FolderForEquipmentRow {
 }
 
 /// A row of `folder_for_fermentable`, which stores `Folder<Fermentable>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForFermentableRow {
     /// `id`, which the database assigns.
     ///
@@ -1016,7 +1017,7 @@ impl FolderForFermentableRow {
 }
 
 /// A row of `folder_for_fermentation`, which stores `Folder<Fermentation>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForFermentationRow {
     /// `id`, which the database assigns.
     ///
@@ -1040,7 +1041,7 @@ impl FolderForFermentationRow {
 }
 
 /// A row of `folder_for_hop`, which stores `Folder<Hop>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForHopRow {
     /// `id`, which the database assigns.
     ///
@@ -1064,7 +1065,7 @@ impl FolderForHopRow {
 }
 
 /// A row of `folder_for_mash`, which stores `Folder<Mash>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForMashRow {
     /// `id`, which the database assigns.
     ///
@@ -1088,7 +1089,7 @@ impl FolderForMashRow {
 }
 
 /// A row of `folder_for_misc`, which stores `Folder<Misc>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForMiscRow {
     /// `id`, which the database assigns.
     ///
@@ -1112,7 +1113,7 @@ impl FolderForMiscRow {
 }
 
 /// A row of `folder_for_recipe`, which stores `Folder<Recipe>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForRecipeRow {
     /// `id`, which the database assigns.
     ///
@@ -1136,7 +1137,7 @@ impl FolderForRecipeRow {
 }
 
 /// A row of `folder_for_style`, which stores `Folder<Style>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForStyleRow {
     /// `id`, which the database assigns.
     ///
@@ -1160,7 +1161,7 @@ impl FolderForStyleRow {
 }
 
 /// A row of `folder_for_water`, which stores `Folder<Water>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForWaterRow {
     /// `id`, which the database assigns.
     ///
@@ -1184,7 +1185,7 @@ impl FolderForWaterRow {
 }
 
 /// A row of `folder_for_yeast`, which stores `Folder<Yeast>`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct FolderForYeastRow {
     /// `id`, which the database assigns.
     ///
@@ -1208,7 +1209,7 @@ impl FolderForYeastRow {
 }
 
 /// A row of `hop`, which stores `Hop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct HopRow {
     /// `id`, which the database assigns.
     ///
@@ -1352,7 +1353,7 @@ impl HopRow {
 }
 
 /// A row of `hop_in_recipe`, which stores `RecipeAdditionHop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct HopInRecipeRow {
     /// `id`, which the database assigns.
     ///
@@ -1431,7 +1432,7 @@ impl HopInRecipeRow {
 }
 
 /// A row of `hop_stock_purchase`, which stores `StockPurchaseHop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct HopStockPurchaseRow {
     /// `id`, which the database assigns.
     ///
@@ -1522,7 +1523,7 @@ impl HopStockPurchaseRow {
 }
 
 /// A row of `hop_stock_use`, which stores `StockUseHop`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct HopStockUseRow {
     /// `id`, which the database assigns.
     ///
@@ -1583,7 +1584,7 @@ impl HopStockUseRow {
 }
 
 /// A row of `instruction`, which stores `Instruction`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct InstructionRow {
     /// `id`, which the database assigns.
     ///
@@ -1630,7 +1631,7 @@ impl InstructionRow {
 }
 
 /// A row of `mash`, which stores `Mash`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct MashRow {
     /// `id`, which the database assigns.
     ///
@@ -1689,7 +1690,7 @@ impl MashRow {
 }
 
 /// A row of `mash_step`, which stores `MashStep`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct MashStepRow {
     /// `id`, which the database assigns.
     ///
@@ -1774,7 +1775,7 @@ impl MashStepRow {
 }
 
 /// A row of `misc`, which stores `Misc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct MiscRow {
     /// `id`, which the database assigns.
     ///
@@ -1850,7 +1851,7 @@ impl MiscRow {
 }
 
 /// A row of `misc_in_recipe`, which stores `RecipeAdditionMisc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct MiscInRecipeRow {
     /// `id`, which the database assigns.
     ///
@@ -1929,7 +1930,7 @@ impl MiscInRecipeRow {
 }
 
 /// A row of `misc_stock_purchase`, which stores `StockPurchaseMisc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct MiscStockPurchaseRow {
     /// `id`, which the database assigns.
     ///
@@ -2011,7 +2012,7 @@ impl MiscStockPurchaseRow {
 }
 
 /// A row of `misc_stock_use`, which stores `StockUseMisc`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct MiscStockUseRow {
     /// `id`, which the database assigns.
     ///
@@ -2072,7 +2073,7 @@ impl MiscStockUseRow {
 }
 
 /// A row of `recipe`, which stores `Recipe`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct RecipeRow {
     /// `id`, which the database assigns.
     ///
@@ -2235,7 +2236,7 @@ impl RecipeRow {
 }
 
 /// A row of `style`, which stores `Style`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct StyleRow {
     /// `id`, which the database assigns.
     ///
@@ -2353,7 +2354,7 @@ impl StyleRow {
 }
 
 /// A row of `water`, which stores `Water`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct WaterRow {
     /// `id`, which the database assigns.
     ///
@@ -2430,7 +2431,7 @@ impl WaterRow {
 }
 
 /// A row of `yeast`, which stores `Yeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct YeastRow {
     /// `id`, which the database assigns.
     ///
@@ -2557,7 +2558,7 @@ impl YeastRow {
 }
 
 /// A row of `yeast_in_recipe`, which stores `RecipeAdditionYeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct YeastInRecipeRow {
     /// `id`, which the database assigns.
     ///
@@ -2645,7 +2646,7 @@ impl YeastInRecipeRow {
 }
 
 /// A row of `yeast_stock_purchase`, which stores `StockPurchaseYeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct YeastStockPurchaseRow {
     /// `id`, which the database assigns.
     ///
@@ -2727,7 +2728,7 @@ impl YeastStockPurchaseRow {
 }
 
 /// A row of `yeast_stock_use`, which stores `StockUseYeast`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct YeastStockUseRow {
     /// `id`, which the database assigns.
     ///

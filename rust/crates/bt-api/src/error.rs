@@ -31,7 +31,7 @@ pub enum ApiError {
 }
 
 /// The body of a failed request.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ErrorBody {
     /// A short, stable word for what went wrong: `not_found`, `bad_request`, `internal`.
     pub kind: &'static str,

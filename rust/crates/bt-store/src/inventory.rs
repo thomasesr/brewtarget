@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 use crate::{Store, StoreError, tables};
 
 /// Which kind of ingredient a holding is of.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, utoipa::ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Kind {
     Fermentable,
@@ -62,7 +62,7 @@ impl std::str::FromStr for Kind {
 }
 
 /// What is left of one lot.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Lot {
     pub purchase_id: i32,
     /// What was received, in the canonical unit.
@@ -77,7 +77,7 @@ pub struct Lot {
 }
 
 /// How much of one ingredient is on hand, and which lots it is in.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Holding {
     pub kind: Kind,
     pub ingredient_id: i32,

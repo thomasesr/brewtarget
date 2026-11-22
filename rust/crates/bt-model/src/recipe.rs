@@ -21,6 +21,7 @@
 //! correcting its alpha acid corrects both.
 
 use bt_measure::{Amount, Unit};
+use utoipa::ToSchema;
 
 use crate::enums::{RecipeAdditionStage, UnknownValue};
 use crate::tables::*;
@@ -29,7 +30,7 @@ use crate::tables::*;
 ///
 /// Ported from `RecipeAdditionBase`.  The `addition` row carries how much and when; the
 /// `ingredient` row carries what it is.
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct Addition<Row, Ingredient> {
     pub addition: Row,
     /// `None` when the ingredient row is missing, which a foreign key should prevent but a
@@ -40,7 +41,7 @@ pub struct Addition<Row, Ingredient> {
 /// A recipe with everything needed to calculate from it.
 ///
 /// Ported from the object graph `Recipe` assembles in the C++.
-#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct Recipe {
     pub row: RecipeRow,
     pub fermentables: Vec<Addition<FermentableInRecipeRow, FermentableRow>>,

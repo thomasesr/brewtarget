@@ -9,6 +9,7 @@ repository.workspace   = true
 authors.workspace      = true
 
 [dependencies]
+utoipa.workspace = true
 bt-measure.workspace = true
 bt-format.workspace = true
 bt-model.workspace = true

@@ -101,6 +101,8 @@ def generate_enums(enums: dict) -> str:
         "",
         "use std::fmt;",
         "",
+        "use utoipa::ToSchema;",
+        "",
         "/// A string in the database that no member of the enumeration corresponds to.",
         "#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]",
         '#[error("{value:?} is not a valid {enumeration}")]',
@@ -119,7 +121,7 @@ def generate_enums(enums: dict) -> str:
         )
         out += [
             f"/// `{name}`, declared in `{mapping['source_file']}`.",
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]",
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]",
             f"pub enum {type_name} {{",
         ]
         for value in mapping["values"]:
@@ -244,6 +246,7 @@ def generate_tables(schema: dict) -> str:
         "use bt_measure::Unit;",
         "use chrono::NaiveDate;",
         "use serde::{Deserialize, Serialize};",
+        "use utoipa::ToSchema;",
         "",
         "use crate::enums::*;",
         "",
@@ -256,7 +259,7 @@ def generate_tables(schema: dict) -> str:
         struct = pascal_case(table["name"]) + "Row"
         out += [
             f"/// A row of `{table['name']}`, which stores `{table['cpp_type']}`.",
-            "#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]",
+            "#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]",
             f"pub struct {struct} {{",
             f"    /// `{table['primary_key']['name']}`, which the database assigns.",
             "    ///",
@@ -534,7 +537,7 @@ def generate_routes(schema: dict) -> str:
         "use bt_model::tables::*;",
         "use bt_store::tables;",
         "",
-        "use crate::error::{ApiError, ApiResult};",
+        "use crate::error::{ApiError, ApiResult, ErrorBody};",
         "use crate::state::AppState;",
         "",
     ]
@@ -543,6 +546,7 @@ def generate_routes(schema: dict) -> str:
         struct = pascal_case(table["name"]) + "Row"
         module = table["name"]
         singular = table["cpp_type"]
+        tag = table["name"]
         out += [
             f"/// `/api/{module}`",
             f"pub mod {module} {{",
@@ -552,10 +556,22 @@ def generate_routes(schema: dict) -> str:
             f'        Router::new().route("/", get(list).post(create)).route("/{{id}}", get(read).put(update).delete(remove))',
             "    }",
             "",
+            "    #[utoipa::path(",
+            f'        get, path = "/api/{module}", tag = "{tag}",',
+            f'        responses((status = 200, description = "Every {singular} row", body = Vec<{struct}>)),',
+            "    )]",
             f"    async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<{struct}>>> {{",
             f"        Ok(Json(tables::{module}::list(state.store()).await?))",
             "    }",
             "",
+            "    #[utoipa::path(",
+            f'        get, path = "/api/{module}/{{id}}", tag = "{tag}",',
+            f'        params(("id" = i32, Path, description = "The key of the {singular}")),',
+            "        responses(",
+            f'            (status = 200, description = "The {singular}", body = {struct}),',
+            f'            (status = 404, description = "No {singular} with that key", body = ErrorBody),',
+            "        ),",
+            "    )]",
             f"    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<{struct}>> {{",
             f"        tables::{module}::get(state.store(), id)",
             "            .await?",
@@ -563,11 +579,25 @@ def generate_routes(schema: dict) -> str:
             f'            .ok_or_else(|| ApiError::NotFound(format!("no {singular} with id {{id}}")))',
             "    }",
             "",
+            "    #[utoipa::path(",
+            f'        post, path = "/api/{module}", tag = "{tag}",',
+            f"        request_body = {struct},",
+            f'        responses((status = 200, description = "The {singular} as stored, with the key the database gave it", body = {struct})),',
+            "    )]",
             f"    async fn create(State(state): State<AppState>, Json(row): Json<{struct}>) -> ApiResult<Json<{struct}>> {{",
             f"        let id = tables::{module}::insert(state.store(), &row).await?;",
             f"        read(State(state), Path(id)).await",
             "    }",
             "",
+            "    #[utoipa::path(",
+            f'        put, path = "/api/{module}/{{id}}", tag = "{tag}",',
+            f'        params(("id" = i32, Path, description = "The key of the {singular}")),',
+            f"        request_body = {struct},",
+            "        responses(",
+            f'            (status = 200, description = "The {singular} as stored", body = {struct}),',
+            f'            (status = 404, description = "No {singular} with that key", body = ErrorBody),',
+            "        ),",
+            "    )]",
             "    async fn update(",
             "        State(state): State<AppState>,",
             "        Path(id): Path<i32>,",
@@ -583,6 +613,11 @@ def generate_routes(schema: dict) -> str:
             f"        read(State(state), Path(id)).await",
             "    }",
             "",
+            "    #[utoipa::path(",
+            f'        delete, path = "/api/{module}/{{id}}", tag = "{tag}",',
+            f'        params(("id" = i32, Path, description = "The key of the {singular}")),',
+            f'        responses((status = 204, description = "The {singular} was deleted")),',
+            "    )]",
             "    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {",
         ]
         if any(column["name"] == "deleted" for column in table["columns"]):
@@ -608,6 +643,23 @@ def generate_routes(schema: dict) -> str:
     for table in schema["tables"]:
         out.append(f'        .nest("/{table["name"]}", {table["name"]}::routes())')
     out += ["}", ""]
+
+    # The OpenAPI document, listing every generated route and every row type it mentions.
+    out += [
+        "/// The generated half of the API description.",
+        "///",
+        "/// `crate::openapi` folds this together with the hand-written routes.",
+        "#[derive(utoipa::OpenApi)]",
+        "#[openapi(",
+        "    paths(",
+    ]
+    for table in schema["tables"]:
+        for handler in ("list", "read", "create", "update", "remove"):
+            out.append(f'        {table["name"]}::{handler},')
+    out += ["    ),", "    components(schemas("]
+    for table in schema["tables"]:
+        out.append(f'        {pascal_case(table["name"])}Row,')
+    out += ["    )),", ")]", "pub struct TableApi;", ""]
     return "\n".join(out)
 
 

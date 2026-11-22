@@ -42,6 +42,9 @@ pub fn data_routes() -> Router<AppState> {
         .merge(crate::generated::routes::table_routes())
         .nest("/recipes", crate::recipes::routes())
         .nest("/inventory", crate::inventory::routes())
+        // The description of the API is part of the API, so it sits inside the group a session
+        // layer will eventually wrap: what you may call is what you may read about.
+        .route("/openapi.json", get(describe))
         .merge(crate::transfer::routes())
 }
 
@@ -53,4 +56,9 @@ pub fn api() -> Router<AppState> {
 /// The whole API, ready to serve.
 pub fn router(state: AppState) -> Router {
     api().with_state(state)
+}
+
+/// The API, described: the document a typed client is generated from.
+async fn describe() -> Json<utoipa::openapi::OpenApi> {
+    Json(crate::openapi::document())
 }

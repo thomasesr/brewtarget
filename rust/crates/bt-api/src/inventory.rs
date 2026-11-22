@@ -17,10 +17,10 @@ use std::str::FromStr;
 use axum::extract::{Path, Query, State};
 use axum::routing::get;
 use axum::{Json, Router};
-use bt_store::inventory::{Holding, Kind};
+use bt_store::inventory::{Holding, Kind, Lot};
 use serde::Deserialize;
 
-use crate::error::{ApiError, ApiResult};
+use crate::error::{ApiError, ApiResult, ErrorBody};
 use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
@@ -28,7 +28,7 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// Which holdings to list.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
 pub struct Filter {
     /// Leave out ingredients that have run out.  `IngredientBase::isOnHand`.
     #[serde(default)]
@@ -47,11 +47,24 @@ fn kind_of(kind: &str) -> ApiResult<Kind> {
     })
 }
 
+#[utoipa::path(
+    get, path = "/api/inventory", tag = "inventory",
+    params(Filter),
+    responses((status = 200, description = "What is on hand of every ingredient", body = Vec<Holding>)),
+)]
 /// Everything on hand, of every kind.
 async fn everything(State(state): State<AppState>, Query(filter): Query<Filter>) -> ApiResult<Json<Vec<Holding>>> {
     Ok(Json(filtered(bt_store::inventory::everything(state.store()).await?, &filter)))
 }
 
+#[utoipa::path(
+    get, path = "/api/inventory/{kind}", tag = "inventory",
+    params(("kind" = String, Path, description = "fermentable, hop, misc or yeast"), Filter),
+    responses(
+        (status = 200, description = "What is on hand of that kind", body = Vec<Holding>),
+        (status = 400, description = "Not something that can be stocked", body = ErrorBody),
+    ),
+)]
 /// Everything on hand of one kind.
 async fn of_kind(
     State(state): State<AppState>,
@@ -62,6 +75,17 @@ async fn of_kind(
     Ok(Json(filtered(holdings, &filter)))
 }
 
+#[utoipa::path(
+    get, path = "/api/inventory/{kind}/{id}", tag = "inventory",
+    params(
+        ("kind" = String, Path, description = "fermentable, hop, misc or yeast"),
+        ("id" = i32, Path, description = "The key of the ingredient"),
+    ),
+    responses(
+        (status = 200, description = "What is on hand, and the lots it is in", body = Holding),
+        (status = 404, description = "Nothing has ever been bought of it", body = ErrorBody),
+    ),
+)]
 /// What is on hand of one ingredient, including the lots it is held in.
 async fn one(State(state): State<AppState>, Path((kind, id)): Path<(String, i32)>) -> ApiResult<Json<Holding>> {
     let kind = kind_of(&kind)?;
@@ -74,3 +98,8 @@ async fn one(State(state): State<AppState>, Path((kind, id)): Path<(String, i32)
         .map(Json)
         .ok_or_else(|| ApiError::NotFound(format!("nothing has been bought of {} {id}", kind.as_str())))
 }
+
+/// The inventory routes, for the API description.
+#[derive(utoipa::OpenApi)]
+#[openapi(paths(everything, of_kind, one), components(schemas(Holding, Lot, Kind)))]
+pub struct InventoryApi;

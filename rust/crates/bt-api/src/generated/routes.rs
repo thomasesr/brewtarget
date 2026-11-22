@@ -24,7 +24,7 @@ use axum::{Json, Router};
 use bt_model::tables::*;
 use bt_store::tables;
 
-use crate::error::{ApiError, ApiResult};
+use crate::error::{ApiError, ApiResult, ErrorBody};
 use crate::state::AppState;
 
 /// `/api/boil`
@@ -35,10 +35,22 @@ pub mod boil {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/boil", tag = "boil",
+        responses((status = 200, description = "Every Boil row", body = Vec<BoilRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<BoilRow>>> {
         Ok(Json(tables::boil::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/boil/{id}", tag = "boil",
+        params(("id" = i32, Path, description = "The key of the Boil")),
+        responses(
+            (status = 200, description = "The Boil", body = BoilRow),
+            (status = 404, description = "No Boil with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<BoilRow>> {
         tables::boil::get(state.store(), id)
             .await?
@@ -46,11 +58,25 @@ pub mod boil {
             .ok_or_else(|| ApiError::NotFound(format!("no Boil with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/boil", tag = "boil",
+        request_body = BoilRow,
+        responses((status = 200, description = "The Boil as stored, with the key the database gave it", body = BoilRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<BoilRow>) -> ApiResult<Json<BoilRow>> {
         let id = tables::boil::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/boil/{id}", tag = "boil",
+        params(("id" = i32, Path, description = "The key of the Boil")),
+        request_body = BoilRow,
+        responses(
+            (status = 200, description = "The Boil as stored", body = BoilRow),
+            (status = 404, description = "No Boil with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -66,6 +92,11 @@ pub mod boil {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/boil/{id}", tag = "boil",
+        params(("id" = i32, Path, description = "The key of the Boil")),
+        responses((status = 204, description = "The Boil was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -82,10 +113,22 @@ pub mod boil_step {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/boil_step", tag = "boil_step",
+        responses((status = 200, description = "Every BoilStep row", body = Vec<BoilStepRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<BoilStepRow>>> {
         Ok(Json(tables::boil_step::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/boil_step/{id}", tag = "boil_step",
+        params(("id" = i32, Path, description = "The key of the BoilStep")),
+        responses(
+            (status = 200, description = "The BoilStep", body = BoilStepRow),
+            (status = 404, description = "No BoilStep with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<BoilStepRow>> {
         tables::boil_step::get(state.store(), id)
             .await?
@@ -93,11 +136,25 @@ pub mod boil_step {
             .ok_or_else(|| ApiError::NotFound(format!("no BoilStep with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/boil_step", tag = "boil_step",
+        request_body = BoilStepRow,
+        responses((status = 200, description = "The BoilStep as stored, with the key the database gave it", body = BoilStepRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<BoilStepRow>) -> ApiResult<Json<BoilStepRow>> {
         let id = tables::boil_step::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/boil_step/{id}", tag = "boil_step",
+        params(("id" = i32, Path, description = "The key of the BoilStep")),
+        request_body = BoilStepRow,
+        responses(
+            (status = 200, description = "The BoilStep as stored", body = BoilStepRow),
+            (status = 404, description = "No BoilStep with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -113,6 +170,11 @@ pub mod boil_step {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/boil_step/{id}", tag = "boil_step",
+        params(("id" = i32, Path, description = "The key of the BoilStep")),
+        responses((status = 204, description = "The BoilStep was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -129,10 +191,22 @@ pub mod brew_log {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/brew_log", tag = "brew_log",
+        responses((status = 200, description = "Every BrewLog row", body = Vec<BrewLogRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<BrewLogRow>>> {
         Ok(Json(tables::brew_log::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/brew_log/{id}", tag = "brew_log",
+        params(("id" = i32, Path, description = "The key of the BrewLog")),
+        responses(
+            (status = 200, description = "The BrewLog", body = BrewLogRow),
+            (status = 404, description = "No BrewLog with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<BrewLogRow>> {
         tables::brew_log::get(state.store(), id)
             .await?
@@ -140,11 +214,25 @@ pub mod brew_log {
             .ok_or_else(|| ApiError::NotFound(format!("no BrewLog with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/brew_log", tag = "brew_log",
+        request_body = BrewLogRow,
+        responses((status = 200, description = "The BrewLog as stored, with the key the database gave it", body = BrewLogRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<BrewLogRow>) -> ApiResult<Json<BrewLogRow>> {
         let id = tables::brew_log::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/brew_log/{id}", tag = "brew_log",
+        params(("id" = i32, Path, description = "The key of the BrewLog")),
+        request_body = BrewLogRow,
+        responses(
+            (status = 200, description = "The BrewLog as stored", body = BrewLogRow),
+            (status = 404, description = "No BrewLog with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -160,6 +248,11 @@ pub mod brew_log {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/brew_log/{id}", tag = "brew_log",
+        params(("id" = i32, Path, description = "The key of the BrewLog")),
+        responses((status = 204, description = "The BrewLog was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -176,10 +269,22 @@ pub mod equipment {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/equipment", tag = "equipment",
+        responses((status = 200, description = "Every Equipment row", body = Vec<EquipmentRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<EquipmentRow>>> {
         Ok(Json(tables::equipment::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/equipment/{id}", tag = "equipment",
+        params(("id" = i32, Path, description = "The key of the Equipment")),
+        responses(
+            (status = 200, description = "The Equipment", body = EquipmentRow),
+            (status = 404, description = "No Equipment with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<EquipmentRow>> {
         tables::equipment::get(state.store(), id)
             .await?
@@ -187,11 +292,25 @@ pub mod equipment {
             .ok_or_else(|| ApiError::NotFound(format!("no Equipment with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/equipment", tag = "equipment",
+        request_body = EquipmentRow,
+        responses((status = 200, description = "The Equipment as stored, with the key the database gave it", body = EquipmentRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<EquipmentRow>) -> ApiResult<Json<EquipmentRow>> {
         let id = tables::equipment::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/equipment/{id}", tag = "equipment",
+        params(("id" = i32, Path, description = "The key of the Equipment")),
+        request_body = EquipmentRow,
+        responses(
+            (status = 200, description = "The Equipment as stored", body = EquipmentRow),
+            (status = 404, description = "No Equipment with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -207,6 +326,11 @@ pub mod equipment {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/equipment/{id}", tag = "equipment",
+        params(("id" = i32, Path, description = "The key of the Equipment")),
+        responses((status = 204, description = "The Equipment was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -223,10 +347,22 @@ pub mod fermentable {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable", tag = "fermentable",
+        responses((status = 200, description = "Every Fermentable row", body = Vec<FermentableRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FermentableRow>>> {
         Ok(Json(tables::fermentable::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable/{id}", tag = "fermentable",
+        params(("id" = i32, Path, description = "The key of the Fermentable")),
+        responses(
+            (status = 200, description = "The Fermentable", body = FermentableRow),
+            (status = 404, description = "No Fermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableRow>> {
         tables::fermentable::get(state.store(), id)
             .await?
@@ -234,11 +370,25 @@ pub mod fermentable {
             .ok_or_else(|| ApiError::NotFound(format!("no Fermentable with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/fermentable", tag = "fermentable",
+        request_body = FermentableRow,
+        responses((status = 200, description = "The Fermentable as stored, with the key the database gave it", body = FermentableRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<FermentableRow>) -> ApiResult<Json<FermentableRow>> {
         let id = tables::fermentable::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/fermentable/{id}", tag = "fermentable",
+        params(("id" = i32, Path, description = "The key of the Fermentable")),
+        request_body = FermentableRow,
+        responses(
+            (status = 200, description = "The Fermentable as stored", body = FermentableRow),
+            (status = 404, description = "No Fermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -254,6 +404,11 @@ pub mod fermentable {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/fermentable/{id}", tag = "fermentable",
+        params(("id" = i32, Path, description = "The key of the Fermentable")),
+        responses((status = 204, description = "The Fermentable was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -270,10 +425,22 @@ pub mod fermentable_in_recipe {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable_in_recipe", tag = "fermentable_in_recipe",
+        responses((status = 200, description = "Every RecipeAdditionFermentable row", body = Vec<FermentableInRecipeRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FermentableInRecipeRow>>> {
         Ok(Json(tables::fermentable_in_recipe::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable_in_recipe/{id}", tag = "fermentable_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionFermentable")),
+        responses(
+            (status = 200, description = "The RecipeAdditionFermentable", body = FermentableInRecipeRow),
+            (status = 404, description = "No RecipeAdditionFermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableInRecipeRow>> {
         tables::fermentable_in_recipe::get(state.store(), id)
             .await?
@@ -281,6 +448,11 @@ pub mod fermentable_in_recipe {
             .ok_or_else(|| ApiError::NotFound(format!("no RecipeAdditionFermentable with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/fermentable_in_recipe", tag = "fermentable_in_recipe",
+        request_body = FermentableInRecipeRow,
+        responses((status = 200, description = "The RecipeAdditionFermentable as stored, with the key the database gave it", body = FermentableInRecipeRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FermentableInRecipeRow>,
@@ -289,6 +461,15 @@ pub mod fermentable_in_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/fermentable_in_recipe/{id}", tag = "fermentable_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionFermentable")),
+        request_body = FermentableInRecipeRow,
+        responses(
+            (status = 200, description = "The RecipeAdditionFermentable as stored", body = FermentableInRecipeRow),
+            (status = 404, description = "No RecipeAdditionFermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -304,6 +485,11 @@ pub mod fermentable_in_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/fermentable_in_recipe/{id}", tag = "fermentable_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionFermentable")),
+        responses((status = 204, description = "The RecipeAdditionFermentable was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -320,10 +506,22 @@ pub mod fermentable_stock_purchase {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable_stock_purchase", tag = "fermentable_stock_purchase",
+        responses((status = 200, description = "Every StockPurchaseFermentable row", body = Vec<FermentableStockPurchaseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FermentableStockPurchaseRow>>> {
         Ok(Json(tables::fermentable_stock_purchase::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable_stock_purchase/{id}", tag = "fermentable_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseFermentable")),
+        responses(
+            (status = 200, description = "The StockPurchaseFermentable", body = FermentableStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseFermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableStockPurchaseRow>> {
         tables::fermentable_stock_purchase::get(state.store(), id)
             .await?
@@ -331,6 +529,11 @@ pub mod fermentable_stock_purchase {
             .ok_or_else(|| ApiError::NotFound(format!("no StockPurchaseFermentable with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/fermentable_stock_purchase", tag = "fermentable_stock_purchase",
+        request_body = FermentableStockPurchaseRow,
+        responses((status = 200, description = "The StockPurchaseFermentable as stored, with the key the database gave it", body = FermentableStockPurchaseRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FermentableStockPurchaseRow>,
@@ -339,6 +542,15 @@ pub mod fermentable_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/fermentable_stock_purchase/{id}", tag = "fermentable_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseFermentable")),
+        request_body = FermentableStockPurchaseRow,
+        responses(
+            (status = 200, description = "The StockPurchaseFermentable as stored", body = FermentableStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseFermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -354,6 +566,11 @@ pub mod fermentable_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/fermentable_stock_purchase/{id}", tag = "fermentable_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseFermentable")),
+        responses((status = 204, description = "The StockPurchaseFermentable was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -370,10 +587,22 @@ pub mod fermentable_stock_use {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable_stock_use", tag = "fermentable_stock_use",
+        responses((status = 200, description = "Every StockUseFermentable row", body = Vec<FermentableStockUseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FermentableStockUseRow>>> {
         Ok(Json(tables::fermentable_stock_use::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentable_stock_use/{id}", tag = "fermentable_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseFermentable")),
+        responses(
+            (status = 200, description = "The StockUseFermentable", body = FermentableStockUseRow),
+            (status = 404, description = "No StockUseFermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableStockUseRow>> {
         tables::fermentable_stock_use::get(state.store(), id)
             .await?
@@ -381,6 +610,11 @@ pub mod fermentable_stock_use {
             .ok_or_else(|| ApiError::NotFound(format!("no StockUseFermentable with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/fermentable_stock_use", tag = "fermentable_stock_use",
+        request_body = FermentableStockUseRow,
+        responses((status = 200, description = "The StockUseFermentable as stored, with the key the database gave it", body = FermentableStockUseRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FermentableStockUseRow>,
@@ -389,6 +623,15 @@ pub mod fermentable_stock_use {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/fermentable_stock_use/{id}", tag = "fermentable_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseFermentable")),
+        request_body = FermentableStockUseRow,
+        responses(
+            (status = 200, description = "The StockUseFermentable as stored", body = FermentableStockUseRow),
+            (status = 404, description = "No StockUseFermentable with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -404,6 +647,11 @@ pub mod fermentable_stock_use {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/fermentable_stock_use/{id}", tag = "fermentable_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseFermentable")),
+        responses((status = 204, description = "The StockUseFermentable was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -420,10 +668,22 @@ pub mod fermentation {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentation", tag = "fermentation",
+        responses((status = 200, description = "Every Fermentation row", body = Vec<FermentationRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FermentationRow>>> {
         Ok(Json(tables::fermentation::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentation/{id}", tag = "fermentation",
+        params(("id" = i32, Path, description = "The key of the Fermentation")),
+        responses(
+            (status = 200, description = "The Fermentation", body = FermentationRow),
+            (status = 404, description = "No Fermentation with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentationRow>> {
         tables::fermentation::get(state.store(), id)
             .await?
@@ -431,6 +691,11 @@ pub mod fermentation {
             .ok_or_else(|| ApiError::NotFound(format!("no Fermentation with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/fermentation", tag = "fermentation",
+        request_body = FermentationRow,
+        responses((status = 200, description = "The Fermentation as stored, with the key the database gave it", body = FermentationRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FermentationRow>,
@@ -439,6 +704,15 @@ pub mod fermentation {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/fermentation/{id}", tag = "fermentation",
+        params(("id" = i32, Path, description = "The key of the Fermentation")),
+        request_body = FermentationRow,
+        responses(
+            (status = 200, description = "The Fermentation as stored", body = FermentationRow),
+            (status = 404, description = "No Fermentation with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -454,6 +728,11 @@ pub mod fermentation {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/fermentation/{id}", tag = "fermentation",
+        params(("id" = i32, Path, description = "The key of the Fermentation")),
+        responses((status = 204, description = "The Fermentation was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -470,10 +749,22 @@ pub mod fermentation_step {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentation_step", tag = "fermentation_step",
+        responses((status = 200, description = "Every FermentationStep row", body = Vec<FermentationStepRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FermentationStepRow>>> {
         Ok(Json(tables::fermentation_step::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/fermentation_step/{id}", tag = "fermentation_step",
+        params(("id" = i32, Path, description = "The key of the FermentationStep")),
+        responses(
+            (status = 200, description = "The FermentationStep", body = FermentationStepRow),
+            (status = 404, description = "No FermentationStep with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentationStepRow>> {
         tables::fermentation_step::get(state.store(), id)
             .await?
@@ -481,6 +772,11 @@ pub mod fermentation_step {
             .ok_or_else(|| ApiError::NotFound(format!("no FermentationStep with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/fermentation_step", tag = "fermentation_step",
+        request_body = FermentationStepRow,
+        responses((status = 200, description = "The FermentationStep as stored, with the key the database gave it", body = FermentationStepRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FermentationStepRow>,
@@ -489,6 +785,15 @@ pub mod fermentation_step {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/fermentation_step/{id}", tag = "fermentation_step",
+        params(("id" = i32, Path, description = "The key of the FermentationStep")),
+        request_body = FermentationStepRow,
+        responses(
+            (status = 200, description = "The FermentationStep as stored", body = FermentationStepRow),
+            (status = 404, description = "No FermentationStep with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -504,6 +809,11 @@ pub mod fermentation_step {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/fermentation_step/{id}", tag = "fermentation_step",
+        params(("id" = i32, Path, description = "The key of the FermentationStep")),
+        responses((status = 204, description = "The FermentationStep was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -520,10 +830,22 @@ pub mod folder_for_boil {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_boil", tag = "folder_for_boil",
+        responses((status = 200, description = "Every Folder<Boil> row", body = Vec<FolderForBoilRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForBoilRow>>> {
         Ok(Json(tables::folder_for_boil::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_boil/{id}", tag = "folder_for_boil",
+        params(("id" = i32, Path, description = "The key of the Folder<Boil>")),
+        responses(
+            (status = 200, description = "The Folder<Boil>", body = FolderForBoilRow),
+            (status = 404, description = "No Folder<Boil> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForBoilRow>> {
         tables::folder_for_boil::get(state.store(), id)
             .await?
@@ -531,6 +853,11 @@ pub mod folder_for_boil {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Boil> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_boil", tag = "folder_for_boil",
+        request_body = FolderForBoilRow,
+        responses((status = 200, description = "The Folder<Boil> as stored, with the key the database gave it", body = FolderForBoilRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForBoilRow>,
@@ -539,6 +866,15 @@ pub mod folder_for_boil {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_boil/{id}", tag = "folder_for_boil",
+        params(("id" = i32, Path, description = "The key of the Folder<Boil>")),
+        request_body = FolderForBoilRow,
+        responses(
+            (status = 200, description = "The Folder<Boil> as stored", body = FolderForBoilRow),
+            (status = 404, description = "No Folder<Boil> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -554,6 +890,11 @@ pub mod folder_for_boil {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_boil/{id}", tag = "folder_for_boil",
+        params(("id" = i32, Path, description = "The key of the Folder<Boil>")),
+        responses((status = 204, description = "The Folder<Boil> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -570,10 +911,22 @@ pub mod folder_for_equipment {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_equipment", tag = "folder_for_equipment",
+        responses((status = 200, description = "Every Folder<Equipment> row", body = Vec<FolderForEquipmentRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForEquipmentRow>>> {
         Ok(Json(tables::folder_for_equipment::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_equipment/{id}", tag = "folder_for_equipment",
+        params(("id" = i32, Path, description = "The key of the Folder<Equipment>")),
+        responses(
+            (status = 200, description = "The Folder<Equipment>", body = FolderForEquipmentRow),
+            (status = 404, description = "No Folder<Equipment> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForEquipmentRow>> {
         tables::folder_for_equipment::get(state.store(), id)
             .await?
@@ -581,6 +934,11 @@ pub mod folder_for_equipment {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Equipment> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_equipment", tag = "folder_for_equipment",
+        request_body = FolderForEquipmentRow,
+        responses((status = 200, description = "The Folder<Equipment> as stored, with the key the database gave it", body = FolderForEquipmentRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForEquipmentRow>,
@@ -589,6 +947,15 @@ pub mod folder_for_equipment {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_equipment/{id}", tag = "folder_for_equipment",
+        params(("id" = i32, Path, description = "The key of the Folder<Equipment>")),
+        request_body = FolderForEquipmentRow,
+        responses(
+            (status = 200, description = "The Folder<Equipment> as stored", body = FolderForEquipmentRow),
+            (status = 404, description = "No Folder<Equipment> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -604,6 +971,11 @@ pub mod folder_for_equipment {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_equipment/{id}", tag = "folder_for_equipment",
+        params(("id" = i32, Path, description = "The key of the Folder<Equipment>")),
+        responses((status = 204, description = "The Folder<Equipment> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -620,10 +992,22 @@ pub mod folder_for_fermentable {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_fermentable", tag = "folder_for_fermentable",
+        responses((status = 200, description = "Every Folder<Fermentable> row", body = Vec<FolderForFermentableRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForFermentableRow>>> {
         Ok(Json(tables::folder_for_fermentable::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_fermentable/{id}", tag = "folder_for_fermentable",
+        params(("id" = i32, Path, description = "The key of the Folder<Fermentable>")),
+        responses(
+            (status = 200, description = "The Folder<Fermentable>", body = FolderForFermentableRow),
+            (status = 404, description = "No Folder<Fermentable> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForFermentableRow>> {
         tables::folder_for_fermentable::get(state.store(), id)
             .await?
@@ -631,6 +1015,11 @@ pub mod folder_for_fermentable {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Fermentable> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_fermentable", tag = "folder_for_fermentable",
+        request_body = FolderForFermentableRow,
+        responses((status = 200, description = "The Folder<Fermentable> as stored, with the key the database gave it", body = FolderForFermentableRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForFermentableRow>,
@@ -639,6 +1028,15 @@ pub mod folder_for_fermentable {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_fermentable/{id}", tag = "folder_for_fermentable",
+        params(("id" = i32, Path, description = "The key of the Folder<Fermentable>")),
+        request_body = FolderForFermentableRow,
+        responses(
+            (status = 200, description = "The Folder<Fermentable> as stored", body = FolderForFermentableRow),
+            (status = 404, description = "No Folder<Fermentable> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -654,6 +1052,11 @@ pub mod folder_for_fermentable {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_fermentable/{id}", tag = "folder_for_fermentable",
+        params(("id" = i32, Path, description = "The key of the Folder<Fermentable>")),
+        responses((status = 204, description = "The Folder<Fermentable> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -670,10 +1073,22 @@ pub mod folder_for_fermentation {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_fermentation", tag = "folder_for_fermentation",
+        responses((status = 200, description = "Every Folder<Fermentation> row", body = Vec<FolderForFermentationRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForFermentationRow>>> {
         Ok(Json(tables::folder_for_fermentation::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_fermentation/{id}", tag = "folder_for_fermentation",
+        params(("id" = i32, Path, description = "The key of the Folder<Fermentation>")),
+        responses(
+            (status = 200, description = "The Folder<Fermentation>", body = FolderForFermentationRow),
+            (status = 404, description = "No Folder<Fermentation> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForFermentationRow>> {
         tables::folder_for_fermentation::get(state.store(), id)
             .await?
@@ -681,6 +1096,11 @@ pub mod folder_for_fermentation {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Fermentation> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_fermentation", tag = "folder_for_fermentation",
+        request_body = FolderForFermentationRow,
+        responses((status = 200, description = "The Folder<Fermentation> as stored, with the key the database gave it", body = FolderForFermentationRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForFermentationRow>,
@@ -689,6 +1109,15 @@ pub mod folder_for_fermentation {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_fermentation/{id}", tag = "folder_for_fermentation",
+        params(("id" = i32, Path, description = "The key of the Folder<Fermentation>")),
+        request_body = FolderForFermentationRow,
+        responses(
+            (status = 200, description = "The Folder<Fermentation> as stored", body = FolderForFermentationRow),
+            (status = 404, description = "No Folder<Fermentation> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -704,6 +1133,11 @@ pub mod folder_for_fermentation {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_fermentation/{id}", tag = "folder_for_fermentation",
+        params(("id" = i32, Path, description = "The key of the Folder<Fermentation>")),
+        responses((status = 204, description = "The Folder<Fermentation> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -720,10 +1154,22 @@ pub mod folder_for_hop {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_hop", tag = "folder_for_hop",
+        responses((status = 200, description = "Every Folder<Hop> row", body = Vec<FolderForHopRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForHopRow>>> {
         Ok(Json(tables::folder_for_hop::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_hop/{id}", tag = "folder_for_hop",
+        params(("id" = i32, Path, description = "The key of the Folder<Hop>")),
+        responses(
+            (status = 200, description = "The Folder<Hop>", body = FolderForHopRow),
+            (status = 404, description = "No Folder<Hop> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForHopRow>> {
         tables::folder_for_hop::get(state.store(), id)
             .await?
@@ -731,6 +1177,11 @@ pub mod folder_for_hop {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Hop> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_hop", tag = "folder_for_hop",
+        request_body = FolderForHopRow,
+        responses((status = 200, description = "The Folder<Hop> as stored, with the key the database gave it", body = FolderForHopRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForHopRow>,
@@ -739,6 +1190,15 @@ pub mod folder_for_hop {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_hop/{id}", tag = "folder_for_hop",
+        params(("id" = i32, Path, description = "The key of the Folder<Hop>")),
+        request_body = FolderForHopRow,
+        responses(
+            (status = 200, description = "The Folder<Hop> as stored", body = FolderForHopRow),
+            (status = 404, description = "No Folder<Hop> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -754,6 +1214,11 @@ pub mod folder_for_hop {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_hop/{id}", tag = "folder_for_hop",
+        params(("id" = i32, Path, description = "The key of the Folder<Hop>")),
+        responses((status = 204, description = "The Folder<Hop> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -770,10 +1235,22 @@ pub mod folder_for_mash {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_mash", tag = "folder_for_mash",
+        responses((status = 200, description = "Every Folder<Mash> row", body = Vec<FolderForMashRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForMashRow>>> {
         Ok(Json(tables::folder_for_mash::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_mash/{id}", tag = "folder_for_mash",
+        params(("id" = i32, Path, description = "The key of the Folder<Mash>")),
+        responses(
+            (status = 200, description = "The Folder<Mash>", body = FolderForMashRow),
+            (status = 404, description = "No Folder<Mash> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForMashRow>> {
         tables::folder_for_mash::get(state.store(), id)
             .await?
@@ -781,6 +1258,11 @@ pub mod folder_for_mash {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Mash> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_mash", tag = "folder_for_mash",
+        request_body = FolderForMashRow,
+        responses((status = 200, description = "The Folder<Mash> as stored, with the key the database gave it", body = FolderForMashRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForMashRow>,
@@ -789,6 +1271,15 @@ pub mod folder_for_mash {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_mash/{id}", tag = "folder_for_mash",
+        params(("id" = i32, Path, description = "The key of the Folder<Mash>")),
+        request_body = FolderForMashRow,
+        responses(
+            (status = 200, description = "The Folder<Mash> as stored", body = FolderForMashRow),
+            (status = 404, description = "No Folder<Mash> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -804,6 +1295,11 @@ pub mod folder_for_mash {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_mash/{id}", tag = "folder_for_mash",
+        params(("id" = i32, Path, description = "The key of the Folder<Mash>")),
+        responses((status = 204, description = "The Folder<Mash> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -820,10 +1316,22 @@ pub mod folder_for_misc {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_misc", tag = "folder_for_misc",
+        responses((status = 200, description = "Every Folder<Misc> row", body = Vec<FolderForMiscRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForMiscRow>>> {
         Ok(Json(tables::folder_for_misc::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_misc/{id}", tag = "folder_for_misc",
+        params(("id" = i32, Path, description = "The key of the Folder<Misc>")),
+        responses(
+            (status = 200, description = "The Folder<Misc>", body = FolderForMiscRow),
+            (status = 404, description = "No Folder<Misc> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForMiscRow>> {
         tables::folder_for_misc::get(state.store(), id)
             .await?
@@ -831,6 +1339,11 @@ pub mod folder_for_misc {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Misc> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_misc", tag = "folder_for_misc",
+        request_body = FolderForMiscRow,
+        responses((status = 200, description = "The Folder<Misc> as stored, with the key the database gave it", body = FolderForMiscRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForMiscRow>,
@@ -839,6 +1352,15 @@ pub mod folder_for_misc {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_misc/{id}", tag = "folder_for_misc",
+        params(("id" = i32, Path, description = "The key of the Folder<Misc>")),
+        request_body = FolderForMiscRow,
+        responses(
+            (status = 200, description = "The Folder<Misc> as stored", body = FolderForMiscRow),
+            (status = 404, description = "No Folder<Misc> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -854,6 +1376,11 @@ pub mod folder_for_misc {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_misc/{id}", tag = "folder_for_misc",
+        params(("id" = i32, Path, description = "The key of the Folder<Misc>")),
+        responses((status = 204, description = "The Folder<Misc> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -870,10 +1397,22 @@ pub mod folder_for_recipe {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_recipe", tag = "folder_for_recipe",
+        responses((status = 200, description = "Every Folder<Recipe> row", body = Vec<FolderForRecipeRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForRecipeRow>>> {
         Ok(Json(tables::folder_for_recipe::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_recipe/{id}", tag = "folder_for_recipe",
+        params(("id" = i32, Path, description = "The key of the Folder<Recipe>")),
+        responses(
+            (status = 200, description = "The Folder<Recipe>", body = FolderForRecipeRow),
+            (status = 404, description = "No Folder<Recipe> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForRecipeRow>> {
         tables::folder_for_recipe::get(state.store(), id)
             .await?
@@ -881,6 +1420,11 @@ pub mod folder_for_recipe {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Recipe> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_recipe", tag = "folder_for_recipe",
+        request_body = FolderForRecipeRow,
+        responses((status = 200, description = "The Folder<Recipe> as stored, with the key the database gave it", body = FolderForRecipeRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForRecipeRow>,
@@ -889,6 +1433,15 @@ pub mod folder_for_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_recipe/{id}", tag = "folder_for_recipe",
+        params(("id" = i32, Path, description = "The key of the Folder<Recipe>")),
+        request_body = FolderForRecipeRow,
+        responses(
+            (status = 200, description = "The Folder<Recipe> as stored", body = FolderForRecipeRow),
+            (status = 404, description = "No Folder<Recipe> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -904,6 +1457,11 @@ pub mod folder_for_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_recipe/{id}", tag = "folder_for_recipe",
+        params(("id" = i32, Path, description = "The key of the Folder<Recipe>")),
+        responses((status = 204, description = "The Folder<Recipe> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -920,10 +1478,22 @@ pub mod folder_for_style {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_style", tag = "folder_for_style",
+        responses((status = 200, description = "Every Folder<Style> row", body = Vec<FolderForStyleRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForStyleRow>>> {
         Ok(Json(tables::folder_for_style::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_style/{id}", tag = "folder_for_style",
+        params(("id" = i32, Path, description = "The key of the Folder<Style>")),
+        responses(
+            (status = 200, description = "The Folder<Style>", body = FolderForStyleRow),
+            (status = 404, description = "No Folder<Style> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForStyleRow>> {
         tables::folder_for_style::get(state.store(), id)
             .await?
@@ -931,6 +1501,11 @@ pub mod folder_for_style {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Style> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_style", tag = "folder_for_style",
+        request_body = FolderForStyleRow,
+        responses((status = 200, description = "The Folder<Style> as stored, with the key the database gave it", body = FolderForStyleRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForStyleRow>,
@@ -939,6 +1514,15 @@ pub mod folder_for_style {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_style/{id}", tag = "folder_for_style",
+        params(("id" = i32, Path, description = "The key of the Folder<Style>")),
+        request_body = FolderForStyleRow,
+        responses(
+            (status = 200, description = "The Folder<Style> as stored", body = FolderForStyleRow),
+            (status = 404, description = "No Folder<Style> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -954,6 +1538,11 @@ pub mod folder_for_style {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_style/{id}", tag = "folder_for_style",
+        params(("id" = i32, Path, description = "The key of the Folder<Style>")),
+        responses((status = 204, description = "The Folder<Style> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -970,10 +1559,22 @@ pub mod folder_for_water {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_water", tag = "folder_for_water",
+        responses((status = 200, description = "Every Folder<Water> row", body = Vec<FolderForWaterRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForWaterRow>>> {
         Ok(Json(tables::folder_for_water::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_water/{id}", tag = "folder_for_water",
+        params(("id" = i32, Path, description = "The key of the Folder<Water>")),
+        responses(
+            (status = 200, description = "The Folder<Water>", body = FolderForWaterRow),
+            (status = 404, description = "No Folder<Water> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForWaterRow>> {
         tables::folder_for_water::get(state.store(), id)
             .await?
@@ -981,6 +1582,11 @@ pub mod folder_for_water {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Water> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_water", tag = "folder_for_water",
+        request_body = FolderForWaterRow,
+        responses((status = 200, description = "The Folder<Water> as stored, with the key the database gave it", body = FolderForWaterRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForWaterRow>,
@@ -989,6 +1595,15 @@ pub mod folder_for_water {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_water/{id}", tag = "folder_for_water",
+        params(("id" = i32, Path, description = "The key of the Folder<Water>")),
+        request_body = FolderForWaterRow,
+        responses(
+            (status = 200, description = "The Folder<Water> as stored", body = FolderForWaterRow),
+            (status = 404, description = "No Folder<Water> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1004,6 +1619,11 @@ pub mod folder_for_water {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_water/{id}", tag = "folder_for_water",
+        params(("id" = i32, Path, description = "The key of the Folder<Water>")),
+        responses((status = 204, description = "The Folder<Water> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1020,10 +1640,22 @@ pub mod folder_for_yeast {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_yeast", tag = "folder_for_yeast",
+        responses((status = 200, description = "Every Folder<Yeast> row", body = Vec<FolderForYeastRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<FolderForYeastRow>>> {
         Ok(Json(tables::folder_for_yeast::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/folder_for_yeast/{id}", tag = "folder_for_yeast",
+        params(("id" = i32, Path, description = "The key of the Folder<Yeast>")),
+        responses(
+            (status = 200, description = "The Folder<Yeast>", body = FolderForYeastRow),
+            (status = 404, description = "No Folder<Yeast> with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForYeastRow>> {
         tables::folder_for_yeast::get(state.store(), id)
             .await?
@@ -1031,6 +1663,11 @@ pub mod folder_for_yeast {
             .ok_or_else(|| ApiError::NotFound(format!("no Folder<Yeast> with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/folder_for_yeast", tag = "folder_for_yeast",
+        request_body = FolderForYeastRow,
+        responses((status = 200, description = "The Folder<Yeast> as stored, with the key the database gave it", body = FolderForYeastRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<FolderForYeastRow>,
@@ -1039,6 +1676,15 @@ pub mod folder_for_yeast {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/folder_for_yeast/{id}", tag = "folder_for_yeast",
+        params(("id" = i32, Path, description = "The key of the Folder<Yeast>")),
+        request_body = FolderForYeastRow,
+        responses(
+            (status = 200, description = "The Folder<Yeast> as stored", body = FolderForYeastRow),
+            (status = 404, description = "No Folder<Yeast> with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1054,6 +1700,11 @@ pub mod folder_for_yeast {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/folder_for_yeast/{id}", tag = "folder_for_yeast",
+        params(("id" = i32, Path, description = "The key of the Folder<Yeast>")),
+        responses((status = 204, description = "The Folder<Yeast> was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1070,10 +1721,22 @@ pub mod hop {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop", tag = "hop",
+        responses((status = 200, description = "Every Hop row", body = Vec<HopRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<HopRow>>> {
         Ok(Json(tables::hop::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop/{id}", tag = "hop",
+        params(("id" = i32, Path, description = "The key of the Hop")),
+        responses(
+            (status = 200, description = "The Hop", body = HopRow),
+            (status = 404, description = "No Hop with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopRow>> {
         tables::hop::get(state.store(), id)
             .await?
@@ -1081,11 +1744,25 @@ pub mod hop {
             .ok_or_else(|| ApiError::NotFound(format!("no Hop with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/hop", tag = "hop",
+        request_body = HopRow,
+        responses((status = 200, description = "The Hop as stored, with the key the database gave it", body = HopRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<HopRow>) -> ApiResult<Json<HopRow>> {
         let id = tables::hop::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/hop/{id}", tag = "hop",
+        params(("id" = i32, Path, description = "The key of the Hop")),
+        request_body = HopRow,
+        responses(
+            (status = 200, description = "The Hop as stored", body = HopRow),
+            (status = 404, description = "No Hop with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1101,6 +1778,11 @@ pub mod hop {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/hop/{id}", tag = "hop",
+        params(("id" = i32, Path, description = "The key of the Hop")),
+        responses((status = 204, description = "The Hop was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1117,10 +1799,22 @@ pub mod hop_in_recipe {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop_in_recipe", tag = "hop_in_recipe",
+        responses((status = 200, description = "Every RecipeAdditionHop row", body = Vec<HopInRecipeRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<HopInRecipeRow>>> {
         Ok(Json(tables::hop_in_recipe::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop_in_recipe/{id}", tag = "hop_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionHop")),
+        responses(
+            (status = 200, description = "The RecipeAdditionHop", body = HopInRecipeRow),
+            (status = 404, description = "No RecipeAdditionHop with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopInRecipeRow>> {
         tables::hop_in_recipe::get(state.store(), id)
             .await?
@@ -1128,11 +1822,25 @@ pub mod hop_in_recipe {
             .ok_or_else(|| ApiError::NotFound(format!("no RecipeAdditionHop with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/hop_in_recipe", tag = "hop_in_recipe",
+        request_body = HopInRecipeRow,
+        responses((status = 200, description = "The RecipeAdditionHop as stored, with the key the database gave it", body = HopInRecipeRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<HopInRecipeRow>) -> ApiResult<Json<HopInRecipeRow>> {
         let id = tables::hop_in_recipe::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/hop_in_recipe/{id}", tag = "hop_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionHop")),
+        request_body = HopInRecipeRow,
+        responses(
+            (status = 200, description = "The RecipeAdditionHop as stored", body = HopInRecipeRow),
+            (status = 404, description = "No RecipeAdditionHop with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1148,6 +1856,11 @@ pub mod hop_in_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/hop_in_recipe/{id}", tag = "hop_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionHop")),
+        responses((status = 204, description = "The RecipeAdditionHop was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1164,10 +1877,22 @@ pub mod hop_stock_purchase {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop_stock_purchase", tag = "hop_stock_purchase",
+        responses((status = 200, description = "Every StockPurchaseHop row", body = Vec<HopStockPurchaseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<HopStockPurchaseRow>>> {
         Ok(Json(tables::hop_stock_purchase::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop_stock_purchase/{id}", tag = "hop_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseHop")),
+        responses(
+            (status = 200, description = "The StockPurchaseHop", body = HopStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseHop with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopStockPurchaseRow>> {
         tables::hop_stock_purchase::get(state.store(), id)
             .await?
@@ -1175,6 +1900,11 @@ pub mod hop_stock_purchase {
             .ok_or_else(|| ApiError::NotFound(format!("no StockPurchaseHop with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/hop_stock_purchase", tag = "hop_stock_purchase",
+        request_body = HopStockPurchaseRow,
+        responses((status = 200, description = "The StockPurchaseHop as stored, with the key the database gave it", body = HopStockPurchaseRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<HopStockPurchaseRow>,
@@ -1183,6 +1913,15 @@ pub mod hop_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/hop_stock_purchase/{id}", tag = "hop_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseHop")),
+        request_body = HopStockPurchaseRow,
+        responses(
+            (status = 200, description = "The StockPurchaseHop as stored", body = HopStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseHop with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1198,6 +1937,11 @@ pub mod hop_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/hop_stock_purchase/{id}", tag = "hop_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseHop")),
+        responses((status = 204, description = "The StockPurchaseHop was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1214,10 +1958,22 @@ pub mod hop_stock_use {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop_stock_use", tag = "hop_stock_use",
+        responses((status = 200, description = "Every StockUseHop row", body = Vec<HopStockUseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<HopStockUseRow>>> {
         Ok(Json(tables::hop_stock_use::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/hop_stock_use/{id}", tag = "hop_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseHop")),
+        responses(
+            (status = 200, description = "The StockUseHop", body = HopStockUseRow),
+            (status = 404, description = "No StockUseHop with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopStockUseRow>> {
         tables::hop_stock_use::get(state.store(), id)
             .await?
@@ -1225,11 +1981,25 @@ pub mod hop_stock_use {
             .ok_or_else(|| ApiError::NotFound(format!("no StockUseHop with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/hop_stock_use", tag = "hop_stock_use",
+        request_body = HopStockUseRow,
+        responses((status = 200, description = "The StockUseHop as stored, with the key the database gave it", body = HopStockUseRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<HopStockUseRow>) -> ApiResult<Json<HopStockUseRow>> {
         let id = tables::hop_stock_use::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/hop_stock_use/{id}", tag = "hop_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseHop")),
+        request_body = HopStockUseRow,
+        responses(
+            (status = 200, description = "The StockUseHop as stored", body = HopStockUseRow),
+            (status = 404, description = "No StockUseHop with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1245,6 +2015,11 @@ pub mod hop_stock_use {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/hop_stock_use/{id}", tag = "hop_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseHop")),
+        responses((status = 204, description = "The StockUseHop was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1261,10 +2036,22 @@ pub mod instruction {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/instruction", tag = "instruction",
+        responses((status = 200, description = "Every Instruction row", body = Vec<InstructionRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<InstructionRow>>> {
         Ok(Json(tables::instruction::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/instruction/{id}", tag = "instruction",
+        params(("id" = i32, Path, description = "The key of the Instruction")),
+        responses(
+            (status = 200, description = "The Instruction", body = InstructionRow),
+            (status = 404, description = "No Instruction with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<InstructionRow>> {
         tables::instruction::get(state.store(), id)
             .await?
@@ -1272,11 +2059,25 @@ pub mod instruction {
             .ok_or_else(|| ApiError::NotFound(format!("no Instruction with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/instruction", tag = "instruction",
+        request_body = InstructionRow,
+        responses((status = 200, description = "The Instruction as stored, with the key the database gave it", body = InstructionRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<InstructionRow>) -> ApiResult<Json<InstructionRow>> {
         let id = tables::instruction::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/instruction/{id}", tag = "instruction",
+        params(("id" = i32, Path, description = "The key of the Instruction")),
+        request_body = InstructionRow,
+        responses(
+            (status = 200, description = "The Instruction as stored", body = InstructionRow),
+            (status = 404, description = "No Instruction with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1292,6 +2093,11 @@ pub mod instruction {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/instruction/{id}", tag = "instruction",
+        params(("id" = i32, Path, description = "The key of the Instruction")),
+        responses((status = 204, description = "The Instruction was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1308,10 +2114,22 @@ pub mod mash {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/mash", tag = "mash",
+        responses((status = 200, description = "Every Mash row", body = Vec<MashRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<MashRow>>> {
         Ok(Json(tables::mash::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/mash/{id}", tag = "mash",
+        params(("id" = i32, Path, description = "The key of the Mash")),
+        responses(
+            (status = 200, description = "The Mash", body = MashRow),
+            (status = 404, description = "No Mash with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MashRow>> {
         tables::mash::get(state.store(), id)
             .await?
@@ -1319,11 +2137,25 @@ pub mod mash {
             .ok_or_else(|| ApiError::NotFound(format!("no Mash with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/mash", tag = "mash",
+        request_body = MashRow,
+        responses((status = 200, description = "The Mash as stored, with the key the database gave it", body = MashRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<MashRow>) -> ApiResult<Json<MashRow>> {
         let id = tables::mash::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/mash/{id}", tag = "mash",
+        params(("id" = i32, Path, description = "The key of the Mash")),
+        request_body = MashRow,
+        responses(
+            (status = 200, description = "The Mash as stored", body = MashRow),
+            (status = 404, description = "No Mash with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1339,6 +2171,11 @@ pub mod mash {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/mash/{id}", tag = "mash",
+        params(("id" = i32, Path, description = "The key of the Mash")),
+        responses((status = 204, description = "The Mash was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1355,10 +2192,22 @@ pub mod mash_step {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/mash_step", tag = "mash_step",
+        responses((status = 200, description = "Every MashStep row", body = Vec<MashStepRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<MashStepRow>>> {
         Ok(Json(tables::mash_step::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/mash_step/{id}", tag = "mash_step",
+        params(("id" = i32, Path, description = "The key of the MashStep")),
+        responses(
+            (status = 200, description = "The MashStep", body = MashStepRow),
+            (status = 404, description = "No MashStep with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MashStepRow>> {
         tables::mash_step::get(state.store(), id)
             .await?
@@ -1366,11 +2215,25 @@ pub mod mash_step {
             .ok_or_else(|| ApiError::NotFound(format!("no MashStep with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/mash_step", tag = "mash_step",
+        request_body = MashStepRow,
+        responses((status = 200, description = "The MashStep as stored, with the key the database gave it", body = MashStepRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<MashStepRow>) -> ApiResult<Json<MashStepRow>> {
         let id = tables::mash_step::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/mash_step/{id}", tag = "mash_step",
+        params(("id" = i32, Path, description = "The key of the MashStep")),
+        request_body = MashStepRow,
+        responses(
+            (status = 200, description = "The MashStep as stored", body = MashStepRow),
+            (status = 404, description = "No MashStep with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1386,6 +2249,11 @@ pub mod mash_step {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/mash_step/{id}", tag = "mash_step",
+        params(("id" = i32, Path, description = "The key of the MashStep")),
+        responses((status = 204, description = "The MashStep was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1402,10 +2270,22 @@ pub mod misc {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc", tag = "misc",
+        responses((status = 200, description = "Every Misc row", body = Vec<MiscRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<MiscRow>>> {
         Ok(Json(tables::misc::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc/{id}", tag = "misc",
+        params(("id" = i32, Path, description = "The key of the Misc")),
+        responses(
+            (status = 200, description = "The Misc", body = MiscRow),
+            (status = 404, description = "No Misc with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscRow>> {
         tables::misc::get(state.store(), id)
             .await?
@@ -1413,11 +2293,25 @@ pub mod misc {
             .ok_or_else(|| ApiError::NotFound(format!("no Misc with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/misc", tag = "misc",
+        request_body = MiscRow,
+        responses((status = 200, description = "The Misc as stored, with the key the database gave it", body = MiscRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<MiscRow>) -> ApiResult<Json<MiscRow>> {
         let id = tables::misc::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/misc/{id}", tag = "misc",
+        params(("id" = i32, Path, description = "The key of the Misc")),
+        request_body = MiscRow,
+        responses(
+            (status = 200, description = "The Misc as stored", body = MiscRow),
+            (status = 404, description = "No Misc with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1433,6 +2327,11 @@ pub mod misc {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/misc/{id}", tag = "misc",
+        params(("id" = i32, Path, description = "The key of the Misc")),
+        responses((status = 204, description = "The Misc was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1449,10 +2348,22 @@ pub mod misc_in_recipe {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc_in_recipe", tag = "misc_in_recipe",
+        responses((status = 200, description = "Every RecipeAdditionMisc row", body = Vec<MiscInRecipeRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<MiscInRecipeRow>>> {
         Ok(Json(tables::misc_in_recipe::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc_in_recipe/{id}", tag = "misc_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionMisc")),
+        responses(
+            (status = 200, description = "The RecipeAdditionMisc", body = MiscInRecipeRow),
+            (status = 404, description = "No RecipeAdditionMisc with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscInRecipeRow>> {
         tables::misc_in_recipe::get(state.store(), id)
             .await?
@@ -1460,6 +2371,11 @@ pub mod misc_in_recipe {
             .ok_or_else(|| ApiError::NotFound(format!("no RecipeAdditionMisc with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/misc_in_recipe", tag = "misc_in_recipe",
+        request_body = MiscInRecipeRow,
+        responses((status = 200, description = "The RecipeAdditionMisc as stored, with the key the database gave it", body = MiscInRecipeRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<MiscInRecipeRow>,
@@ -1468,6 +2384,15 @@ pub mod misc_in_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/misc_in_recipe/{id}", tag = "misc_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionMisc")),
+        request_body = MiscInRecipeRow,
+        responses(
+            (status = 200, description = "The RecipeAdditionMisc as stored", body = MiscInRecipeRow),
+            (status = 404, description = "No RecipeAdditionMisc with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1483,6 +2408,11 @@ pub mod misc_in_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/misc_in_recipe/{id}", tag = "misc_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionMisc")),
+        responses((status = 204, description = "The RecipeAdditionMisc was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1499,10 +2429,22 @@ pub mod misc_stock_purchase {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc_stock_purchase", tag = "misc_stock_purchase",
+        responses((status = 200, description = "Every StockPurchaseMisc row", body = Vec<MiscStockPurchaseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<MiscStockPurchaseRow>>> {
         Ok(Json(tables::misc_stock_purchase::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc_stock_purchase/{id}", tag = "misc_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseMisc")),
+        responses(
+            (status = 200, description = "The StockPurchaseMisc", body = MiscStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseMisc with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscStockPurchaseRow>> {
         tables::misc_stock_purchase::get(state.store(), id)
             .await?
@@ -1510,6 +2452,11 @@ pub mod misc_stock_purchase {
             .ok_or_else(|| ApiError::NotFound(format!("no StockPurchaseMisc with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/misc_stock_purchase", tag = "misc_stock_purchase",
+        request_body = MiscStockPurchaseRow,
+        responses((status = 200, description = "The StockPurchaseMisc as stored, with the key the database gave it", body = MiscStockPurchaseRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<MiscStockPurchaseRow>,
@@ -1518,6 +2465,15 @@ pub mod misc_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/misc_stock_purchase/{id}", tag = "misc_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseMisc")),
+        request_body = MiscStockPurchaseRow,
+        responses(
+            (status = 200, description = "The StockPurchaseMisc as stored", body = MiscStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseMisc with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1533,6 +2489,11 @@ pub mod misc_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/misc_stock_purchase/{id}", tag = "misc_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseMisc")),
+        responses((status = 204, description = "The StockPurchaseMisc was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1549,10 +2510,22 @@ pub mod misc_stock_use {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc_stock_use", tag = "misc_stock_use",
+        responses((status = 200, description = "Every StockUseMisc row", body = Vec<MiscStockUseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<MiscStockUseRow>>> {
         Ok(Json(tables::misc_stock_use::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/misc_stock_use/{id}", tag = "misc_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseMisc")),
+        responses(
+            (status = 200, description = "The StockUseMisc", body = MiscStockUseRow),
+            (status = 404, description = "No StockUseMisc with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscStockUseRow>> {
         tables::misc_stock_use::get(state.store(), id)
             .await?
@@ -1560,6 +2533,11 @@ pub mod misc_stock_use {
             .ok_or_else(|| ApiError::NotFound(format!("no StockUseMisc with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/misc_stock_use", tag = "misc_stock_use",
+        request_body = MiscStockUseRow,
+        responses((status = 200, description = "The StockUseMisc as stored, with the key the database gave it", body = MiscStockUseRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<MiscStockUseRow>,
@@ -1568,6 +2546,15 @@ pub mod misc_stock_use {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/misc_stock_use/{id}", tag = "misc_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseMisc")),
+        request_body = MiscStockUseRow,
+        responses(
+            (status = 200, description = "The StockUseMisc as stored", body = MiscStockUseRow),
+            (status = 404, description = "No StockUseMisc with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1583,6 +2570,11 @@ pub mod misc_stock_use {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/misc_stock_use/{id}", tag = "misc_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseMisc")),
+        responses((status = 204, description = "The StockUseMisc was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1599,10 +2591,22 @@ pub mod recipe {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/recipe", tag = "recipe",
+        responses((status = 200, description = "Every Recipe row", body = Vec<RecipeRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<RecipeRow>>> {
         Ok(Json(tables::recipe::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/recipe/{id}", tag = "recipe",
+        params(("id" = i32, Path, description = "The key of the Recipe")),
+        responses(
+            (status = 200, description = "The Recipe", body = RecipeRow),
+            (status = 404, description = "No Recipe with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<RecipeRow>> {
         tables::recipe::get(state.store(), id)
             .await?
@@ -1610,11 +2614,25 @@ pub mod recipe {
             .ok_or_else(|| ApiError::NotFound(format!("no Recipe with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/recipe", tag = "recipe",
+        request_body = RecipeRow,
+        responses((status = 200, description = "The Recipe as stored, with the key the database gave it", body = RecipeRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<RecipeRow>) -> ApiResult<Json<RecipeRow>> {
         let id = tables::recipe::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/recipe/{id}", tag = "recipe",
+        params(("id" = i32, Path, description = "The key of the Recipe")),
+        request_body = RecipeRow,
+        responses(
+            (status = 200, description = "The Recipe as stored", body = RecipeRow),
+            (status = 404, description = "No Recipe with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1630,6 +2648,11 @@ pub mod recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/recipe/{id}", tag = "recipe",
+        params(("id" = i32, Path, description = "The key of the Recipe")),
+        responses((status = 204, description = "The Recipe was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1646,10 +2669,22 @@ pub mod style {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/style", tag = "style",
+        responses((status = 200, description = "Every Style row", body = Vec<StyleRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<StyleRow>>> {
         Ok(Json(tables::style::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/style/{id}", tag = "style",
+        params(("id" = i32, Path, description = "The key of the Style")),
+        responses(
+            (status = 200, description = "The Style", body = StyleRow),
+            (status = 404, description = "No Style with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<StyleRow>> {
         tables::style::get(state.store(), id)
             .await?
@@ -1657,11 +2692,25 @@ pub mod style {
             .ok_or_else(|| ApiError::NotFound(format!("no Style with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/style", tag = "style",
+        request_body = StyleRow,
+        responses((status = 200, description = "The Style as stored, with the key the database gave it", body = StyleRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<StyleRow>) -> ApiResult<Json<StyleRow>> {
         let id = tables::style::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/style/{id}", tag = "style",
+        params(("id" = i32, Path, description = "The key of the Style")),
+        request_body = StyleRow,
+        responses(
+            (status = 200, description = "The Style as stored", body = StyleRow),
+            (status = 404, description = "No Style with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1677,6 +2726,11 @@ pub mod style {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/style/{id}", tag = "style",
+        params(("id" = i32, Path, description = "The key of the Style")),
+        responses((status = 204, description = "The Style was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1693,10 +2747,22 @@ pub mod water {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/water", tag = "water",
+        responses((status = 200, description = "Every Water row", body = Vec<WaterRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<WaterRow>>> {
         Ok(Json(tables::water::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/water/{id}", tag = "water",
+        params(("id" = i32, Path, description = "The key of the Water")),
+        responses(
+            (status = 200, description = "The Water", body = WaterRow),
+            (status = 404, description = "No Water with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<WaterRow>> {
         tables::water::get(state.store(), id)
             .await?
@@ -1704,11 +2770,25 @@ pub mod water {
             .ok_or_else(|| ApiError::NotFound(format!("no Water with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/water", tag = "water",
+        request_body = WaterRow,
+        responses((status = 200, description = "The Water as stored, with the key the database gave it", body = WaterRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<WaterRow>) -> ApiResult<Json<WaterRow>> {
         let id = tables::water::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/water/{id}", tag = "water",
+        params(("id" = i32, Path, description = "The key of the Water")),
+        request_body = WaterRow,
+        responses(
+            (status = 200, description = "The Water as stored", body = WaterRow),
+            (status = 404, description = "No Water with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1724,6 +2804,11 @@ pub mod water {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/water/{id}", tag = "water",
+        params(("id" = i32, Path, description = "The key of the Water")),
+        responses((status = 204, description = "The Water was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1740,10 +2825,22 @@ pub mod yeast {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast", tag = "yeast",
+        responses((status = 200, description = "Every Yeast row", body = Vec<YeastRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<YeastRow>>> {
         Ok(Json(tables::yeast::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast/{id}", tag = "yeast",
+        params(("id" = i32, Path, description = "The key of the Yeast")),
+        responses(
+            (status = 200, description = "The Yeast", body = YeastRow),
+            (status = 404, description = "No Yeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastRow>> {
         tables::yeast::get(state.store(), id)
             .await?
@@ -1751,11 +2848,25 @@ pub mod yeast {
             .ok_or_else(|| ApiError::NotFound(format!("no Yeast with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/yeast", tag = "yeast",
+        request_body = YeastRow,
+        responses((status = 200, description = "The Yeast as stored, with the key the database gave it", body = YeastRow)),
+    )]
     async fn create(State(state): State<AppState>, Json(row): Json<YeastRow>) -> ApiResult<Json<YeastRow>> {
         let id = tables::yeast::insert(state.store(), &row).await?;
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/yeast/{id}", tag = "yeast",
+        params(("id" = i32, Path, description = "The key of the Yeast")),
+        request_body = YeastRow,
+        responses(
+            (status = 200, description = "The Yeast as stored", body = YeastRow),
+            (status = 404, description = "No Yeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1771,6 +2882,11 @@ pub mod yeast {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/yeast/{id}", tag = "yeast",
+        params(("id" = i32, Path, description = "The key of the Yeast")),
+        responses((status = 204, description = "The Yeast was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1787,10 +2903,22 @@ pub mod yeast_in_recipe {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast_in_recipe", tag = "yeast_in_recipe",
+        responses((status = 200, description = "Every RecipeAdditionYeast row", body = Vec<YeastInRecipeRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<YeastInRecipeRow>>> {
         Ok(Json(tables::yeast_in_recipe::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast_in_recipe/{id}", tag = "yeast_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionYeast")),
+        responses(
+            (status = 200, description = "The RecipeAdditionYeast", body = YeastInRecipeRow),
+            (status = 404, description = "No RecipeAdditionYeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastInRecipeRow>> {
         tables::yeast_in_recipe::get(state.store(), id)
             .await?
@@ -1798,6 +2926,11 @@ pub mod yeast_in_recipe {
             .ok_or_else(|| ApiError::NotFound(format!("no RecipeAdditionYeast with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/yeast_in_recipe", tag = "yeast_in_recipe",
+        request_body = YeastInRecipeRow,
+        responses((status = 200, description = "The RecipeAdditionYeast as stored, with the key the database gave it", body = YeastInRecipeRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<YeastInRecipeRow>,
@@ -1806,6 +2939,15 @@ pub mod yeast_in_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/yeast_in_recipe/{id}", tag = "yeast_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionYeast")),
+        request_body = YeastInRecipeRow,
+        responses(
+            (status = 200, description = "The RecipeAdditionYeast as stored", body = YeastInRecipeRow),
+            (status = 404, description = "No RecipeAdditionYeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1821,6 +2963,11 @@ pub mod yeast_in_recipe {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/yeast_in_recipe/{id}", tag = "yeast_in_recipe",
+        params(("id" = i32, Path, description = "The key of the RecipeAdditionYeast")),
+        responses((status = 204, description = "The RecipeAdditionYeast was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1837,10 +2984,22 @@ pub mod yeast_stock_purchase {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast_stock_purchase", tag = "yeast_stock_purchase",
+        responses((status = 200, description = "Every StockPurchaseYeast row", body = Vec<YeastStockPurchaseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<YeastStockPurchaseRow>>> {
         Ok(Json(tables::yeast_stock_purchase::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast_stock_purchase/{id}", tag = "yeast_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseYeast")),
+        responses(
+            (status = 200, description = "The StockPurchaseYeast", body = YeastStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseYeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastStockPurchaseRow>> {
         tables::yeast_stock_purchase::get(state.store(), id)
             .await?
@@ -1848,6 +3007,11 @@ pub mod yeast_stock_purchase {
             .ok_or_else(|| ApiError::NotFound(format!("no StockPurchaseYeast with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/yeast_stock_purchase", tag = "yeast_stock_purchase",
+        request_body = YeastStockPurchaseRow,
+        responses((status = 200, description = "The StockPurchaseYeast as stored, with the key the database gave it", body = YeastStockPurchaseRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<YeastStockPurchaseRow>,
@@ -1856,6 +3020,15 @@ pub mod yeast_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/yeast_stock_purchase/{id}", tag = "yeast_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseYeast")),
+        request_body = YeastStockPurchaseRow,
+        responses(
+            (status = 200, description = "The StockPurchaseYeast as stored", body = YeastStockPurchaseRow),
+            (status = 404, description = "No StockPurchaseYeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1871,6 +3044,11 @@ pub mod yeast_stock_purchase {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/yeast_stock_purchase/{id}", tag = "yeast_stock_purchase",
+        params(("id" = i32, Path, description = "The key of the StockPurchaseYeast")),
+        responses((status = 204, description = "The StockPurchaseYeast was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1887,10 +3065,22 @@ pub mod yeast_stock_use {
         Router::new().route("/", get(list).post(create)).route("/{id}", get(read).put(update).delete(remove))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast_stock_use", tag = "yeast_stock_use",
+        responses((status = 200, description = "Every StockUseYeast row", body = Vec<YeastStockUseRow>)),
+    )]
     async fn list(State(state): State<AppState>) -> ApiResult<Json<Vec<YeastStockUseRow>>> {
         Ok(Json(tables::yeast_stock_use::list(state.store()).await?))
     }
 
+    #[utoipa::path(
+        get, path = "/api/yeast_stock_use/{id}", tag = "yeast_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseYeast")),
+        responses(
+            (status = 200, description = "The StockUseYeast", body = YeastStockUseRow),
+            (status = 404, description = "No StockUseYeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastStockUseRow>> {
         tables::yeast_stock_use::get(state.store(), id)
             .await?
@@ -1898,6 +3088,11 @@ pub mod yeast_stock_use {
             .ok_or_else(|| ApiError::NotFound(format!("no StockUseYeast with id {id}")))
     }
 
+    #[utoipa::path(
+        post, path = "/api/yeast_stock_use", tag = "yeast_stock_use",
+        request_body = YeastStockUseRow,
+        responses((status = 200, description = "The StockUseYeast as stored, with the key the database gave it", body = YeastStockUseRow)),
+    )]
     async fn create(
         State(state): State<AppState>,
         Json(row): Json<YeastStockUseRow>,
@@ -1906,6 +3101,15 @@ pub mod yeast_stock_use {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        put, path = "/api/yeast_stock_use/{id}", tag = "yeast_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseYeast")),
+        request_body = YeastStockUseRow,
+        responses(
+            (status = 200, description = "The StockUseYeast as stored", body = YeastStockUseRow),
+            (status = 404, description = "No StockUseYeast with that key", body = ErrorBody),
+        ),
+    )]
     async fn update(
         State(state): State<AppState>,
         Path(id): Path<i32>,
@@ -1921,6 +3125,11 @@ pub mod yeast_stock_use {
         read(State(state), Path(id)).await
     }
 
+    #[utoipa::path(
+        delete, path = "/api/yeast_stock_use/{id}", tag = "yeast_stock_use",
+        params(("id" = i32, Path, description = "The key of the StockUseYeast")),
+        responses((status = 204, description = "The StockUseYeast was deleted")),
+    )]
     async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
@@ -1972,3 +3181,249 @@ pub fn table_routes() -> Router<AppState> {
         .nest("/yeast_stock_purchase", yeast_stock_purchase::routes())
         .nest("/yeast_stock_use", yeast_stock_use::routes())
 }
+
+/// The generated half of the API description.
+///
+/// `crate::openapi` folds this together with the hand-written routes.
+#[derive(utoipa::OpenApi)]
+#[openapi(
+    paths(
+        boil::list,
+        boil::read,
+        boil::create,
+        boil::update,
+        boil::remove,
+        boil_step::list,
+        boil_step::read,
+        boil_step::create,
+        boil_step::update,
+        boil_step::remove,
+        brew_log::list,
+        brew_log::read,
+        brew_log::create,
+        brew_log::update,
+        brew_log::remove,
+        equipment::list,
+        equipment::read,
+        equipment::create,
+        equipment::update,
+        equipment::remove,
+        fermentable::list,
+        fermentable::read,
+        fermentable::create,
+        fermentable::update,
+        fermentable::remove,
+        fermentable_in_recipe::list,
+        fermentable_in_recipe::read,
+        fermentable_in_recipe::create,
+        fermentable_in_recipe::update,
+        fermentable_in_recipe::remove,
+        fermentable_stock_purchase::list,
+        fermentable_stock_purchase::read,
+        fermentable_stock_purchase::create,
+        fermentable_stock_purchase::update,
+        fermentable_stock_purchase::remove,
+        fermentable_stock_use::list,
+        fermentable_stock_use::read,
+        fermentable_stock_use::create,
+        fermentable_stock_use::update,
+        fermentable_stock_use::remove,
+        fermentation::list,
+        fermentation::read,
+        fermentation::create,
+        fermentation::update,
+        fermentation::remove,
+        fermentation_step::list,
+        fermentation_step::read,
+        fermentation_step::create,
+        fermentation_step::update,
+        fermentation_step::remove,
+        folder_for_boil::list,
+        folder_for_boil::read,
+        folder_for_boil::create,
+        folder_for_boil::update,
+        folder_for_boil::remove,
+        folder_for_equipment::list,
+        folder_for_equipment::read,
+        folder_for_equipment::create,
+        folder_for_equipment::update,
+        folder_for_equipment::remove,
+        folder_for_fermentable::list,
+        folder_for_fermentable::read,
+        folder_for_fermentable::create,
+        folder_for_fermentable::update,
+        folder_for_fermentable::remove,
+        folder_for_fermentation::list,
+        folder_for_fermentation::read,
+        folder_for_fermentation::create,
+        folder_for_fermentation::update,
+        folder_for_fermentation::remove,
+        folder_for_hop::list,
+        folder_for_hop::read,
+        folder_for_hop::create,
+        folder_for_hop::update,
+        folder_for_hop::remove,
+        folder_for_mash::list,
+        folder_for_mash::read,
+        folder_for_mash::create,
+        folder_for_mash::update,
+        folder_for_mash::remove,
+        folder_for_misc::list,
+        folder_for_misc::read,
+        folder_for_misc::create,
+        folder_for_misc::update,
+        folder_for_misc::remove,
+        folder_for_recipe::list,
+        folder_for_recipe::read,
+        folder_for_recipe::create,
+        folder_for_recipe::update,
+        folder_for_recipe::remove,
+        folder_for_style::list,
+        folder_for_style::read,
+        folder_for_style::create,
+        folder_for_style::update,
+        folder_for_style::remove,
+        folder_for_water::list,
+        folder_for_water::read,
+        folder_for_water::create,
+        folder_for_water::update,
+        folder_for_water::remove,
+        folder_for_yeast::list,
+        folder_for_yeast::read,
+        folder_for_yeast::create,
+        folder_for_yeast::update,
+        folder_for_yeast::remove,
+        hop::list,
+        hop::read,
+        hop::create,
+        hop::update,
+        hop::remove,
+        hop_in_recipe::list,
+        hop_in_recipe::read,
+        hop_in_recipe::create,
+        hop_in_recipe::update,
+        hop_in_recipe::remove,
+        hop_stock_purchase::list,
+        hop_stock_purchase::read,
+        hop_stock_purchase::create,
+        hop_stock_purchase::update,
+        hop_stock_purchase::remove,
+        hop_stock_use::list,
+        hop_stock_use::read,
+        hop_stock_use::create,
+        hop_stock_use::update,
+        hop_stock_use::remove,
+        instruction::list,
+        instruction::read,
+        instruction::create,
+        instruction::update,
+        instruction::remove,
+        mash::list,
+        mash::read,
+        mash::create,
+        mash::update,
+        mash::remove,
+        mash_step::list,
+        mash_step::read,
+        mash_step::create,
+        mash_step::update,
+        mash_step::remove,
+        misc::list,
+        misc::read,
+        misc::create,
+        misc::update,
+        misc::remove,
+        misc_in_recipe::list,
+        misc_in_recipe::read,
+        misc_in_recipe::create,
+        misc_in_recipe::update,
+        misc_in_recipe::remove,
+        misc_stock_purchase::list,
+        misc_stock_purchase::read,
+        misc_stock_purchase::create,
+        misc_stock_purchase::update,
+        misc_stock_purchase::remove,
+        misc_stock_use::list,
+        misc_stock_use::read,
+        misc_stock_use::create,
+        misc_stock_use::update,
+        misc_stock_use::remove,
+        recipe::list,
+        recipe::read,
+        recipe::create,
+        recipe::update,
+        recipe::remove,
+        style::list,
+        style::read,
+        style::create,
+        style::update,
+        style::remove,
+        water::list,
+        water::read,
+        water::create,
+        water::update,
+        water::remove,
+        yeast::list,
+        yeast::read,
+        yeast::create,
+        yeast::update,
+        yeast::remove,
+        yeast_in_recipe::list,
+        yeast_in_recipe::read,
+        yeast_in_recipe::create,
+        yeast_in_recipe::update,
+        yeast_in_recipe::remove,
+        yeast_stock_purchase::list,
+        yeast_stock_purchase::read,
+        yeast_stock_purchase::create,
+        yeast_stock_purchase::update,
+        yeast_stock_purchase::remove,
+        yeast_stock_use::list,
+        yeast_stock_use::read,
+        yeast_stock_use::create,
+        yeast_stock_use::update,
+        yeast_stock_use::remove,
+    ),
+    components(schemas(
+        BoilRow,
+        BoilStepRow,
+        BrewLogRow,
+        EquipmentRow,
+        FermentableRow,
+        FermentableInRecipeRow,
+        FermentableStockPurchaseRow,
+        FermentableStockUseRow,
+        FermentationRow,
+        FermentationStepRow,
+        FolderForBoilRow,
+        FolderForEquipmentRow,
+        FolderForFermentableRow,
+        FolderForFermentationRow,
+        FolderForHopRow,
+        FolderForMashRow,
+        FolderForMiscRow,
+        FolderForRecipeRow,
+        FolderForStyleRow,
+        FolderForWaterRow,
+        FolderForYeastRow,
+        HopRow,
+        HopInRecipeRow,
+        HopStockPurchaseRow,
+        HopStockUseRow,
+        InstructionRow,
+        MashRow,
+        MashStepRow,
+        MiscRow,
+        MiscInRecipeRow,
+        MiscStockPurchaseRow,
+        MiscStockUseRow,
+        RecipeRow,
+        StyleRow,
+        WaterRow,
+        YeastRow,
+        YeastInRecipeRow,
+        YeastStockPurchaseRow,
+        YeastStockUseRow,
+    ))
+)]
+pub struct TableApi;

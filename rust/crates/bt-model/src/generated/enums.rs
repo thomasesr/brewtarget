@@ -16,6 +16,8 @@
 
 use std::fmt;
 
+use utoipa::ToSchema;
+
 /// A string in the database that no member of the enumeration corresponds to.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{value:?} is not a valid {enumeration}")]
@@ -25,7 +27,7 @@ pub struct UnknownValue {
 }
 
 /// `BEER_JSON_IBU_FORMULA_MAPPER`, declared in `src/serialization/json/beerJson/BeerJson.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerJsonIbuFormulaMapper {
     /// Stored as `Tinseth`.
     Tinseth,
@@ -80,7 +82,7 @@ impl fmt::Display for BeerJsonIbuFormulaMapper {
 }
 
 /// `BEER_XML_FERMENTABLE_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlFermentableTypeMapper {
     /// Stored as `Grain`.
     Grain,
@@ -146,7 +148,7 @@ impl fmt::Display for BeerXmlFermentableTypeMapper {
 }
 
 /// `BEER_XML_HOP_FORM_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlHopFormMapper {
     /// Stored as `Leaf`.
     Leaf,
@@ -197,7 +199,7 @@ impl fmt::Display for BeerXmlHopFormMapper {
 }
 
 /// `BEER_XML_HOP_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlHopTypeMapper {
     /// Stored as `Bittering`.
     Bittering,
@@ -259,7 +261,7 @@ impl fmt::Display for BeerXmlHopTypeMapper {
 }
 
 /// `BEER_XML_MASH_STEP_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlMashStepTypeMapper {
     /// Stored as `Infusion`.
     Infusion,
@@ -321,7 +323,7 @@ impl fmt::Display for BeerXmlMashStepTypeMapper {
 }
 
 /// `BEER_XML_MISC_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlMiscTypeMapper {
     /// Stored as `Spice`.
     Spice,
@@ -376,7 +378,7 @@ impl fmt::Display for BeerXmlMiscTypeMapper {
 }
 
 /// `BEER_XML_RECIPE_STEP_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlRecipeStepTypeMapper {
     /// Stored as `Extract`.
     Extract,
@@ -446,7 +448,7 @@ impl fmt::Display for BeerXmlRecipeStepTypeMapper {
 }
 
 /// `BEER_XML_STYLE_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlStyleTypeMapper {
     /// Stored as `Ale`.
     Beer,
@@ -501,7 +503,7 @@ impl fmt::Display for BeerXmlStyleTypeMapper {
 }
 
 /// `BEER_XML_YEAST_FLOCCULATION_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlYeastFlocculationMapper {
     /// Stored as `Low<!--very low-->`.
     VeryLow,
@@ -556,7 +558,7 @@ impl fmt::Display for BeerXmlYeastFlocculationMapper {
 }
 
 /// `BEER_XML_YEAST_FORM_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlYeastFormMapper {
     /// Stored as `Liquid`.
     Liquid,
@@ -604,7 +606,7 @@ impl fmt::Display for BeerXmlYeastFormMapper {
 }
 
 /// `BEER_XML_YEAST_TYPE_MAPPER`, declared in `src/serialization/xml/BeerXml.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BeerXmlYeastTypeMapper {
     /// Stored as `Ale`.
     Ale,
@@ -690,7 +692,7 @@ impl fmt::Display for BeerXmlYeastTypeMapper {
 }
 
 /// `BoilStep::chillingTypeStringMapping`, declared in `src/model/BoilStep.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum BoilStepChillingType {
     /// Stored as `batch`.
     Batch,
@@ -729,7 +731,7 @@ impl fmt::Display for BoilStepChillingType {
 }
 
 /// `ColorMethods::formulaStringMapping`, declared in `src/calculations/ColorMethods.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum ColorMethodsFormula {
     /// Stored as `mosher`.
     Mosher,
@@ -771,7 +773,7 @@ impl fmt::Display for ColorMethodsFormula {
 }
 
 /// `Fermentable::grainGroupStringMapping`, declared in `src/model/Fermentable.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum FermentableGrainGroup {
     /// Stored as `base`.
     Base,
@@ -826,7 +828,7 @@ impl fmt::Display for FermentableGrainGroup {
 }
 
 /// `Fermentable::typeStringMapping`, declared in `src/model/Fermentable.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum FermentableType {
     /// Stored as `grain`.
     Grain,
@@ -892,7 +894,7 @@ impl fmt::Display for FermentableType {
 }
 
 /// `Fermentation::krausenHandlingStringMapping`, declared in `src/model/Fermentation.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum FermentationKrausenHandling {
     /// Stored as `mixed in`.
     MixedIn,
@@ -958,7 +960,7 @@ impl fmt::Display for FermentationKrausenHandling {
 }
 
 /// `Hop::formStringMapping`, declared in `src/model/Hop.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum HopForm {
     /// Stored as `leaf`.
     Leaf,
@@ -1009,7 +1011,7 @@ impl fmt::Display for HopForm {
 }
 
 /// `Hop::typeStringMapping`, declared in `src/model/Hop.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum HopType {
     /// Stored as `bittering`.
     Bittering,
@@ -1071,7 +1073,7 @@ impl fmt::Display for HopType {
 }
 
 /// `IbuMethods::formulaStringMapping`, declared in `src/calculations/IbuMethods.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum IbuMethodsFormula {
     /// Stored as `tinseth`.
     Tinseth,
@@ -1126,7 +1128,7 @@ impl fmt::Display for IbuMethodsFormula {
 }
 
 /// `IbuMethods::formulaStringMappingUc`, declared in `src/calculations/IbuMethods.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum IbuMethodsFormulaStringMappingUc {
     /// Stored as `Tinseth`.
     Tinseth,
@@ -1181,7 +1183,7 @@ impl fmt::Display for IbuMethodsFormulaStringMappingUc {
 }
 
 /// `MashStep::typeStringMapping`, declared in `src/model/MashStep.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum MashStepType {
     /// Stored as `infusion`.
     Infusion,
@@ -1243,7 +1245,7 @@ impl fmt::Display for MashStepType {
 }
 
 /// `Measurement::Qualitative::wortClarityStringMapping`, declared in `src/measurement/Qualitative.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum QualitativeWortClarity {
     /// Stored as `very clear`.
     VeryClear,
@@ -1309,7 +1311,7 @@ impl fmt::Display for QualitativeWortClarity {
 }
 
 /// `Measurement::choiceOfPhysicalQuantityStringMapping`, declared in `src/measurement/PhysicalQuantity.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum MeasurementChoiceOfPhysicalQuantity {
     /// Stored as `Mass_Volume`. C++ `Mass_Volume`.
     MassVolume,
@@ -1348,7 +1350,7 @@ impl fmt::Display for MeasurementChoiceOfPhysicalQuantity {
 }
 
 /// `Measurement::physicalQuantityStringMapping`, declared in `src/measurement/PhysicalQuantity.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum MeasurementPhysicalQuantity {
     /// Stored as `Mass`.
     Mass,
@@ -1454,7 +1456,7 @@ impl fmt::Display for MeasurementPhysicalQuantity {
 }
 
 /// `Misc::typeStringMapping`, declared in `src/model/Misc.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum MiscType {
     /// Stored as `spice`.
     Spice,
@@ -1509,7 +1511,7 @@ impl fmt::Display for MiscType {
 }
 
 /// `Misc::waterAgentTypeStringMapping`, declared in `src/model/Misc.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum MiscWaterAgentType {
     /// Stored as `calcium chloride anhydrous`. C++ `CalciumChloride_Anhydrous`.
     CalciumChlorideAnhydrous,
@@ -1599,7 +1601,7 @@ impl fmt::Display for MiscWaterAgentType {
 }
 
 /// `Recipe::typeStringMapping`, declared in `src/model/Recipe.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum RecipeType {
     /// Stored as `extract`.
     Extract,
@@ -1669,7 +1671,7 @@ impl fmt::Display for RecipeType {
 }
 
 /// `RecipeAddition::stageStringMapping`, declared in `src/model/RecipeAddition.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum RecipeAdditionStage {
     /// Stored as `add_to_mash`.
     Mash,
@@ -1714,7 +1716,7 @@ impl fmt::Display for RecipeAdditionStage {
 }
 
 /// `RecipeAdditionHop::useStringMapping`, declared in `src/model/RecipeAdditionHop.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum RecipeAdditionHopUse {
     /// Stored as `Mash`.
     Mash,
@@ -1762,7 +1764,7 @@ impl fmt::Display for RecipeAdditionHopUse {
 }
 
 /// `RecipeAdditionMisc::useStringMapping`, declared in `src/model/RecipeAdditionMisc.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum RecipeAdditionMiscUse {
     /// Stored as `Mash`.
     Mash,
@@ -1810,7 +1812,7 @@ impl fmt::Display for RecipeAdditionMiscUse {
 }
 
 /// `StockUse::reasonStringMapping`, declared in `src/model/StockUse.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum StockUseReason {
     /// Stored as `used`.
     Used,
@@ -1852,7 +1854,7 @@ impl fmt::Display for StockUseReason {
 }
 
 /// `Style::typeStringMapping`, declared in `src/model/Style.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum StyleType {
     /// Stored as `beer`.
     Beer,
@@ -1907,7 +1909,7 @@ impl fmt::Display for StyleType {
 }
 
 /// `Water::ionStringMapping`, declared in `src/model/Water.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum WaterIon {
     /// Stored as `bicarbonate`.
     Bicarbonate,
@@ -2001,7 +2003,7 @@ impl fmt::Display for WaterIon {
 }
 
 /// `Yeast::flocculationStringMapping`, declared in `src/model/Yeast.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum YeastFlocculation {
     /// Stored as `very low`.
     VeryLow,
@@ -2056,7 +2058,7 @@ impl fmt::Display for YeastFlocculation {
 }
 
 /// `Yeast::formStringMapping`, declared in `src/model/Yeast.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum YeastForm {
     /// Stored as `liquid`.
     Liquid,
@@ -2104,7 +2106,7 @@ impl fmt::Display for YeastForm {
 }
 
 /// `Yeast::typeStringMapping`, declared in `src/model/Yeast.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum YeastType {
     /// Stored as `ale`.
     Ale,
@@ -2190,7 +2192,7 @@ impl fmt::Display for YeastType {
 }
 
 /// `relativeScaleToName`, declared in `src/measurement/UnitSystem.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum RelativeScaleToName {
     /// Stored as `scaleExtraSmall`.
     ExtraSmall,
@@ -2241,7 +2243,7 @@ impl fmt::Display for RelativeScaleToName {
 }
 
 /// `systemOfMeasurementToUniqueName`, declared in `src/measurement/SystemOfMeasurement.cpp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ToSchema)]
 pub enum SystemOfMeasurementToUniqueName {
     /// Stored as `Imperial`.
     Imperial,
