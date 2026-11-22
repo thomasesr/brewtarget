@@ -63,8 +63,16 @@ pub struct Field {
     pub field_type: String,
     /// Where the value sits in the record, `/`-separated for a nested one.
     pub path: String,
-    /// The model property this feeds, `None` for fields that are structural only.
+    /// The model property this feeds, `None` for fields that are structural only and for fields
+    /// that name a path of properties rather than one.
     pub property: Option<String>,
+    /// The chain of properties this field feeds, where it names more than one.
+    ///
+    /// BeerXML has no `Boil` record, so a recipe's `BOIL_TIME` is "the boil time of the recipe's
+    /// boil": the boil is something the reader has to create.  Only BeerXML does this, and only
+    /// on a recipe.
+    #[serde(default)]
+    pub property_path: Option<Vec<String>>,
     /// The enum mapping, unit table, nested record or validator this field uses.
     pub decoder: Option<String>,
     /// Set when `decoder` names another record definition.

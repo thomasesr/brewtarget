@@ -38,7 +38,7 @@ const DEFAULT_TOP_UP_WATER_L: f64 = 0.0;
 const DEFAULT_ATTENUATION_PCT: f64 = 75.0;
 
 /// Everything a recipe works out to.
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct Calculated {
     pub grains_kg: f64,
     pub grains_in_mash_kg: f64,
@@ -66,7 +66,7 @@ pub struct Calculated {
 /// Ported from `Recipe::sugarTotals`.  Sugar that came with the ingredient -- in an extract, in
 /// honey -- goes into the wort whatever the mash does, so it is not affected by mash efficiency.
 /// Sugar that has to be converted from starch is.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct Sugars {
     pub existing_sugars_all_kg: f64,
     pub existing_sugars_non_fermentable_kg: f64,
@@ -357,79 +357,16 @@ pub fn attenuation_typical_pct(yeast: &bt_model::tables::YeastRow) -> f64 {
 
 /// Where in the boil a step sits.
 ///
-/// Ported from `Boil::StepPhase`.  A boil is not only the boil: the wort has to get up to
-/// temperature first and comes back down afterwards, and only the middle counts as boiling.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum StepPhase {
-    PreBoil,
-    BoilProper,
-    PostBoil,
-}
-
-/// `Boil::minimumBoilTemperature_c`.
-const MINIMUM_BOIL_TEMPERATURE_C: f64 = 81.0;
-
-/// A step with no temperature recorded is taken to be at the boil, which is what the C++'s
-/// infinity sentinel amounts to.
-fn start_temp_for_comparison(step: &bt_model::tables::BoilStepRow) -> f64 {
-    step.start_temp_c.unwrap_or(f64::INFINITY)
-}
-
-fn end_temp_for_comparison(step: &bt_model::tables::BoilStepRow) -> f64 {
-    step.end_temp_c.unwrap_or(f64::INFINITY)
-}
-
-/// Whether a step stays at the boil throughout.
-///
-/// Ported from `Boil::holdsAtBoil`: hot at both ends, and not cooling as it goes.
-fn holds_at_boil(step: &bt_model::tables::BoilStepRow) -> bool {
-    let start = start_temp_for_comparison(step);
-    let end = end_temp_for_comparison(step);
-    start >= MINIMUM_BOIL_TEMPERATURE_C && end >= MINIMUM_BOIL_TEMPERATURE_C && end >= start
-}
-
-/// Work out which phase each boil step belongs to.
-///
-/// Ported from `Boil::stepPhases`.  The phases only go forwards: once the wort has come off the
-/// boil it does not go back on, so a later hot step is still post-boil.
-pub fn step_phases(steps: &[bt_model::tables::BoilStepRow]) -> Vec<StepPhase> {
-    let mut phases = Vec::with_capacity(steps.len());
-    let mut current = StepPhase::PreBoil;
-    let mut previous: Option<&bt_model::tables::BoilStepRow> = None;
-
-    for step in steps {
-        match current {
-            StepPhase::PreBoil => {
-                if holds_at_boil(step) {
-                    current = StepPhase::BoilProper;
-                }
-            }
-            StepPhase::BoilProper => {
-                if let Some(previous) = previous
-                    && (!holds_at_boil(step) || start_temp_for_comparison(step) < end_temp_for_comparison(previous))
-                {
-                    current = StepPhase::PostBoil;
-                }
-            }
-            StepPhase::PostBoil => {}
-        }
-        phases.push(current);
-        previous = Some(step);
-    }
-    phases
-}
+// The boil's own semantics -- which steps count as the boil proper, how long that lasts -- live
+// in `bt_model::boil`, ported from `src/model/Boil.cpp`, because the model is where the C++ keeps
+// them and the file readers need them too.
+pub use bt_model::boil::{StepPhase, step_phases};
 
 /// How long the recipe actually boils for, counting only the boil proper.
 ///
 /// Ported from `Boil::boilTime_mins`.
 pub fn boil_time_mins(recipe: &Recipe) -> f64 {
-    let steps = recipe.boil_steps();
-    step_phases(steps)
-        .into_iter()
-        .zip(steps)
-        .filter(|(phase, _)| *phase == StepPhase::BoilProper)
-        .filter_map(|(_, step)| step.step_time_mins)
-        .sum()
+    bt_model::boil::boil_time_mins(recipe.boil_steps())
 }
 
 /// Original and final gravity, each both as brewed and counting only fermentable sugar.

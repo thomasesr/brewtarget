@@ -120,7 +120,14 @@ fn read_owned(format: &Format, definition: &Record, node: &Value) -> Result<Owne
         }
 
         let nested_nodes: Vec<&Value> = match field.field_type.as_str() {
-            "ListOfRecords" => current.as_array().map(|array| array.iter().collect()).unwrap_or_default(),
+            // A list of exactly one has no array around it in XML, for the same reason the
+            // top-level sections do not -- nothing in the document says whether one or many was
+            // expected, so the format definition is what decides.  See `records_in`.
+            "ListOfRecords" => match current {
+                Value::Array(array) => array.iter().collect(),
+                Value::Null => Vec::new(),
+                single => vec![single],
+            },
             // A single nested record, e.g. the ingredient embedded in an addition.
             "Record" => vec![current],
             _ => continue,
@@ -138,7 +145,12 @@ fn read_owned(format: &Format, definition: &Record, node: &Value) -> Result<Owne
         children.push(Child { path: field.path.clone(), nesting, records: read? });
     }
 
-    Ok(Owned { record, children })
+    // The record may say things in terms the database does not have -- a boil time rather than a
+    // boil, a hop "use" rather than a stage -- so the last step of reading one is working out
+    // what it meant.  Nothing to do for a format that says it directly.
+    let mut owned = Owned { record, children };
+    crate::legacy::expand(&mut owned);
+    Ok(owned)
 }
 
 /// The collections a `.beer` file may contain, in the order they have to be stored.
@@ -265,6 +277,10 @@ pub fn read(
 
 /// Write a record and everything nested inside it.
 fn write_owned(format: &Format, definition: &Record, owned: &Owned) -> Value {
+    // A format may not have a record for everything this one holds -- BeerXML has no boil -- in
+    // which case those children become fields on this record instead.
+    let folded = crate::legacy::fold(definition, owned);
+    let owned = folded.as_ref().unwrap_or(owned);
     let mut node = crate::writing::write_record_with(format, definition, &owned.record);
 
     for child in &owned.children {

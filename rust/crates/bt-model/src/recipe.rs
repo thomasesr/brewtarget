@@ -29,7 +29,7 @@ use crate::tables::*;
 ///
 /// Ported from `RecipeAdditionBase`.  The `addition` row carries how much and when; the
 /// `ingredient` row carries what it is.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Addition<Row, Ingredient> {
     pub addition: Row,
     /// `None` when the ingredient row is missing, which a foreign key should prevent but a
@@ -40,7 +40,7 @@ pub struct Addition<Row, Ingredient> {
 /// A recipe with everything needed to calculate from it.
 ///
 /// Ported from the object graph `Recipe` assembles in the C++.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Recipe {
     pub row: RecipeRow,
     pub fermentables: Vec<Addition<FermentableInRecipeRow, FermentableRow>>,
@@ -120,12 +120,27 @@ impl Recipe {
 /// The four addition tables share these columns, inherited from `INGREDIENT_AMOUNT_COMMON_FIELDS`
 /// in `ObjectStoreTyped.cpp`.
 pub trait IngredientAmount {
+    /// What the ingredient this is an addition of is measured in -- mass for a hop, volume for
+    /// water.  `defaultMeasure` in each model class: `Fermentable.h`, `Hop.h`, `Misc.h`,
+    /// `Yeast.h`, `Water.h`.
+    const DEFAULT_MEASURE: &'static str;
+
     fn quantity(&self) -> Option<f64>;
     fn unit(&self) -> Option<Unit>;
 
-    /// The amount as given, if both the quantity and the unit are present.
+    /// The amount as given.
+    ///
+    /// A row that records how much but not in what is read in the canonical unit for whatever the
+    /// ingredient is measured in, which is what `IngredientAmount`'s constructor in
+    /// `src/model/IngredientAmount.h` does when the bundle has a quantity and no unit.  BeerXML
+    /// arrives that way: it has an `AMOUNT` and specifies that it is in kilograms or litres,
+    /// with no element to say which.
     fn amount(&self) -> Option<Amount> {
-        Some(Amount { quantity: self.quantity()?, unit: self.unit()? })
+        let unit = match self.unit() {
+            Some(unit) => unit,
+            None => Unit::canonical_for(Self::DEFAULT_MEASURE)?,
+        };
+        Some(Amount { quantity: self.quantity()?, unit })
     }
 
     /// The amount converted to the canonical unit for whatever it measures: kilograms for a mass,
@@ -138,9 +153,11 @@ pub trait IngredientAmount {
 }
 
 macro_rules! ingredient_amount {
-    ($($row:ty),+ $(,)?) => {
+    ($($row:ty => $measure:literal),+ $(,)?) => {
         $(
             impl IngredientAmount for $row {
+                const DEFAULT_MEASURE: &'static str = $measure;
+
                 fn quantity(&self) -> Option<f64> {
                     self.quantity
                 }
@@ -153,15 +170,17 @@ macro_rules! ingredient_amount {
     };
 }
 
+// Every ingredient that can be added to a recipe is weighed; only water is measured by volume,
+// and water is not an addition.
 ingredient_amount!(
-    FermentableInRecipeRow,
-    HopInRecipeRow,
-    MiscInRecipeRow,
-    YeastInRecipeRow,
-    FermentableStockPurchaseRow,
-    HopStockPurchaseRow,
-    MiscStockPurchaseRow,
-    YeastStockPurchaseRow,
+    FermentableInRecipeRow => "Mass",
+    HopInRecipeRow => "Mass",
+    MiscInRecipeRow => "Mass",
+    YeastInRecipeRow => "Mass",
+    FermentableStockPurchaseRow => "Mass",
+    HopStockPurchaseRow => "Mass",
+    MiscStockPurchaseRow => "Mass",
+    YeastStockPurchaseRow => "Mass",
 );
 
 /// The stage an addition belongs to, surfacing a value the database holds but this version does

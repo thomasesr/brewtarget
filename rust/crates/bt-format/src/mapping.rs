@@ -57,6 +57,15 @@ pub struct MappedRecord {
     pub references: BTreeMap<String, String>,
     /// The folder this record says it lives in, which has to become a folder row of its own.
     pub folder_path: Option<String>,
+    /// Values the record carried that no column on this table holds, keyed by the property path
+    /// that named them, joined with `/`.
+    ///
+    /// Two sorts end up here.  Some are calculated -- a recipe's ABV is written out so that other
+    /// programs can read it, and recalculated rather than read back.  The rest describe something
+    /// the record does not itself hold: BeerXML has no `Boil` record, so a recipe's `BOIL_TIME`
+    /// arrives as `Recipe::boil/Boil::boilTime_mins` and a boil has to be made to put it in.  See
+    /// `crate::legacy`.
+    pub legacy: BTreeMap<String, Value>,
 }
 
 impl MappedRecord {
@@ -227,11 +236,19 @@ pub fn map_record_with(format: &Format, definition: &Record, record: &Value) -> 
     let mut local_id = None;
     let mut folder_path = None;
     let mut references = BTreeMap::new();
+    let mut legacy = BTreeMap::new();
 
     for field in &definition.fields {
         let Some(value) = read_field(format, record, field)? else {
             continue;
         };
+        // A field naming a chain of properties is describing a record other than this one, so
+        // there is nothing on this table to put it in.  It is kept under the whole chain, which
+        // is what says where it belongs.
+        if let Some(path) = &field.property_path {
+            legacy.insert(path.join("/"), value);
+            continue;
+        }
         match field.field_type.as_str() {
             // Neither of these is a column: a local ID exists only within the file, and a folder
             // path has to become a folder row before anything can point at it.
@@ -260,15 +277,22 @@ pub fn map_record_with(format: &Format, definition: &Record, record: &Value) -> 
                     columns.insert(unit_column.to_owned(), Value::String(unit.name().to_owned()));
                     continue;
                 }
-                // A property the schema does not store is a calculated one -- a recipe's ABV, a
-                // fermentable's colour in SRM -- and is written out but never read back in.
-                if let Some(column) = bt_model::tables::column_for_property(table, property) {
-                    columns.insert(column.to_owned(), value);
+                match bt_model::tables::column_for_property(table, property) {
+                    Some(column) => {
+                        columns.insert(column.to_owned(), value);
+                    }
+                    // A property with no column is either calculated -- a recipe's ABV, a
+                    // fermentable's colour in SRM, written out but worked out again rather than
+                    // read back -- or one of the legacy BeerXML fields that says something about
+                    // the record which `crate::legacy` turns into columns that do exist.
+                    None => {
+                        legacy.insert(property.to_owned(), value);
+                    }
                 }
             }
         }
     }
-    Ok(MappedRecord { table, columns, local_id, folder_path, references })
+    Ok(MappedRecord { table, columns, local_id, folder_path, references, legacy })
 }
 
 /// Read every record of a named collection out of a document.

@@ -66,13 +66,19 @@ fn canonical_unit_name<'a>(format: &'a Format, mapping_name: &str, unit: bt_meas
 }
 
 /// Write one field, if the row has anything to say about it.
-fn write_field(
-    format: &Format,
-    table: &str,
-    columns: &Map<String, Value>,
-    field: &Field,
-    target: &mut Map<String, Value>,
-) {
+fn write_field(format: &Format, record: &MappedRecord, field: &Field, target: &mut Map<String, Value>) {
+    let (table, columns) = (record.table, &record.columns);
+
+    // A field naming a chain of properties describes something the record does not itself hold --
+    // the length of a recipe's boil.  `legacy::fold` works those out before writing, because the
+    // records they came from are not written at all.
+    if let Some(path) = &field.property_path {
+        if let Some(value) = record.legacy.get(&path.join("/")) {
+            insert_at(target, &field.path, value.clone());
+        }
+        return;
+    }
+
     // A composite amount is two columns and one field, so it is handled before the rest.
     if field.property.as_deref().is_some_and(|property| property.ends_with("::amount")) {
         let quantity = bt_model::tables::column_for_property(table, "IngredientAmount::quantity")
@@ -96,8 +102,21 @@ fn write_field(
     }
 
     let Some(property) = field.property.as_deref() else { return };
-    let Some(column) = bt_model::tables::column_for_property(table, property) else { return };
+    let Some(column) = bt_model::tables::column_for_property(table, property) else {
+        // No column holds it, so it is either calculated and not written at all, or one of the
+        // legacy BeerXML fields that `legacy::fold` worked out for exactly this.
+        if let Some(value) = record.legacy.get(property) {
+            write_value(format, field, value.clone(), target);
+        }
+        return;
+    };
     let Some(value) = columns.get(column) else { return };
+    write_value(format, field, value.clone(), target);
+}
+
+/// Put one value into the document, in whatever shape the field is written in.
+fn write_value(format: &Format, field: &Field, value: Value, target: &mut Map<String, Value>) {
+    let value = &value;
     if value.is_null() {
         return;
     }
@@ -205,7 +224,7 @@ pub fn write_record_with(format: &Format, definition: &Record, record: &MappedRe
                     insert_at(&mut target, &field.path, Value::String(folder_path.clone()));
                 }
             }
-            _ => write_field(format, record.table, &record.columns, field, &mut target),
+            _ => write_field(format, record, field, &mut target),
         }
     }
     Value::Object(target)

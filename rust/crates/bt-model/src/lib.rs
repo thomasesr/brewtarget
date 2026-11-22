@@ -22,8 +22,10 @@
 
 #![forbid(unsafe_code)]
 
+pub mod boil;
 pub mod folder;
 pub mod generated;
+pub mod hop_addition;
 pub mod recipe;
 
 pub use folder::{FolderError, FolderNode, FolderTree};

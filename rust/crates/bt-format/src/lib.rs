@@ -27,6 +27,7 @@ pub mod data;
 pub mod document;
 pub mod enums;
 pub mod jsonc;
+pub mod legacy;
 pub mod mapping;
 pub mod references;
 pub mod schema;

@@ -91,7 +91,11 @@ def parse_field(entry: str) -> dict | None:
             break
     if path is None:
         raise Unsupported(f"no path in {entry!r}")
-    property_name = PROPERTY_RE.search(entry)
+    # A field may name a path of properties rather than one property.  BeerXML has no Boil
+    # record, so a recipe's BOIL_TIME is written as
+    # `{PropertyNames::Recipe::boil, PropertyNames::Boil::boilTime_mins}`, meaning "the boil time
+    # of the recipe's boil" -- the boil has to be created to hold it.
+    properties = [f"{owner}::{member}" for owner, member in PROPERTY_RE.findall(entry)]
     # A trailing `&something` is the value decoder: an enum mapping, a unit mapping, or a
     # reference to another record definition for a nested object.  `staticMetaObject` is Qt
     # plumbing rather than a decoder.
@@ -107,7 +111,10 @@ def parse_field(entry: str) -> dict | None:
     return {
         "field_type": field_type.group(1),
         "path": path,
-        "property": f"{property_name.group(1)}::{property_name.group(2)}" if property_name else None,
+        "property": properties[0] if len(properties) == 1 else None,
+        # Only set where the field names more than one property, so that the common case stays
+        # as it reads: one field, one property, one column.
+        "property_path": properties if len(properties) > 1 else None,
         "decoder": decoder,
         # A Record or ListOfRecords field points at the definition of whatever it contains.
         "nested_record_type": (nested.group(1) or decoder) if nested else None,
