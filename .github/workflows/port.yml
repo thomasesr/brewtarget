@@ -27,18 +27,30 @@ jobs:
       - run: cargo test --workspace
       - run: cargo build --workspace --release
 
+  # The interface is built separately because it is a different target: `bt-ui` has to
+  # keep compiling for wasm32, and the easiest way to be sure of that is to compile it.
   web:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web
+        working-directory: rust
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun test
-      - run: bun run build
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      # A database driver reaching the interface would break the browser build, and the
+      # error would be a compile_error! from deep inside getrandom rather than anything
+      # that names the mistake.  So the crates it may depend on are built for wasm32
+      # directly, which fails on the crate that introduced the dependency.
+      - run: cargo build -p bt-measure -p bt-model -p bt-calc --target wasm32-unknown-unknown
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: dioxus-cli@0.7.10
+      - run: dx build --package bt-web --release
 
   tools:
     runs-on: ubuntu-latest
