@@ -523,3 +523,54 @@ pub fn calculate_with(
         ibus_per_addition,
     }
 }
+
+/// What kind of mash step this is, as the fermentability model sees it.
+///
+/// Ported from `Recipe::impl::fermentabilityStepType`: a sparge ends the mash as far as the
+/// model is concerned, and a souring step is something else entirely.
+fn fermentability_step_type(step: &bt_model::tables::MashStepRow) -> crate::mash::StepType {
+    use bt_model::enums::MashStepType;
+
+    use crate::mash::StepType;
+    match step.mstype().ok().flatten() {
+        Some(MashStepType::Infusion) => StepType::Infusion,
+        Some(MashStepType::Temperature) => StepType::Temperature,
+        Some(MashStepType::Decoction) => StepType::Decoction,
+        Some(MashStepType::FlySparge | MashStepType::BatchSparge) => StepType::Sparge,
+        _ => StepType::Other,
+    }
+}
+
+/// What this recipe's mash schedule does to how fermentable the wort is.
+///
+/// `None` when there is no mash to judge -- an extract recipe -- which is what
+/// [`calculate_with`] expects in that case.
+pub fn mash_attenuation_multiplier(recipe: &Recipe) -> Option<f64> {
+    use crate::mash;
+
+    if recipe.mash_steps().is_empty() {
+        return None;
+    }
+    let steps: Vec<mash::Step> = recipe
+        .mash_steps()
+        .iter()
+        .map(|step| mash::Step {
+            kind: fermentability_step_type(step),
+            step_temp_c: step.step_temp_c.unwrap_or(0.0),
+            end_temp_c: step.end_temp_c,
+            step_time_mins: step.step_time_mins.unwrap_or(0.0),
+            ramp_time_mins: step.ramp_time_mins,
+        })
+        .collect();
+    mash::attenuation_multiplier(&mash::build_profile(&steps), mash::enzyme_levels(None, None))
+}
+
+/// Everything a recipe comes to, from the recipe alone.
+///
+/// The mash schedule changes how fermentable the wort is, which changes the final gravity, so it
+/// has to be modelled before the recipe can be.  [`calculate_with`] takes that as a parameter
+/// because the C++ passes it in too; this works it out, so that every caller gets the same
+/// answer rather than each assembling the inputs and one of them forgetting the mash.
+pub fn calculate_recipe(recipe: &Recipe, formula: ColorFormula, ibu: crate::recipe_ibu::IbuSettings) -> Calculated {
+    calculate_with(recipe, formula, mash_attenuation_multiplier(recipe), ibu)
+}

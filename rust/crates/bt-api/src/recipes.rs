@@ -15,7 +15,6 @@
 use axum::extract::{Path, State};
 use axum::routing::get;
 use axum::{Json, Router};
-use bt_calc::mash;
 use bt_calc::recipe::Calculated;
 use bt_model::recipe::Recipe;
 use serde::Serialize;
@@ -61,42 +60,7 @@ async fn full(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<J
 async fn calculated(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<Calculated>> {
     let recipe = load(&state, id).await?;
     let preferences = state.preferences();
-
-    // The mash changes how fermentable the wort is, which changes the final gravity, so the
-    // schedule has to be modelled before the recipe can be.
-    let multiplier = if recipe.mash_steps().is_empty() {
-        None
-    } else {
-        let steps: Vec<mash::Step> = recipe
-            .mash_steps()
-            .iter()
-            .map(|step| mash::Step {
-                kind: step_kind(step),
-                step_temp_c: step.step_temp_c.unwrap_or(0.0),
-                end_temp_c: step.end_temp_c,
-                step_time_mins: step.step_time_mins.unwrap_or(0.0),
-                ramp_time_mins: step.ramp_time_mins,
-            })
-            .collect();
-        mash::attenuation_multiplier(&mash::build_profile(&steps), mash::enzyme_levels(None, None))
-    };
-
-    Ok(Json(bt_calc::recipe::calculate_with(&recipe, preferences.color_formula, multiplier, preferences.ibu)))
-}
-
-/// What kind of mash step this is, as the fermentability model sees it.
-///
-/// Ported from `Recipe::impl::fermentabilityStepType`: a sparge ends the mash as far as the
-/// model is concerned, and a souring step is something else entirely.
-fn step_kind(step: &bt_model::tables::MashStepRow) -> mash::StepType {
-    use bt_model::enums::MashStepType;
-    match step.mstype().ok().flatten() {
-        Some(MashStepType::Infusion) => mash::StepType::Infusion,
-        Some(MashStepType::Temperature) => mash::StepType::Temperature,
-        Some(MashStepType::Decoction) => mash::StepType::Decoction,
-        Some(MashStepType::FlySparge | MashStepType::BatchSparge) => mash::StepType::Sparge,
-        _ => mash::StepType::Other,
-    }
+    Ok(Json(bt_calc::recipe::calculate_recipe(&recipe, preferences.color_formula, preferences.ibu)))
 }
 
 /// One thing to do on brew day.
@@ -150,7 +114,7 @@ async fn brewday(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResul
         recipe_name: recipe.name().to_owned(),
         batch_size_l: recipe.row.batch_size,
         boil_time_mins: bt_calc::recipe::boil_time_mins(&recipe),
-        calculated: bt_calc::recipe::calculate_with(&recipe, preferences.color_formula, None, preferences.ibu),
+        calculated: bt_calc::recipe::calculate_recipe(&recipe, preferences.color_formula, preferences.ibu),
         steps,
     }))
 }

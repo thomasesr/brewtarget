@@ -149,3 +149,98 @@ body {
    background: color-mix(in srgb, var(--bt-alarm) 8%, transparent);
    color: var(--bt-alarm);
 }
+
+/* ---- Recipes ------------------------------------------------------------ */
+
+/*
+ * A button that reads as a link.  The row is not itself clickable: a row that only
+ * responds to a click cannot be reached from a keyboard.
+ */
+.bt-link {
+   border: 0;
+   padding: 0;
+   background: none;
+   font: inherit;
+   color: var(--bt-wort);
+   cursor: pointer;
+   text-align: left;
+}
+
+.bt-link:hover { text-decoration: underline; }
+
+.bt-back { margin-bottom: 0.5rem; }
+
+.bt-recipe-header h2 { margin: 0 0 0.5rem; font-size: 1.25rem; }
+
+/* The facts about a recipe: brewer, style, equipment, batch, boil, efficiency. */
+.bt-facts {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.25rem 1.75rem;
+   margin: 0 0 1rem;
+}
+
+.bt-fact dt {
+   font-size: 0.75rem;
+   color: var(--bt-quiet);
+   text-transform: uppercase;
+   letter-spacing: 0.05em;
+}
+
+.bt-fact dd { margin: 0; }
+
+/* The figures across the top of the recipe screen. */
+.bt-derived {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+   gap: 1px;
+   margin: 0 0 1.25rem;
+   background: var(--bt-rule);
+   border: 1px solid var(--bt-rule);
+   border-radius: 4px;
+   overflow: hidden;
+}
+
+.bt-figure {
+   padding: 0.5rem 0.75rem;
+   background: var(--bt-paper);
+}
+
+.bt-figure dt {
+   font-size: 0.6875rem;
+   color: var(--bt-quiet);
+   text-transform: uppercase;
+   letter-spacing: 0.06em;
+}
+
+.bt-figure dd {
+   margin: 0.1rem 0 0;
+   font-size: 1.125rem;
+   font-variant-numeric: tabular-nums;
+}
+
+/* The ingredient tabs. */
+.bt-tabs {
+   display: flex;
+   gap: 0.25rem;
+   border-bottom: 1px solid var(--bt-rule);
+   margin-bottom: 0.75rem;
+}
+
+.bt-tab {
+   border: 0;
+   border-bottom: 2px solid transparent;
+   padding: 0.4rem 0.8rem;
+   background: none;
+   font: inherit;
+   color: var(--bt-quiet);
+   cursor: pointer;
+}
+
+.bt-tab:hover { color: var(--bt-ink); }
+
+.bt-tab.bt-chosen {
+   border-bottom-color: var(--bt-wort);
+   color: var(--bt-ink);
+   font-weight: 600;
+}

@@ -25,6 +25,7 @@ thiserror.workspace = true
 # The client is tested against the real server rather than a stand-in: the risk worth
 # covering is the two disagreeing, and a stand-in would agree with whatever it was told.
 bt-api.workspace = true
+bt-calc.workspace = true
 bt-schema.workspace = true
 bt-store.workspace = true
 axum.workspace = true

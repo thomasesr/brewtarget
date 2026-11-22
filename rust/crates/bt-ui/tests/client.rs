@@ -43,6 +43,26 @@ async fn serving(label: &str) -> Client {
     Client::new(format!("http://{address}"))
 }
 
+/// As [`serving`], but with the content that ships with the application already in it.
+async fn serving_with_content(label: &str) -> Client {
+    let path = std::env::temp_dir().join(format!("bt-ui-{label}.sqlite"));
+    let _ = std::fs::remove_file(&path);
+    std::fs::File::create(&path).expect("create the database file");
+
+    let store = Store::connect(&format!("sqlite://{}", path.display())).await.expect("connect");
+    store.prepare(&Namespace::Default).await.expect("prepare");
+    let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../data");
+    bt_store::default_content::load(&store, &data).await.expect("load the shipped content");
+    let app = api().with_state(AppState::new(store, data));
+
+    let listener = tokio::net::TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, 0))).await.expect("bind");
+    let address = listener.local_addr().expect("the address it got");
+    tokio::spawn(async move {
+        let _ = axum::serve(listener, app).await;
+    });
+    Client::new(format!("http://{address}"))
+}
+
 #[tokio::test]
 async fn a_row_can_be_stored_read_back_changed_and_removed() {
     let client = serving("crud").await;
@@ -120,4 +140,85 @@ async fn the_columns_the_catalogue_shows_survive_the_trip() {
     assert_eq!(read.color_lovibond, Some(3.0));
     // The enumerated column parses rather than arriving as a string the interface cannot read.
     assert_eq!(read.ftype().expect("a known type").map(|value| value.as_str()), Some("grain"));
+}
+
+/// Two figures that came the same way out of the same arithmetic.
+///
+/// Not exact equality, and not because the arithmetic differs: `serde_json` does not round-trip
+/// every `f64`.  192.61098795228318 is written out in full and read back as 192.6109879522832,
+/// one unit in the last place away.  That is a property of the transport, so the comparison is
+/// loose enough to ignore it and still some nine orders of magnitude tighter than any real
+/// disagreement -- the mash bug this test first caught moved a final gravity by half a percent.
+#[track_caller]
+fn agree(here: f64, there: f64, what: &str) {
+    let difference = (here - there).abs();
+    let scale = here.abs().max(there.abs()).max(1.0);
+    assert!(difference / scale < 1e-12, "{what}: the interface says {here}, the server says {there}");
+}
+
+/// The figures worked out in the interface are the figures the server works out.
+///
+/// This is the architectural claim the whole choice of Rust for the interface rests on: that
+/// `bt-calc` running in a browser and `bt-calc` running in the server are the same code giving
+/// the same answers, so a recipe being edited can be costed without a round trip.  If the two
+/// ever disagree -- a default changed on one side, a preference read from somewhere -- the panel
+/// would quietly show something the server would not.
+#[tokio::test]
+async fn the_interface_and_the_server_agree_on_what_a_recipe_comes_to() {
+    let client = serving_with_content("agreement").await;
+
+    let recipes = client.recipe_rows().await.expect("the recipes");
+    assert!(recipes.len() > 20, "the shipped content has a library of recipes in it");
+
+    // Several recipes rather than one: they differ in whether they have equipment, a mash, a
+    // boil, non-fermentable sugar, and each of those is a branch in the arithmetic.
+    for row in recipes.iter().take(8) {
+        let recipe = client.recipe(row.id).await.expect("the recipe in full");
+        let here = bt_calc::recipe::calculate_recipe(&recipe, Default::default(), Default::default());
+        let there = client.calculated(row.id).await.expect("what the server makes of it");
+
+        let name = row.name.as_deref().unwrap_or("?");
+        agree(here.og, there.og, &format!("{name}: original gravity"));
+        agree(here.fg, there.fg, &format!("{name}: final gravity"));
+        agree(here.abv_pct, there.abv_pct, &format!("{name}: alcohol"));
+        agree(here.ibus, there.ibus, &format!("{name}: bitterness"));
+        agree(here.color_srm, there.color_srm, &format!("{name}: colour"));
+        agree(here.final_volume_l, there.final_volume_l, &format!("{name}: volume into the fermenter"));
+
+        assert_eq!(
+            here.ibus_per_addition.len(),
+            there.ibus_per_addition.len(),
+            "{name}: a different number of hop additions"
+        );
+        for (index, (here, there)) in here.ibus_per_addition.iter().zip(&there.ibus_per_addition).enumerate() {
+            agree(*here, *there, &format!("{name}: bitterness from hop addition {index}"));
+        }
+    }
+}
+
+/// The recipe screen reads a recipe's style, equipment and additions off the aggregate rather
+/// than fetching each of them, so the aggregate has to actually carry them.
+#[tokio::test]
+async fn a_recipe_arrives_with_everything_the_screen_shows() {
+    let client = serving_with_content("aggregate").await;
+
+    let recipes = client.recipe_rows().await.expect("the recipes");
+    let id = recipes.iter().find(|row| row.name.as_deref() == Some("Bt: American IPA")).expect("the shipped IPA").id;
+    let recipe = client.recipe(id).await.expect("the recipe in full");
+
+    assert_eq!(recipe.row.name.as_deref(), Some("Bt: American IPA"));
+    assert!(recipe.style.is_some(), "the style is resolved, not left as a key");
+    assert!(recipe.equipment.is_some(), "so is the equipment");
+    assert!(!recipe.fermentables.is_empty(), "an all-grain recipe has malt in it");
+    assert!(!recipe.hops.is_empty(), "an IPA has hops in it");
+    assert!(!recipe.yeasts.is_empty(), "and something to ferment it");
+
+    // Every addition names the ingredient it is an addition of; a tab showing blank names
+    // would mean the join had not been made.
+    for addition in &recipe.hops {
+        assert!(addition.ingredient.is_some(), "a hop addition with no hop");
+    }
+    // And an amount, which is what the Amount column reads.
+    use bt_model::recipe::IngredientAmount;
+    assert!(recipe.fermentables.iter().all(|addition| addition.addition.amount().is_some()));
 }
