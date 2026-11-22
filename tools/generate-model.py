@@ -168,7 +168,12 @@ def generate_enums(enums: dict) -> str:
 def rename_attribute(column: str) -> list[str]:
     """Tell sqlx and serde the column name when the Rust field is spelled differently."""
     name = field_name(column).removeprefix("r#")
-    return [] if name == column else [f'    #[sqlx(rename = "{column}")]', f'    #[serde(rename = "{column}")]']
+    if name == column:
+        return []
+    return [
+        f'    #[cfg_attr(feature = "sqlx", sqlx(rename = "{column}"))]',
+        f'    #[serde(rename = "{column}")]',
+    ]
 
 
 def enum_type_name(mapping_name: str) -> str:
@@ -250,7 +255,9 @@ def generate_tables(schema: dict) -> str:
         "",
         "use crate::enums::*;",
         "",
-        "// `sqlx::FromRow` reads a row straight into one of these.  Fields whose Rust spelling",
+        "// `sqlx::FromRow` reads a row straight into one of these, under the `sqlx` feature. The",
+        "// feature exists so that a build with no database in it -- a browser, most obviously --",
+        "// does not drag three database drivers along behind the model.  Fields whose Rust spelling",
         "// differs from the column name carry an explicit rename, so the two cannot drift.",
         "",
     ]
@@ -259,7 +266,8 @@ def generate_tables(schema: dict) -> str:
         struct = pascal_case(table["name"]) + "Row"
         out += [
             f"/// A row of `{table['name']}`, which stores `{table['cpp_type']}`.",
-            "#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow, ToSchema)]",
+            "#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, ToSchema)]",
+            '#[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]',
             f"pub struct {struct} {{",
             f"    /// `{table['primary_key']['name']}`, which the database assigns.",
             "    ///",

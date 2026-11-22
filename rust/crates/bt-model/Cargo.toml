@@ -15,7 +15,12 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 chrono.workspace = true
-sqlx.workspace = true
+sqlx = { workspace = true, optional = true }
+
+[features]
+# Reading a row straight out of a database.  Off by default so that a build with no
+# database in it -- a browser, most obviously -- does not pull in three drivers.
+sqlx = ["dep:sqlx"]
 
 [dev-dependencies]
 serde.workspace = true

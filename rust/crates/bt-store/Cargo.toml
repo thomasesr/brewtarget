@@ -12,7 +12,7 @@ authors.workspace      = true
 utoipa.workspace = true
 bt-measure.workspace = true
 bt-format.workspace = true
-bt-model.workspace = true
+bt-model = { workspace = true, features = ["sqlx"] }
 bt-schema.workspace = true
 sqlx.workspace = true
 serde.workspace = true
