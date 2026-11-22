@@ -301,17 +301,24 @@ def main_window_fields(text: str) -> dict[str, dict]:
     return found
 
 
-def main_window() -> dict:
-    """How the main window is arranged.
+# The parts of the application that bind fields the way the dialogs do, and the `.ui` file
+# each is laid out in.  Every one of these is a tab or a panel rather than a window of its own.
+PANELS = {
+    "main_window": ("src/MainWindow.cpp", "ui/mainWindow.ui", "Recipe"),
+    "recipe_extras": ("src/widgets/RecipeExtrasWidget.cpp", "ui/recipeExtrasWidget.ui", None),
+    "recipe_water": ("src/widgets/RecipeWaterWidget.cpp", "ui/recipeWaterWidget.ui", None),
+}
 
-    Three lists and a form.  The left-hand tab strip is the trees; the right is a recipe above
-    its ingredients.  This is the shape of the application, and the part of it this port had
-    invented for itself rather than taken from here.
+
+def panel(source_name: str, ui_name: str, only_page: str | None) -> dict:
+    """The fields one panel binds, in the order its layout has them.
+
+    `only_page` narrows it to a single tab, for a file that lays out more than one.
     """
-    source = REPO / "src" / "MainWindow.cpp"
+    source = REPO / source_name
     bindings = main_window_fields(strip_comments(source.read_text(encoding="utf-8", errors="replace")))
 
-    path = REPO / "ui" / "mainWindow.ui"
+    path = REPO / ui_name
     root = ElementTree.parse(path).getroot()
     layout: dict = {}
     for widget in root.findall("widget"):
@@ -322,18 +329,17 @@ def main_window() -> dict:
         if node.get("class") in {"QTabWidget", "BtTabWidget"}:
             strips[node.get("name") or ""] = tab_titles(node)
 
-    # The fields on the Recipe tab, in the order the dialog has them.
     fields = []
     for widget, binding in bindings.items():
         where = layout.get(widget, {})
-        if where.get("page") != "Recipe":
+        if only_page is not None and where.get("page") != only_page:
             continue
         label = layout.get(binding["label_widget"], {})
         fields.append(
             {
                 "property": binding["property"],
                 "model": binding["model"],
-                # `&Name` is Qt's way of marking the keyboard shortcut; the ampersand is not
+                # `&Name` is Qt's way of marking a keyboard shortcut; the ampersand is not
                 # part of what is shown.
                 "label": (label.get("text") or "").replace("&", "") or None,
                 "group": where.get("group"),
@@ -348,11 +354,11 @@ def main_window() -> dict:
         field.pop("order")
 
     return {
-        "ui": str(path.relative_to(REPO)),
+        "ui": ui_name,
         "trees": strips.get("tabWidget_Trees", []),
         "recipe_tabs": strips.get("tabWidget_recipeView", []),
         "ingredient_tabs": strips.get("tabWidget_ingredients", []),
-        "recipe_fields": fields,
+        "fields": fields,
     }
 
 
@@ -371,20 +377,29 @@ def main() -> int:
         editors[editor] = built
         sources.append(str(source.relative_to(REPO)))
 
-    shell = main_window()
-    sources.append("src/MainWindow.cpp")
+    panels = {}
+    for name, (source_name, ui_name, only_page) in PANELS.items():
+        panels[name] = panel(source_name, ui_name, only_page)
+        sources.append(source_name)
+
     document = {
         "generated_by": "tools/extract-editors.py",
-        "source_files": sources,
-        # How the application itself is arranged, as distinct from its dialogs.
-        "main_window": shell,
+        "source_files": sorted(sources),
+        # How the application itself is arranged, as distinct from its dialogs: the main
+        # window and the panels its recipe tabs are made of.
+        "panels": panels,
         "editors": dict(sorted(editors.items())),
     }
     text = json.dumps(document, indent=2) + "\n"
     if args.out:
         args.out.write_text(text, encoding="utf-8")
         fields = sum(len(tab["fields"]) for editor in editors.values() for tab in editor["tabs"])
-        print(f"wrote {args.out} ({len(editors)} editors, {fields} fields)", file=sys.stderr)
+        panel_fields = sum(len(found["fields"]) for found in panels.values())
+        print(
+            f"wrote {args.out} ({len(editors)} editors, {fields} fields; "
+            f"{len(panels)} panels, {panel_fields} fields)",
+            file=sys.stderr,
+        )
     else:
         print(text, end="")
     return 0

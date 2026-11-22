@@ -600,3 +600,32 @@ fn the_sections_are_the_ones_the_application_has_in_its_order() {
     let titles: Vec<&str> = Which::ALL.iter().map(|which| which.title()).collect();
     assert_eq!(titles, expected);
 }
+
+/// A recipe arrives with the water profiles its Water tab shows.
+///
+/// They are rows of `water` rather than columns on the recipe, so the aggregate has to resolve
+/// them as it does the style and the equipment.
+#[tokio::test]
+async fn a_recipe_carries_the_water_it_starts_from() {
+    let client = serving_with_content("water").await;
+    let recipes = client.recipe_rows().await.expect("the recipes");
+
+    // Not every shipped recipe names water, so this looks for one that does.
+    let mut found = false;
+    for row in recipes.iter().take(12) {
+        let recipe = client.recipe(row.id).await.expect("the recipe");
+        if recipe.row.water_base.is_some() {
+            assert!(recipe.water_base.is_some(), "{:?} names a base water that did not resolve", row.name);
+            found = true;
+        }
+        if recipe.row.water_target.is_some() {
+            assert!(recipe.water_target.is_some(), "{:?} names a target water that did not resolve", row.name);
+            found = true;
+        }
+    }
+    // If none of them names water the test has proved nothing, which is worth saying rather
+    // than passing quietly.
+    if !found {
+        eprintln!("none of the shipped recipes names a water profile; nothing was checked");
+    }
+}

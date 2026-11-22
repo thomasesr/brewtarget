@@ -105,6 +105,16 @@ pub async fn load(store: &Store, id: i32) -> Result<Option<Recipe>, StoreError> 
         Some(id) => tables::style::get(store, id).await?,
         None => None,
     };
+    // The water the recipe starts from and the water it is aiming at.  Both are profiles in
+    // their own right, which is why they are rows of `water` rather than columns here.
+    let water_base = match row.water_base {
+        Some(id) => tables::water::get(store, id).await?,
+        None => None,
+    };
+    let water_target = match row.water_target {
+        Some(id) => tables::water::get(store, id).await?,
+        None => None,
+    };
 
     // Each of these is an object with its own ordered steps, so the row is fetched first and the
     // steps only if it is really there.
@@ -155,6 +165,8 @@ pub async fn load(store: &Store, id: i32) -> Result<Option<Recipe>, StoreError> 
         yeasts,
         equipment,
         style,
+        water_base,
+        water_target,
         mash,
         boil,
         fermentation,

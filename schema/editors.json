@@ -1,6 +1,7 @@
 {
   "generated_by": "tools/extract-editors.py",
   "source_files": [
+    "src/MainWindow.cpp",
     "src/editors/BoilEditor.cpp",
     "src/editors/BoilStepEditor.cpp",
     "src/editors/EquipmentEditor.cpp",
@@ -19,130 +20,211 @@
     "src/editors/StyleEditor.cpp",
     "src/editors/WaterEditor.cpp",
     "src/editors/YeastEditor.cpp",
-    "src/MainWindow.cpp"
+    "src/widgets/RecipeExtrasWidget.cpp",
+    "src/widgets/RecipeWaterWidget.cpp"
   ],
-  "main_window": {
-    "ui": "ui/mainWindow.ui",
-    "trees": [
-      "Recipes",
-      "Styles",
-      "Equipment",
-      "Mash Profiles",
-      "Boil Profiles",
-      "Fermentation Profiles",
-      "Fermentables",
-      "Hops",
-      "Miscs",
-      "Yeasts",
-      "Water"
-    ],
-    "recipe_tabs": [
-      "Recipe",
-      "Extras",
-      "Water",
-      "Brewday"
-    ],
-    "ingredient_tabs": [
-      "Fermentables",
-      "Hops",
-      "Miscellaneous",
-      "Yeast",
-      "Mash",
-      "Boil",
-      "Fermentation"
-    ],
-    "recipe_fields": [
-      {
-        "property": "Recipe::og",
-        "model": "Recipe",
-        "label": "OG",
-        "group": null,
-        "control": "text",
-        "precision": null,
-        "shown_only": true
-      },
-      {
-        "property": "Recipe::fg",
-        "model": "Recipe",
-        "label": "FG",
-        "group": null,
-        "control": "text",
-        "precision": null,
-        "shown_only": true
-      },
-      {
-        "property": "Recipe::color_srm",
-        "model": "Recipe",
-        "label": "Color",
-        "group": null,
-        "control": "text",
-        "precision": null,
-        "shown_only": true
-      },
-      {
-        "property": "Recipe::efficiency_pct",
-        "model": "Recipe",
-        "label": "Efficiency",
-        "group": null,
-        "control": "measured",
-        "precision": 1,
-        "shown_only": false
-      },
-      {
-        "property": "Boil::preBoilSize_l",
-        "model": "Boil",
-        "label": "Pre-Boil Volume",
-        "group": null,
-        "control": "calculated",
-        "precision": 2,
-        "shown_only": false
-      },
-      {
-        "property": "Boil::boilTime_mins",
-        "model": "Boil",
-        "label": "Boil Time",
-        "group": null,
-        "control": "calculated",
-        "precision": 0,
-        "shown_only": false
-      },
-      {
-        "property": "Recipe::boilGrav",
-        "model": "Recipe",
-        "label": "Boil SG",
-        "group": null,
-        "control": "calculated",
-        "precision": 3,
-        "shown_only": false
-      },
-      {
-        "property": "NamedEntity::name",
-        "model": "Recipe",
-        "label": "Name",
-        "group": null,
-        "control": "measured",
-        "precision": null,
-        "shown_only": false
-      },
-      {
-        "property": "Recipe::batchSize_l",
-        "model": "Recipe",
-        "label": "Target",
-        "group": "Batch Size",
-        "control": "measured",
-        "precision": 2,
-        "shown_only": false
-      },
-      {
-        "property": "Recipe::finalVolume_l",
-        "model": "Recipe",
-        "label": "Calculated",
-        "group": "Batch Size",
-        "control": "calculated",
-        "precision": 2,
-        "shown_only": false
-      }
-    ]
+  "panels": {
+    "main_window": {
+      "ui": "ui/mainWindow.ui",
+      "trees": [
+        "Recipes",
+        "Styles",
+        "Equipment",
+        "Mash Profiles",
+        "Boil Profiles",
+        "Fermentation Profiles",
+        "Fermentables",
+        "Hops",
+        "Miscs",
+        "Yeasts",
+        "Water"
+      ],
+      "recipe_tabs": [
+        "Recipe",
+        "Extras",
+        "Water",
+        "Brewday"
+      ],
+      "ingredient_tabs": [
+        "Fermentables",
+        "Hops",
+        "Miscellaneous",
+        "Yeast",
+        "Mash",
+        "Boil",
+        "Fermentation"
+      ],
+      "fields": [
+        {
+          "property": "Recipe::og",
+          "model": "Recipe",
+          "label": "OG",
+          "group": null,
+          "control": "text",
+          "precision": null,
+          "shown_only": true
+        },
+        {
+          "property": "Recipe::fg",
+          "model": "Recipe",
+          "label": "FG",
+          "group": null,
+          "control": "text",
+          "precision": null,
+          "shown_only": true
+        },
+        {
+          "property": "Recipe::color_srm",
+          "model": "Recipe",
+          "label": "Color",
+          "group": null,
+          "control": "text",
+          "precision": null,
+          "shown_only": true
+        },
+        {
+          "property": "Recipe::efficiency_pct",
+          "model": "Recipe",
+          "label": "Efficiency",
+          "group": null,
+          "control": "measured",
+          "precision": 1,
+          "shown_only": false
+        },
+        {
+          "property": "Boil::preBoilSize_l",
+          "model": "Boil",
+          "label": "Pre-Boil Volume",
+          "group": null,
+          "control": "calculated",
+          "precision": 2,
+          "shown_only": false
+        },
+        {
+          "property": "Boil::boilTime_mins",
+          "model": "Boil",
+          "label": "Boil Time",
+          "group": null,
+          "control": "calculated",
+          "precision": 0,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::boilGrav",
+          "model": "Recipe",
+          "label": "Boil SG",
+          "group": null,
+          "control": "calculated",
+          "precision": 3,
+          "shown_only": false
+        },
+        {
+          "property": "NamedEntity::name",
+          "model": "Recipe",
+          "label": "Name",
+          "group": null,
+          "control": "measured",
+          "precision": null,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::batchSize_l",
+          "model": "Recipe",
+          "label": "Target",
+          "group": "Batch Size",
+          "control": "measured",
+          "precision": 2,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::finalVolume_l",
+          "model": "Recipe",
+          "label": "Calculated",
+          "group": "Batch Size",
+          "control": "calculated",
+          "precision": 2,
+          "shown_only": false
+        }
+      ]
+    },
+    "recipe_extras": {
+      "ui": "ui/recipeExtrasWidget.ui",
+      "trees": [],
+      "recipe_tabs": [],
+      "ingredient_tabs": [],
+      "fields": [
+        {
+          "property": "Recipe::brewer",
+          "model": "Recipe",
+          "label": "Brewer",
+          "group": null,
+          "control": "measured",
+          "precision": null,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::assistantBrewer",
+          "model": "Recipe",
+          "label": "Assistant Brewer",
+          "group": null,
+          "control": "measured",
+          "precision": null,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::age_days",
+          "model": "Recipe",
+          "label": "Bottle/Keg Age (days)",
+          "group": null,
+          "control": "measured",
+          "precision": 0,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::ageTemp_c",
+          "model": "Recipe",
+          "label": "Bottle/Keg Temp",
+          "group": null,
+          "control": "measured",
+          "precision": 1,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::carbonation_vols",
+          "model": "Recipe",
+          "label": "Carbonation Volumes",
+          "group": null,
+          "control": "measured",
+          "precision": null,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::beerAcidity_pH",
+          "model": "Recipe",
+          "label": "Final beer pH",
+          "group": null,
+          "control": "measured",
+          "precision": 1,
+          "shown_only": false
+        },
+        {
+          "property": "Recipe::apparentAttenuation_pct",
+          "model": "Recipe",
+          "label": "Total apparent attenuation",
+          "group": null,
+          "control": "measured",
+          "precision": 1,
+          "shown_only": false
+        }
+      ]
+    },
+    "recipe_water": {
+      "ui": "ui/recipeWaterWidget.ui",
+      "trees": [],
+      "recipe_tabs": [],
+      "ingredient_tabs": [],
+      "fields": []
+    }
   },
   "editors": {
     "BoilEditor": {

@@ -22,9 +22,34 @@ use dioxus::prelude::*;
 
 use super::format::{NOTHING, number, percent, text};
 use super::table::{Failed, Loading};
-use super::{additions, steps};
+use super::{additions, brewday, extras, steps, water};
 use crate::Client;
 use crate::route::Route;
+
+/// The four tabs above the recipe's ingredients.
+///
+/// `tabWidget_recipeView` in `ui/mainWindow.ui`: the recipe itself, the details that are not
+/// part of brewing it, its water, and the sheet to brew from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum View {
+    Recipe,
+    Extras,
+    Water,
+    Brewday,
+}
+
+impl View {
+    const ALL: [Self; 4] = [Self::Recipe, Self::Extras, Self::Water, Self::Brewday];
+
+    fn title(self) -> &'static str {
+        match self {
+            Self::Recipe => "Recipe",
+            Self::Extras => "Extras",
+            Self::Water => "Water",
+            Self::Brewday => "Brewday",
+        }
+    }
+}
 
 /// Which of the recipe's tabs is open.
 ///
@@ -78,6 +103,8 @@ pub fn RecipeView(id: i32) -> Element {
 /// A recipe that has arrived.
 #[component]
 fn Loaded(recipe: Recipe) -> Element {
+    let mut view = use_signal(|| View::Recipe);
+    let open_view = view();
     let mut tab = use_signal(|| Tab::Fermentables);
     let open = tab();
 
@@ -110,26 +137,50 @@ fn Loaded(recipe: Recipe) -> Element {
         Derived { figures: figures.clone() }
 
         div { class: "bt-tabs", role: "tablist",
-            for entry in Tab::ALL {
+            for entry in View::ALL {
                 button {
                     key: "{entry:?}",
                     role: "tab",
-                    class: if entry == open { "bt-tab bt-chosen" } else { "bt-tab" },
-                    aria_selected: "{entry == open}",
-                    onclick: move |_| tab.set(entry),
+                    class: if entry == open_view { "bt-tab bt-chosen" } else { "bt-tab" },
+                    aria_selected: "{entry == open_view}",
+                    onclick: move |_| view.set(entry),
                     "{entry.title()}"
                 }
             }
         }
-        div { role: "tabpanel", aria_label: "{open.title()}",
-            match open {
-                Tab::Fermentables => rsx! { additions::Fermentables { recipe: recipe.clone() } },
-                Tab::Hops => rsx! { additions::Hops { recipe: recipe.clone(), figures: figures.clone() } },
-                Tab::Miscs => rsx! { additions::Miscs { recipe: recipe.clone() } },
-                Tab::Yeasts => rsx! { additions::Yeasts { recipe: recipe.clone() } },
-                Tab::Mash => rsx! { steps::MashSteps { recipe: recipe.clone() } },
-                Tab::Boil => rsx! { steps::BoilSteps { recipe: recipe.clone() } },
-                Tab::Fermentation => rsx! { steps::FermentationSteps { recipe: recipe.clone() } },
+
+        div { role: "tabpanel", aria_label: "{open_view.title()}",
+            match open_view {
+                View::Recipe => rsx! {
+                    div { class: "bt-tabs bt-subtabs", role: "tablist",
+                        for entry in Tab::ALL {
+                            button {
+                                key: "{entry:?}",
+                                role: "tab",
+                                class: if entry == open { "bt-tab bt-chosen" } else { "bt-tab" },
+                                aria_selected: "{entry == open}",
+                                onclick: move |_| tab.set(entry),
+                                "{entry.title()}"
+                            }
+                        }
+                    }
+                    div { role: "tabpanel", aria_label: "{open.title()}",
+                        match open {
+                            Tab::Fermentables => rsx! { additions::Fermentables { recipe: recipe.clone() } },
+                            Tab::Hops => rsx! {
+                                additions::Hops { recipe: recipe.clone(), figures: figures.clone() }
+                            },
+                            Tab::Miscs => rsx! { additions::Miscs { recipe: recipe.clone() } },
+                            Tab::Yeasts => rsx! { additions::Yeasts { recipe: recipe.clone() } },
+                            Tab::Mash => rsx! { steps::MashSteps { recipe: recipe.clone() } },
+                            Tab::Boil => rsx! { steps::BoilSteps { recipe: recipe.clone() } },
+                            Tab::Fermentation => rsx! { steps::FermentationSteps { recipe: recipe.clone() } },
+                        }
+                    }
+                },
+                View::Extras => rsx! { extras::Extras { recipe: recipe.clone(), figures: figures.clone() } },
+                View::Water => rsx! { water::Water { recipe: recipe.clone() } },
+                View::Brewday => rsx! { brewday::Brewday { recipe: recipe.clone(), figures: figures.clone() } },
             }
         }
     }

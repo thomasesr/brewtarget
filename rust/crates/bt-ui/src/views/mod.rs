@@ -10,14 +10,17 @@
 //! The screens.
 
 pub mod additions;
+pub mod brewday;
 pub mod catalogues;
 pub mod editor;
+pub mod extras;
 pub mod format;
 pub mod recipe;
 pub mod recipes;
 pub mod steps;
 pub mod table;
 pub mod transfer;
+pub mod water;
 
 use std::fmt;
 use std::str::FromStr;

@@ -50,6 +50,9 @@ pub struct Recipe {
     pub yeasts: Vec<Addition<YeastInRecipeRow, YeastRow>>,
     pub equipment: Option<EquipmentRow>,
     pub style: Option<StyleRow>,
+    /// The water this recipe starts from, and the water it is aiming at.
+    pub water_base: Option<WaterRow>,
+    pub water_target: Option<WaterRow>,
     /// The mash and its steps, in step order.
     pub mash: Option<(MashRow, Vec<MashStepRow>)>,
     pub boil: Option<(BoilRow, Vec<BoilStepRow>)>,

@@ -413,3 +413,35 @@ body {
    color: var(--bt-quiet);
    cursor: not-allowed;
 }
+
+/* The tabs within a recipe sit under the ones that choose what you are looking at. */
+.bt-subtabs {
+   margin-top: 0.5rem;
+   font-size: 0.9375rem;
+}
+
+.bt-extras { max-width: 52rem; }
+
+.bt-ions { gap: 0.25rem 1.25rem; }
+
+/* Notes and directions: sentences, not values. */
+.bt-prose {
+   margin: 0 0 1rem;
+   max-width: 46rem;
+   white-space: pre-wrap;
+   line-height: 1.5;
+}
+
+.bt-steps { margin: 0; padding-left: 1.4rem; max-width: 46rem; }
+
+.bt-steps li { margin-bottom: 0.9rem; }
+
+.bt-steps .bt-prose { margin: 0.15rem 0 0; }
+
+/* The brew day sheet is meant to be printed and carried to the kettle. */
+@media print {
+   .bt-nav, .bt-header, .bt-tabs, .bt-toolbar, .bt-back { display: none !important; }
+   .bt-catalogue { display: block; }
+   .bt-pane { padding: 0; }
+   body { background: #fff; color: #000; }
+}
