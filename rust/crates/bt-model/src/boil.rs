@@ -219,7 +219,7 @@ pub fn ensure_standard_profile(steps: &mut Vec<BoilStepRow>, surroundings: &Surr
 /// Number the steps from one, which is what `StepOwnerBase::insert` does as it goes.
 fn renumber(steps: &mut [BoilStepRow]) {
     for (index, step) in steps.iter_mut().enumerate() {
-        step.step_number = Some(index as i64 + 1);
+        step.step_number = Some(index as i32 + 1);
     }
 }
 

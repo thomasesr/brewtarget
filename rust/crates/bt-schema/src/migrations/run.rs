@@ -47,6 +47,10 @@ pub async fn schema_version(connection: &mut AnyConnection) -> Result<u32, Migra
         Ok(None) | Err(_) => return Ok(1), // no settings table: version 2.0.0
     };
     // The column held a string in early releases and an integer later, so read it either way.
+    // INTEGER is 32 bits on PostgreSQL and MariaDB and 64 on SQLite, so both widths are tried.
+    if let Ok(version) = row.try_get::<i32, _>("version") {
+        return Ok(version as u32);
+    }
     if let Ok(version) = row.try_get::<i64, _>("version") {
         return Ok(version as u32);
     }
@@ -72,7 +76,9 @@ fn apply_bind<'q>(
         Bind::Int(value) => query.bind(*value),
         Bind::Float(value) => query.bind(*value),
         Bind::Text(value) => query.bind(value.clone()),
-        Bind::Reference { reference: Reference::LatestVersion } => query.bind(i64::from(latest_version)),
+        Bind::Reference { reference: Reference::LatestVersion } => {
+            query.bind(i32::try_from(latest_version).unwrap_or(i32::MAX))
+        }
         // Inlined as CURRENT_DATE before we get here, so this cannot be reached.
         Bind::Reference { reference: Reference::CurrentDate } => query,
     }
@@ -169,7 +175,9 @@ async fn migrate_next(connection: &mut AnyConnection, from: u32, dialect: Dialec
     // holds a version string that the migration itself has already written.
     if from > 3 {
         let sql = bind_placeholders("UPDATE settings SET version = ? WHERE id = 1", dialect);
-        sqlx::query(&sql).bind((from + 1).to_string()).execute(&mut *connection).await?;
+        // The C++ binds the version as a string, which SQLite converts on the way into an
+        // INTEGER column.  PostgreSQL and MariaDB do not, so the number is bound as a number.
+        sqlx::query(&sql).bind(i32::try_from(from + 1).unwrap_or(i32::MAX)).execute(&mut *connection).await?;
     }
     Ok(())
 }

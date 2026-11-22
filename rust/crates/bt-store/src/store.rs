@@ -31,6 +31,8 @@ pub enum StoreError {
     Migration(#[from] bt_schema::MigrationError),
     #[error("{0}")]
     Namespace(#[from] bt_schema::InvalidNamespace),
+    #[error(transparent)]
+    Ddl(#[from] bt_schema::DdlError),
     #[error("{0} is not one of the folder tables in this schema")]
     UnknownFolderTable(String),
     #[error("{0} is not a table in this schema")]
@@ -146,14 +148,54 @@ impl Store {
         })
     }
 
+    /// Bring a namespace into being, empty.
+    ///
+    /// Only the namespace: the tables in it are made by connecting *into* it and calling
+    /// [`Store::prepare`].  That is the order the eventual design needs -- a connection's
+    /// namespace is settled when it is opened, never with a `SET` afterwards, because a pooled
+    /// connection told once could later be handed to anything (`PLAN.md` Appendix B).
+    ///
+    /// SQLite has no namespaces, so there is nothing to make: the file is the namespace.
+    pub async fn create_namespace(&self, namespace: &Namespace) -> Result<(), StoreError> {
+        if let Some(statement) = bt_schema::create_namespace(self.dialect(), namespace)? {
+            let mut connection = self.schema_connection().await?;
+            sqlx::query(&statement).execute(&mut connection).await?;
+        }
+        Ok(())
+    }
+
+    /// Remove a namespace and everything in it.
+    pub async fn drop_namespace(&self, namespace: &Namespace) -> Result<(), StoreError> {
+        if let Some(statement) = bt_schema::drop_namespace(self.dialect(), namespace)? {
+            let mut connection = self.schema_connection().await?;
+            sqlx::query(&statement).execute(&mut connection).await?;
+        }
+        Ok(())
+    }
+
     /// A connection for schema work, through the `Any` driver.
     async fn schema_connection(&self) -> Result<sqlx::AnyConnection, StoreError> {
         sqlx::any::install_default_drivers();
         Ok(<sqlx::AnyConnection as sqlx::Connection>::connect(&self.url).await?)
     }
 
-    /// Rewrite `?` placeholders for the backend: PostgreSQL numbers them, the others do not.
+    /// The character that quotes an identifier: a backtick on MariaDB, a double quote elsewhere.
+    pub fn identifier_quote(&self) -> &'static str {
+        match self.dialect() {
+            Dialect::Mariadb => "`",
+            Dialect::Sqlite | Dialect::Postgresql => "\"",
+        }
+    }
+
+    /// Make a statement ready for this backend.
+    ///
+    /// Two substitutions.  `?` placeholders are numbered on PostgreSQL and left alone elsewhere.
+    /// `{q}` becomes the identifier quote, which generated SELECTs use to alias each column back
+    /// into the case the schema declares it in -- PostgreSQL folds an unquoted identifier to
+    /// lower case, so a column called `sixMonthAlphaLoss_pct` comes back under another name.
     pub fn placeholders(&self, sql: &str) -> String {
+        let sql = sql.replace("{q}", self.identifier_quote());
+        let sql = &sql;
         bt_schema::migrations::render::bind_placeholders(sql, self.dialect())
     }
 

@@ -34,11 +34,11 @@ macro_rules! fetch_children {
 /// dropping the addition silently would change the recipe.
 async fn with_ingredients<Row, Ingredient, F, Fut>(
     additions: Vec<Row>,
-    ingredient_id: impl Fn(&Row) -> Option<i64>,
+    ingredient_id: impl Fn(&Row) -> Option<i32>,
     fetch: F,
 ) -> Result<Vec<Addition<Row, Ingredient>>, StoreError>
 where
-    F: Fn(i64) -> Fut,
+    F: Fn(i32) -> Fut,
     Fut: std::future::Future<Output = Result<Option<Ingredient>, StoreError>>,
 {
     let mut result = Vec::with_capacity(additions.len());
@@ -53,7 +53,7 @@ where
 }
 
 /// Read a whole recipe, or `None` if there is no such row.
-pub async fn load(store: &Store, id: i64) -> Result<Option<Recipe>, StoreError> {
+pub async fn load(store: &Store, id: i32) -> Result<Option<Recipe>, StoreError> {
     let Some(row) = tables::recipe::get(store, id).await? else {
         return Ok(None);
     };
@@ -138,7 +138,7 @@ pub async fn load(store: &Store, id: i64) -> Result<Option<Recipe>, StoreError> 
 }
 
 /// Delete every row of `table` whose `column` matches `id`.
-async fn delete_children(store: &Store, table: &str, column: &str, id: i64) -> Result<(), StoreError> {
+async fn delete_children(store: &Store, table: &str, column: &str, id: i32) -> Result<(), StoreError> {
     let sql = store.placeholders(&format!("DELETE FROM {table} WHERE {column} = ?"));
     dispatch!(store, |pool| {
         sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -147,7 +147,7 @@ async fn delete_children(store: &Store, table: &str, column: &str, id: i64) -> R
 }
 
 /// How many recipes point at a mash, boil or fermentation.
-async fn recipes_using(store: &Store, column: &str, id: i64) -> Result<i64, StoreError> {
+async fn recipes_using(store: &Store, column: &str, id: i32) -> Result<i64, StoreError> {
     let sql = store.placeholders(&format!("SELECT COUNT(*) FROM recipe WHERE {column} = ?"));
     Ok(dispatch!(store, |pool| { sqlx::query_scalar::<_, i64>(&sql).bind(id).fetch_one(pool).await? }))
 }
@@ -158,7 +158,7 @@ async fn delete_step_owner(
     table: &str,
     step_table: &str,
     column: &str,
-    id: i64,
+    id: i32,
 ) -> Result<(), StoreError> {
     delete_children(store, step_table, column, id).await?;
     let sql = store.placeholders(&format!("DELETE FROM {table} WHERE id = ?"));
@@ -179,7 +179,7 @@ async fn delete_step_owner(
 ///
 /// The order matters: the recipe row has to go before the mash can, or the foreign key still
 /// pointing at it would refuse the delete.  That is why the C++ splits this into two steps too.
-pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
     let Some(recipe) = tables::recipe::get(store, id).await? else {
         return Ok(());
     };
@@ -223,21 +223,21 @@ pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
     Ok(())
 }
 
-async fn mash_name(store: &Store, id: Option<i64>) -> Result<Option<String>, StoreError> {
+async fn mash_name(store: &Store, id: Option<i32>) -> Result<Option<String>, StoreError> {
     Ok(match id {
         Some(id) => tables::mash::get(store, id).await?.and_then(|row| row.name),
         None => None,
     })
 }
 
-async fn boil_name(store: &Store, id: Option<i64>) -> Result<Option<String>, StoreError> {
+async fn boil_name(store: &Store, id: Option<i32>) -> Result<Option<String>, StoreError> {
     Ok(match id {
         Some(id) => tables::boil::get(store, id).await?.and_then(|row| row.name),
         None => None,
     })
 }
 
-async fn fermentation_name(store: &Store, id: Option<i64>) -> Result<Option<String>, StoreError> {
+async fn fermentation_name(store: &Store, id: Option<i32>) -> Result<Option<String>, StoreError> {
     Ok(match id {
         Some(id) => tables::fermentation::get(store, id).await?.and_then(|row| row.name),
         None => None,

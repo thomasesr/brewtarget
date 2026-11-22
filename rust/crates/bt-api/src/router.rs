@@ -41,6 +41,7 @@ pub fn data_routes() -> Router<AppState> {
     Router::new()
         .merge(crate::generated::routes::table_routes())
         .nest("/recipes", crate::recipes::routes())
+        .nest("/inventory", crate::inventory::routes())
         .merge(crate::transfer::routes())
 }
 

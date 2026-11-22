@@ -39,7 +39,7 @@ pub mod boil {
         Ok(Json(tables::boil::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<BoilRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<BoilRow>> {
         tables::boil::get(state.store(), id)
             .await?
             .map(Json)
@@ -53,7 +53,7 @@ pub mod boil {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<BoilRow>,
     ) -> ApiResult<Json<BoilRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -66,7 +66,7 @@ pub mod boil {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::boil::soft_delete(state.store(), id, true).await?;
@@ -86,7 +86,7 @@ pub mod boil_step {
         Ok(Json(tables::boil_step::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<BoilStepRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<BoilStepRow>> {
         tables::boil_step::get(state.store(), id)
             .await?
             .map(Json)
@@ -100,7 +100,7 @@ pub mod boil_step {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<BoilStepRow>,
     ) -> ApiResult<Json<BoilStepRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -113,7 +113,7 @@ pub mod boil_step {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::boil_step::soft_delete(state.store(), id, true).await?;
@@ -133,7 +133,7 @@ pub mod brew_log {
         Ok(Json(tables::brew_log::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<BrewLogRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<BrewLogRow>> {
         tables::brew_log::get(state.store(), id)
             .await?
             .map(Json)
@@ -147,7 +147,7 @@ pub mod brew_log {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<BrewLogRow>,
     ) -> ApiResult<Json<BrewLogRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -160,7 +160,7 @@ pub mod brew_log {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::brew_log::soft_delete(state.store(), id, true).await?;
@@ -180,7 +180,7 @@ pub mod equipment {
         Ok(Json(tables::equipment::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<EquipmentRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<EquipmentRow>> {
         tables::equipment::get(state.store(), id)
             .await?
             .map(Json)
@@ -194,7 +194,7 @@ pub mod equipment {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<EquipmentRow>,
     ) -> ApiResult<Json<EquipmentRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -207,7 +207,7 @@ pub mod equipment {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::equipment::soft_delete(state.store(), id, true).await?;
@@ -227,7 +227,7 @@ pub mod fermentable {
         Ok(Json(tables::fermentable::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FermentableRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableRow>> {
         tables::fermentable::get(state.store(), id)
             .await?
             .map(Json)
@@ -241,7 +241,7 @@ pub mod fermentable {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FermentableRow>,
     ) -> ApiResult<Json<FermentableRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -254,7 +254,7 @@ pub mod fermentable {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::fermentable::soft_delete(state.store(), id, true).await?;
@@ -274,7 +274,7 @@ pub mod fermentable_in_recipe {
         Ok(Json(tables::fermentable_in_recipe::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FermentableInRecipeRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableInRecipeRow>> {
         tables::fermentable_in_recipe::get(state.store(), id)
             .await?
             .map(Json)
@@ -291,7 +291,7 @@ pub mod fermentable_in_recipe {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FermentableInRecipeRow>,
     ) -> ApiResult<Json<FermentableInRecipeRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -304,7 +304,7 @@ pub mod fermentable_in_recipe {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::fermentable_in_recipe::soft_delete(state.store(), id, true).await?;
@@ -324,7 +324,7 @@ pub mod fermentable_stock_purchase {
         Ok(Json(tables::fermentable_stock_purchase::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FermentableStockPurchaseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableStockPurchaseRow>> {
         tables::fermentable_stock_purchase::get(state.store(), id)
             .await?
             .map(Json)
@@ -341,7 +341,7 @@ pub mod fermentable_stock_purchase {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FermentableStockPurchaseRow>,
     ) -> ApiResult<Json<FermentableStockPurchaseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -354,7 +354,7 @@ pub mod fermentable_stock_purchase {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::fermentable_stock_purchase::soft_delete(state.store(), id, true).await?;
@@ -374,7 +374,7 @@ pub mod fermentable_stock_use {
         Ok(Json(tables::fermentable_stock_use::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FermentableStockUseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentableStockUseRow>> {
         tables::fermentable_stock_use::get(state.store(), id)
             .await?
             .map(Json)
@@ -391,7 +391,7 @@ pub mod fermentable_stock_use {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FermentableStockUseRow>,
     ) -> ApiResult<Json<FermentableStockUseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -404,7 +404,7 @@ pub mod fermentable_stock_use {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::fermentable_stock_use::soft_delete(state.store(), id, true).await?;
@@ -424,7 +424,7 @@ pub mod fermentation {
         Ok(Json(tables::fermentation::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FermentationRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentationRow>> {
         tables::fermentation::get(state.store(), id)
             .await?
             .map(Json)
@@ -441,7 +441,7 @@ pub mod fermentation {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FermentationRow>,
     ) -> ApiResult<Json<FermentationRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -454,7 +454,7 @@ pub mod fermentation {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::fermentation::soft_delete(state.store(), id, true).await?;
@@ -474,7 +474,7 @@ pub mod fermentation_step {
         Ok(Json(tables::fermentation_step::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FermentationStepRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FermentationStepRow>> {
         tables::fermentation_step::get(state.store(), id)
             .await?
             .map(Json)
@@ -491,7 +491,7 @@ pub mod fermentation_step {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FermentationStepRow>,
     ) -> ApiResult<Json<FermentationStepRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -504,7 +504,7 @@ pub mod fermentation_step {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::fermentation_step::soft_delete(state.store(), id, true).await?;
@@ -524,7 +524,7 @@ pub mod folder_for_boil {
         Ok(Json(tables::folder_for_boil::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForBoilRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForBoilRow>> {
         tables::folder_for_boil::get(state.store(), id)
             .await?
             .map(Json)
@@ -541,7 +541,7 @@ pub mod folder_for_boil {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForBoilRow>,
     ) -> ApiResult<Json<FolderForBoilRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -554,7 +554,7 @@ pub mod folder_for_boil {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_boil::soft_delete(state.store(), id, true).await?;
@@ -574,7 +574,7 @@ pub mod folder_for_equipment {
         Ok(Json(tables::folder_for_equipment::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForEquipmentRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForEquipmentRow>> {
         tables::folder_for_equipment::get(state.store(), id)
             .await?
             .map(Json)
@@ -591,7 +591,7 @@ pub mod folder_for_equipment {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForEquipmentRow>,
     ) -> ApiResult<Json<FolderForEquipmentRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -604,7 +604,7 @@ pub mod folder_for_equipment {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_equipment::soft_delete(state.store(), id, true).await?;
@@ -624,7 +624,7 @@ pub mod folder_for_fermentable {
         Ok(Json(tables::folder_for_fermentable::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForFermentableRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForFermentableRow>> {
         tables::folder_for_fermentable::get(state.store(), id)
             .await?
             .map(Json)
@@ -641,7 +641,7 @@ pub mod folder_for_fermentable {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForFermentableRow>,
     ) -> ApiResult<Json<FolderForFermentableRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -654,7 +654,7 @@ pub mod folder_for_fermentable {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_fermentable::soft_delete(state.store(), id, true).await?;
@@ -674,7 +674,7 @@ pub mod folder_for_fermentation {
         Ok(Json(tables::folder_for_fermentation::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForFermentationRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForFermentationRow>> {
         tables::folder_for_fermentation::get(state.store(), id)
             .await?
             .map(Json)
@@ -691,7 +691,7 @@ pub mod folder_for_fermentation {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForFermentationRow>,
     ) -> ApiResult<Json<FolderForFermentationRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -704,7 +704,7 @@ pub mod folder_for_fermentation {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_fermentation::soft_delete(state.store(), id, true).await?;
@@ -724,7 +724,7 @@ pub mod folder_for_hop {
         Ok(Json(tables::folder_for_hop::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForHopRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForHopRow>> {
         tables::folder_for_hop::get(state.store(), id)
             .await?
             .map(Json)
@@ -741,7 +741,7 @@ pub mod folder_for_hop {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForHopRow>,
     ) -> ApiResult<Json<FolderForHopRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -754,7 +754,7 @@ pub mod folder_for_hop {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_hop::soft_delete(state.store(), id, true).await?;
@@ -774,7 +774,7 @@ pub mod folder_for_mash {
         Ok(Json(tables::folder_for_mash::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForMashRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForMashRow>> {
         tables::folder_for_mash::get(state.store(), id)
             .await?
             .map(Json)
@@ -791,7 +791,7 @@ pub mod folder_for_mash {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForMashRow>,
     ) -> ApiResult<Json<FolderForMashRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -804,7 +804,7 @@ pub mod folder_for_mash {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_mash::soft_delete(state.store(), id, true).await?;
@@ -824,7 +824,7 @@ pub mod folder_for_misc {
         Ok(Json(tables::folder_for_misc::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForMiscRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForMiscRow>> {
         tables::folder_for_misc::get(state.store(), id)
             .await?
             .map(Json)
@@ -841,7 +841,7 @@ pub mod folder_for_misc {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForMiscRow>,
     ) -> ApiResult<Json<FolderForMiscRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -854,7 +854,7 @@ pub mod folder_for_misc {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_misc::soft_delete(state.store(), id, true).await?;
@@ -874,7 +874,7 @@ pub mod folder_for_recipe {
         Ok(Json(tables::folder_for_recipe::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForRecipeRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForRecipeRow>> {
         tables::folder_for_recipe::get(state.store(), id)
             .await?
             .map(Json)
@@ -891,7 +891,7 @@ pub mod folder_for_recipe {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForRecipeRow>,
     ) -> ApiResult<Json<FolderForRecipeRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -904,7 +904,7 @@ pub mod folder_for_recipe {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_recipe::soft_delete(state.store(), id, true).await?;
@@ -924,7 +924,7 @@ pub mod folder_for_style {
         Ok(Json(tables::folder_for_style::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForStyleRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForStyleRow>> {
         tables::folder_for_style::get(state.store(), id)
             .await?
             .map(Json)
@@ -941,7 +941,7 @@ pub mod folder_for_style {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForStyleRow>,
     ) -> ApiResult<Json<FolderForStyleRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -954,7 +954,7 @@ pub mod folder_for_style {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_style::soft_delete(state.store(), id, true).await?;
@@ -974,7 +974,7 @@ pub mod folder_for_water {
         Ok(Json(tables::folder_for_water::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForWaterRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForWaterRow>> {
         tables::folder_for_water::get(state.store(), id)
             .await?
             .map(Json)
@@ -991,7 +991,7 @@ pub mod folder_for_water {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForWaterRow>,
     ) -> ApiResult<Json<FolderForWaterRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1004,7 +1004,7 @@ pub mod folder_for_water {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_water::soft_delete(state.store(), id, true).await?;
@@ -1024,7 +1024,7 @@ pub mod folder_for_yeast {
         Ok(Json(tables::folder_for_yeast::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<FolderForYeastRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<FolderForYeastRow>> {
         tables::folder_for_yeast::get(state.store(), id)
             .await?
             .map(Json)
@@ -1041,7 +1041,7 @@ pub mod folder_for_yeast {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<FolderForYeastRow>,
     ) -> ApiResult<Json<FolderForYeastRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1054,7 +1054,7 @@ pub mod folder_for_yeast {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::folder_for_yeast::soft_delete(state.store(), id, true).await?;
@@ -1074,7 +1074,7 @@ pub mod hop {
         Ok(Json(tables::hop::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<HopRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopRow>> {
         tables::hop::get(state.store(), id)
             .await?
             .map(Json)
@@ -1088,7 +1088,7 @@ pub mod hop {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<HopRow>,
     ) -> ApiResult<Json<HopRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1101,7 +1101,7 @@ pub mod hop {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::hop::soft_delete(state.store(), id, true).await?;
@@ -1121,7 +1121,7 @@ pub mod hop_in_recipe {
         Ok(Json(tables::hop_in_recipe::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<HopInRecipeRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopInRecipeRow>> {
         tables::hop_in_recipe::get(state.store(), id)
             .await?
             .map(Json)
@@ -1135,7 +1135,7 @@ pub mod hop_in_recipe {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<HopInRecipeRow>,
     ) -> ApiResult<Json<HopInRecipeRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1148,7 +1148,7 @@ pub mod hop_in_recipe {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::hop_in_recipe::soft_delete(state.store(), id, true).await?;
@@ -1168,7 +1168,7 @@ pub mod hop_stock_purchase {
         Ok(Json(tables::hop_stock_purchase::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<HopStockPurchaseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopStockPurchaseRow>> {
         tables::hop_stock_purchase::get(state.store(), id)
             .await?
             .map(Json)
@@ -1185,7 +1185,7 @@ pub mod hop_stock_purchase {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<HopStockPurchaseRow>,
     ) -> ApiResult<Json<HopStockPurchaseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1198,7 +1198,7 @@ pub mod hop_stock_purchase {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::hop_stock_purchase::soft_delete(state.store(), id, true).await?;
@@ -1218,7 +1218,7 @@ pub mod hop_stock_use {
         Ok(Json(tables::hop_stock_use::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<HopStockUseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<HopStockUseRow>> {
         tables::hop_stock_use::get(state.store(), id)
             .await?
             .map(Json)
@@ -1232,7 +1232,7 @@ pub mod hop_stock_use {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<HopStockUseRow>,
     ) -> ApiResult<Json<HopStockUseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1245,7 +1245,7 @@ pub mod hop_stock_use {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::hop_stock_use::soft_delete(state.store(), id, true).await?;
@@ -1265,7 +1265,7 @@ pub mod instruction {
         Ok(Json(tables::instruction::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<InstructionRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<InstructionRow>> {
         tables::instruction::get(state.store(), id)
             .await?
             .map(Json)
@@ -1279,7 +1279,7 @@ pub mod instruction {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<InstructionRow>,
     ) -> ApiResult<Json<InstructionRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1292,7 +1292,7 @@ pub mod instruction {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::instruction::soft_delete(state.store(), id, true).await?;
@@ -1312,7 +1312,7 @@ pub mod mash {
         Ok(Json(tables::mash::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<MashRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MashRow>> {
         tables::mash::get(state.store(), id)
             .await?
             .map(Json)
@@ -1326,7 +1326,7 @@ pub mod mash {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<MashRow>,
     ) -> ApiResult<Json<MashRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1339,7 +1339,7 @@ pub mod mash {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::mash::soft_delete(state.store(), id, true).await?;
@@ -1359,7 +1359,7 @@ pub mod mash_step {
         Ok(Json(tables::mash_step::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<MashStepRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MashStepRow>> {
         tables::mash_step::get(state.store(), id)
             .await?
             .map(Json)
@@ -1373,7 +1373,7 @@ pub mod mash_step {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<MashStepRow>,
     ) -> ApiResult<Json<MashStepRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1386,7 +1386,7 @@ pub mod mash_step {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::mash_step::soft_delete(state.store(), id, true).await?;
@@ -1406,7 +1406,7 @@ pub mod misc {
         Ok(Json(tables::misc::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<MiscRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscRow>> {
         tables::misc::get(state.store(), id)
             .await?
             .map(Json)
@@ -1420,7 +1420,7 @@ pub mod misc {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<MiscRow>,
     ) -> ApiResult<Json<MiscRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1433,7 +1433,7 @@ pub mod misc {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::misc::soft_delete(state.store(), id, true).await?;
@@ -1453,7 +1453,7 @@ pub mod misc_in_recipe {
         Ok(Json(tables::misc_in_recipe::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<MiscInRecipeRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscInRecipeRow>> {
         tables::misc_in_recipe::get(state.store(), id)
             .await?
             .map(Json)
@@ -1470,7 +1470,7 @@ pub mod misc_in_recipe {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<MiscInRecipeRow>,
     ) -> ApiResult<Json<MiscInRecipeRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1483,7 +1483,7 @@ pub mod misc_in_recipe {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::misc_in_recipe::soft_delete(state.store(), id, true).await?;
@@ -1503,7 +1503,7 @@ pub mod misc_stock_purchase {
         Ok(Json(tables::misc_stock_purchase::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<MiscStockPurchaseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscStockPurchaseRow>> {
         tables::misc_stock_purchase::get(state.store(), id)
             .await?
             .map(Json)
@@ -1520,7 +1520,7 @@ pub mod misc_stock_purchase {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<MiscStockPurchaseRow>,
     ) -> ApiResult<Json<MiscStockPurchaseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1533,7 +1533,7 @@ pub mod misc_stock_purchase {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::misc_stock_purchase::soft_delete(state.store(), id, true).await?;
@@ -1553,7 +1553,7 @@ pub mod misc_stock_use {
         Ok(Json(tables::misc_stock_use::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<MiscStockUseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<MiscStockUseRow>> {
         tables::misc_stock_use::get(state.store(), id)
             .await?
             .map(Json)
@@ -1570,7 +1570,7 @@ pub mod misc_stock_use {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<MiscStockUseRow>,
     ) -> ApiResult<Json<MiscStockUseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1583,7 +1583,7 @@ pub mod misc_stock_use {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::misc_stock_use::soft_delete(state.store(), id, true).await?;
@@ -1603,7 +1603,7 @@ pub mod recipe {
         Ok(Json(tables::recipe::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<RecipeRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<RecipeRow>> {
         tables::recipe::get(state.store(), id)
             .await?
             .map(Json)
@@ -1617,7 +1617,7 @@ pub mod recipe {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<RecipeRow>,
     ) -> ApiResult<Json<RecipeRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1630,7 +1630,7 @@ pub mod recipe {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::recipe::soft_delete(state.store(), id, true).await?;
@@ -1650,7 +1650,7 @@ pub mod style {
         Ok(Json(tables::style::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<StyleRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<StyleRow>> {
         tables::style::get(state.store(), id)
             .await?
             .map(Json)
@@ -1664,7 +1664,7 @@ pub mod style {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<StyleRow>,
     ) -> ApiResult<Json<StyleRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1677,7 +1677,7 @@ pub mod style {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::style::soft_delete(state.store(), id, true).await?;
@@ -1697,7 +1697,7 @@ pub mod water {
         Ok(Json(tables::water::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<WaterRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<WaterRow>> {
         tables::water::get(state.store(), id)
             .await?
             .map(Json)
@@ -1711,7 +1711,7 @@ pub mod water {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<WaterRow>,
     ) -> ApiResult<Json<WaterRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1724,7 +1724,7 @@ pub mod water {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::water::soft_delete(state.store(), id, true).await?;
@@ -1744,7 +1744,7 @@ pub mod yeast {
         Ok(Json(tables::yeast::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<YeastRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastRow>> {
         tables::yeast::get(state.store(), id)
             .await?
             .map(Json)
@@ -1758,7 +1758,7 @@ pub mod yeast {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<YeastRow>,
     ) -> ApiResult<Json<YeastRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1771,7 +1771,7 @@ pub mod yeast {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::yeast::soft_delete(state.store(), id, true).await?;
@@ -1791,7 +1791,7 @@ pub mod yeast_in_recipe {
         Ok(Json(tables::yeast_in_recipe::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<YeastInRecipeRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastInRecipeRow>> {
         tables::yeast_in_recipe::get(state.store(), id)
             .await?
             .map(Json)
@@ -1808,7 +1808,7 @@ pub mod yeast_in_recipe {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<YeastInRecipeRow>,
     ) -> ApiResult<Json<YeastInRecipeRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1821,7 +1821,7 @@ pub mod yeast_in_recipe {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::yeast_in_recipe::soft_delete(state.store(), id, true).await?;
@@ -1841,7 +1841,7 @@ pub mod yeast_stock_purchase {
         Ok(Json(tables::yeast_stock_purchase::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<YeastStockPurchaseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastStockPurchaseRow>> {
         tables::yeast_stock_purchase::get(state.store(), id)
             .await?
             .map(Json)
@@ -1858,7 +1858,7 @@ pub mod yeast_stock_purchase {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<YeastStockPurchaseRow>,
     ) -> ApiResult<Json<YeastStockPurchaseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1871,7 +1871,7 @@ pub mod yeast_stock_purchase {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::yeast_stock_purchase::soft_delete(state.store(), id, true).await?;
@@ -1891,7 +1891,7 @@ pub mod yeast_stock_use {
         Ok(Json(tables::yeast_stock_use::list(state.store()).await?))
     }
 
-    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<YeastStockUseRow>> {
+    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<YeastStockUseRow>> {
         tables::yeast_stock_use::get(state.store(), id)
             .await?
             .map(Json)
@@ -1908,7 +1908,7 @@ pub mod yeast_stock_use {
 
     async fn update(
         State(state): State<AppState>,
-        Path(id): Path<i64>,
+        Path(id): Path<i32>,
         Json(mut row): Json<YeastStockUseRow>,
     ) -> ApiResult<Json<YeastStockUseRow>> {
         // The key in the path is the one that counts; a body claiming another is a
@@ -1921,7 +1921,7 @@ pub mod yeast_stock_use {
         read(State(state), Path(id)).await
     }
 
-    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {
+    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {
         // Deleting is soft: the row stays so that anything referring to it still
         // resolves, and is simply hidden from the lists.
         tables::yeast_stock_use::soft_delete(state.store(), id, true).await?;

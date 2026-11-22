@@ -28,7 +28,7 @@ use bt_format::{jsonc, xml};
 use crate::{Store, StoreError, import};
 
 /// `DefaultContentLoader::availableContentVersion`.
-pub const AVAILABLE_CONTENT_VERSION: i64 = 6;
+pub const AVAILABLE_CONTENT_VERSION: i32 = 6;
 
 /// Where the recipes that come with the application are filed.
 ///
@@ -39,21 +39,21 @@ pub const SUPPLIED_RECIPES_FOLDER: &str = "brewtarget";
 #[derive(Debug, Clone, PartialEq)]
 pub enum Loaded {
     /// The database already had everything this release ships.
-    NothingToDo { version: i64 },
+    NothingToDo { version: i32 },
     /// Content was loaded, up to the version named.
-    UpTo { version: i64, files: Vec<String>, rows_written: usize },
+    UpTo { version: i32, files: Vec<String>, rows_written: usize },
 }
 
 /// How far through the sequence this database has got.
-pub async fn loaded_version(store: &Store) -> Result<i64, StoreError> {
+pub async fn loaded_version(store: &Store) -> Result<i32, StoreError> {
     let sql = "SELECT default_content_version FROM settings WHERE id = 1";
-    let found: Option<Option<i64>> =
+    let found: Option<Option<i32>> =
         crate::dispatch!(store, |pool| { sqlx::query_scalar(sql).fetch_optional(pool).await? });
     Ok(found.flatten().unwrap_or(0))
 }
 
 /// Record how far through the sequence this database has got.
-pub async fn set_loaded_version(store: &Store, version: i64) -> Result<(), StoreError> {
+pub async fn set_loaded_version(store: &Store, version: i32) -> Result<(), StoreError> {
     let sql = store.placeholders("UPDATE settings SET default_content_version = ? WHERE id = 1");
     crate::dispatch!(store, |pool| {
         sqlx::query(&sql).bind(version).execute(pool).await?;
@@ -65,7 +65,7 @@ pub async fn set_loaded_version(store: &Store, version: i64) -> Result<(), Store
 ///
 /// The files are named `DefaultContentNNN-something.extension`, and exactly one must match each
 /// number: two would make the order ambiguous.
-pub fn file_for(directory: &Path, version: i64) -> Result<Option<PathBuf>, StoreError> {
+pub fn file_for(directory: &Path, version: i32) -> Result<Option<PathBuf>, StoreError> {
     let prefix = format!("DefaultContent{version:03}-");
     let mut matching: Vec<PathBuf> = std::fs::read_dir(directory)
         .map_err(|source| StoreError::ContentDirectory { path: directory.display().to_string(), source })?

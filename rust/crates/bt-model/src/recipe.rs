@@ -57,7 +57,7 @@ pub struct Recipe {
 }
 
 impl Recipe {
-    pub fn id(&self) -> i64 {
+    pub fn id(&self) -> i32 {
         self.row.id
     }
 
@@ -81,7 +81,7 @@ impl Recipe {
     ///
     /// A recipe is its own ancestor when it has never been superseded, which is what
     /// `migrate_to_10` set up, so that case reads as "no ancestor" here.
-    pub fn ancestor_id(&self) -> Option<i64> {
+    pub fn ancestor_id(&self) -> Option<i32> {
         self.row.ancestor_id.filter(|ancestor| *ancestor != self.row.id)
     }
 

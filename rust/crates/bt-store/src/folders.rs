@@ -55,14 +55,14 @@ pub async fn ensure_path_on(
     entity: &str,
     path: &str,
     tree: &mut FolderTree,
-) -> Result<Option<i64>, StoreError> {
+) -> Result<Option<i32>, StoreError> {
     let table = folder_table_for(entity)?;
     let normalised = bt_model::folder::normalise(path);
     if normalised.is_empty() {
         return Ok(None);
     }
 
-    let mut parent_id: Option<i64> = None;
+    let mut parent_id: Option<i32> = None;
     let mut walked = String::new();
     for component in normalised.split('/') {
         walked = if walked.is_empty() { component.to_owned() } else { format!("{walked}/{component}") };
@@ -72,7 +72,7 @@ pub async fn ensure_path_on(
                 let insert = placeholders(&format!(
                     "INSERT INTO {table} (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id"
                 ));
-                let id: i64 = dispatch_connection!(connection, |handle| {
+                let id: i32 = dispatch_connection!(connection, |handle| {
                     sqlx::query_scalar(&insert)
                         .bind(component)
                         .bind(false)
@@ -118,7 +118,7 @@ pub async fn load_tree(store: &Store, entity: &str) -> Result<FolderTree, StoreE
 ///
 /// Ported from `Folder::ensure`.  An empty path means the root, which is no folder at all rather
 /// than a folder named "".
-pub async fn ensure_path(store: &Store, entity: &str, path: &str) -> Result<Option<i64>, StoreError> {
+pub async fn ensure_path(store: &Store, entity: &str, path: &str) -> Result<Option<i32>, StoreError> {
     let mut tree = load_tree(store, entity).await?;
     ensure_path_in(store, entity, path, &mut tree).await
 }
@@ -134,14 +134,14 @@ pub async fn ensure_path_in(
     entity: &str,
     path: &str,
     tree: &mut FolderTree,
-) -> Result<Option<i64>, StoreError> {
+) -> Result<Option<i32>, StoreError> {
     let table = folder_table_for(entity)?;
     let normalised = bt_model::folder::normalise(path);
     if normalised.is_empty() {
         return Ok(None);
     }
 
-    let mut parent_id: Option<i64> = None;
+    let mut parent_id: Option<i32> = None;
     let mut walked = String::new();
 
     for component in normalised.split('/') {
@@ -152,7 +152,7 @@ pub async fn ensure_path_in(
                 let insert = store.placeholders(&format!(
                     "INSERT INTO {table} (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id"
                 ));
-                let id: i64 = dispatch!(store, |pool| {
+                let id: i32 = dispatch!(store, |pool| {
                     sqlx::query_scalar(&insert).bind(component).bind(false).bind(parent_id).fetch_one(pool).await?
                 });
                 // Keep the tree in step so the next component can find what was just created.
@@ -167,6 +167,6 @@ pub async fn ensure_path_in(
 }
 
 /// The full path of one folder, or `None` if there is no such folder.
-pub async fn full_path(store: &Store, entity: &str, id: i64) -> Result<Option<String>, StoreError> {
+pub async fn full_path(store: &Store, entity: &str, id: i32) -> Result<Option<String>, StoreError> {
     Ok(load_tree(store, entity).await?.full_path(id))
 }

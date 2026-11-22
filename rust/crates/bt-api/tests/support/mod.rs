@@ -23,6 +23,14 @@ use bt_store::Store;
 use serde_json::Value;
 use tower::ServiceExt;
 
+/// Show what the server logged, so a request that fails says why.
+///
+/// The API reports store failures in outline so that table and column names do not leak to a
+/// caller; the detail goes to the log, which is where a test needs to look.
+pub fn show_logs() {
+    let _ = tracing_subscriber::fmt().with_test_writer().with_env_filter("warn,bt_api=debug,bt_store=debug").try_init();
+}
+
 /// The root of the repository, where the shipped data files are.
 pub fn repository() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..")

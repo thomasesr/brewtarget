@@ -23,25 +23,25 @@ use std::collections::{BTreeMap, BTreeSet};
 /// One folder, independent of which of the eleven tables it came from.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FolderNode {
-    pub id: i64,
+    pub id: i32,
     pub name: String,
     /// `contained_in_folder_id`: the folder this one sits in, if any.
-    pub parent_id: Option<i64>,
+    pub parent_id: Option<i32>,
     pub deleted: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum FolderError {
     #[error("folder #{0} is contained in #{1}, which does not exist")]
-    MissingParent(i64, i64),
+    MissingParent(i32, i32),
     #[error("folders {0:?} contain each other")]
-    Cycle(Vec<i64>),
+    Cycle(Vec<i32>),
 }
 
 /// The folders of one table, indexed so paths can be walked.
 #[derive(Debug, Clone, Default)]
 pub struct FolderTree {
-    nodes: BTreeMap<i64, FolderNode>,
+    nodes: BTreeMap<i32, FolderNode>,
 }
 
 impl FolderTree {
@@ -51,7 +51,7 @@ impl FolderTree {
     /// `doPath` round for ever, which matters more in a server than in a desktop application, so
     /// every chain is walked once up front and a cycle is an error rather than a hang.
     pub fn new(nodes: impl IntoIterator<Item = FolderNode>) -> Result<Self, FolderError> {
-        let nodes: BTreeMap<i64, FolderNode> = nodes.into_iter().map(|node| (node.id, node)).collect();
+        let nodes: BTreeMap<i32, FolderNode> = nodes.into_iter().map(|node| (node.id, node)).collect();
 
         for node in nodes.values() {
             let mut seen = BTreeSet::from([node.id]);
@@ -67,7 +67,7 @@ impl FolderTree {
         Ok(Self { nodes })
     }
 
-    pub fn get(&self, id: i64) -> Option<&FolderNode> {
+    pub fn get(&self, id: i32) -> Option<&FolderNode> {
         self.nodes.get(&id)
     }
 
@@ -84,7 +84,7 @@ impl FolderTree {
     }
 
     /// The folders containing this one, nearest first.
-    pub fn ancestors(&self, id: i64) -> Vec<&FolderNode> {
+    pub fn ancestors(&self, id: i32) -> Vec<&FolderNode> {
         let mut ancestors = Vec::new();
         let mut current = self.nodes.get(&id);
         while let Some(node) = current {
@@ -102,19 +102,19 @@ impl FolderTree {
     /// Everything before this folder's own name, with a trailing slash; empty at the root.
     ///
     /// Ported from `Folder::path`, which is `doPath("")`.
-    pub fn path(&self, id: i64) -> Option<String> {
+    pub fn path(&self, id: i32) -> Option<String> {
         self.do_path(id, String::new())
     }
 
     /// The whole path, ending in this folder's own name.
     ///
     /// Ported from `Folder::fullPath`, which is `doPath(name())`.
-    pub fn full_path(&self, id: i64) -> Option<String> {
+    pub fn full_path(&self, id: i32) -> Option<String> {
         let node = self.nodes.get(&id)?;
         self.do_path(id, node.name.clone())
     }
 
-    fn do_path(&self, id: i64, start_with: String) -> Option<String> {
+    fn do_path(&self, id: i32, start_with: String) -> Option<String> {
         let node = self.nodes.get(&id)?;
         let mut path = start_with;
         for ancestor in self.ancestors(node.id) {
@@ -132,7 +132,7 @@ impl FolderTree {
     }
 
     /// The folders directly inside `parent_id`, or the root folders when that is `None`.
-    pub fn children(&self, parent_id: Option<i64>) -> Vec<&FolderNode> {
+    pub fn children(&self, parent_id: Option<i32>) -> Vec<&FolderNode> {
         self.nodes.values().filter(|node| node.parent_id == parent_id).collect()
     }
 }

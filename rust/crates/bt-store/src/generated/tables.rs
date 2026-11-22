@@ -32,12 +32,12 @@ pub mod boil {
 
     const INSERT: &str = "INSERT INTO boil (locked, description, notes, pre_boil_size_l, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE boil SET locked = ?, description = ?, notes = ?, pre_boil_size_l = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM boil WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM boil";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, locked AS {q}locked{q}, description AS {q}description{q}, notes AS {q}notes{q}, pre_boil_size_l AS {q}pre_boil_size_l{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM boil WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, locked AS {q}locked{q}, description AS {q}description{q}, notes AS {q}notes{q}, pre_boil_size_l AS {q}pre_boil_size_l{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM boil";
     const DELETE: &str = "DELETE FROM boil WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &BoilRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &BoilRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -73,18 +73,19 @@ pub mod boil {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<BoilRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<BoilRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BoilRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<BoilRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BoilRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BoilRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -94,7 +95,7 @@ pub mod boil {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE boil SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -109,12 +110,12 @@ pub mod boil_step {
 
     const INSERT: &str = "INSERT INTO boil_step (step_time_mins, start_temp_c, end_temp_c, ramp_time_mins, step_number, description, start_acidity_ph, end_acidity_ph, start_gravity_sg, end_gravity_sg, chilling_type, name, deleted, boil_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE boil_step SET step_time_mins = ?, start_temp_c = ?, end_temp_c = ?, ramp_time_mins = ?, step_number = ?, description = ?, start_acidity_ph = ?, end_acidity_ph = ?, start_gravity_sg = ?, end_gravity_sg = ?, chilling_type = ?, name = ?, deleted = ?, boil_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM boil_step WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM boil_step";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, step_time_mins AS {q}step_time_mins{q}, start_temp_c AS {q}start_temp_c{q}, end_temp_c AS {q}end_temp_c{q}, ramp_time_mins AS {q}ramp_time_mins{q}, step_number AS {q}step_number{q}, description AS {q}description{q}, start_acidity_ph AS {q}start_acidity_ph{q}, end_acidity_ph AS {q}end_acidity_ph{q}, start_gravity_sg AS {q}start_gravity_sg{q}, end_gravity_sg AS {q}end_gravity_sg{q}, chilling_type AS {q}chilling_type{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, boil_id AS {q}boil_id{q} FROM boil_step WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, step_time_mins AS {q}step_time_mins{q}, start_temp_c AS {q}start_temp_c{q}, end_temp_c AS {q}end_temp_c{q}, ramp_time_mins AS {q}ramp_time_mins{q}, step_number AS {q}step_number{q}, description AS {q}description{q}, start_acidity_ph AS {q}start_acidity_ph{q}, end_acidity_ph AS {q}end_acidity_ph{q}, start_gravity_sg AS {q}start_gravity_sg{q}, end_gravity_sg AS {q}end_gravity_sg{q}, chilling_type AS {q}chilling_type{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, boil_id AS {q}boil_id{q} FROM boil_step";
     const DELETE: &str = "DELETE FROM boil_step WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &BoilStepRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &BoilStepRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -164,18 +165,19 @@ pub mod boil_step {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<BoilStepRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<BoilStepRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BoilStepRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<BoilStepRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BoilStepRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BoilStepRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -185,7 +187,7 @@ pub mod boil_step {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE boil_step SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -200,12 +202,12 @@ pub mod brew_log {
 
     const INSERT: &str = "INSERT INTO brew_log (brew_date, ferment_date, notes, expected_pre_boil_gravity_sg, measured_pre_boil_gravity_sg, expected_pre_boil_volume_l, measured_pre_boil_volume_l, expected_strike_temp_c, measured_strike_temp_c, expected_mash_final_temp_c, measured_mash_final_temp_c, expected_original_gravity_sg, forecast_original_gravity_sg, measured_original_gravity_sg, measured_post_boil_volume_l, expected_volume_into_fv_l, measured_volume_into_fv_l, measured_pitch_temp_c, expected_final_gravity_sg, measured_final_gravity_sg, measured_final_volume, expected_alcohol_by_volume_pct, computed_alcohol_by_volume_pct, expected_attenuation_pct, measured_wort_clarity, computed_attenuation_pct, expected_efficiency_pct, computed_efficiency_pct, computed_pre_boil_efficiency_pct, expected_boil_off_l, name, deleted, recipe_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE brew_log SET brew_date = ?, ferment_date = ?, notes = ?, expected_pre_boil_gravity_sg = ?, measured_pre_boil_gravity_sg = ?, expected_pre_boil_volume_l = ?, measured_pre_boil_volume_l = ?, expected_strike_temp_c = ?, measured_strike_temp_c = ?, expected_mash_final_temp_c = ?, measured_mash_final_temp_c = ?, expected_original_gravity_sg = ?, forecast_original_gravity_sg = ?, measured_original_gravity_sg = ?, measured_post_boil_volume_l = ?, expected_volume_into_fv_l = ?, measured_volume_into_fv_l = ?, measured_pitch_temp_c = ?, expected_final_gravity_sg = ?, measured_final_gravity_sg = ?, measured_final_volume = ?, expected_alcohol_by_volume_pct = ?, computed_alcohol_by_volume_pct = ?, expected_attenuation_pct = ?, measured_wort_clarity = ?, computed_attenuation_pct = ?, expected_efficiency_pct = ?, computed_efficiency_pct = ?, computed_pre_boil_efficiency_pct = ?, expected_boil_off_l = ?, name = ?, deleted = ?, recipe_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM brew_log WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM brew_log";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, brew_date AS {q}brew_date{q}, ferment_date AS {q}ferment_date{q}, notes AS {q}notes{q}, expected_pre_boil_gravity_sg AS {q}expected_pre_boil_gravity_sg{q}, measured_pre_boil_gravity_sg AS {q}measured_pre_boil_gravity_sg{q}, expected_pre_boil_volume_l AS {q}expected_pre_boil_volume_l{q}, measured_pre_boil_volume_l AS {q}measured_pre_boil_volume_l{q}, expected_strike_temp_c AS {q}expected_strike_temp_c{q}, measured_strike_temp_c AS {q}measured_strike_temp_c{q}, expected_mash_final_temp_c AS {q}expected_mash_final_temp_c{q}, measured_mash_final_temp_c AS {q}measured_mash_final_temp_c{q}, expected_original_gravity_sg AS {q}expected_original_gravity_sg{q}, forecast_original_gravity_sg AS {q}forecast_original_gravity_sg{q}, measured_original_gravity_sg AS {q}measured_original_gravity_sg{q}, measured_post_boil_volume_l AS {q}measured_post_boil_volume_l{q}, expected_volume_into_fv_l AS {q}expected_volume_into_fv_l{q}, measured_volume_into_fv_l AS {q}measured_volume_into_fv_l{q}, measured_pitch_temp_c AS {q}measured_pitch_temp_c{q}, expected_final_gravity_sg AS {q}expected_final_gravity_sg{q}, measured_final_gravity_sg AS {q}measured_final_gravity_sg{q}, measured_final_volume AS {q}measured_final_volume{q}, expected_alcohol_by_volume_pct AS {q}expected_alcohol_by_volume_pct{q}, computed_alcohol_by_volume_pct AS {q}computed_alcohol_by_volume_pct{q}, expected_attenuation_pct AS {q}expected_attenuation_pct{q}, measured_wort_clarity AS {q}measured_wort_clarity{q}, computed_attenuation_pct AS {q}computed_attenuation_pct{q}, expected_efficiency_pct AS {q}expected_efficiency_pct{q}, computed_efficiency_pct AS {q}computed_efficiency_pct{q}, computed_pre_boil_efficiency_pct AS {q}computed_pre_boil_efficiency_pct{q}, expected_boil_off_l AS {q}expected_boil_off_l{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, recipe_id AS {q}recipe_id{q} FROM brew_log WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, brew_date AS {q}brew_date{q}, ferment_date AS {q}ferment_date{q}, notes AS {q}notes{q}, expected_pre_boil_gravity_sg AS {q}expected_pre_boil_gravity_sg{q}, measured_pre_boil_gravity_sg AS {q}measured_pre_boil_gravity_sg{q}, expected_pre_boil_volume_l AS {q}expected_pre_boil_volume_l{q}, measured_pre_boil_volume_l AS {q}measured_pre_boil_volume_l{q}, expected_strike_temp_c AS {q}expected_strike_temp_c{q}, measured_strike_temp_c AS {q}measured_strike_temp_c{q}, expected_mash_final_temp_c AS {q}expected_mash_final_temp_c{q}, measured_mash_final_temp_c AS {q}measured_mash_final_temp_c{q}, expected_original_gravity_sg AS {q}expected_original_gravity_sg{q}, forecast_original_gravity_sg AS {q}forecast_original_gravity_sg{q}, measured_original_gravity_sg AS {q}measured_original_gravity_sg{q}, measured_post_boil_volume_l AS {q}measured_post_boil_volume_l{q}, expected_volume_into_fv_l AS {q}expected_volume_into_fv_l{q}, measured_volume_into_fv_l AS {q}measured_volume_into_fv_l{q}, measured_pitch_temp_c AS {q}measured_pitch_temp_c{q}, expected_final_gravity_sg AS {q}expected_final_gravity_sg{q}, measured_final_gravity_sg AS {q}measured_final_gravity_sg{q}, measured_final_volume AS {q}measured_final_volume{q}, expected_alcohol_by_volume_pct AS {q}expected_alcohol_by_volume_pct{q}, computed_alcohol_by_volume_pct AS {q}computed_alcohol_by_volume_pct{q}, expected_attenuation_pct AS {q}expected_attenuation_pct{q}, measured_wort_clarity AS {q}measured_wort_clarity{q}, computed_attenuation_pct AS {q}computed_attenuation_pct{q}, expected_efficiency_pct AS {q}expected_efficiency_pct{q}, computed_efficiency_pct AS {q}computed_efficiency_pct{q}, computed_pre_boil_efficiency_pct AS {q}computed_pre_boil_efficiency_pct{q}, expected_boil_off_l AS {q}expected_boil_off_l{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, recipe_id AS {q}recipe_id{q} FROM brew_log";
     const DELETE: &str = "DELETE FROM brew_log WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &BrewLogRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &BrewLogRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -293,18 +295,19 @@ pub mod brew_log {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<BrewLogRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<BrewLogRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BrewLogRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<BrewLogRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BrewLogRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, BrewLogRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -314,7 +317,7 @@ pub mod brew_log {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE brew_log SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -329,12 +332,12 @@ pub mod equipment {
 
     const INSERT: &str = "INSERT INTO equipment (fv_batch_size_l, boiling_point, kettle_boil_size_l, kettle_evaporation_per_hour_l, evap_rate, grain_absorption_lkg, hop_utilization, lauter_tun_deadspace_loss_l, kettle_notes, top_up_kettle, top_up_water, kettle_trub_chiller_loss_l, mash_tun_specific_heat_calgc, mash_tun_volume_l, mash_tun_weight_kg, kettleInternalDiameter_cm, kettleOpeningDiameter_cm, hlt_type, mash_tun_type, lauter_tun_type, kettle_type, fv_type, agingvessel_type, packaging_vessel_type, hlt_volume_l, kettle_volume_l, lauter_tun_volume_l, fv_volume_l, aging_vessel_volume_l, packaging_vessel_volume_l, hlt_loss_l, mash_tun_loss_l, foundation_volume_l, fv_loss_l, aging_vessel_loss_l, packaging_vessel_loss_l, kettle_outflow_per_minute_l, hlt_weight_kg, lauter_tun_weight_kg, kettle_weight_kg, hlt_specific_heat_calgc, lauter_tun_specific_heat_calgc, kettle_specific_heat_calgc, hlt_notes, mash_tun_notes, lauter_tun_notes, fv_notes, aging_vessel_notes, packaging_vessel_notes, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE equipment SET fv_batch_size_l = ?, boiling_point = ?, kettle_boil_size_l = ?, kettle_evaporation_per_hour_l = ?, evap_rate = ?, grain_absorption_lkg = ?, hop_utilization = ?, lauter_tun_deadspace_loss_l = ?, kettle_notes = ?, top_up_kettle = ?, top_up_water = ?, kettle_trub_chiller_loss_l = ?, mash_tun_specific_heat_calgc = ?, mash_tun_volume_l = ?, mash_tun_weight_kg = ?, kettleInternalDiameter_cm = ?, kettleOpeningDiameter_cm = ?, hlt_type = ?, mash_tun_type = ?, lauter_tun_type = ?, kettle_type = ?, fv_type = ?, agingvessel_type = ?, packaging_vessel_type = ?, hlt_volume_l = ?, kettle_volume_l = ?, lauter_tun_volume_l = ?, fv_volume_l = ?, aging_vessel_volume_l = ?, packaging_vessel_volume_l = ?, hlt_loss_l = ?, mash_tun_loss_l = ?, foundation_volume_l = ?, fv_loss_l = ?, aging_vessel_loss_l = ?, packaging_vessel_loss_l = ?, kettle_outflow_per_minute_l = ?, hlt_weight_kg = ?, lauter_tun_weight_kg = ?, kettle_weight_kg = ?, hlt_specific_heat_calgc = ?, lauter_tun_specific_heat_calgc = ?, kettle_specific_heat_calgc = ?, hlt_notes = ?, mash_tun_notes = ?, lauter_tun_notes = ?, fv_notes = ?, aging_vessel_notes = ?, packaging_vessel_notes = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM equipment WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM equipment";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, fv_batch_size_l AS {q}fv_batch_size_l{q}, boiling_point AS {q}boiling_point{q}, kettle_boil_size_l AS {q}kettle_boil_size_l{q}, kettle_evaporation_per_hour_l AS {q}kettle_evaporation_per_hour_l{q}, evap_rate AS {q}evap_rate{q}, grain_absorption_lkg AS {q}grain_absorption_lkg{q}, hop_utilization AS {q}hop_utilization{q}, lauter_tun_deadspace_loss_l AS {q}lauter_tun_deadspace_loss_l{q}, kettle_notes AS {q}kettle_notes{q}, top_up_kettle AS {q}top_up_kettle{q}, top_up_water AS {q}top_up_water{q}, kettle_trub_chiller_loss_l AS {q}kettle_trub_chiller_loss_l{q}, mash_tun_specific_heat_calgc AS {q}mash_tun_specific_heat_calgc{q}, mash_tun_volume_l AS {q}mash_tun_volume_l{q}, mash_tun_weight_kg AS {q}mash_tun_weight_kg{q}, kettleInternalDiameter_cm AS {q}kettleInternalDiameter_cm{q}, kettleOpeningDiameter_cm AS {q}kettleOpeningDiameter_cm{q}, hlt_type AS {q}hlt_type{q}, mash_tun_type AS {q}mash_tun_type{q}, lauter_tun_type AS {q}lauter_tun_type{q}, kettle_type AS {q}kettle_type{q}, fv_type AS {q}fv_type{q}, agingvessel_type AS {q}agingvessel_type{q}, packaging_vessel_type AS {q}packaging_vessel_type{q}, hlt_volume_l AS {q}hlt_volume_l{q}, kettle_volume_l AS {q}kettle_volume_l{q}, lauter_tun_volume_l AS {q}lauter_tun_volume_l{q}, fv_volume_l AS {q}fv_volume_l{q}, aging_vessel_volume_l AS {q}aging_vessel_volume_l{q}, packaging_vessel_volume_l AS {q}packaging_vessel_volume_l{q}, hlt_loss_l AS {q}hlt_loss_l{q}, mash_tun_loss_l AS {q}mash_tun_loss_l{q}, foundation_volume_l AS {q}foundation_volume_l{q}, fv_loss_l AS {q}fv_loss_l{q}, aging_vessel_loss_l AS {q}aging_vessel_loss_l{q}, packaging_vessel_loss_l AS {q}packaging_vessel_loss_l{q}, kettle_outflow_per_minute_l AS {q}kettle_outflow_per_minute_l{q}, hlt_weight_kg AS {q}hlt_weight_kg{q}, lauter_tun_weight_kg AS {q}lauter_tun_weight_kg{q}, kettle_weight_kg AS {q}kettle_weight_kg{q}, hlt_specific_heat_calgc AS {q}hlt_specific_heat_calgc{q}, lauter_tun_specific_heat_calgc AS {q}lauter_tun_specific_heat_calgc{q}, kettle_specific_heat_calgc AS {q}kettle_specific_heat_calgc{q}, hlt_notes AS {q}hlt_notes{q}, mash_tun_notes AS {q}mash_tun_notes{q}, lauter_tun_notes AS {q}lauter_tun_notes{q}, fv_notes AS {q}fv_notes{q}, aging_vessel_notes AS {q}aging_vessel_notes{q}, packaging_vessel_notes AS {q}packaging_vessel_notes{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM equipment WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, fv_batch_size_l AS {q}fv_batch_size_l{q}, boiling_point AS {q}boiling_point{q}, kettle_boil_size_l AS {q}kettle_boil_size_l{q}, kettle_evaporation_per_hour_l AS {q}kettle_evaporation_per_hour_l{q}, evap_rate AS {q}evap_rate{q}, grain_absorption_lkg AS {q}grain_absorption_lkg{q}, hop_utilization AS {q}hop_utilization{q}, lauter_tun_deadspace_loss_l AS {q}lauter_tun_deadspace_loss_l{q}, kettle_notes AS {q}kettle_notes{q}, top_up_kettle AS {q}top_up_kettle{q}, top_up_water AS {q}top_up_water{q}, kettle_trub_chiller_loss_l AS {q}kettle_trub_chiller_loss_l{q}, mash_tun_specific_heat_calgc AS {q}mash_tun_specific_heat_calgc{q}, mash_tun_volume_l AS {q}mash_tun_volume_l{q}, mash_tun_weight_kg AS {q}mash_tun_weight_kg{q}, kettleInternalDiameter_cm AS {q}kettleInternalDiameter_cm{q}, kettleOpeningDiameter_cm AS {q}kettleOpeningDiameter_cm{q}, hlt_type AS {q}hlt_type{q}, mash_tun_type AS {q}mash_tun_type{q}, lauter_tun_type AS {q}lauter_tun_type{q}, kettle_type AS {q}kettle_type{q}, fv_type AS {q}fv_type{q}, agingvessel_type AS {q}agingvessel_type{q}, packaging_vessel_type AS {q}packaging_vessel_type{q}, hlt_volume_l AS {q}hlt_volume_l{q}, kettle_volume_l AS {q}kettle_volume_l{q}, lauter_tun_volume_l AS {q}lauter_tun_volume_l{q}, fv_volume_l AS {q}fv_volume_l{q}, aging_vessel_volume_l AS {q}aging_vessel_volume_l{q}, packaging_vessel_volume_l AS {q}packaging_vessel_volume_l{q}, hlt_loss_l AS {q}hlt_loss_l{q}, mash_tun_loss_l AS {q}mash_tun_loss_l{q}, foundation_volume_l AS {q}foundation_volume_l{q}, fv_loss_l AS {q}fv_loss_l{q}, aging_vessel_loss_l AS {q}aging_vessel_loss_l{q}, packaging_vessel_loss_l AS {q}packaging_vessel_loss_l{q}, kettle_outflow_per_minute_l AS {q}kettle_outflow_per_minute_l{q}, hlt_weight_kg AS {q}hlt_weight_kg{q}, lauter_tun_weight_kg AS {q}lauter_tun_weight_kg{q}, kettle_weight_kg AS {q}kettle_weight_kg{q}, hlt_specific_heat_calgc AS {q}hlt_specific_heat_calgc{q}, lauter_tun_specific_heat_calgc AS {q}lauter_tun_specific_heat_calgc{q}, kettle_specific_heat_calgc AS {q}kettle_specific_heat_calgc{q}, hlt_notes AS {q}hlt_notes{q}, mash_tun_notes AS {q}mash_tun_notes{q}, lauter_tun_notes AS {q}lauter_tun_notes{q}, fv_notes AS {q}fv_notes{q}, aging_vessel_notes AS {q}aging_vessel_notes{q}, packaging_vessel_notes AS {q}packaging_vessel_notes{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM equipment";
     const DELETE: &str = "DELETE FROM equipment WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &EquipmentRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &EquipmentRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -460,18 +463,19 @@ pub mod equipment {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<EquipmentRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<EquipmentRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, EquipmentRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<EquipmentRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, EquipmentRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, EquipmentRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -481,7 +485,7 @@ pub mod equipment {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE equipment SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -496,12 +500,12 @@ pub mod fermentable {
 
     const INSERT: &str = "INSERT INTO fermentable (coarse_fine_diff, color_lovibond, diastatic_power, ftype, ibu_gal_per_lb, max_in_batch, moisture, notes, origin, supplier, protein, recommend_mash, grain_group, producer, product_id, fine_grind_yield_pct, coarse_grind_yield_pct, potential_yield_sg, alpha_amylase_dext_units, kolbach_index_pct, hardness_prp_glassy_pct, hardness_prp_half_pct, hardness_prp_mealy_pct, kernel_size_prp_plump_pct, kernel_size_prp_thin_pct, friability_pct, di_ph, viscosity_cp, dmsp_ppm, fan_ppm, fermentability_pct, beta_glucan_ppm, lactic_acid_by_weight_pct, fermentable_fraction_pct, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE fermentable SET coarse_fine_diff = ?, color_lovibond = ?, diastatic_power = ?, ftype = ?, ibu_gal_per_lb = ?, max_in_batch = ?, moisture = ?, notes = ?, origin = ?, supplier = ?, protein = ?, recommend_mash = ?, grain_group = ?, producer = ?, product_id = ?, fine_grind_yield_pct = ?, coarse_grind_yield_pct = ?, potential_yield_sg = ?, alpha_amylase_dext_units = ?, kolbach_index_pct = ?, hardness_prp_glassy_pct = ?, hardness_prp_half_pct = ?, hardness_prp_mealy_pct = ?, kernel_size_prp_plump_pct = ?, kernel_size_prp_thin_pct = ?, friability_pct = ?, di_ph = ?, viscosity_cp = ?, dmsp_ppm = ?, fan_ppm = ?, fermentability_pct = ?, beta_glucan_ppm = ?, lactic_acid_by_weight_pct = ?, fermentable_fraction_pct = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM fermentable WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM fermentable";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, coarse_fine_diff AS {q}coarse_fine_diff{q}, color_lovibond AS {q}color_lovibond{q}, diastatic_power AS {q}diastatic_power{q}, ftype AS {q}ftype{q}, ibu_gal_per_lb AS {q}ibu_gal_per_lb{q}, max_in_batch AS {q}max_in_batch{q}, moisture AS {q}moisture{q}, notes AS {q}notes{q}, origin AS {q}origin{q}, supplier AS {q}supplier{q}, protein AS {q}protein{q}, recommend_mash AS {q}recommend_mash{q}, grain_group AS {q}grain_group{q}, producer AS {q}producer{q}, product_id AS {q}product_id{q}, fine_grind_yield_pct AS {q}fine_grind_yield_pct{q}, coarse_grind_yield_pct AS {q}coarse_grind_yield_pct{q}, potential_yield_sg AS {q}potential_yield_sg{q}, alpha_amylase_dext_units AS {q}alpha_amylase_dext_units{q}, kolbach_index_pct AS {q}kolbach_index_pct{q}, hardness_prp_glassy_pct AS {q}hardness_prp_glassy_pct{q}, hardness_prp_half_pct AS {q}hardness_prp_half_pct{q}, hardness_prp_mealy_pct AS {q}hardness_prp_mealy_pct{q}, kernel_size_prp_plump_pct AS {q}kernel_size_prp_plump_pct{q}, kernel_size_prp_thin_pct AS {q}kernel_size_prp_thin_pct{q}, friability_pct AS {q}friability_pct{q}, di_ph AS {q}di_ph{q}, viscosity_cp AS {q}viscosity_cp{q}, dmsp_ppm AS {q}dmsp_ppm{q}, fan_ppm AS {q}fan_ppm{q}, fermentability_pct AS {q}fermentability_pct{q}, beta_glucan_ppm AS {q}beta_glucan_ppm{q}, lactic_acid_by_weight_pct AS {q}lactic_acid_by_weight_pct{q}, fermentable_fraction_pct AS {q}fermentable_fraction_pct{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM fermentable WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, coarse_fine_diff AS {q}coarse_fine_diff{q}, color_lovibond AS {q}color_lovibond{q}, diastatic_power AS {q}diastatic_power{q}, ftype AS {q}ftype{q}, ibu_gal_per_lb AS {q}ibu_gal_per_lb{q}, max_in_batch AS {q}max_in_batch{q}, moisture AS {q}moisture{q}, notes AS {q}notes{q}, origin AS {q}origin{q}, supplier AS {q}supplier{q}, protein AS {q}protein{q}, recommend_mash AS {q}recommend_mash{q}, grain_group AS {q}grain_group{q}, producer AS {q}producer{q}, product_id AS {q}product_id{q}, fine_grind_yield_pct AS {q}fine_grind_yield_pct{q}, coarse_grind_yield_pct AS {q}coarse_grind_yield_pct{q}, potential_yield_sg AS {q}potential_yield_sg{q}, alpha_amylase_dext_units AS {q}alpha_amylase_dext_units{q}, kolbach_index_pct AS {q}kolbach_index_pct{q}, hardness_prp_glassy_pct AS {q}hardness_prp_glassy_pct{q}, hardness_prp_half_pct AS {q}hardness_prp_half_pct{q}, hardness_prp_mealy_pct AS {q}hardness_prp_mealy_pct{q}, kernel_size_prp_plump_pct AS {q}kernel_size_prp_plump_pct{q}, kernel_size_prp_thin_pct AS {q}kernel_size_prp_thin_pct{q}, friability_pct AS {q}friability_pct{q}, di_ph AS {q}di_ph{q}, viscosity_cp AS {q}viscosity_cp{q}, dmsp_ppm AS {q}dmsp_ppm{q}, fan_ppm AS {q}fan_ppm{q}, fermentability_pct AS {q}fermentability_pct{q}, beta_glucan_ppm AS {q}beta_glucan_ppm{q}, lactic_acid_by_weight_pct AS {q}lactic_acid_by_weight_pct{q}, fermentable_fraction_pct AS {q}fermentable_fraction_pct{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM fermentable";
     const DELETE: &str = "DELETE FROM fermentable WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FermentableRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FermentableRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -597,18 +601,19 @@ pub mod fermentable {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FermentableRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FermentableRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FermentableRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -618,7 +623,7 @@ pub mod fermentable {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE fermentable SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -633,12 +638,12 @@ pub mod fermentable_in_recipe {
 
     const INSERT: &str = "INSERT INTO fermentable_in_recipe (name, deleted, quantity, unit, stage, step, add_at_time_mins, add_at_gravity_sg, add_at_acidity_ph, duration_mins, recipe_id, fermentable_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE fermentable_in_recipe SET name = ?, deleted = ?, quantity = ?, unit = ?, stage = ?, step = ?, add_at_time_mins = ?, add_at_gravity_sg = ?, add_at_acidity_ph = ?, duration_mins = ?, recipe_id = ?, fermentable_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM fermentable_in_recipe WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM fermentable_in_recipe";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, fermentable_id AS {q}fermentable_id{q} FROM fermentable_in_recipe WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, fermentable_id AS {q}fermentable_id{q} FROM fermentable_in_recipe";
     const DELETE: &str = "DELETE FROM fermentable_in_recipe WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FermentableInRecipeRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FermentableInRecipeRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -684,7 +689,7 @@ pub mod fermentable_in_recipe {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FermentableInRecipeRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FermentableInRecipeRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FermentableInRecipeRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -693,11 +698,12 @@ pub mod fermentable_in_recipe {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FermentableInRecipeRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableInRecipeRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableInRecipeRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -707,7 +713,7 @@ pub mod fermentable_in_recipe {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE fermentable_in_recipe SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -722,12 +728,12 @@ pub mod fermentable_stock_purchase {
 
     const INSERT: &str = "INSERT INTO fermentable_stock_purchase (color_lovibond, name, deleted, quantity, unit, quantity_ordered, date_received, date_ordered, date_best_before, supplier, note, purchase_price_currency, purchase_price, purchase_tax_currency, purchase_tax, shipping_cost_currency, shipping_cost, fermentable_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE fermentable_stock_purchase SET color_lovibond = ?, name = ?, deleted = ?, quantity = ?, unit = ?, quantity_ordered = ?, date_received = ?, date_ordered = ?, date_best_before = ?, supplier = ?, note = ?, purchase_price_currency = ?, purchase_price = ?, purchase_tax_currency = ?, purchase_tax = ?, shipping_cost_currency = ?, shipping_cost = ?, fermentable_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM fermentable_stock_purchase WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM fermentable_stock_purchase";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, color_lovibond AS {q}color_lovibond{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, fermentable_id AS {q}fermentable_id{q} FROM fermentable_stock_purchase WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, color_lovibond AS {q}color_lovibond{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, fermentable_id AS {q}fermentable_id{q} FROM fermentable_stock_purchase";
     const DELETE: &str = "DELETE FROM fermentable_stock_purchase WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FermentableStockPurchaseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FermentableStockPurchaseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -785,7 +791,7 @@ pub mod fermentable_stock_purchase {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FermentableStockPurchaseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FermentableStockPurchaseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FermentableStockPurchaseRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -794,13 +800,12 @@ pub mod fermentable_stock_purchase {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FermentableStockPurchaseRow>, StoreError> {
-        dispatch!(store, |pool| {
-            Ok(sqlx::query_as::<_, FermentableStockPurchaseRow>(SELECT_ALL).fetch_all(pool).await?)
-        })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableStockPurchaseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -810,7 +815,7 @@ pub mod fermentable_stock_purchase {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE fermentable_stock_purchase SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -825,12 +830,12 @@ pub mod fermentable_stock_use {
 
     const INSERT: &str = "INSERT INTO fermentable_stock_use (name, deleted, sequence_number, date, reason, comment, quantity_used, fermentable_purchase_id, brew_log_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE fermentable_stock_use SET name = ?, deleted = ?, sequence_number = ?, date = ?, reason = ?, comment = ?, quantity_used = ?, fermentable_purchase_id = ?, brew_log_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM fermentable_stock_use WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM fermentable_stock_use";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, fermentable_purchase_id AS {q}fermentable_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM fermentable_stock_use WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, fermentable_purchase_id AS {q}fermentable_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM fermentable_stock_use";
     const DELETE: &str = "DELETE FROM fermentable_stock_use WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FermentableStockUseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FermentableStockUseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -870,7 +875,7 @@ pub mod fermentable_stock_use {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FermentableStockUseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FermentableStockUseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FermentableStockUseRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -879,11 +884,12 @@ pub mod fermentable_stock_use {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FermentableStockUseRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableStockUseRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentableStockUseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -893,7 +899,7 @@ pub mod fermentable_stock_use {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE fermentable_stock_use SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -908,12 +914,12 @@ pub mod fermentation {
 
     const INSERT: &str = "INSERT INTO fermentation (locked, description, notes, krausen_handling, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE fermentation SET locked = ?, description = ?, notes = ?, krausen_handling = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM fermentation WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM fermentation";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, locked AS {q}locked{q}, description AS {q}description{q}, notes AS {q}notes{q}, krausen_handling AS {q}krausen_handling{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM fermentation WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, locked AS {q}locked{q}, description AS {q}description{q}, notes AS {q}notes{q}, krausen_handling AS {q}krausen_handling{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM fermentation";
     const DELETE: &str = "DELETE FROM fermentation WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FermentationRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FermentationRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -949,18 +955,19 @@ pub mod fermentation {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FermentationRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FermentationRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentationRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FermentationRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentationRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentationRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -970,7 +977,7 @@ pub mod fermentation {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE fermentation SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -985,12 +992,12 @@ pub mod fermentation_step {
 
     const INSERT: &str = "INSERT INTO fermentation_step (step_time_mins, start_temp_c, end_temp_c, step_number, description, start_acidity_ph, end_acidity_ph, start_gravity_sg, end_gravity_sg, free_rise, vessel, name, deleted, fermentation_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE fermentation_step SET step_time_mins = ?, start_temp_c = ?, end_temp_c = ?, step_number = ?, description = ?, start_acidity_ph = ?, end_acidity_ph = ?, start_gravity_sg = ?, end_gravity_sg = ?, free_rise = ?, vessel = ?, name = ?, deleted = ?, fermentation_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM fermentation_step WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM fermentation_step";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, step_time_mins AS {q}step_time_mins{q}, start_temp_c AS {q}start_temp_c{q}, end_temp_c AS {q}end_temp_c{q}, step_number AS {q}step_number{q}, description AS {q}description{q}, start_acidity_ph AS {q}start_acidity_ph{q}, end_acidity_ph AS {q}end_acidity_ph{q}, start_gravity_sg AS {q}start_gravity_sg{q}, end_gravity_sg AS {q}end_gravity_sg{q}, free_rise AS {q}free_rise{q}, vessel AS {q}vessel{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, fermentation_id AS {q}fermentation_id{q} FROM fermentation_step WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, step_time_mins AS {q}step_time_mins{q}, start_temp_c AS {q}start_temp_c{q}, end_temp_c AS {q}end_temp_c{q}, step_number AS {q}step_number{q}, description AS {q}description{q}, start_acidity_ph AS {q}start_acidity_ph{q}, end_acidity_ph AS {q}end_acidity_ph{q}, start_gravity_sg AS {q}start_gravity_sg{q}, end_gravity_sg AS {q}end_gravity_sg{q}, free_rise AS {q}free_rise{q}, vessel AS {q}vessel{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, fermentation_id AS {q}fermentation_id{q} FROM fermentation_step";
     const DELETE: &str = "DELETE FROM fermentation_step WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FermentationStepRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FermentationStepRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1040,7 +1047,7 @@ pub mod fermentation_step {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FermentationStepRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FermentationStepRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FermentationStepRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1049,11 +1056,12 @@ pub mod fermentation_step {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FermentationStepRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentationStepRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FermentationStepRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1063,7 +1071,7 @@ pub mod fermentation_step {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE fermentation_step SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1079,12 +1087,12 @@ pub mod folder_for_boil {
     const INSERT: &str =
         "INSERT INTO folder_for_boil (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_boil SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_boil WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_boil";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_boil WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_boil";
     const DELETE: &str = "DELETE FROM folder_for_boil WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForBoilRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForBoilRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1112,7 +1120,7 @@ pub mod folder_for_boil {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForBoilRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForBoilRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForBoilRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1121,11 +1129,12 @@ pub mod folder_for_boil {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForBoilRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForBoilRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForBoilRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1135,7 +1144,7 @@ pub mod folder_for_boil {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_boil SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1152,12 +1161,12 @@ pub mod folder_for_equipment {
         "INSERT INTO folder_for_equipment (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str =
         "UPDATE folder_for_equipment SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_equipment WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_equipment";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_equipment WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_equipment";
     const DELETE: &str = "DELETE FROM folder_for_equipment WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForEquipmentRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForEquipmentRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1185,7 +1194,7 @@ pub mod folder_for_equipment {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForEquipmentRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForEquipmentRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForEquipmentRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1194,11 +1203,12 @@ pub mod folder_for_equipment {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForEquipmentRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForEquipmentRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForEquipmentRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1208,7 +1218,7 @@ pub mod folder_for_equipment {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_equipment SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1225,12 +1235,12 @@ pub mod folder_for_fermentable {
         "INSERT INTO folder_for_fermentable (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str =
         "UPDATE folder_for_fermentable SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_fermentable WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_fermentable";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_fermentable WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_fermentable";
     const DELETE: &str = "DELETE FROM folder_for_fermentable WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForFermentableRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForFermentableRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1258,7 +1268,7 @@ pub mod folder_for_fermentable {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForFermentableRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForFermentableRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForFermentableRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1267,11 +1277,12 @@ pub mod folder_for_fermentable {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForFermentableRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForFermentableRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForFermentableRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1281,7 +1292,7 @@ pub mod folder_for_fermentable {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_fermentable SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1298,12 +1309,12 @@ pub mod folder_for_fermentation {
         "INSERT INTO folder_for_fermentation (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str =
         "UPDATE folder_for_fermentation SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_fermentation WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_fermentation";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_fermentation WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_fermentation";
     const DELETE: &str = "DELETE FROM folder_for_fermentation WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForFermentationRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForFermentationRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1331,7 +1342,7 @@ pub mod folder_for_fermentation {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForFermentationRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForFermentationRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForFermentationRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1340,13 +1351,12 @@ pub mod folder_for_fermentation {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForFermentationRow>, StoreError> {
-        dispatch!(store, |pool| {
-            Ok(sqlx::query_as::<_, FolderForFermentationRow>(SELECT_ALL).fetch_all(pool).await?)
-        })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForFermentationRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1356,7 +1366,7 @@ pub mod folder_for_fermentation {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_fermentation SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1372,12 +1382,12 @@ pub mod folder_for_hop {
     const INSERT: &str =
         "INSERT INTO folder_for_hop (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_hop SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_hop WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_hop";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_hop WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_hop";
     const DELETE: &str = "DELETE FROM folder_for_hop WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForHopRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForHopRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1405,18 +1415,19 @@ pub mod folder_for_hop {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForHopRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForHopRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForHopRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForHopRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForHopRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForHopRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1426,7 +1437,7 @@ pub mod folder_for_hop {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_hop SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1442,12 +1453,12 @@ pub mod folder_for_mash {
     const INSERT: &str =
         "INSERT INTO folder_for_mash (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_mash SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_mash WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_mash";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_mash WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_mash";
     const DELETE: &str = "DELETE FROM folder_for_mash WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForMashRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForMashRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1475,7 +1486,7 @@ pub mod folder_for_mash {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForMashRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForMashRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForMashRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1484,11 +1495,12 @@ pub mod folder_for_mash {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForMashRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForMashRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForMashRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1498,7 +1510,7 @@ pub mod folder_for_mash {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_mash SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1514,12 +1526,12 @@ pub mod folder_for_misc {
     const INSERT: &str =
         "INSERT INTO folder_for_misc (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_misc SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_misc WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_misc";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_misc WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_misc";
     const DELETE: &str = "DELETE FROM folder_for_misc WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForMiscRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForMiscRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1547,7 +1559,7 @@ pub mod folder_for_misc {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForMiscRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForMiscRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForMiscRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1556,11 +1568,12 @@ pub mod folder_for_misc {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForMiscRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForMiscRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForMiscRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1570,7 +1583,7 @@ pub mod folder_for_misc {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_misc SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1586,12 +1599,12 @@ pub mod folder_for_recipe {
     const INSERT: &str =
         "INSERT INTO folder_for_recipe (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_recipe SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_recipe WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_recipe";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_recipe WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_recipe";
     const DELETE: &str = "DELETE FROM folder_for_recipe WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForRecipeRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForRecipeRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1619,7 +1632,7 @@ pub mod folder_for_recipe {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForRecipeRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForRecipeRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForRecipeRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1628,11 +1641,12 @@ pub mod folder_for_recipe {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForRecipeRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForRecipeRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForRecipeRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1642,7 +1656,7 @@ pub mod folder_for_recipe {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_recipe SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1658,12 +1672,12 @@ pub mod folder_for_style {
     const INSERT: &str =
         "INSERT INTO folder_for_style (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_style SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_style WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_style";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_style WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_style";
     const DELETE: &str = "DELETE FROM folder_for_style WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForStyleRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForStyleRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1691,7 +1705,7 @@ pub mod folder_for_style {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForStyleRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForStyleRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForStyleRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1700,11 +1714,12 @@ pub mod folder_for_style {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForStyleRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForStyleRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForStyleRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1714,7 +1729,7 @@ pub mod folder_for_style {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_style SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1730,12 +1745,12 @@ pub mod folder_for_water {
     const INSERT: &str =
         "INSERT INTO folder_for_water (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_water SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_water WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_water";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_water WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_water";
     const DELETE: &str = "DELETE FROM folder_for_water WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForWaterRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForWaterRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1763,7 +1778,7 @@ pub mod folder_for_water {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForWaterRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForWaterRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForWaterRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1772,11 +1787,12 @@ pub mod folder_for_water {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForWaterRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForWaterRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForWaterRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1786,7 +1802,7 @@ pub mod folder_for_water {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_water SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1802,12 +1818,12 @@ pub mod folder_for_yeast {
     const INSERT: &str =
         "INSERT INTO folder_for_yeast (name, deleted, contained_in_folder_id) VALUES (?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE folder_for_yeast SET name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM folder_for_yeast WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM folder_for_yeast";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_yeast WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM folder_for_yeast";
     const DELETE: &str = "DELETE FROM folder_for_yeast WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &FolderForYeastRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &FolderForYeastRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1835,7 +1851,7 @@ pub mod folder_for_yeast {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<FolderForYeastRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<FolderForYeastRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, FolderForYeastRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -1844,11 +1860,12 @@ pub mod folder_for_yeast {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<FolderForYeastRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForYeastRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, FolderForYeastRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1858,7 +1875,7 @@ pub mod folder_for_yeast {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE folder_for_yeast SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -1873,12 +1890,12 @@ pub mod hop {
 
     const INSERT: &str = "INSERT INTO hop (alpha_pct, alpha_min_pct, alpha_max_pct, beta_pct, beta_min_pct, beta_max_pct, caryophyllene_pct, cohumulone_pct, form, sixMonthAlphaLoss_pct, humulene_pct, myrcene_pct, notes, origin, substitutes, htype, producer, product_id, year, total_oil_ml_per_100g, farnesene_pct, geraniol_pct, b_pinene_pct, linalool_pct, limonene_pct, nerol_pct, pinene_pct, polyphenols_pct, xanthohumol_pct, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE hop SET alpha_pct = ?, alpha_min_pct = ?, alpha_max_pct = ?, beta_pct = ?, beta_min_pct = ?, beta_max_pct = ?, caryophyllene_pct = ?, cohumulone_pct = ?, form = ?, sixMonthAlphaLoss_pct = ?, humulene_pct = ?, myrcene_pct = ?, notes = ?, origin = ?, substitutes = ?, htype = ?, producer = ?, product_id = ?, year = ?, total_oil_ml_per_100g = ?, farnesene_pct = ?, geraniol_pct = ?, b_pinene_pct = ?, linalool_pct = ?, limonene_pct = ?, nerol_pct = ?, pinene_pct = ?, polyphenols_pct = ?, xanthohumol_pct = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM hop WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM hop";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, alpha_pct AS {q}alpha_pct{q}, alpha_min_pct AS {q}alpha_min_pct{q}, alpha_max_pct AS {q}alpha_max_pct{q}, beta_pct AS {q}beta_pct{q}, beta_min_pct AS {q}beta_min_pct{q}, beta_max_pct AS {q}beta_max_pct{q}, caryophyllene_pct AS {q}caryophyllene_pct{q}, cohumulone_pct AS {q}cohumulone_pct{q}, form AS {q}form{q}, sixMonthAlphaLoss_pct AS {q}sixMonthAlphaLoss_pct{q}, humulene_pct AS {q}humulene_pct{q}, myrcene_pct AS {q}myrcene_pct{q}, notes AS {q}notes{q}, origin AS {q}origin{q}, substitutes AS {q}substitutes{q}, htype AS {q}htype{q}, producer AS {q}producer{q}, product_id AS {q}product_id{q}, year AS {q}year{q}, total_oil_ml_per_100g AS {q}total_oil_ml_per_100g{q}, farnesene_pct AS {q}farnesene_pct{q}, geraniol_pct AS {q}geraniol_pct{q}, b_pinene_pct AS {q}b_pinene_pct{q}, linalool_pct AS {q}linalool_pct{q}, limonene_pct AS {q}limonene_pct{q}, nerol_pct AS {q}nerol_pct{q}, pinene_pct AS {q}pinene_pct{q}, polyphenols_pct AS {q}polyphenols_pct{q}, xanthohumol_pct AS {q}xanthohumol_pct{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM hop WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, alpha_pct AS {q}alpha_pct{q}, alpha_min_pct AS {q}alpha_min_pct{q}, alpha_max_pct AS {q}alpha_max_pct{q}, beta_pct AS {q}beta_pct{q}, beta_min_pct AS {q}beta_min_pct{q}, beta_max_pct AS {q}beta_max_pct{q}, caryophyllene_pct AS {q}caryophyllene_pct{q}, cohumulone_pct AS {q}cohumulone_pct{q}, form AS {q}form{q}, sixMonthAlphaLoss_pct AS {q}sixMonthAlphaLoss_pct{q}, humulene_pct AS {q}humulene_pct{q}, myrcene_pct AS {q}myrcene_pct{q}, notes AS {q}notes{q}, origin AS {q}origin{q}, substitutes AS {q}substitutes{q}, htype AS {q}htype{q}, producer AS {q}producer{q}, product_id AS {q}product_id{q}, year AS {q}year{q}, total_oil_ml_per_100g AS {q}total_oil_ml_per_100g{q}, farnesene_pct AS {q}farnesene_pct{q}, geraniol_pct AS {q}geraniol_pct{q}, b_pinene_pct AS {q}b_pinene_pct{q}, linalool_pct AS {q}linalool_pct{q}, limonene_pct AS {q}limonene_pct{q}, nerol_pct AS {q}nerol_pct{q}, pinene_pct AS {q}pinene_pct{q}, polyphenols_pct AS {q}polyphenols_pct{q}, xanthohumol_pct AS {q}xanthohumol_pct{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM hop";
     const DELETE: &str = "DELETE FROM hop WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &HopRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &HopRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -1964,18 +1981,19 @@ pub mod hop {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<HopRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<HopRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<HopRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -1985,7 +2003,7 @@ pub mod hop {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE hop SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2000,12 +2018,12 @@ pub mod hop_in_recipe {
 
     const INSERT: &str = "INSERT INTO hop_in_recipe (name, deleted, quantity, unit, stage, step, add_at_time_mins, add_at_gravity_sg, add_at_acidity_ph, duration_mins, recipe_id, hop_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE hop_in_recipe SET name = ?, deleted = ?, quantity = ?, unit = ?, stage = ?, step = ?, add_at_time_mins = ?, add_at_gravity_sg = ?, add_at_acidity_ph = ?, duration_mins = ?, recipe_id = ?, hop_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM hop_in_recipe WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM hop_in_recipe";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, hop_id AS {q}hop_id{q} FROM hop_in_recipe WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, hop_id AS {q}hop_id{q} FROM hop_in_recipe";
     const DELETE: &str = "DELETE FROM hop_in_recipe WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &HopInRecipeRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &HopInRecipeRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2051,18 +2069,19 @@ pub mod hop_in_recipe {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<HopInRecipeRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<HopInRecipeRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopInRecipeRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<HopInRecipeRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopInRecipeRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopInRecipeRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2072,7 +2091,7 @@ pub mod hop_in_recipe {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE hop_in_recipe SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2087,12 +2106,12 @@ pub mod hop_stock_purchase {
 
     const INSERT: &str = "INSERT INTO hop_stock_purchase (alpha_pct, form, year, name, deleted, quantity, unit, quantity_ordered, date_received, date_ordered, date_best_before, supplier, note, purchase_price_currency, purchase_price, purchase_tax_currency, purchase_tax, shipping_cost_currency, shipping_cost, hop_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE hop_stock_purchase SET alpha_pct = ?, form = ?, year = ?, name = ?, deleted = ?, quantity = ?, unit = ?, quantity_ordered = ?, date_received = ?, date_ordered = ?, date_best_before = ?, supplier = ?, note = ?, purchase_price_currency = ?, purchase_price = ?, purchase_tax_currency = ?, purchase_tax = ?, shipping_cost_currency = ?, shipping_cost = ?, hop_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM hop_stock_purchase WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM hop_stock_purchase";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, alpha_pct AS {q}alpha_pct{q}, form AS {q}form{q}, year AS {q}year{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, hop_id AS {q}hop_id{q} FROM hop_stock_purchase WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, alpha_pct AS {q}alpha_pct{q}, form AS {q}form{q}, year AS {q}year{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, hop_id AS {q}hop_id{q} FROM hop_stock_purchase";
     const DELETE: &str = "DELETE FROM hop_stock_purchase WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &HopStockPurchaseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &HopStockPurchaseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2154,7 +2173,7 @@ pub mod hop_stock_purchase {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<HopStockPurchaseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<HopStockPurchaseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, HopStockPurchaseRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -2163,11 +2182,12 @@ pub mod hop_stock_purchase {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<HopStockPurchaseRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopStockPurchaseRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopStockPurchaseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2177,7 +2197,7 @@ pub mod hop_stock_purchase {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE hop_stock_purchase SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2192,12 +2212,12 @@ pub mod hop_stock_use {
 
     const INSERT: &str = "INSERT INTO hop_stock_use (name, deleted, sequence_number, date, reason, comment, quantity_used, hop_purchase_id, brew_log_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE hop_stock_use SET name = ?, deleted = ?, sequence_number = ?, date = ?, reason = ?, comment = ?, quantity_used = ?, hop_purchase_id = ?, brew_log_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM hop_stock_use WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM hop_stock_use";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, hop_purchase_id AS {q}hop_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM hop_stock_use WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, hop_purchase_id AS {q}hop_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM hop_stock_use";
     const DELETE: &str = "DELETE FROM hop_stock_use WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &HopStockUseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &HopStockUseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2237,18 +2257,19 @@ pub mod hop_stock_use {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<HopStockUseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<HopStockUseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopStockUseRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<HopStockUseRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopStockUseRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, HopStockUseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2258,7 +2279,7 @@ pub mod hop_stock_use {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE hop_stock_use SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2273,12 +2294,12 @@ pub mod instruction {
 
     const INSERT: &str = "INSERT INTO instruction (step_number, directions, has_timer, timer_value, completed, interval_mins, name, deleted, recipe_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE instruction SET step_number = ?, directions = ?, has_timer = ?, timer_value = ?, completed = ?, interval_mins = ?, name = ?, deleted = ?, recipe_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM instruction WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM instruction";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, step_number AS {q}step_number{q}, directions AS {q}directions{q}, has_timer AS {q}has_timer{q}, timer_value AS {q}timer_value{q}, completed AS {q}completed{q}, interval_mins AS {q}interval_mins{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, recipe_id AS {q}recipe_id{q} FROM instruction WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, step_number AS {q}step_number{q}, directions AS {q}directions{q}, has_timer AS {q}has_timer{q}, timer_value AS {q}timer_value{q}, completed AS {q}completed{q}, interval_mins AS {q}interval_mins{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, recipe_id AS {q}recipe_id{q} FROM instruction";
     const DELETE: &str = "DELETE FROM instruction WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &InstructionRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &InstructionRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2318,18 +2339,19 @@ pub mod instruction {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<InstructionRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<InstructionRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, InstructionRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<InstructionRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, InstructionRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, InstructionRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2339,7 +2361,7 @@ pub mod instruction {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE instruction SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2354,12 +2376,12 @@ pub mod mash {
 
     const INSERT: &str = "INSERT INTO mash (locked, auto_adjust, equip_adjust, grain_temp, notes, ph, sparge_temp, tun_specific_heat_calgc, initial_tun_temp_c, tun_weight_kg, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE mash SET locked = ?, auto_adjust = ?, equip_adjust = ?, grain_temp = ?, notes = ?, ph = ?, sparge_temp = ?, tun_specific_heat_calgc = ?, initial_tun_temp_c = ?, tun_weight_kg = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM mash WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM mash";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, locked AS {q}locked{q}, auto_adjust AS {q}auto_adjust{q}, equip_adjust AS {q}equip_adjust{q}, grain_temp AS {q}grain_temp{q}, notes AS {q}notes{q}, ph AS {q}ph{q}, sparge_temp AS {q}sparge_temp{q}, tun_specific_heat_calgc AS {q}tun_specific_heat_calgc{q}, initial_tun_temp_c AS {q}initial_tun_temp_c{q}, tun_weight_kg AS {q}tun_weight_kg{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM mash WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, locked AS {q}locked{q}, auto_adjust AS {q}auto_adjust{q}, equip_adjust AS {q}equip_adjust{q}, grain_temp AS {q}grain_temp{q}, notes AS {q}notes{q}, ph AS {q}ph{q}, sparge_temp AS {q}sparge_temp{q}, tun_specific_heat_calgc AS {q}tun_specific_heat_calgc{q}, initial_tun_temp_c AS {q}initial_tun_temp_c{q}, tun_weight_kg AS {q}tun_weight_kg{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM mash";
     const DELETE: &str = "DELETE FROM mash WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &MashRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &MashRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2407,18 +2429,19 @@ pub mod mash {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<MashRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<MashRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MashRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<MashRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MashRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MashRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2428,7 +2451,7 @@ pub mod mash {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE mash SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2443,12 +2466,12 @@ pub mod mash_step {
 
     const INSERT: &str = "INSERT INTO mash_step (end_temp_c, infuse_temp_c, mstype, ramp_time_mins, step_number, step_temp_c, step_time_mins, amount_l, description, liquor_to_grist_ratio_lkg, start_acidity_ph, end_acidity_ph, amount_fixed, infuse_temp_fixed, name, deleted, mash_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE mash_step SET end_temp_c = ?, infuse_temp_c = ?, mstype = ?, ramp_time_mins = ?, step_number = ?, step_temp_c = ?, step_time_mins = ?, amount_l = ?, description = ?, liquor_to_grist_ratio_lkg = ?, start_acidity_ph = ?, end_acidity_ph = ?, amount_fixed = ?, infuse_temp_fixed = ?, name = ?, deleted = ?, mash_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM mash_step WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM mash_step";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, end_temp_c AS {q}end_temp_c{q}, infuse_temp_c AS {q}infuse_temp_c{q}, mstype AS {q}mstype{q}, ramp_time_mins AS {q}ramp_time_mins{q}, step_number AS {q}step_number{q}, step_temp_c AS {q}step_temp_c{q}, step_time_mins AS {q}step_time_mins{q}, amount_l AS {q}amount_l{q}, description AS {q}description{q}, liquor_to_grist_ratio_lkg AS {q}liquor_to_grist_ratio_lkg{q}, start_acidity_ph AS {q}start_acidity_ph{q}, end_acidity_ph AS {q}end_acidity_ph{q}, amount_fixed AS {q}amount_fixed{q}, infuse_temp_fixed AS {q}infuse_temp_fixed{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, mash_id AS {q}mash_id{q} FROM mash_step WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, end_temp_c AS {q}end_temp_c{q}, infuse_temp_c AS {q}infuse_temp_c{q}, mstype AS {q}mstype{q}, ramp_time_mins AS {q}ramp_time_mins{q}, step_number AS {q}step_number{q}, step_temp_c AS {q}step_temp_c{q}, step_time_mins AS {q}step_time_mins{q}, amount_l AS {q}amount_l{q}, description AS {q}description{q}, liquor_to_grist_ratio_lkg AS {q}liquor_to_grist_ratio_lkg{q}, start_acidity_ph AS {q}start_acidity_ph{q}, end_acidity_ph AS {q}end_acidity_ph{q}, amount_fixed AS {q}amount_fixed{q}, infuse_temp_fixed AS {q}infuse_temp_fixed{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, mash_id AS {q}mash_id{q} FROM mash_step";
     const DELETE: &str = "DELETE FROM mash_step WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &MashStepRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &MashStepRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2504,18 +2527,19 @@ pub mod mash_step {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<MashStepRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<MashStepRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MashStepRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<MashStepRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MashStepRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MashStepRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2525,7 +2549,7 @@ pub mod mash_step {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE mash_step SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2540,12 +2564,12 @@ pub mod misc {
 
     const INSERT: &str = "INSERT INTO misc (mtype, use_for, notes, producer, product_id, water_agent_type, water_agent_percent_acid, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE misc SET mtype = ?, use_for = ?, notes = ?, producer = ?, product_id = ?, water_agent_type = ?, water_agent_percent_acid = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM misc WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM misc";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, mtype AS {q}mtype{q}, use_for AS {q}use_for{q}, notes AS {q}notes{q}, producer AS {q}producer{q}, product_id AS {q}product_id{q}, water_agent_type AS {q}water_agent_type{q}, water_agent_percent_acid AS {q}water_agent_percent_acid{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM misc WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, mtype AS {q}mtype{q}, use_for AS {q}use_for{q}, notes AS {q}notes{q}, producer AS {q}producer{q}, product_id AS {q}product_id{q}, water_agent_type AS {q}water_agent_type{q}, water_agent_percent_acid AS {q}water_agent_percent_acid{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM misc";
     const DELETE: &str = "DELETE FROM misc WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &MiscRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &MiscRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2587,18 +2611,19 @@ pub mod misc {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<MiscRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<MiscRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<MiscRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2608,7 +2633,7 @@ pub mod misc {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE misc SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2623,12 +2648,12 @@ pub mod misc_in_recipe {
 
     const INSERT: &str = "INSERT INTO misc_in_recipe (name, deleted, quantity, unit, stage, step, add_at_time_mins, add_at_gravity_sg, add_at_acidity_ph, duration_mins, recipe_id, misc_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE misc_in_recipe SET name = ?, deleted = ?, quantity = ?, unit = ?, stage = ?, step = ?, add_at_time_mins = ?, add_at_gravity_sg = ?, add_at_acidity_ph = ?, duration_mins = ?, recipe_id = ?, misc_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM misc_in_recipe WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM misc_in_recipe";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, misc_id AS {q}misc_id{q} FROM misc_in_recipe WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, misc_id AS {q}misc_id{q} FROM misc_in_recipe";
     const DELETE: &str = "DELETE FROM misc_in_recipe WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &MiscInRecipeRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &MiscInRecipeRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2674,18 +2699,19 @@ pub mod misc_in_recipe {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<MiscInRecipeRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<MiscInRecipeRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscInRecipeRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<MiscInRecipeRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscInRecipeRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscInRecipeRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2695,7 +2721,7 @@ pub mod misc_in_recipe {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE misc_in_recipe SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2710,12 +2736,12 @@ pub mod misc_stock_purchase {
 
     const INSERT: &str = "INSERT INTO misc_stock_purchase (name, deleted, quantity, unit, quantity_ordered, date_received, date_ordered, date_best_before, supplier, note, purchase_price_currency, purchase_price, purchase_tax_currency, purchase_tax, shipping_cost_currency, shipping_cost, misc_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE misc_stock_purchase SET name = ?, deleted = ?, quantity = ?, unit = ?, quantity_ordered = ?, date_received = ?, date_ordered = ?, date_best_before = ?, supplier = ?, note = ?, purchase_price_currency = ?, purchase_price = ?, purchase_tax_currency = ?, purchase_tax = ?, shipping_cost_currency = ?, shipping_cost = ?, misc_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM misc_stock_purchase WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM misc_stock_purchase";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, misc_id AS {q}misc_id{q} FROM misc_stock_purchase WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, misc_id AS {q}misc_id{q} FROM misc_stock_purchase";
     const DELETE: &str = "DELETE FROM misc_stock_purchase WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &MiscStockPurchaseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &MiscStockPurchaseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2771,7 +2797,7 @@ pub mod misc_stock_purchase {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<MiscStockPurchaseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<MiscStockPurchaseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, MiscStockPurchaseRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -2780,11 +2806,12 @@ pub mod misc_stock_purchase {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<MiscStockPurchaseRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscStockPurchaseRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscStockPurchaseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2794,7 +2821,7 @@ pub mod misc_stock_purchase {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE misc_stock_purchase SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2809,12 +2836,12 @@ pub mod misc_stock_use {
 
     const INSERT: &str = "INSERT INTO misc_stock_use (name, deleted, sequence_number, date, reason, comment, quantity_used, misc_purchase_id, brew_log_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE misc_stock_use SET name = ?, deleted = ?, sequence_number = ?, date = ?, reason = ?, comment = ?, quantity_used = ?, misc_purchase_id = ?, brew_log_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM misc_stock_use WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM misc_stock_use";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, misc_purchase_id AS {q}misc_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM misc_stock_use WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, misc_purchase_id AS {q}misc_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM misc_stock_use";
     const DELETE: &str = "DELETE FROM misc_stock_use WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &MiscStockUseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &MiscStockUseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2854,18 +2881,19 @@ pub mod misc_stock_use {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<MiscStockUseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<MiscStockUseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscStockUseRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<MiscStockUseRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscStockUseRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, MiscStockUseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -2875,7 +2903,7 @@ pub mod misc_stock_use {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE misc_stock_use SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -2890,12 +2918,12 @@ pub mod recipe {
 
     const INSERT: &str = "INSERT INTO recipe (age, age_temp, assistant_brewer, batch_size, brewer, carb_volume, carbonationtemp_c, date, efficiency, fg, forced_carb, keg_priming_factor, notes, og, priming_sugar_equiv, priming_sugar_name, taste_notes, taste_rating, type, locked, beer_acidity_ph, apparent_attenuation_pct, ro_water_mash_pct, ro_water_sparge_pct, target_mash_ph, water_kept_in_sync, fg_calc_uses_mash, wort_clarity, name, deleted, contained_in_folder_id, equipment_id, mash_id, style_id, ancestor_id, boil_id, fermentation_id, water_base, water_target) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE recipe SET age = ?, age_temp = ?, assistant_brewer = ?, batch_size = ?, brewer = ?, carb_volume = ?, carbonationtemp_c = ?, date = ?, efficiency = ?, fg = ?, forced_carb = ?, keg_priming_factor = ?, notes = ?, og = ?, priming_sugar_equiv = ?, priming_sugar_name = ?, taste_notes = ?, taste_rating = ?, type = ?, locked = ?, beer_acidity_ph = ?, apparent_attenuation_pct = ?, ro_water_mash_pct = ?, ro_water_sparge_pct = ?, target_mash_ph = ?, water_kept_in_sync = ?, fg_calc_uses_mash = ?, wort_clarity = ?, name = ?, deleted = ?, contained_in_folder_id = ?, equipment_id = ?, mash_id = ?, style_id = ?, ancestor_id = ?, boil_id = ?, fermentation_id = ?, water_base = ?, water_target = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM recipe WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM recipe";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, age AS {q}age{q}, age_temp AS {q}age_temp{q}, assistant_brewer AS {q}assistant_brewer{q}, batch_size AS {q}batch_size{q}, brewer AS {q}brewer{q}, carb_volume AS {q}carb_volume{q}, carbonationtemp_c AS {q}carbonationtemp_c{q}, date AS {q}date{q}, efficiency AS {q}efficiency{q}, fg AS {q}fg{q}, forced_carb AS {q}forced_carb{q}, keg_priming_factor AS {q}keg_priming_factor{q}, notes AS {q}notes{q}, og AS {q}og{q}, priming_sugar_equiv AS {q}priming_sugar_equiv{q}, priming_sugar_name AS {q}priming_sugar_name{q}, taste_notes AS {q}taste_notes{q}, taste_rating AS {q}taste_rating{q}, type AS {q}type{q}, locked AS {q}locked{q}, beer_acidity_ph AS {q}beer_acidity_ph{q}, apparent_attenuation_pct AS {q}apparent_attenuation_pct{q}, ro_water_mash_pct AS {q}ro_water_mash_pct{q}, ro_water_sparge_pct AS {q}ro_water_sparge_pct{q}, target_mash_ph AS {q}target_mash_ph{q}, water_kept_in_sync AS {q}water_kept_in_sync{q}, fg_calc_uses_mash AS {q}fg_calc_uses_mash{q}, wort_clarity AS {q}wort_clarity{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q}, equipment_id AS {q}equipment_id{q}, mash_id AS {q}mash_id{q}, style_id AS {q}style_id{q}, ancestor_id AS {q}ancestor_id{q}, boil_id AS {q}boil_id{q}, fermentation_id AS {q}fermentation_id{q}, water_base AS {q}water_base{q}, water_target AS {q}water_target{q} FROM recipe WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, age AS {q}age{q}, age_temp AS {q}age_temp{q}, assistant_brewer AS {q}assistant_brewer{q}, batch_size AS {q}batch_size{q}, brewer AS {q}brewer{q}, carb_volume AS {q}carb_volume{q}, carbonationtemp_c AS {q}carbonationtemp_c{q}, date AS {q}date{q}, efficiency AS {q}efficiency{q}, fg AS {q}fg{q}, forced_carb AS {q}forced_carb{q}, keg_priming_factor AS {q}keg_priming_factor{q}, notes AS {q}notes{q}, og AS {q}og{q}, priming_sugar_equiv AS {q}priming_sugar_equiv{q}, priming_sugar_name AS {q}priming_sugar_name{q}, taste_notes AS {q}taste_notes{q}, taste_rating AS {q}taste_rating{q}, type AS {q}type{q}, locked AS {q}locked{q}, beer_acidity_ph AS {q}beer_acidity_ph{q}, apparent_attenuation_pct AS {q}apparent_attenuation_pct{q}, ro_water_mash_pct AS {q}ro_water_mash_pct{q}, ro_water_sparge_pct AS {q}ro_water_sparge_pct{q}, target_mash_ph AS {q}target_mash_ph{q}, water_kept_in_sync AS {q}water_kept_in_sync{q}, fg_calc_uses_mash AS {q}fg_calc_uses_mash{q}, wort_clarity AS {q}wort_clarity{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q}, equipment_id AS {q}equipment_id{q}, mash_id AS {q}mash_id{q}, style_id AS {q}style_id{q}, ancestor_id AS {q}ancestor_id{q}, boil_id AS {q}boil_id{q}, fermentation_id AS {q}fermentation_id{q}, water_base AS {q}water_base{q}, water_target AS {q}water_target{q} FROM recipe";
     const DELETE: &str = "DELETE FROM recipe WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &RecipeRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &RecipeRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -2995,18 +3023,19 @@ pub mod recipe {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<RecipeRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<RecipeRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, RecipeRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<RecipeRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, RecipeRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, RecipeRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -3016,7 +3045,7 @@ pub mod recipe {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE recipe SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -3031,12 +3060,12 @@ pub mod style {
 
     const INSERT: &str = "INSERT INTO style (abv_max, abv_min, carb_max, carb_min, category, category_number, color_max, color_min, examples, fg_max, fg_min, ibu_max, ibu_min, ingredients, notes, og_max, og_min, style_guide, style_letter, stype, aroma, appearance, flavor, mouthfeel, overall_impression, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE style SET abv_max = ?, abv_min = ?, carb_max = ?, carb_min = ?, category = ?, category_number = ?, color_max = ?, color_min = ?, examples = ?, fg_max = ?, fg_min = ?, ibu_max = ?, ibu_min = ?, ingredients = ?, notes = ?, og_max = ?, og_min = ?, style_guide = ?, style_letter = ?, stype = ?, aroma = ?, appearance = ?, flavor = ?, mouthfeel = ?, overall_impression = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM style WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM style";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, abv_max AS {q}abv_max{q}, abv_min AS {q}abv_min{q}, carb_max AS {q}carb_max{q}, carb_min AS {q}carb_min{q}, category AS {q}category{q}, category_number AS {q}category_number{q}, color_max AS {q}color_max{q}, color_min AS {q}color_min{q}, examples AS {q}examples{q}, fg_max AS {q}fg_max{q}, fg_min AS {q}fg_min{q}, ibu_max AS {q}ibu_max{q}, ibu_min AS {q}ibu_min{q}, ingredients AS {q}ingredients{q}, notes AS {q}notes{q}, og_max AS {q}og_max{q}, og_min AS {q}og_min{q}, style_guide AS {q}style_guide{q}, style_letter AS {q}style_letter{q}, stype AS {q}stype{q}, aroma AS {q}aroma{q}, appearance AS {q}appearance{q}, flavor AS {q}flavor{q}, mouthfeel AS {q}mouthfeel{q}, overall_impression AS {q}overall_impression{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM style WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, abv_max AS {q}abv_max{q}, abv_min AS {q}abv_min{q}, carb_max AS {q}carb_max{q}, carb_min AS {q}carb_min{q}, category AS {q}category{q}, category_number AS {q}category_number{q}, color_max AS {q}color_max{q}, color_min AS {q}color_min{q}, examples AS {q}examples{q}, fg_max AS {q}fg_max{q}, fg_min AS {q}fg_min{q}, ibu_max AS {q}ibu_max{q}, ibu_min AS {q}ibu_min{q}, ingredients AS {q}ingredients{q}, notes AS {q}notes{q}, og_max AS {q}og_max{q}, og_min AS {q}og_min{q}, style_guide AS {q}style_guide{q}, style_letter AS {q}style_letter{q}, stype AS {q}stype{q}, aroma AS {q}aroma{q}, appearance AS {q}appearance{q}, flavor AS {q}flavor{q}, mouthfeel AS {q}mouthfeel{q}, overall_impression AS {q}overall_impression{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM style";
     const DELETE: &str = "DELETE FROM style WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &StyleRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &StyleRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -3114,18 +3143,19 @@ pub mod style {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<StyleRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<StyleRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, StyleRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<StyleRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, StyleRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, StyleRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -3135,7 +3165,7 @@ pub mod style {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE style SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -3150,12 +3180,12 @@ pub mod water {
 
     const INSERT: &str = "INSERT INTO water (notes, calcium, bicarbonate, sulfate, sodium, chloride, magnesium, ph, alkalinity, as_hco3, carbonate_ppm, potassium_ppm, iron_ppm, nitrate_ppm, nitrite_ppm, fluoride_ppm, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE water SET notes = ?, calcium = ?, bicarbonate = ?, sulfate = ?, sodium = ?, chloride = ?, magnesium = ?, ph = ?, alkalinity = ?, as_hco3 = ?, carbonate_ppm = ?, potassium_ppm = ?, iron_ppm = ?, nitrate_ppm = ?, nitrite_ppm = ?, fluoride_ppm = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM water WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM water";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, notes AS {q}notes{q}, calcium AS {q}calcium{q}, bicarbonate AS {q}bicarbonate{q}, sulfate AS {q}sulfate{q}, sodium AS {q}sodium{q}, chloride AS {q}chloride{q}, magnesium AS {q}magnesium{q}, ph AS {q}ph{q}, alkalinity AS {q}alkalinity{q}, as_hco3 AS {q}as_hco3{q}, carbonate_ppm AS {q}carbonate_ppm{q}, potassium_ppm AS {q}potassium_ppm{q}, iron_ppm AS {q}iron_ppm{q}, nitrate_ppm AS {q}nitrate_ppm{q}, nitrite_ppm AS {q}nitrite_ppm{q}, fluoride_ppm AS {q}fluoride_ppm{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM water WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, notes AS {q}notes{q}, calcium AS {q}calcium{q}, bicarbonate AS {q}bicarbonate{q}, sulfate AS {q}sulfate{q}, sodium AS {q}sodium{q}, chloride AS {q}chloride{q}, magnesium AS {q}magnesium{q}, ph AS {q}ph{q}, alkalinity AS {q}alkalinity{q}, as_hco3 AS {q}as_hco3{q}, carbonate_ppm AS {q}carbonate_ppm{q}, potassium_ppm AS {q}potassium_ppm{q}, iron_ppm AS {q}iron_ppm{q}, nitrate_ppm AS {q}nitrate_ppm{q}, nitrite_ppm AS {q}nitrite_ppm{q}, fluoride_ppm AS {q}fluoride_ppm{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM water";
     const DELETE: &str = "DELETE FROM water WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &WaterRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &WaterRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -3215,18 +3245,19 @@ pub mod water {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<WaterRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<WaterRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, WaterRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<WaterRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, WaterRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, WaterRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -3236,7 +3267,7 @@ pub mod water {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE water SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -3251,12 +3282,12 @@ pub mod yeast {
 
     const INSERT: &str = "INSERT INTO yeast (max_temperature, min_temperature, flocculation, form, ytype, max_reuse, best_for, laboratory, notes, product_id, alcohol_tolerance_pct, attenuation_min_pct, attenuation_max_pct, phenolic_off_flavor_positive, glucoamylase_positive, killer_producing_k1_toxin, killer_producing_k2_toxin, killer_producing_k28_toxin, killer_producing_klus_toxin, killer_neutral, name, deleted, contained_in_folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE yeast SET max_temperature = ?, min_temperature = ?, flocculation = ?, form = ?, ytype = ?, max_reuse = ?, best_for = ?, laboratory = ?, notes = ?, product_id = ?, alcohol_tolerance_pct = ?, attenuation_min_pct = ?, attenuation_max_pct = ?, phenolic_off_flavor_positive = ?, glucoamylase_positive = ?, killer_producing_k1_toxin = ?, killer_producing_k2_toxin = ?, killer_producing_k28_toxin = ?, killer_producing_klus_toxin = ?, killer_neutral = ?, name = ?, deleted = ?, contained_in_folder_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM yeast WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM yeast";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, max_temperature AS {q}max_temperature{q}, min_temperature AS {q}min_temperature{q}, flocculation AS {q}flocculation{q}, form AS {q}form{q}, ytype AS {q}ytype{q}, max_reuse AS {q}max_reuse{q}, best_for AS {q}best_for{q}, laboratory AS {q}laboratory{q}, notes AS {q}notes{q}, product_id AS {q}product_id{q}, alcohol_tolerance_pct AS {q}alcohol_tolerance_pct{q}, attenuation_min_pct AS {q}attenuation_min_pct{q}, attenuation_max_pct AS {q}attenuation_max_pct{q}, phenolic_off_flavor_positive AS {q}phenolic_off_flavor_positive{q}, glucoamylase_positive AS {q}glucoamylase_positive{q}, killer_producing_k1_toxin AS {q}killer_producing_k1_toxin{q}, killer_producing_k2_toxin AS {q}killer_producing_k2_toxin{q}, killer_producing_k28_toxin AS {q}killer_producing_k28_toxin{q}, killer_producing_klus_toxin AS {q}killer_producing_klus_toxin{q}, killer_neutral AS {q}killer_neutral{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM yeast WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, max_temperature AS {q}max_temperature{q}, min_temperature AS {q}min_temperature{q}, flocculation AS {q}flocculation{q}, form AS {q}form{q}, ytype AS {q}ytype{q}, max_reuse AS {q}max_reuse{q}, best_for AS {q}best_for{q}, laboratory AS {q}laboratory{q}, notes AS {q}notes{q}, product_id AS {q}product_id{q}, alcohol_tolerance_pct AS {q}alcohol_tolerance_pct{q}, attenuation_min_pct AS {q}attenuation_min_pct{q}, attenuation_max_pct AS {q}attenuation_max_pct{q}, phenolic_off_flavor_positive AS {q}phenolic_off_flavor_positive{q}, glucoamylase_positive AS {q}glucoamylase_positive{q}, killer_producing_k1_toxin AS {q}killer_producing_k1_toxin{q}, killer_producing_k2_toxin AS {q}killer_producing_k2_toxin{q}, killer_producing_k28_toxin AS {q}killer_producing_k28_toxin{q}, killer_producing_klus_toxin AS {q}killer_producing_klus_toxin{q}, killer_neutral AS {q}killer_neutral{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, contained_in_folder_id AS {q}contained_in_folder_id{q} FROM yeast";
     const DELETE: &str = "DELETE FROM yeast WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &YeastRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &YeastRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -3324,18 +3355,19 @@ pub mod yeast {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<YeastRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<YeastRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastRow>(&sql).bind(id).fetch_optional(pool).await?) })
     }
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<YeastRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -3345,7 +3377,7 @@ pub mod yeast {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE yeast SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -3360,12 +3392,12 @@ pub mod yeast_in_recipe {
 
     const INSERT: &str = "INSERT INTO yeast_in_recipe (attenuation_pct, times_cultured, cell_count_billions, name, deleted, quantity, unit, stage, step, add_at_time_mins, add_at_gravity_sg, add_at_acidity_ph, duration_mins, recipe_id, yeast_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE yeast_in_recipe SET attenuation_pct = ?, times_cultured = ?, cell_count_billions = ?, name = ?, deleted = ?, quantity = ?, unit = ?, stage = ?, step = ?, add_at_time_mins = ?, add_at_gravity_sg = ?, add_at_acidity_ph = ?, duration_mins = ?, recipe_id = ?, yeast_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM yeast_in_recipe WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM yeast_in_recipe";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, attenuation_pct AS {q}attenuation_pct{q}, times_cultured AS {q}times_cultured{q}, cell_count_billions AS {q}cell_count_billions{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, yeast_id AS {q}yeast_id{q} FROM yeast_in_recipe WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, attenuation_pct AS {q}attenuation_pct{q}, times_cultured AS {q}times_cultured{q}, cell_count_billions AS {q}cell_count_billions{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, stage AS {q}stage{q}, step AS {q}step{q}, add_at_time_mins AS {q}add_at_time_mins{q}, add_at_gravity_sg AS {q}add_at_gravity_sg{q}, add_at_acidity_ph AS {q}add_at_acidity_ph{q}, duration_mins AS {q}duration_mins{q}, recipe_id AS {q}recipe_id{q}, yeast_id AS {q}yeast_id{q} FROM yeast_in_recipe";
     const DELETE: &str = "DELETE FROM yeast_in_recipe WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &YeastInRecipeRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &YeastInRecipeRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -3417,7 +3449,7 @@ pub mod yeast_in_recipe {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<YeastInRecipeRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<YeastInRecipeRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, YeastInRecipeRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -3426,11 +3458,12 @@ pub mod yeast_in_recipe {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<YeastInRecipeRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastInRecipeRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastInRecipeRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -3440,7 +3473,7 @@ pub mod yeast_in_recipe {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE yeast_in_recipe SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -3455,12 +3488,12 @@ pub mod yeast_stock_purchase {
 
     const INSERT: &str = "INSERT INTO yeast_stock_purchase (name, deleted, quantity, unit, quantity_ordered, date_received, date_ordered, date_best_before, supplier, note, purchase_price_currency, purchase_price, purchase_tax_currency, purchase_tax, shipping_cost_currency, shipping_cost, yeast_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE yeast_stock_purchase SET name = ?, deleted = ?, quantity = ?, unit = ?, quantity_ordered = ?, date_received = ?, date_ordered = ?, date_best_before = ?, supplier = ?, note = ?, purchase_price_currency = ?, purchase_price = ?, purchase_tax_currency = ?, purchase_tax = ?, shipping_cost_currency = ?, shipping_cost = ?, yeast_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM yeast_stock_purchase WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM yeast_stock_purchase";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, yeast_id AS {q}yeast_id{q} FROM yeast_stock_purchase WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, quantity AS {q}quantity{q}, unit AS {q}unit{q}, quantity_ordered AS {q}quantity_ordered{q}, date_received AS {q}date_received{q}, date_ordered AS {q}date_ordered{q}, date_best_before AS {q}date_best_before{q}, supplier AS {q}supplier{q}, note AS {q}note{q}, purchase_price_currency AS {q}purchase_price_currency{q}, purchase_price AS {q}purchase_price{q}, purchase_tax_currency AS {q}purchase_tax_currency{q}, purchase_tax AS {q}purchase_tax{q}, shipping_cost_currency AS {q}shipping_cost_currency{q}, shipping_cost AS {q}shipping_cost{q}, yeast_id AS {q}yeast_id{q} FROM yeast_stock_purchase";
     const DELETE: &str = "DELETE FROM yeast_stock_purchase WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &YeastStockPurchaseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &YeastStockPurchaseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -3516,7 +3549,7 @@ pub mod yeast_stock_purchase {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<YeastStockPurchaseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<YeastStockPurchaseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, YeastStockPurchaseRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -3525,11 +3558,12 @@ pub mod yeast_stock_purchase {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<YeastStockPurchaseRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastStockPurchaseRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastStockPurchaseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -3539,7 +3573,7 @@ pub mod yeast_stock_purchase {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE yeast_stock_purchase SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;
@@ -3554,12 +3588,12 @@ pub mod yeast_stock_use {
 
     const INSERT: &str = "INSERT INTO yeast_stock_use (name, deleted, sequence_number, date, reason, comment, quantity_used, yeast_purchase_id, brew_log_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
     const UPDATE: &str = "UPDATE yeast_stock_use SET name = ?, deleted = ?, sequence_number = ?, date = ?, reason = ?, comment = ?, quantity_used = ?, yeast_purchase_id = ?, brew_log_id = ? WHERE id = ?";
-    const SELECT_ONE: &str = "SELECT * FROM yeast_stock_use WHERE id = ?";
-    const SELECT_ALL: &str = "SELECT * FROM yeast_stock_use";
+    const SELECT_ONE: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, yeast_purchase_id AS {q}yeast_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM yeast_stock_use WHERE id = ?";
+    const SELECT_ALL: &str = "SELECT id AS {q}id{q}, name AS {q}name{q}, deleted AS {q}deleted{q}, sequence_number AS {q}sequence_number{q}, date AS {q}date{q}, reason AS {q}reason{q}, comment AS {q}comment{q}, quantity_used AS {q}quantity_used{q}, yeast_purchase_id AS {q}yeast_purchase_id{q}, brew_log_id AS {q}brew_log_id{q} FROM yeast_stock_use";
     const DELETE: &str = "DELETE FROM yeast_stock_use WHERE id = ?";
 
     /// Insert a row and return the key the database generated for it.
-    pub async fn insert(store: &Store, row: &YeastStockUseRow) -> Result<i64, StoreError> {
+    pub async fn insert(store: &Store, row: &YeastStockUseRow) -> Result<i32, StoreError> {
         let sql = store.placeholders(INSERT);
         dispatch!(store, |pool| {
             Ok(sqlx::query_scalar(&sql)
@@ -3599,7 +3633,7 @@ pub mod yeast_stock_use {
     }
 
     /// Read one row by its primary key.
-    pub async fn get(store: &Store, id: i64) -> Result<Option<YeastStockUseRow>, StoreError> {
+    pub async fn get(store: &Store, id: i32) -> Result<Option<YeastStockUseRow>, StoreError> {
         let sql = store.placeholders(SELECT_ONE);
         dispatch!(store, |pool| {
             Ok(sqlx::query_as::<_, YeastStockUseRow>(&sql).bind(id).fetch_optional(pool).await?)
@@ -3608,11 +3642,12 @@ pub mod yeast_stock_use {
 
     /// Read every row, including ones marked deleted.
     pub async fn list(store: &Store) -> Result<Vec<YeastStockUseRow>, StoreError> {
-        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastStockUseRow>(SELECT_ALL).fetch_all(pool).await?) })
+        let sql = store.placeholders(SELECT_ALL);
+        dispatch!(store, |pool| { Ok(sqlx::query_as::<_, YeastStockUseRow>(&sql).fetch_all(pool).await?) })
     }
 
     /// Remove a row outright.  Most callers want the soft delete the model uses instead.
-    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {
+    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {
         let sql = store.placeholders(DELETE);
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(id).execute(pool).await?;
@@ -3622,7 +3657,7 @@ pub mod yeast_stock_use {
 
     /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to
     /// them still resolve, and are simply hidden from the lists.
-    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {
+    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {
         let sql = store.placeholders("UPDATE yeast_stock_use SET deleted = ? WHERE id = ?");
         dispatch!(store, |pool| {
             sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;

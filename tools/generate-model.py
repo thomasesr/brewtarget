@@ -31,7 +31,10 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 
 # No column in the v23 schema is NOT NULL, so every one of them can come back as NULL.  Rather
 # than guess which are really required, every field but the primary key is optional.
-RUST_TYPES = {"bool": "bool", "int": "i64", "uint": "i64", "double": "f64", "string": "String", "date": "NaiveDate"}
+# The schema declares keys and whole numbers as INTEGER, which is INT4 on PostgreSQL and INT on
+# MariaDB -- 32 bits on both.  Reading one as an i64 is a decode error there, so the Rust type
+# follows the schema rather than the other way round.
+RUST_TYPES = {"bool": "bool", "int": "i32", "uint": "i32", "double": "f64", "string": "String", "date": "NaiveDate"}
 
 RUST_KEYWORDS = {"type", "use", "ref", "match", "move", "box", "enum", "fn", "impl", "let", "loop", "mod", "self"}
 
@@ -261,7 +264,7 @@ def generate_tables(schema: dict) -> str:
             "    /// identity until it is stored -- deserialises without one.",
             "    #[serde(default)]",
             *rename_attribute(table["primary_key"]["name"]),
-            f"    pub {field_name(table['primary_key']['name'])}: i64,",
+            f"    pub {field_name(table['primary_key']['name'])}: i32,",
         ]
         for column in table["columns"]:
             rust_type = RUST_TYPES[column["base_type"]]
@@ -273,7 +276,7 @@ def generate_tables(schema: dict) -> str:
         for key in table["foreign_keys"]:
             out.append(f"    /// `{key['column']}` referencing `{key['references_table']}.{key['references_column']}`.")
             out += rename_attribute(key["column"])
-            out.append(f"    pub {field_name(key['column'])}: Option<i64>,")
+            out.append(f"    pub {field_name(key['column'])}: Option<i32>,")
         columns = (
             [table["primary_key"]["name"]]
             + [column["name"] for column in table["columns"]]
@@ -351,23 +354,42 @@ def generate_tables(schema: dict) -> str:
     out += ["        _ => None,", "    }", "}", ""]
 
     out += [
-        "/// Whether a column holds a true/false value.",
+        "/// What a column holds, as the schema declares it.",
         "///",
-        "/// Needed when a row is read back without a struct to deserialise into: SQLite keeps a",
-        "/// BOOLEAN as 0 or 1 and MySQL as a TINYINT, so what the column means has to come from the",
-        "/// schema rather than from what the database hands back.",
-        "pub fn is_boolean_column(table: &str, column: &str) -> bool {",
-        "    matches!(",
-        "        (table, column),",
+        "/// Needed when a row is read back without a struct to deserialise into.  What a database",
+        "/// hands back does not say what the column means -- SQLite keeps a BOOLEAN as 0 or 1,",
+        "/// MariaDB as a TINYINT -- and guessing from the value turns every flag into a number.",
+        "pub fn column_base_type(table: &str, column: &str) -> Option<BaseType> {",
+        "    let found = match (table, column) {",
     ]
-    booleans = [
-        f'("{table["name"]}", "{column["name"]}")'
-        for table in schema["tables"]
-        for column in table["columns"]
-        if column["field_type"] == "Bool"
+    base_types = {"bool": "Bool", "int": "Int", "uint": "Int", "double": "Double", "string": "String", "date": "Date"}
+    seen: set[tuple[str, str]] = set()
+    for table in schema["tables"]:
+        entries = [(table["primary_key"]["name"], "int")]
+        entries += [(column["name"], column["base_type"]) for column in table["columns"]]
+        entries += [(key["column"], "int") for key in table["foreign_keys"]]
+        for name, base_type in entries:
+            if (table["name"], name) in seen:
+                continue
+            seen.add((table["name"], name))
+            out.append(f'        ("{table["name"]}", "{name}") => BaseType::{base_types[base_type]},')
+    out += [
+        "        _ => return None,",
+        "    };",
+        "    Some(found)",
+        "}",
+        "",
+        "/// The kinds of value a column may hold.",
+        "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
+        "pub enum BaseType {",
+        "    Bool,",
+        "    Int,",
+        "    Double,",
+        "    String,",
+        "    Date,",
+        "}",
+        "",
     ]
-    out.append("        " + " | ".join(booleans))
-    out += ["    )", "}", ""]
     return "\n".join(out)
 
 
@@ -403,6 +425,13 @@ def generate_store(schema: dict) -> str:
         placeholders = ", ".join("?" for _ in writable)
         assignments = ", ".join(f"{column} = ?" for column in writable)
         column_list = ", ".join(writable)
+        # Columns are named explicitly and aliased in their own case.  PostgreSQL folds an
+        # unquoted identifier to lower case, so `SELECT *` from a table with a column called
+        # `sixMonthAlphaLoss_pct` hands back `sixmonthalphaloss_pct` and nothing matches it.  The
+        # DDL is left exactly as the C++ writes it -- quoting it there would make a database the
+        # desktop application could not open -- so the reading end is where this is dealt with.
+        # `{q}` becomes the dialect's quote character; see `Store::placeholders`.
+        selected = ", ".join(f"{column} AS {{q}}{column}{{q}}" for column in [primary_key] + writable)
 
         out += [
             f"/// Rows of `{table['name']}`.",
@@ -411,12 +440,12 @@ def generate_store(schema: dict) -> str:
             "",
             f"    const INSERT: &str = \"INSERT INTO {table['name']} ({column_list}) VALUES ({placeholders}) RETURNING {primary_key}\";",
             f"    const UPDATE: &str = \"UPDATE {table['name']} SET {assignments} WHERE {primary_key} = ?\";",
-            f"    const SELECT_ONE: &str = \"SELECT * FROM {table['name']} WHERE {primary_key} = ?\";",
-            f"    const SELECT_ALL: &str = \"SELECT * FROM {table['name']}\";",
+            f"    const SELECT_ONE: &str = \"SELECT {selected} FROM {table['name']} WHERE {primary_key} = ?\";",
+            f"    const SELECT_ALL: &str = \"SELECT {selected} FROM {table['name']}\";",
             f"    const DELETE: &str = \"DELETE FROM {table['name']} WHERE {primary_key} = ?\";",
             "",
             "    /// Insert a row and return the key the database generated for it.",
-            f"    pub async fn insert(store: &Store, row: &{struct}) -> Result<i64, StoreError> {{",
+            f"    pub async fn insert(store: &Store, row: &{struct}) -> Result<i32, StoreError> {{",
             "        let sql = store.placeholders(INSERT);",
             "        dispatch!(store, |pool| {",
             "            Ok(sqlx::query_scalar(&sql)",
@@ -444,7 +473,7 @@ def generate_store(schema: dict) -> str:
             "    }",
             "",
             "    /// Read one row by its primary key.",
-            f"    pub async fn get(store: &Store, id: i64) -> Result<Option<{struct}>, StoreError> {{",
+            f"    pub async fn get(store: &Store, id: i32) -> Result<Option<{struct}>, StoreError> {{",
             "        let sql = store.placeholders(SELECT_ONE);",
             "        dispatch!(store, |pool| {",
             f"            Ok(sqlx::query_as::<_, {struct}>(&sql).bind(id).fetch_optional(pool).await?)",
@@ -453,13 +482,14 @@ def generate_store(schema: dict) -> str:
             "",
             "    /// Read every row, including ones marked deleted.",
             f"    pub async fn list(store: &Store) -> Result<Vec<{struct}>, StoreError> {{",
+            "        let sql = store.placeholders(SELECT_ALL);",
             "        dispatch!(store, |pool| {",
-            f"            Ok(sqlx::query_as::<_, {struct}>(SELECT_ALL).fetch_all(pool).await?)",
+            f"            Ok(sqlx::query_as::<_, {struct}>(&sql).fetch_all(pool).await?)",
             "        })",
             "    }",
             "",
             "    /// Remove a row outright.  Most callers want the soft delete the model uses instead.",
-            "    pub async fn delete(store: &Store, id: i64) -> Result<(), StoreError> {",
+            "    pub async fn delete(store: &Store, id: i32) -> Result<(), StoreError> {",
             "        let sql = store.placeholders(DELETE);",
             "        dispatch!(store, |pool| {",
             "            sqlx::query(&sql).bind(id).execute(pool).await?;",
@@ -472,7 +502,7 @@ def generate_store(schema: dict) -> str:
                 "",
                 "    /// Mark a row deleted, as the C++ does: rows are kept so that recipes referring to",
                 "    /// them still resolve, and are simply hidden from the lists.",
-                "    pub async fn soft_delete(store: &Store, id: i64, deleted: bool) -> Result<(), StoreError> {",
+                "    pub async fn soft_delete(store: &Store, id: i32, deleted: bool) -> Result<(), StoreError> {",
                 f"        let sql = store.placeholders(\"UPDATE {table['name']} SET deleted = ? WHERE {primary_key} = ?\");",
                 "        dispatch!(store, |pool| {",
                 "            sqlx::query(&sql).bind(deleted).bind(id).execute(pool).await?;",
@@ -526,7 +556,7 @@ def generate_routes(schema: dict) -> str:
             f"        Ok(Json(tables::{module}::list(state.store()).await?))",
             "    }",
             "",
-            f"    async fn read(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<{struct}>> {{",
+            f"    async fn read(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<{struct}>> {{",
             f"        tables::{module}::get(state.store(), id)",
             "            .await?",
             "            .map(Json)",
@@ -540,7 +570,7 @@ def generate_routes(schema: dict) -> str:
             "",
             "    async fn update(",
             "        State(state): State<AppState>,",
-            "        Path(id): Path<i64>,",
+            "        Path(id): Path<i32>,",
             f"        Json(mut row): Json<{struct}>,",
             f"    ) -> ApiResult<Json<{struct}>> {{",
             "        // The key in the path is the one that counts; a body claiming another is a",
@@ -553,7 +583,7 @@ def generate_routes(schema: dict) -> str:
             f"        read(State(state), Path(id)).await",
             "    }",
             "",
-            "    async fn remove(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<axum::http::StatusCode> {",
+            "    async fn remove(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<axum::http::StatusCode> {",
         ]
         if any(column["name"] == "deleted" for column in table["columns"]):
             out += [

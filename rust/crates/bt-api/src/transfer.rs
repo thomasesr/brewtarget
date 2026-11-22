@@ -89,7 +89,7 @@ pub fn read(source: &str) -> ApiResult<(Format, Document)> {
 pub struct ImportSummary {
     pub format: Format,
     pub rows_written: usize,
-    pub recipe_ids: Vec<i64>,
+    pub recipe_ids: Vec<i32>,
 }
 
 /// Read a file and store everything in it.

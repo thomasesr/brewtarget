@@ -68,7 +68,7 @@ pub async fn insert_on(
     placeholders: impl Fn(&str) -> String,
     table: &str,
     columns: &Map<String, Value>,
-) -> Result<i64, StoreError> {
+) -> Result<i32, StoreError> {
     let (sql, values) = insert_statement(placeholders, table, columns)?;
     Ok(dispatch_connection!(connection, |handle| {
         let mut query = sqlx::query_scalar(&sql);
@@ -104,7 +104,7 @@ fn insert_statement<'a>(
 }
 
 /// Insert a row described by its table and columns, returning the key the database generated.
-pub async fn insert(store: &Store, table: &str, columns: &Map<String, Value>) -> Result<i64, StoreError> {
+pub async fn insert(store: &Store, table: &str, columns: &Map<String, Value>) -> Result<i32, StoreError> {
     let table = checked_table(table)?;
     let primary_key = columns_of(table).and_then(|columns| columns.first()).copied().unwrap_or("id");
 

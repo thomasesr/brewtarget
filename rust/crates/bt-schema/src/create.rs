@@ -40,6 +40,12 @@ pub async fn create_database(
     }
 
     let sql = bind_placeholders("INSERT INTO settings (version, default_content_version) VALUES (?, ?)", dialect);
-    sqlx::query(&sql).bind(i64::from(migrations().latest_version)).bind(0_i64).execute(&mut *connection).await?;
+    // Both columns are INTEGER, which is 32 bits on PostgreSQL and MariaDB, so the bound values
+    // have to be too -- a 64-bit parameter is rejected outright rather than narrowed.
+    sqlx::query(&sql)
+        .bind(i32::try_from(migrations().latest_version).unwrap_or(i32::MAX))
+        .bind(0_i32)
+        .execute(&mut *connection)
+        .await?;
     Ok(())
 }

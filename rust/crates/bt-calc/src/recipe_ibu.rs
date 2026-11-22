@@ -71,7 +71,7 @@ fn ramp_time_mins(step: &BoilStepRow) -> f64 {
 pub fn boil_addition_timing(
     recipe: &Recipe,
     add_at_time_mins: Option<f64>,
-    step: Option<i64>,
+    step: Option<i32>,
     duration_mins: Option<f64>,
 ) -> BoilAdditionTiming {
     let boil_time = boil_time_or_default(recipe);

@@ -22,6 +22,7 @@
 
 pub mod error;
 pub mod generated;
+pub mod inventory;
 pub mod recipes;
 pub mod router;
 pub mod state;

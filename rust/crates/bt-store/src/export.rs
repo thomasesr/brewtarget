@@ -59,7 +59,7 @@ const RECIPE_OWNED: [(&str, &str); 6] = [
 ///
 /// Made from the table and the key so that it is unique across the whole file, which is what the
 /// format requires even between records of different kinds.
-fn local_id(table: &str, key: i64) -> String {
+fn local_id(table: &str, key: i32) -> String {
     format!("{table}_{key}")
 }
 
@@ -91,18 +91,21 @@ async fn rows_of(store: &Store, table: &str) -> Result<Vec<Map<String, Value>>, 
                     // What the column means decides how it is read.  A BOOLEAN is a number on
                     // SQLite and a TINYINT on MySQL, so asking the database what it has would
                     // turn every flag into a 1 and nothing would read the file back.
-                    let value = if bt_model::tables::is_boolean_column(table, column.name()) {
+                    let value = if matches!(
+                        bt_model::tables::column_base_type(table, column.name()),
+                        Some(bt_model::tables::BaseType::Bool)
+                    ) {
                         row.try_get::<Option<bool>, _>(index)
                             .ok()
                             .flatten()
-                            .or_else(|| row.try_get::<Option<i64>, _>(index).ok().flatten().map(|flag| flag != 0))
+                            .or_else(|| row.try_get::<Option<i32>, _>(index).ok().flatten().map(|flag| flag != 0))
                             .map(Value::from)
                     } else {
                         row.try_get::<Option<f64>, _>(index)
                             .ok()
                             .flatten()
                             .map(Value::from)
-                            .or_else(|| row.try_get::<Option<i64>, _>(index).ok().flatten().map(Value::from))
+                            .or_else(|| row.try_get::<Option<i32>, _>(index).ok().flatten().map(Value::from))
                             .or_else(|| row.try_get::<Option<String>, _>(index).ok().flatten().map(Value::from))
                     };
                     if let Some(value) = value {
@@ -117,8 +120,10 @@ async fn rows_of(store: &Store, table: &str) -> Result<Vec<Map<String, Value>>, 
 }
 
 /// The key a column holds, if it holds one.
-fn key_in(columns: &Map<String, Value>, column: &str) -> Option<i64> {
-    columns.get(column)?.as_i64()
+fn key_in(columns: &Map<String, Value>, column: &str) -> Option<i32> {
+    // Keys are INTEGER in the schema, which is 32 bits everywhere but SQLite; a value too big to
+    // be one did not come from a key column.
+    i32::try_from(columns.get(column)?.as_i64()?).ok()
 }
 
 /// Turn a row into a record, naming what it refers to and where it is filed.

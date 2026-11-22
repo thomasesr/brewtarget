@@ -122,3 +122,35 @@ pub fn create_all(dialect: Dialect, namespace: &Namespace) -> Result<Vec<String>
     statements.push(settings_table(dialect, namespace)?);
     Ok(statements)
 }
+
+/// The statement that brings a namespace into being, if the dialect has one.
+///
+/// SQLite has no namespaces at all -- a database is a file -- so there is nothing to create.
+/// PostgreSQL has schemas.  MariaDB has no schema-versus-database distinction: `CREATE SCHEMA` is
+/// a synonym for `CREATE DATABASE`, so the same isolation is a database there.
+///
+/// A namespace name cannot be bound as a parameter, so it reaches SQL as text.  That is why
+/// [`Namespace::named`] validates it and why this is the only place, along with
+/// [`Namespace::qualify`], where the interpolation happens.
+pub fn create_namespace(dialect: Dialect, namespace: &Namespace) -> Result<Option<String>, DdlError> {
+    let Namespace::Named(name) = namespace else { return Ok(None) };
+    let quote = lookup(&schema().identifier_quote, dialect, "identifier_quote")?;
+    Ok(match dialect {
+        Dialect::Sqlite => None,
+        Dialect::Postgresql => Some(format!("CREATE SCHEMA IF NOT EXISTS {quote}{name}{quote}")),
+        Dialect::Mariadb => Some(format!("CREATE DATABASE IF NOT EXISTS {quote}{name}{quote}")),
+    })
+}
+
+/// The statement that removes a namespace and everything in it.
+///
+/// The counterpart to [`create_namespace`], and subject to the same reasoning about interpolation.
+pub fn drop_namespace(dialect: Dialect, namespace: &Namespace) -> Result<Option<String>, DdlError> {
+    let Namespace::Named(name) = namespace else { return Ok(None) };
+    let quote = lookup(&schema().identifier_quote, dialect, "identifier_quote")?;
+    Ok(match dialect {
+        Dialect::Sqlite => None,
+        Dialect::Postgresql => Some(format!("DROP SCHEMA IF EXISTS {quote}{name}{quote} CASCADE")),
+        Dialect::Mariadb => Some(format!("DROP DATABASE IF EXISTS {quote}{name}{quote}")),
+    })
+}

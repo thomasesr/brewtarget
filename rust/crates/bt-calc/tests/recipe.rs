@@ -227,7 +227,7 @@ fn a_recipe_with_a_boil() -> Recipe {
     recipe
 }
 
-fn a_hop_addition(step: i64, add_at_time_mins: Option<f64>, grams: f64) -> Addition<HopInRecipeRow, HopRow> {
+fn a_hop_addition(step: i32, add_at_time_mins: Option<f64>, grams: f64) -> Addition<HopInRecipeRow, HopRow> {
     let mut hop = HopRow { alpha_pct: Some(10.0), ..Default::default() };
     hop.set_form(Some(HopForm::Leaf));
     let mut addition =

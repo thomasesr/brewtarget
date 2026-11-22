@@ -27,6 +27,7 @@ pub mod export;
 pub mod folders;
 pub mod generated;
 pub mod import;
+pub mod inventory;
 pub mod recipes;
 pub mod rows;
 pub mod store;

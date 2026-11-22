@@ -30,19 +30,19 @@ pub fn routes() -> Router<AppState> {
         .route("/{id}/brewday", get(brewday))
 }
 
-async fn load(state: &AppState, id: i64) -> ApiResult<Recipe> {
+async fn load(state: &AppState, id: i32) -> ApiResult<Recipe> {
     bt_store::recipes::load(state.store(), id)
         .await?
         .ok_or_else(|| ApiError::NotFound(format!("no recipe with id {id}")))
 }
 
 /// The whole recipe: its row, its additions with the ingredients they name, and its profiles.
-async fn full(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<Recipe>> {
+async fn full(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<Recipe>> {
     Ok(Json(load(&state, id).await?))
 }
 
 /// Everything the recipe screen shows: gravity, colour, bitterness, alcohol, volumes.
-async fn calculated(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<Calculated>> {
+async fn calculated(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<Calculated>> {
     let recipe = load(&state, id).await?;
     let preferences = state.preferences();
 
@@ -86,7 +86,7 @@ fn step_kind(step: &bt_model::tables::MashStepRow) -> mash::StepType {
 /// One thing to do on brew day.
 #[derive(Debug, Serialize)]
 pub struct BrewdayStep {
-    pub number: i64,
+    pub number: i32,
     pub name: String,
     pub directions: String,
     /// Where in the brew this belongs, so the sheet can be grouped.
@@ -96,7 +96,7 @@ pub struct BrewdayStep {
 /// The brew day sheet.
 #[derive(Debug, Serialize)]
 pub struct Brewday {
-    pub recipe_id: i64,
+    pub recipe_id: i32,
     pub recipe_name: String,
     pub batch_size_l: Option<f64>,
     pub boil_time_mins: f64,
@@ -105,7 +105,7 @@ pub struct Brewday {
 }
 
 /// The instruction sheet for brewing a recipe.
-async fn brewday(State(state): State<AppState>, Path(id): Path<i64>) -> ApiResult<Json<Brewday>> {
+async fn brewday(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Json<Brewday>> {
     let recipe = load(&state, id).await?;
     let preferences = state.preferences();
 

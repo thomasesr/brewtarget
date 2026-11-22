@@ -37,9 +37,9 @@ type FolderCache = BTreeMap<String, FolderTree>;
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Imported {
     /// The key each local ID was given, and the table it went into.
-    pub by_local_id: BTreeMap<String, (String, i64)>,
+    pub by_local_id: BTreeMap<String, (String, i32)>,
     /// The recipes stored, by their key.
-    pub recipe_ids: Vec<i64>,
+    pub recipe_ids: Vec<i32>,
     /// How many rows were written in total, children included.
     pub rows_written: usize,
 }
@@ -64,10 +64,10 @@ async fn store_record(
     store: &Store,
     connection: &mut Connection,
     record: &MappedRecord,
-    resolved: &BTreeMap<String, (String, i64)>,
-    extra: &[(&str, i64)],
+    resolved: &BTreeMap<String, (String, i32)>,
+    extra: &[(&str, i32)],
     folder_cache: &mut FolderCache,
-) -> Result<i64, StoreError> {
+) -> Result<i32, StoreError> {
     let mut columns: Map<String, Value> = record.columns.clone();
 
     // A folder path is a path, and the database holds a tree, so the chain has to be created
@@ -113,15 +113,15 @@ async fn store_owned(
     store: &Store,
     connection: &mut Connection,
     owned: &Owned,
-    resolved: &mut BTreeMap<String, (String, i64)>,
-    extra: &[(&str, i64)],
+    resolved: &mut BTreeMap<String, (String, i32)>,
+    extra: &[(&str, i32)],
     written: &mut usize,
     folder_cache: &mut FolderCache,
-) -> Result<i64, StoreError> {
+) -> Result<i32, StoreError> {
     // A referenced record has to exist before the record that points at it, so those go first
     // and their keys become columns on this one.  BeerXML writes a hop addition and the hop as a
     // single element, which is how this arises.
-    let mut pointing_at: Vec<(&'static str, i64)> = Vec::new();
+    let mut pointing_at: Vec<(&'static str, i32)> = Vec::new();
     for child in owned.children.iter().filter(|child| child.nesting == Nesting::Referenced) {
         for nested in &child.records {
             let nested_key =
@@ -132,7 +132,7 @@ async fn store_owned(
         }
     }
 
-    let mut columns_to_add: Vec<(&str, i64)> = extra.to_vec();
+    let mut columns_to_add: Vec<(&str, i32)> = extra.to_vec();
     columns_to_add.extend(pointing_at);
     let key = store_record(store, connection, &owned.record, resolved, &columns_to_add, folder_cache).await?;
     *written += 1;
@@ -145,7 +145,7 @@ async fn store_owned(
             // An owned record points back at whatever owns it, which is the only thing it needs
             // that is not in the file: `mash_step.mash_id`, `hop_in_recipe.recipe_id`.
             let link = owner_column(nested.record.table, owned.record.table).map(|column| (column, key));
-            let extra: Vec<(&str, i64)> = link.into_iter().collect();
+            let extra: Vec<(&str, i32)> = link.into_iter().collect();
             Box::pin(store_owned(store, connection, nested, resolved, &extra, written, folder_cache)).await?;
         }
     }
@@ -157,7 +157,7 @@ async fn store_owned(
 /// The order is the dependency order: the things a recipe refers to go first, so that by the time
 /// a recipe is stored every local ID it names already has a key.
 pub async fn import(store: &Store, document: &Document) -> Result<Imported, StoreError> {
-    let mut resolved: BTreeMap<String, (String, i64)> = BTreeMap::new();
+    let mut resolved: BTreeMap<String, (String, i32)> = BTreeMap::new();
     let mut folder_cache = FolderCache::new();
     let mut summary = Imported::default();
 

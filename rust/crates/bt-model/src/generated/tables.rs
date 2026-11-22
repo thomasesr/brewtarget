@@ -38,7 +38,7 @@ pub struct BoilRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `locked` (Bool).
     pub locked: Option<bool>,
     /// `description` (String).
@@ -52,7 +52,7 @@ pub struct BoilRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_boil.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl BoilRow {
@@ -71,7 +71,7 @@ pub struct BoilStepRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `step_time_mins` (Double).
     pub step_time_mins: Option<f64>,
     /// `start_temp_c` (Double).
@@ -81,7 +81,7 @@ pub struct BoilStepRow {
     /// `ramp_time_mins` (Double).
     pub ramp_time_mins: Option<f64>,
     /// `step_number` (Int).
-    pub step_number: Option<i64>,
+    pub step_number: Option<i32>,
     /// `description` (String).
     pub description: Option<String>,
     /// `start_acidity_ph` (Double).
@@ -99,7 +99,7 @@ pub struct BoilStepRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `boil_id` referencing `boil.id`.
-    pub boil_id: Option<i64>,
+    pub boil_id: Option<i32>,
 }
 
 impl BoilStepRow {
@@ -147,7 +147,7 @@ pub struct BrewLogRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `brew_date` (Date).
     pub brew_date: Option<NaiveDate>,
     /// `ferment_date` (Date).
@@ -213,7 +213,7 @@ pub struct BrewLogRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `recipe_id` referencing `recipe.id`.
-    pub recipe_id: Option<i64>,
+    pub recipe_id: Option<i32>,
 }
 
 impl BrewLogRow {
@@ -280,7 +280,7 @@ pub struct EquipmentRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `fv_batch_size_l` (Double).
     pub fv_batch_size_l: Option<f64>,
     /// `boiling_point` (Double).
@@ -388,7 +388,7 @@ pub struct EquipmentRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_equipment.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl EquipmentRow {
@@ -460,7 +460,7 @@ pub struct FermentableRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `coarse_fine_diff` (Double).
     pub coarse_fine_diff: Option<f64>,
     /// `color_lovibond` (Double).
@@ -534,7 +534,7 @@ pub struct FermentableRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_fermentable.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FermentableRow {
@@ -617,7 +617,7 @@ pub struct FermentableInRecipeRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
@@ -629,7 +629,7 @@ pub struct FermentableInRecipeRow {
     /// `stage` (Enum). Stored via `RecipeAddition::stageStringMapping`. Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub stage: Option<String>,
     /// `step` (Int). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
-    pub step: Option<i64>,
+    pub step: Option<i32>,
     /// `add_at_time_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub add_at_time_mins: Option<f64>,
     /// `add_at_gravity_sg` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
@@ -639,9 +639,9 @@ pub struct FermentableInRecipeRow {
     /// `duration_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub duration_mins: Option<f64>,
     /// `recipe_id` referencing `recipe.id`.
-    pub recipe_id: Option<i64>,
+    pub recipe_id: Option<i32>,
     /// `fermentable_id` referencing `fermentable.id`.
-    pub fermentable_id: Option<i64>,
+    pub fermentable_id: Option<i32>,
 }
 
 impl FermentableInRecipeRow {
@@ -696,7 +696,7 @@ pub struct FermentableStockPurchaseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `color_lovibond` (Double).
     pub color_lovibond: Option<f64>,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
@@ -722,17 +722,17 @@ pub struct FermentableStockPurchaseRow {
     /// `purchase_price_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_price_currency: Option<String>,
     /// `purchase_price` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_price: Option<i64>,
+    pub purchase_price: Option<i32>,
     /// `purchase_tax_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_tax_currency: Option<String>,
     /// `purchase_tax` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_tax: Option<i64>,
+    pub purchase_tax: Option<i32>,
     /// `shipping_cost_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub shipping_cost_currency: Option<String>,
     /// `shipping_cost` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub shipping_cost: Option<i64>,
+    pub shipping_cost: Option<i32>,
     /// `fermentable_id` referencing `fermentable.id`.
-    pub fermentable_id: Option<i64>,
+    pub fermentable_id: Option<i32>,
 }
 
 impl FermentableStockPurchaseRow {
@@ -781,13 +781,13 @@ pub struct FermentableStockUseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `sequence_number` (Int). Inherited from `STOCK_USE_COMMON_FIELDS`.
-    pub sequence_number: Option<i64>,
+    pub sequence_number: Option<i32>,
     /// `date` (Date). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub date: Option<NaiveDate>,
     /// `reason` (Enum). Stored via `StockUse::reasonStringMapping`. Inherited from `STOCK_USE_COMMON_FIELDS`.
@@ -797,9 +797,9 @@ pub struct FermentableStockUseRow {
     /// `quantity_used` (Double). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub quantity_used: Option<f64>,
     /// `fermentable_purchase_id` referencing `fermentable_stock_purchase.id`.
-    pub fermentable_purchase_id: Option<i64>,
+    pub fermentable_purchase_id: Option<i32>,
     /// `brew_log_id` referencing `brew_log.id`.
-    pub brew_log_id: Option<i64>,
+    pub brew_log_id: Option<i32>,
 }
 
 impl FermentableStockUseRow {
@@ -842,7 +842,7 @@ pub struct FermentationRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `locked` (Bool).
     pub locked: Option<bool>,
     /// `description` (String).
@@ -856,7 +856,7 @@ pub struct FermentationRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_fermentation.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FermentationRow {
@@ -889,7 +889,7 @@ pub struct FermentationStepRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `step_time_mins` (Double).
     pub step_time_mins: Option<f64>,
     /// `start_temp_c` (Double).
@@ -897,7 +897,7 @@ pub struct FermentationStepRow {
     /// `end_temp_c` (Double).
     pub end_temp_c: Option<f64>,
     /// `step_number` (Int).
-    pub step_number: Option<i64>,
+    pub step_number: Option<i32>,
     /// `description` (String).
     pub description: Option<String>,
     /// `start_acidity_ph` (Double).
@@ -917,7 +917,7 @@ pub struct FermentationStepRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `fermentation_id` referencing `fermentation.id`.
-    pub fermentation_id: Option<i64>,
+    pub fermentation_id: Option<i32>,
 }
 
 impl FermentationStepRow {
@@ -951,13 +951,13 @@ pub struct FolderForBoilRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_boil.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForBoilRow {
@@ -975,13 +975,13 @@ pub struct FolderForEquipmentRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_equipment.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForEquipmentRow {
@@ -999,13 +999,13 @@ pub struct FolderForFermentableRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_fermentable.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForFermentableRow {
@@ -1023,13 +1023,13 @@ pub struct FolderForFermentationRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_fermentation.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForFermentationRow {
@@ -1047,13 +1047,13 @@ pub struct FolderForHopRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_hop.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForHopRow {
@@ -1071,13 +1071,13 @@ pub struct FolderForMashRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_mash.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForMashRow {
@@ -1095,13 +1095,13 @@ pub struct FolderForMiscRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_misc.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForMiscRow {
@@ -1119,13 +1119,13 @@ pub struct FolderForRecipeRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_recipe.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForRecipeRow {
@@ -1143,13 +1143,13 @@ pub struct FolderForStyleRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_style.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForStyleRow {
@@ -1167,13 +1167,13 @@ pub struct FolderForWaterRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_water.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForWaterRow {
@@ -1191,13 +1191,13 @@ pub struct FolderForYeastRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_yeast.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl FolderForYeastRow {
@@ -1215,7 +1215,7 @@ pub struct HopRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `alpha_pct` (Double).
     pub alpha_pct: Option<f64>,
     /// `alpha_min_pct` (Double).
@@ -1281,7 +1281,7 @@ pub struct HopRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_hop.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl HopRow {
@@ -1359,7 +1359,7 @@ pub struct HopInRecipeRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
@@ -1371,7 +1371,7 @@ pub struct HopInRecipeRow {
     /// `stage` (Enum). Stored via `RecipeAddition::stageStringMapping`. Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub stage: Option<String>,
     /// `step` (Int). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
-    pub step: Option<i64>,
+    pub step: Option<i32>,
     /// `add_at_time_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub add_at_time_mins: Option<f64>,
     /// `add_at_gravity_sg` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
@@ -1381,9 +1381,9 @@ pub struct HopInRecipeRow {
     /// `duration_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub duration_mins: Option<f64>,
     /// `recipe_id` referencing `recipe.id`.
-    pub recipe_id: Option<i64>,
+    pub recipe_id: Option<i32>,
     /// `hop_id` referencing `hop.id`.
-    pub hop_id: Option<i64>,
+    pub hop_id: Option<i32>,
 }
 
 impl HopInRecipeRow {
@@ -1438,7 +1438,7 @@ pub struct HopStockPurchaseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `alpha_pct` (Double).
     pub alpha_pct: Option<f64>,
     /// `form` (String). Stored via `Hop::typeStringMapping`.
@@ -1468,17 +1468,17 @@ pub struct HopStockPurchaseRow {
     /// `purchase_price_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_price_currency: Option<String>,
     /// `purchase_price` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_price: Option<i64>,
+    pub purchase_price: Option<i32>,
     /// `purchase_tax_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_tax_currency: Option<String>,
     /// `purchase_tax` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_tax: Option<i64>,
+    pub purchase_tax: Option<i32>,
     /// `shipping_cost_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub shipping_cost_currency: Option<String>,
     /// `shipping_cost` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub shipping_cost: Option<i64>,
+    pub shipping_cost: Option<i32>,
     /// `hop_id` referencing `hop.id`.
-    pub hop_id: Option<i64>,
+    pub hop_id: Option<i32>,
 }
 
 impl HopStockPurchaseRow {
@@ -1529,13 +1529,13 @@ pub struct HopStockUseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `sequence_number` (Int). Inherited from `STOCK_USE_COMMON_FIELDS`.
-    pub sequence_number: Option<i64>,
+    pub sequence_number: Option<i32>,
     /// `date` (Date). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub date: Option<NaiveDate>,
     /// `reason` (Enum). Stored via `StockUse::reasonStringMapping`. Inherited from `STOCK_USE_COMMON_FIELDS`.
@@ -1545,9 +1545,9 @@ pub struct HopStockUseRow {
     /// `quantity_used` (Double). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub quantity_used: Option<f64>,
     /// `hop_purchase_id` referencing `hop_stock_purchase.id`.
-    pub hop_purchase_id: Option<i64>,
+    pub hop_purchase_id: Option<i32>,
     /// `brew_log_id` referencing `brew_log.id`.
-    pub brew_log_id: Option<i64>,
+    pub brew_log_id: Option<i32>,
 }
 
 impl HopStockUseRow {
@@ -1590,9 +1590,9 @@ pub struct InstructionRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `step_number` (Int).
-    pub step_number: Option<i64>,
+    pub step_number: Option<i32>,
     /// `directions` (String).
     pub directions: Option<String>,
     /// `has_timer` (Bool).
@@ -1608,7 +1608,7 @@ pub struct InstructionRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `recipe_id` referencing `recipe.id`.
-    pub recipe_id: Option<i64>,
+    pub recipe_id: Option<i32>,
 }
 
 impl InstructionRow {
@@ -1637,7 +1637,7 @@ pub struct MashRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `locked` (Bool).
     pub locked: Option<bool>,
     /// `auto_adjust` (Bool).
@@ -1663,7 +1663,7 @@ pub struct MashRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_mash.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl MashRow {
@@ -1696,7 +1696,7 @@ pub struct MashStepRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `end_temp_c` (Double).
     pub end_temp_c: Option<f64>,
     /// `infuse_temp_c` (Double).
@@ -1706,7 +1706,7 @@ pub struct MashStepRow {
     /// `ramp_time_mins` (Double).
     pub ramp_time_mins: Option<f64>,
     /// `step_number` (Int).
-    pub step_number: Option<i64>,
+    pub step_number: Option<i32>,
     /// `step_temp_c` (Double).
     pub step_temp_c: Option<f64>,
     /// `step_time_mins` (Double).
@@ -1730,7 +1730,7 @@ pub struct MashStepRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `mash_id` referencing `mash.id`.
-    pub mash_id: Option<i64>,
+    pub mash_id: Option<i32>,
 }
 
 impl MashStepRow {
@@ -1781,7 +1781,7 @@ pub struct MiscRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `mtype` (Enum). Stored via `Misc::typeStringMapping`.
     pub mtype: Option<String>,
     /// `use_for` (String).
@@ -1801,7 +1801,7 @@ pub struct MiscRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_misc.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl MiscRow {
@@ -1857,7 +1857,7 @@ pub struct MiscInRecipeRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
@@ -1869,7 +1869,7 @@ pub struct MiscInRecipeRow {
     /// `stage` (Enum). Stored via `RecipeAddition::stageStringMapping`. Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub stage: Option<String>,
     /// `step` (Int). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
-    pub step: Option<i64>,
+    pub step: Option<i32>,
     /// `add_at_time_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub add_at_time_mins: Option<f64>,
     /// `add_at_gravity_sg` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
@@ -1879,9 +1879,9 @@ pub struct MiscInRecipeRow {
     /// `duration_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub duration_mins: Option<f64>,
     /// `recipe_id` referencing `recipe.id`.
-    pub recipe_id: Option<i64>,
+    pub recipe_id: Option<i32>,
     /// `misc_id` referencing `misc.id`.
-    pub misc_id: Option<i64>,
+    pub misc_id: Option<i32>,
 }
 
 impl MiscInRecipeRow {
@@ -1936,7 +1936,7 @@ pub struct MiscStockPurchaseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
@@ -1960,17 +1960,17 @@ pub struct MiscStockPurchaseRow {
     /// `purchase_price_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_price_currency: Option<String>,
     /// `purchase_price` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_price: Option<i64>,
+    pub purchase_price: Option<i32>,
     /// `purchase_tax_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_tax_currency: Option<String>,
     /// `purchase_tax` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_tax: Option<i64>,
+    pub purchase_tax: Option<i32>,
     /// `shipping_cost_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub shipping_cost_currency: Option<String>,
     /// `shipping_cost` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub shipping_cost: Option<i64>,
+    pub shipping_cost: Option<i32>,
     /// `misc_id` referencing `misc.id`.
-    pub misc_id: Option<i64>,
+    pub misc_id: Option<i32>,
 }
 
 impl MiscStockPurchaseRow {
@@ -2018,13 +2018,13 @@ pub struct MiscStockUseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `sequence_number` (Int). Inherited from `STOCK_USE_COMMON_FIELDS`.
-    pub sequence_number: Option<i64>,
+    pub sequence_number: Option<i32>,
     /// `date` (Date). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub date: Option<NaiveDate>,
     /// `reason` (Enum). Stored via `StockUse::reasonStringMapping`. Inherited from `STOCK_USE_COMMON_FIELDS`.
@@ -2034,9 +2034,9 @@ pub struct MiscStockUseRow {
     /// `quantity_used` (Double). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub quantity_used: Option<f64>,
     /// `misc_purchase_id` referencing `misc_stock_purchase.id`.
-    pub misc_purchase_id: Option<i64>,
+    pub misc_purchase_id: Option<i32>,
     /// `brew_log_id` referencing `brew_log.id`.
-    pub brew_log_id: Option<i64>,
+    pub brew_log_id: Option<i32>,
 }
 
 impl MiscStockUseRow {
@@ -2079,7 +2079,7 @@ pub struct RecipeRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `age` (Double).
     pub age: Option<f64>,
     /// `age_temp` (Double).
@@ -2141,23 +2141,23 @@ pub struct RecipeRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_recipe.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
     /// `equipment_id` referencing `equipment.id`.
-    pub equipment_id: Option<i64>,
+    pub equipment_id: Option<i32>,
     /// `mash_id` referencing `mash.id`.
-    pub mash_id: Option<i64>,
+    pub mash_id: Option<i32>,
     /// `style_id` referencing `style.id`.
-    pub style_id: Option<i64>,
+    pub style_id: Option<i32>,
     /// `ancestor_id` referencing `recipe.id`.
-    pub ancestor_id: Option<i64>,
+    pub ancestor_id: Option<i32>,
     /// `boil_id` referencing `boil.id`.
-    pub boil_id: Option<i64>,
+    pub boil_id: Option<i32>,
     /// `fermentation_id` referencing `fermentation.id`.
-    pub fermentation_id: Option<i64>,
+    pub fermentation_id: Option<i32>,
     /// `water_base` referencing `water.id`.
-    pub water_base: Option<i64>,
+    pub water_base: Option<i32>,
     /// `water_target` referencing `water.id`.
-    pub water_target: Option<i64>,
+    pub water_target: Option<i32>,
 }
 
 impl RecipeRow {
@@ -2242,7 +2242,7 @@ pub struct StyleRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `abv_max` (Double).
     pub abv_max: Option<f64>,
     /// `abv_min` (Double).
@@ -2298,7 +2298,7 @@ pub struct StyleRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_style.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl StyleRow {
@@ -2360,7 +2360,7 @@ pub struct WaterRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `notes` (String).
     pub notes: Option<String>,
     /// `calcium` (Double).
@@ -2398,7 +2398,7 @@ pub struct WaterRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_water.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl WaterRow {
@@ -2437,7 +2437,7 @@ pub struct YeastRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `max_temperature` (Double).
     pub max_temperature: Option<f64>,
     /// `min_temperature` (Double).
@@ -2449,7 +2449,7 @@ pub struct YeastRow {
     /// `ytype` (Enum). Stored via `Yeast::typeStringMapping`.
     pub ytype: Option<String>,
     /// `max_reuse` (Int).
-    pub max_reuse: Option<i64>,
+    pub max_reuse: Option<i32>,
     /// `best_for` (String).
     pub best_for: Option<String>,
     /// `laboratory` (String).
@@ -2483,7 +2483,7 @@ pub struct YeastRow {
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `contained_in_folder_id` referencing `folder_for_yeast.id`.
-    pub contained_in_folder_id: Option<i64>,
+    pub contained_in_folder_id: Option<i32>,
 }
 
 impl YeastRow {
@@ -2564,11 +2564,11 @@ pub struct YeastInRecipeRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `attenuation_pct` (Double).
     pub attenuation_pct: Option<f64>,
     /// `times_cultured` (Int).
-    pub times_cultured: Option<i64>,
+    pub times_cultured: Option<i32>,
     /// `cell_count_billions` (Double).
     pub cell_count_billions: Option<f64>,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
@@ -2582,7 +2582,7 @@ pub struct YeastInRecipeRow {
     /// `stage` (Enum). Stored via `RecipeAddition::stageStringMapping`. Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub stage: Option<String>,
     /// `step` (Int). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
-    pub step: Option<i64>,
+    pub step: Option<i32>,
     /// `add_at_time_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub add_at_time_mins: Option<f64>,
     /// `add_at_gravity_sg` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
@@ -2592,9 +2592,9 @@ pub struct YeastInRecipeRow {
     /// `duration_mins` (Double). Inherited from `RECIPE_ADDITION_COMMON_FIELDS`.
     pub duration_mins: Option<f64>,
     /// `recipe_id` referencing `recipe.id`.
-    pub recipe_id: Option<i64>,
+    pub recipe_id: Option<i32>,
     /// `yeast_id` referencing `yeast.id`.
-    pub yeast_id: Option<i64>,
+    pub yeast_id: Option<i32>,
 }
 
 impl YeastInRecipeRow {
@@ -2652,7 +2652,7 @@ pub struct YeastStockPurchaseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
@@ -2676,17 +2676,17 @@ pub struct YeastStockPurchaseRow {
     /// `purchase_price_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_price_currency: Option<String>,
     /// `purchase_price` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_price: Option<i64>,
+    pub purchase_price: Option<i32>,
     /// `purchase_tax_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub purchase_tax_currency: Option<String>,
     /// `purchase_tax` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub purchase_tax: Option<i64>,
+    pub purchase_tax: Option<i32>,
     /// `shipping_cost_currency` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
     pub shipping_cost_currency: Option<String>,
     /// `shipping_cost` (Money). Inherited from `STOCK_PURCHASE_COMMON_FIELDS`.
-    pub shipping_cost: Option<i64>,
+    pub shipping_cost: Option<i32>,
     /// `yeast_id` referencing `yeast.id`.
-    pub yeast_id: Option<i64>,
+    pub yeast_id: Option<i32>,
 }
 
 impl YeastStockPurchaseRow {
@@ -2734,13 +2734,13 @@ pub struct YeastStockUseRow {
     /// Defaults to zero so that a row read out of a file -- which has no database
     /// identity until it is stored -- deserialises without one.
     #[serde(default)]
-    pub id: i64,
+    pub id: i32,
     /// `name` (String). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub name: Option<String>,
     /// `deleted` (Bool). Inherited from `NAMED_ENTITY_COMMON_FIELDS`.
     pub deleted: Option<bool>,
     /// `sequence_number` (Int). Inherited from `STOCK_USE_COMMON_FIELDS`.
-    pub sequence_number: Option<i64>,
+    pub sequence_number: Option<i32>,
     /// `date` (Date). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub date: Option<NaiveDate>,
     /// `reason` (Enum). Stored via `StockUse::reasonStringMapping`. Inherited from `STOCK_USE_COMMON_FIELDS`.
@@ -2750,9 +2750,9 @@ pub struct YeastStockUseRow {
     /// `quantity_used` (Double). Inherited from `STOCK_USE_COMMON_FIELDS`.
     pub quantity_used: Option<f64>,
     /// `yeast_purchase_id` referencing `yeast_stock_purchase.id`.
-    pub yeast_purchase_id: Option<i64>,
+    pub yeast_purchase_id: Option<i32>,
     /// `brew_log_id` referencing `brew_log.id`.
-    pub brew_log_id: Option<i64>,
+    pub brew_log_id: Option<i32>,
 }
 
 impl YeastStockUseRow {
@@ -3509,75 +3509,609 @@ pub fn columns_of(table: &str) -> Option<&'static [&'static str]> {
     }
 }
 
-/// Whether a column holds a true/false value.
+/// What a column holds, as the schema declares it.
 ///
-/// Needed when a row is read back without a struct to deserialise into: SQLite keeps a
-/// BOOLEAN as 0 or 1 and MySQL as a TINYINT, so what the column means has to come from the
-/// schema rather than from what the database hands back.
-pub fn is_boolean_column(table: &str, column: &str) -> bool {
-    matches!(
-        (table, column),
-        ("boil", "locked")
-            | ("boil", "deleted")
-            | ("boil_step", "deleted")
-            | ("brew_log", "deleted")
-            | ("equipment", "deleted")
-            | ("fermentable", "recommend_mash")
-            | ("fermentable", "deleted")
-            | ("fermentable_in_recipe", "deleted")
-            | ("fermentable_stock_purchase", "deleted")
-            | ("fermentable_stock_use", "deleted")
-            | ("fermentation", "locked")
-            | ("fermentation", "deleted")
-            | ("fermentation_step", "free_rise")
-            | ("fermentation_step", "deleted")
-            | ("folder_for_boil", "deleted")
-            | ("folder_for_equipment", "deleted")
-            | ("folder_for_fermentable", "deleted")
-            | ("folder_for_fermentation", "deleted")
-            | ("folder_for_hop", "deleted")
-            | ("folder_for_mash", "deleted")
-            | ("folder_for_misc", "deleted")
-            | ("folder_for_recipe", "deleted")
-            | ("folder_for_style", "deleted")
-            | ("folder_for_water", "deleted")
-            | ("folder_for_yeast", "deleted")
-            | ("hop", "deleted")
-            | ("hop_in_recipe", "deleted")
-            | ("hop_stock_purchase", "deleted")
-            | ("hop_stock_use", "deleted")
-            | ("instruction", "has_timer")
-            | ("instruction", "completed")
-            | ("instruction", "deleted")
-            | ("mash", "locked")
-            | ("mash", "auto_adjust")
-            | ("mash", "equip_adjust")
-            | ("mash", "deleted")
-            | ("mash_step", "amount_fixed")
-            | ("mash_step", "infuse_temp_fixed")
-            | ("mash_step", "deleted")
-            | ("misc", "deleted")
-            | ("misc_in_recipe", "deleted")
-            | ("misc_stock_purchase", "deleted")
-            | ("misc_stock_use", "deleted")
-            | ("recipe", "forced_carb")
-            | ("recipe", "locked")
-            | ("recipe", "water_kept_in_sync")
-            | ("recipe", "fg_calc_uses_mash")
-            | ("recipe", "deleted")
-            | ("style", "deleted")
-            | ("water", "as_hco3")
-            | ("water", "deleted")
-            | ("yeast", "phenolic_off_flavor_positive")
-            | ("yeast", "glucoamylase_positive")
-            | ("yeast", "killer_producing_k1_toxin")
-            | ("yeast", "killer_producing_k2_toxin")
-            | ("yeast", "killer_producing_k28_toxin")
-            | ("yeast", "killer_producing_klus_toxin")
-            | ("yeast", "killer_neutral")
-            | ("yeast", "deleted")
-            | ("yeast_in_recipe", "deleted")
-            | ("yeast_stock_purchase", "deleted")
-            | ("yeast_stock_use", "deleted")
-    )
+/// Needed when a row is read back without a struct to deserialise into.  What a database
+/// hands back does not say what the column means -- SQLite keeps a BOOLEAN as 0 or 1,
+/// MariaDB as a TINYINT -- and guessing from the value turns every flag into a number.
+pub fn column_base_type(table: &str, column: &str) -> Option<BaseType> {
+    let found = match (table, column) {
+        ("boil", "id") => BaseType::Int,
+        ("boil", "locked") => BaseType::Bool,
+        ("boil", "description") => BaseType::String,
+        ("boil", "notes") => BaseType::String,
+        ("boil", "pre_boil_size_l") => BaseType::Double,
+        ("boil", "name") => BaseType::String,
+        ("boil", "deleted") => BaseType::Bool,
+        ("boil", "contained_in_folder_id") => BaseType::Int,
+        ("boil_step", "id") => BaseType::Int,
+        ("boil_step", "step_time_mins") => BaseType::Double,
+        ("boil_step", "start_temp_c") => BaseType::Double,
+        ("boil_step", "end_temp_c") => BaseType::Double,
+        ("boil_step", "ramp_time_mins") => BaseType::Double,
+        ("boil_step", "step_number") => BaseType::Int,
+        ("boil_step", "description") => BaseType::String,
+        ("boil_step", "start_acidity_ph") => BaseType::Double,
+        ("boil_step", "end_acidity_ph") => BaseType::Double,
+        ("boil_step", "start_gravity_sg") => BaseType::Double,
+        ("boil_step", "end_gravity_sg") => BaseType::Double,
+        ("boil_step", "chilling_type") => BaseType::String,
+        ("boil_step", "name") => BaseType::String,
+        ("boil_step", "deleted") => BaseType::Bool,
+        ("boil_step", "boil_id") => BaseType::Int,
+        ("brew_log", "id") => BaseType::Int,
+        ("brew_log", "brew_date") => BaseType::Date,
+        ("brew_log", "ferment_date") => BaseType::Date,
+        ("brew_log", "notes") => BaseType::String,
+        ("brew_log", "expected_pre_boil_gravity_sg") => BaseType::Double,
+        ("brew_log", "measured_pre_boil_gravity_sg") => BaseType::Double,
+        ("brew_log", "expected_pre_boil_volume_l") => BaseType::Double,
+        ("brew_log", "measured_pre_boil_volume_l") => BaseType::Double,
+        ("brew_log", "expected_strike_temp_c") => BaseType::Double,
+        ("brew_log", "measured_strike_temp_c") => BaseType::Double,
+        ("brew_log", "expected_mash_final_temp_c") => BaseType::Double,
+        ("brew_log", "measured_mash_final_temp_c") => BaseType::Double,
+        ("brew_log", "expected_original_gravity_sg") => BaseType::Double,
+        ("brew_log", "forecast_original_gravity_sg") => BaseType::Double,
+        ("brew_log", "measured_original_gravity_sg") => BaseType::Double,
+        ("brew_log", "measured_post_boil_volume_l") => BaseType::Double,
+        ("brew_log", "expected_volume_into_fv_l") => BaseType::Double,
+        ("brew_log", "measured_volume_into_fv_l") => BaseType::Double,
+        ("brew_log", "measured_pitch_temp_c") => BaseType::Double,
+        ("brew_log", "expected_final_gravity_sg") => BaseType::Double,
+        ("brew_log", "measured_final_gravity_sg") => BaseType::Double,
+        ("brew_log", "measured_final_volume") => BaseType::Double,
+        ("brew_log", "expected_alcohol_by_volume_pct") => BaseType::Double,
+        ("brew_log", "computed_alcohol_by_volume_pct") => BaseType::Double,
+        ("brew_log", "expected_attenuation_pct") => BaseType::Double,
+        ("brew_log", "measured_wort_clarity") => BaseType::String,
+        ("brew_log", "computed_attenuation_pct") => BaseType::Double,
+        ("brew_log", "expected_efficiency_pct") => BaseType::Double,
+        ("brew_log", "computed_efficiency_pct") => BaseType::Double,
+        ("brew_log", "computed_pre_boil_efficiency_pct") => BaseType::Double,
+        ("brew_log", "expected_boil_off_l") => BaseType::Double,
+        ("brew_log", "name") => BaseType::String,
+        ("brew_log", "deleted") => BaseType::Bool,
+        ("brew_log", "recipe_id") => BaseType::Int,
+        ("equipment", "id") => BaseType::Int,
+        ("equipment", "fv_batch_size_l") => BaseType::Double,
+        ("equipment", "boiling_point") => BaseType::Double,
+        ("equipment", "kettle_boil_size_l") => BaseType::Double,
+        ("equipment", "kettle_evaporation_per_hour_l") => BaseType::Double,
+        ("equipment", "evap_rate") => BaseType::Double,
+        ("equipment", "grain_absorption_lkg") => BaseType::Double,
+        ("equipment", "hop_utilization") => BaseType::Double,
+        ("equipment", "lauter_tun_deadspace_loss_l") => BaseType::Double,
+        ("equipment", "kettle_notes") => BaseType::String,
+        ("equipment", "top_up_kettle") => BaseType::Double,
+        ("equipment", "top_up_water") => BaseType::Double,
+        ("equipment", "kettle_trub_chiller_loss_l") => BaseType::Double,
+        ("equipment", "mash_tun_specific_heat_calgc") => BaseType::Double,
+        ("equipment", "mash_tun_volume_l") => BaseType::Double,
+        ("equipment", "mash_tun_weight_kg") => BaseType::Double,
+        ("equipment", "kettleInternalDiameter_cm") => BaseType::Double,
+        ("equipment", "kettleOpeningDiameter_cm") => BaseType::Double,
+        ("equipment", "hlt_type") => BaseType::String,
+        ("equipment", "mash_tun_type") => BaseType::String,
+        ("equipment", "lauter_tun_type") => BaseType::String,
+        ("equipment", "kettle_type") => BaseType::String,
+        ("equipment", "fv_type") => BaseType::String,
+        ("equipment", "agingvessel_type") => BaseType::String,
+        ("equipment", "packaging_vessel_type") => BaseType::String,
+        ("equipment", "hlt_volume_l") => BaseType::Double,
+        ("equipment", "kettle_volume_l") => BaseType::Double,
+        ("equipment", "lauter_tun_volume_l") => BaseType::Double,
+        ("equipment", "fv_volume_l") => BaseType::Double,
+        ("equipment", "aging_vessel_volume_l") => BaseType::Double,
+        ("equipment", "packaging_vessel_volume_l") => BaseType::Double,
+        ("equipment", "hlt_loss_l") => BaseType::Double,
+        ("equipment", "mash_tun_loss_l") => BaseType::Double,
+        ("equipment", "foundation_volume_l") => BaseType::Double,
+        ("equipment", "fv_loss_l") => BaseType::Double,
+        ("equipment", "aging_vessel_loss_l") => BaseType::Double,
+        ("equipment", "packaging_vessel_loss_l") => BaseType::Double,
+        ("equipment", "kettle_outflow_per_minute_l") => BaseType::Double,
+        ("equipment", "hlt_weight_kg") => BaseType::Double,
+        ("equipment", "lauter_tun_weight_kg") => BaseType::Double,
+        ("equipment", "kettle_weight_kg") => BaseType::Double,
+        ("equipment", "hlt_specific_heat_calgc") => BaseType::Double,
+        ("equipment", "lauter_tun_specific_heat_calgc") => BaseType::Double,
+        ("equipment", "kettle_specific_heat_calgc") => BaseType::Double,
+        ("equipment", "hlt_notes") => BaseType::String,
+        ("equipment", "mash_tun_notes") => BaseType::String,
+        ("equipment", "lauter_tun_notes") => BaseType::String,
+        ("equipment", "fv_notes") => BaseType::String,
+        ("equipment", "aging_vessel_notes") => BaseType::String,
+        ("equipment", "packaging_vessel_notes") => BaseType::String,
+        ("equipment", "name") => BaseType::String,
+        ("equipment", "deleted") => BaseType::Bool,
+        ("equipment", "contained_in_folder_id") => BaseType::Int,
+        ("fermentable", "id") => BaseType::Int,
+        ("fermentable", "coarse_fine_diff") => BaseType::Double,
+        ("fermentable", "color_lovibond") => BaseType::Double,
+        ("fermentable", "diastatic_power") => BaseType::Double,
+        ("fermentable", "ftype") => BaseType::String,
+        ("fermentable", "ibu_gal_per_lb") => BaseType::Double,
+        ("fermentable", "max_in_batch") => BaseType::Double,
+        ("fermentable", "moisture") => BaseType::Double,
+        ("fermentable", "notes") => BaseType::String,
+        ("fermentable", "origin") => BaseType::String,
+        ("fermentable", "supplier") => BaseType::String,
+        ("fermentable", "protein") => BaseType::Double,
+        ("fermentable", "recommend_mash") => BaseType::Bool,
+        ("fermentable", "grain_group") => BaseType::String,
+        ("fermentable", "producer") => BaseType::String,
+        ("fermentable", "product_id") => BaseType::String,
+        ("fermentable", "fine_grind_yield_pct") => BaseType::Double,
+        ("fermentable", "coarse_grind_yield_pct") => BaseType::Double,
+        ("fermentable", "potential_yield_sg") => BaseType::Double,
+        ("fermentable", "alpha_amylase_dext_units") => BaseType::Double,
+        ("fermentable", "kolbach_index_pct") => BaseType::Double,
+        ("fermentable", "hardness_prp_glassy_pct") => BaseType::Double,
+        ("fermentable", "hardness_prp_half_pct") => BaseType::Double,
+        ("fermentable", "hardness_prp_mealy_pct") => BaseType::Double,
+        ("fermentable", "kernel_size_prp_plump_pct") => BaseType::Double,
+        ("fermentable", "kernel_size_prp_thin_pct") => BaseType::Double,
+        ("fermentable", "friability_pct") => BaseType::Double,
+        ("fermentable", "di_ph") => BaseType::Double,
+        ("fermentable", "viscosity_cp") => BaseType::Double,
+        ("fermentable", "dmsp_ppm") => BaseType::Double,
+        ("fermentable", "fan_ppm") => BaseType::Double,
+        ("fermentable", "fermentability_pct") => BaseType::Double,
+        ("fermentable", "beta_glucan_ppm") => BaseType::Double,
+        ("fermentable", "lactic_acid_by_weight_pct") => BaseType::Double,
+        ("fermentable", "fermentable_fraction_pct") => BaseType::Double,
+        ("fermentable", "name") => BaseType::String,
+        ("fermentable", "deleted") => BaseType::Bool,
+        ("fermentable", "contained_in_folder_id") => BaseType::Int,
+        ("fermentable_in_recipe", "id") => BaseType::Int,
+        ("fermentable_in_recipe", "name") => BaseType::String,
+        ("fermentable_in_recipe", "deleted") => BaseType::Bool,
+        ("fermentable_in_recipe", "quantity") => BaseType::Double,
+        ("fermentable_in_recipe", "unit") => BaseType::String,
+        ("fermentable_in_recipe", "stage") => BaseType::String,
+        ("fermentable_in_recipe", "step") => BaseType::Int,
+        ("fermentable_in_recipe", "add_at_time_mins") => BaseType::Double,
+        ("fermentable_in_recipe", "add_at_gravity_sg") => BaseType::Double,
+        ("fermentable_in_recipe", "add_at_acidity_ph") => BaseType::Double,
+        ("fermentable_in_recipe", "duration_mins") => BaseType::Double,
+        ("fermentable_in_recipe", "recipe_id") => BaseType::Int,
+        ("fermentable_in_recipe", "fermentable_id") => BaseType::Int,
+        ("fermentable_stock_purchase", "id") => BaseType::Int,
+        ("fermentable_stock_purchase", "color_lovibond") => BaseType::Double,
+        ("fermentable_stock_purchase", "name") => BaseType::String,
+        ("fermentable_stock_purchase", "deleted") => BaseType::Bool,
+        ("fermentable_stock_purchase", "quantity") => BaseType::Double,
+        ("fermentable_stock_purchase", "unit") => BaseType::String,
+        ("fermentable_stock_purchase", "quantity_ordered") => BaseType::Double,
+        ("fermentable_stock_purchase", "date_received") => BaseType::Date,
+        ("fermentable_stock_purchase", "date_ordered") => BaseType::Date,
+        ("fermentable_stock_purchase", "date_best_before") => BaseType::Date,
+        ("fermentable_stock_purchase", "supplier") => BaseType::String,
+        ("fermentable_stock_purchase", "note") => BaseType::String,
+        ("fermentable_stock_purchase", "purchase_price_currency") => BaseType::String,
+        ("fermentable_stock_purchase", "purchase_price") => BaseType::Int,
+        ("fermentable_stock_purchase", "purchase_tax_currency") => BaseType::String,
+        ("fermentable_stock_purchase", "purchase_tax") => BaseType::Int,
+        ("fermentable_stock_purchase", "shipping_cost_currency") => BaseType::String,
+        ("fermentable_stock_purchase", "shipping_cost") => BaseType::Int,
+        ("fermentable_stock_purchase", "fermentable_id") => BaseType::Int,
+        ("fermentable_stock_use", "id") => BaseType::Int,
+        ("fermentable_stock_use", "name") => BaseType::String,
+        ("fermentable_stock_use", "deleted") => BaseType::Bool,
+        ("fermentable_stock_use", "sequence_number") => BaseType::Int,
+        ("fermentable_stock_use", "date") => BaseType::Date,
+        ("fermentable_stock_use", "reason") => BaseType::String,
+        ("fermentable_stock_use", "comment") => BaseType::String,
+        ("fermentable_stock_use", "quantity_used") => BaseType::Double,
+        ("fermentable_stock_use", "fermentable_purchase_id") => BaseType::Int,
+        ("fermentable_stock_use", "brew_log_id") => BaseType::Int,
+        ("fermentation", "id") => BaseType::Int,
+        ("fermentation", "locked") => BaseType::Bool,
+        ("fermentation", "description") => BaseType::String,
+        ("fermentation", "notes") => BaseType::String,
+        ("fermentation", "krausen_handling") => BaseType::String,
+        ("fermentation", "name") => BaseType::String,
+        ("fermentation", "deleted") => BaseType::Bool,
+        ("fermentation", "contained_in_folder_id") => BaseType::Int,
+        ("fermentation_step", "id") => BaseType::Int,
+        ("fermentation_step", "step_time_mins") => BaseType::Double,
+        ("fermentation_step", "start_temp_c") => BaseType::Double,
+        ("fermentation_step", "end_temp_c") => BaseType::Double,
+        ("fermentation_step", "step_number") => BaseType::Int,
+        ("fermentation_step", "description") => BaseType::String,
+        ("fermentation_step", "start_acidity_ph") => BaseType::Double,
+        ("fermentation_step", "end_acidity_ph") => BaseType::Double,
+        ("fermentation_step", "start_gravity_sg") => BaseType::Double,
+        ("fermentation_step", "end_gravity_sg") => BaseType::Double,
+        ("fermentation_step", "free_rise") => BaseType::Bool,
+        ("fermentation_step", "vessel") => BaseType::String,
+        ("fermentation_step", "name") => BaseType::String,
+        ("fermentation_step", "deleted") => BaseType::Bool,
+        ("fermentation_step", "fermentation_id") => BaseType::Int,
+        ("folder_for_boil", "id") => BaseType::Int,
+        ("folder_for_boil", "name") => BaseType::String,
+        ("folder_for_boil", "deleted") => BaseType::Bool,
+        ("folder_for_boil", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_equipment", "id") => BaseType::Int,
+        ("folder_for_equipment", "name") => BaseType::String,
+        ("folder_for_equipment", "deleted") => BaseType::Bool,
+        ("folder_for_equipment", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_fermentable", "id") => BaseType::Int,
+        ("folder_for_fermentable", "name") => BaseType::String,
+        ("folder_for_fermentable", "deleted") => BaseType::Bool,
+        ("folder_for_fermentable", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_fermentation", "id") => BaseType::Int,
+        ("folder_for_fermentation", "name") => BaseType::String,
+        ("folder_for_fermentation", "deleted") => BaseType::Bool,
+        ("folder_for_fermentation", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_hop", "id") => BaseType::Int,
+        ("folder_for_hop", "name") => BaseType::String,
+        ("folder_for_hop", "deleted") => BaseType::Bool,
+        ("folder_for_hop", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_mash", "id") => BaseType::Int,
+        ("folder_for_mash", "name") => BaseType::String,
+        ("folder_for_mash", "deleted") => BaseType::Bool,
+        ("folder_for_mash", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_misc", "id") => BaseType::Int,
+        ("folder_for_misc", "name") => BaseType::String,
+        ("folder_for_misc", "deleted") => BaseType::Bool,
+        ("folder_for_misc", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_recipe", "id") => BaseType::Int,
+        ("folder_for_recipe", "name") => BaseType::String,
+        ("folder_for_recipe", "deleted") => BaseType::Bool,
+        ("folder_for_recipe", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_style", "id") => BaseType::Int,
+        ("folder_for_style", "name") => BaseType::String,
+        ("folder_for_style", "deleted") => BaseType::Bool,
+        ("folder_for_style", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_water", "id") => BaseType::Int,
+        ("folder_for_water", "name") => BaseType::String,
+        ("folder_for_water", "deleted") => BaseType::Bool,
+        ("folder_for_water", "contained_in_folder_id") => BaseType::Int,
+        ("folder_for_yeast", "id") => BaseType::Int,
+        ("folder_for_yeast", "name") => BaseType::String,
+        ("folder_for_yeast", "deleted") => BaseType::Bool,
+        ("folder_for_yeast", "contained_in_folder_id") => BaseType::Int,
+        ("hop", "id") => BaseType::Int,
+        ("hop", "alpha_pct") => BaseType::Double,
+        ("hop", "alpha_min_pct") => BaseType::Double,
+        ("hop", "alpha_max_pct") => BaseType::Double,
+        ("hop", "beta_pct") => BaseType::Double,
+        ("hop", "beta_min_pct") => BaseType::Double,
+        ("hop", "beta_max_pct") => BaseType::Double,
+        ("hop", "caryophyllene_pct") => BaseType::Double,
+        ("hop", "cohumulone_pct") => BaseType::Double,
+        ("hop", "form") => BaseType::String,
+        ("hop", "sixMonthAlphaLoss_pct") => BaseType::Double,
+        ("hop", "humulene_pct") => BaseType::Double,
+        ("hop", "myrcene_pct") => BaseType::Double,
+        ("hop", "notes") => BaseType::String,
+        ("hop", "origin") => BaseType::String,
+        ("hop", "substitutes") => BaseType::String,
+        ("hop", "htype") => BaseType::String,
+        ("hop", "producer") => BaseType::String,
+        ("hop", "product_id") => BaseType::String,
+        ("hop", "year") => BaseType::String,
+        ("hop", "total_oil_ml_per_100g") => BaseType::Double,
+        ("hop", "farnesene_pct") => BaseType::Double,
+        ("hop", "geraniol_pct") => BaseType::Double,
+        ("hop", "b_pinene_pct") => BaseType::Double,
+        ("hop", "linalool_pct") => BaseType::Double,
+        ("hop", "limonene_pct") => BaseType::Double,
+        ("hop", "nerol_pct") => BaseType::Double,
+        ("hop", "pinene_pct") => BaseType::Double,
+        ("hop", "polyphenols_pct") => BaseType::Double,
+        ("hop", "xanthohumol_pct") => BaseType::Double,
+        ("hop", "name") => BaseType::String,
+        ("hop", "deleted") => BaseType::Bool,
+        ("hop", "contained_in_folder_id") => BaseType::Int,
+        ("hop_in_recipe", "id") => BaseType::Int,
+        ("hop_in_recipe", "name") => BaseType::String,
+        ("hop_in_recipe", "deleted") => BaseType::Bool,
+        ("hop_in_recipe", "quantity") => BaseType::Double,
+        ("hop_in_recipe", "unit") => BaseType::String,
+        ("hop_in_recipe", "stage") => BaseType::String,
+        ("hop_in_recipe", "step") => BaseType::Int,
+        ("hop_in_recipe", "add_at_time_mins") => BaseType::Double,
+        ("hop_in_recipe", "add_at_gravity_sg") => BaseType::Double,
+        ("hop_in_recipe", "add_at_acidity_ph") => BaseType::Double,
+        ("hop_in_recipe", "duration_mins") => BaseType::Double,
+        ("hop_in_recipe", "recipe_id") => BaseType::Int,
+        ("hop_in_recipe", "hop_id") => BaseType::Int,
+        ("hop_stock_purchase", "id") => BaseType::Int,
+        ("hop_stock_purchase", "alpha_pct") => BaseType::Double,
+        ("hop_stock_purchase", "form") => BaseType::String,
+        ("hop_stock_purchase", "year") => BaseType::String,
+        ("hop_stock_purchase", "name") => BaseType::String,
+        ("hop_stock_purchase", "deleted") => BaseType::Bool,
+        ("hop_stock_purchase", "quantity") => BaseType::Double,
+        ("hop_stock_purchase", "unit") => BaseType::String,
+        ("hop_stock_purchase", "quantity_ordered") => BaseType::Double,
+        ("hop_stock_purchase", "date_received") => BaseType::Date,
+        ("hop_stock_purchase", "date_ordered") => BaseType::Date,
+        ("hop_stock_purchase", "date_best_before") => BaseType::Date,
+        ("hop_stock_purchase", "supplier") => BaseType::String,
+        ("hop_stock_purchase", "note") => BaseType::String,
+        ("hop_stock_purchase", "purchase_price_currency") => BaseType::String,
+        ("hop_stock_purchase", "purchase_price") => BaseType::Int,
+        ("hop_stock_purchase", "purchase_tax_currency") => BaseType::String,
+        ("hop_stock_purchase", "purchase_tax") => BaseType::Int,
+        ("hop_stock_purchase", "shipping_cost_currency") => BaseType::String,
+        ("hop_stock_purchase", "shipping_cost") => BaseType::Int,
+        ("hop_stock_purchase", "hop_id") => BaseType::Int,
+        ("hop_stock_use", "id") => BaseType::Int,
+        ("hop_stock_use", "name") => BaseType::String,
+        ("hop_stock_use", "deleted") => BaseType::Bool,
+        ("hop_stock_use", "sequence_number") => BaseType::Int,
+        ("hop_stock_use", "date") => BaseType::Date,
+        ("hop_stock_use", "reason") => BaseType::String,
+        ("hop_stock_use", "comment") => BaseType::String,
+        ("hop_stock_use", "quantity_used") => BaseType::Double,
+        ("hop_stock_use", "hop_purchase_id") => BaseType::Int,
+        ("hop_stock_use", "brew_log_id") => BaseType::Int,
+        ("instruction", "id") => BaseType::Int,
+        ("instruction", "step_number") => BaseType::Int,
+        ("instruction", "directions") => BaseType::String,
+        ("instruction", "has_timer") => BaseType::Bool,
+        ("instruction", "timer_value") => BaseType::String,
+        ("instruction", "completed") => BaseType::Bool,
+        ("instruction", "interval_mins") => BaseType::Double,
+        ("instruction", "name") => BaseType::String,
+        ("instruction", "deleted") => BaseType::Bool,
+        ("instruction", "recipe_id") => BaseType::Int,
+        ("mash", "id") => BaseType::Int,
+        ("mash", "locked") => BaseType::Bool,
+        ("mash", "auto_adjust") => BaseType::Bool,
+        ("mash", "equip_adjust") => BaseType::Bool,
+        ("mash", "grain_temp") => BaseType::Double,
+        ("mash", "notes") => BaseType::String,
+        ("mash", "ph") => BaseType::Double,
+        ("mash", "sparge_temp") => BaseType::Double,
+        ("mash", "tun_specific_heat_calgc") => BaseType::Double,
+        ("mash", "initial_tun_temp_c") => BaseType::Double,
+        ("mash", "tun_weight_kg") => BaseType::Double,
+        ("mash", "name") => BaseType::String,
+        ("mash", "deleted") => BaseType::Bool,
+        ("mash", "contained_in_folder_id") => BaseType::Int,
+        ("mash_step", "id") => BaseType::Int,
+        ("mash_step", "end_temp_c") => BaseType::Double,
+        ("mash_step", "infuse_temp_c") => BaseType::Double,
+        ("mash_step", "mstype") => BaseType::String,
+        ("mash_step", "ramp_time_mins") => BaseType::Double,
+        ("mash_step", "step_number") => BaseType::Int,
+        ("mash_step", "step_temp_c") => BaseType::Double,
+        ("mash_step", "step_time_mins") => BaseType::Double,
+        ("mash_step", "amount_l") => BaseType::Double,
+        ("mash_step", "description") => BaseType::String,
+        ("mash_step", "liquor_to_grist_ratio_lkg") => BaseType::Double,
+        ("mash_step", "start_acidity_ph") => BaseType::Double,
+        ("mash_step", "end_acidity_ph") => BaseType::Double,
+        ("mash_step", "amount_fixed") => BaseType::Bool,
+        ("mash_step", "infuse_temp_fixed") => BaseType::Bool,
+        ("mash_step", "name") => BaseType::String,
+        ("mash_step", "deleted") => BaseType::Bool,
+        ("mash_step", "mash_id") => BaseType::Int,
+        ("misc", "id") => BaseType::Int,
+        ("misc", "mtype") => BaseType::String,
+        ("misc", "use_for") => BaseType::String,
+        ("misc", "notes") => BaseType::String,
+        ("misc", "producer") => BaseType::String,
+        ("misc", "product_id") => BaseType::String,
+        ("misc", "water_agent_type") => BaseType::String,
+        ("misc", "water_agent_percent_acid") => BaseType::Double,
+        ("misc", "name") => BaseType::String,
+        ("misc", "deleted") => BaseType::Bool,
+        ("misc", "contained_in_folder_id") => BaseType::Int,
+        ("misc_in_recipe", "id") => BaseType::Int,
+        ("misc_in_recipe", "name") => BaseType::String,
+        ("misc_in_recipe", "deleted") => BaseType::Bool,
+        ("misc_in_recipe", "quantity") => BaseType::Double,
+        ("misc_in_recipe", "unit") => BaseType::String,
+        ("misc_in_recipe", "stage") => BaseType::String,
+        ("misc_in_recipe", "step") => BaseType::Int,
+        ("misc_in_recipe", "add_at_time_mins") => BaseType::Double,
+        ("misc_in_recipe", "add_at_gravity_sg") => BaseType::Double,
+        ("misc_in_recipe", "add_at_acidity_ph") => BaseType::Double,
+        ("misc_in_recipe", "duration_mins") => BaseType::Double,
+        ("misc_in_recipe", "recipe_id") => BaseType::Int,
+        ("misc_in_recipe", "misc_id") => BaseType::Int,
+        ("misc_stock_purchase", "id") => BaseType::Int,
+        ("misc_stock_purchase", "name") => BaseType::String,
+        ("misc_stock_purchase", "deleted") => BaseType::Bool,
+        ("misc_stock_purchase", "quantity") => BaseType::Double,
+        ("misc_stock_purchase", "unit") => BaseType::String,
+        ("misc_stock_purchase", "quantity_ordered") => BaseType::Double,
+        ("misc_stock_purchase", "date_received") => BaseType::Date,
+        ("misc_stock_purchase", "date_ordered") => BaseType::Date,
+        ("misc_stock_purchase", "date_best_before") => BaseType::Date,
+        ("misc_stock_purchase", "supplier") => BaseType::String,
+        ("misc_stock_purchase", "note") => BaseType::String,
+        ("misc_stock_purchase", "purchase_price_currency") => BaseType::String,
+        ("misc_stock_purchase", "purchase_price") => BaseType::Int,
+        ("misc_stock_purchase", "purchase_tax_currency") => BaseType::String,
+        ("misc_stock_purchase", "purchase_tax") => BaseType::Int,
+        ("misc_stock_purchase", "shipping_cost_currency") => BaseType::String,
+        ("misc_stock_purchase", "shipping_cost") => BaseType::Int,
+        ("misc_stock_purchase", "misc_id") => BaseType::Int,
+        ("misc_stock_use", "id") => BaseType::Int,
+        ("misc_stock_use", "name") => BaseType::String,
+        ("misc_stock_use", "deleted") => BaseType::Bool,
+        ("misc_stock_use", "sequence_number") => BaseType::Int,
+        ("misc_stock_use", "date") => BaseType::Date,
+        ("misc_stock_use", "reason") => BaseType::String,
+        ("misc_stock_use", "comment") => BaseType::String,
+        ("misc_stock_use", "quantity_used") => BaseType::Double,
+        ("misc_stock_use", "misc_purchase_id") => BaseType::Int,
+        ("misc_stock_use", "brew_log_id") => BaseType::Int,
+        ("recipe", "id") => BaseType::Int,
+        ("recipe", "age") => BaseType::Double,
+        ("recipe", "age_temp") => BaseType::Double,
+        ("recipe", "assistant_brewer") => BaseType::String,
+        ("recipe", "batch_size") => BaseType::Double,
+        ("recipe", "brewer") => BaseType::String,
+        ("recipe", "carb_volume") => BaseType::Double,
+        ("recipe", "carbonationtemp_c") => BaseType::Double,
+        ("recipe", "date") => BaseType::Date,
+        ("recipe", "efficiency") => BaseType::Double,
+        ("recipe", "fg") => BaseType::Double,
+        ("recipe", "forced_carb") => BaseType::Bool,
+        ("recipe", "keg_priming_factor") => BaseType::Double,
+        ("recipe", "notes") => BaseType::String,
+        ("recipe", "og") => BaseType::Double,
+        ("recipe", "priming_sugar_equiv") => BaseType::Double,
+        ("recipe", "priming_sugar_name") => BaseType::String,
+        ("recipe", "taste_notes") => BaseType::String,
+        ("recipe", "taste_rating") => BaseType::Double,
+        ("recipe", "type") => BaseType::String,
+        ("recipe", "locked") => BaseType::Bool,
+        ("recipe", "beer_acidity_ph") => BaseType::Double,
+        ("recipe", "apparent_attenuation_pct") => BaseType::Double,
+        ("recipe", "ro_water_mash_pct") => BaseType::Double,
+        ("recipe", "ro_water_sparge_pct") => BaseType::Double,
+        ("recipe", "target_mash_ph") => BaseType::Double,
+        ("recipe", "water_kept_in_sync") => BaseType::Bool,
+        ("recipe", "fg_calc_uses_mash") => BaseType::Bool,
+        ("recipe", "wort_clarity") => BaseType::String,
+        ("recipe", "name") => BaseType::String,
+        ("recipe", "deleted") => BaseType::Bool,
+        ("recipe", "contained_in_folder_id") => BaseType::Int,
+        ("recipe", "equipment_id") => BaseType::Int,
+        ("recipe", "mash_id") => BaseType::Int,
+        ("recipe", "style_id") => BaseType::Int,
+        ("recipe", "ancestor_id") => BaseType::Int,
+        ("recipe", "boil_id") => BaseType::Int,
+        ("recipe", "fermentation_id") => BaseType::Int,
+        ("recipe", "water_base") => BaseType::Int,
+        ("recipe", "water_target") => BaseType::Int,
+        ("style", "id") => BaseType::Int,
+        ("style", "abv_max") => BaseType::Double,
+        ("style", "abv_min") => BaseType::Double,
+        ("style", "carb_max") => BaseType::Double,
+        ("style", "carb_min") => BaseType::Double,
+        ("style", "category") => BaseType::String,
+        ("style", "category_number") => BaseType::String,
+        ("style", "color_max") => BaseType::Double,
+        ("style", "color_min") => BaseType::Double,
+        ("style", "examples") => BaseType::String,
+        ("style", "fg_max") => BaseType::Double,
+        ("style", "fg_min") => BaseType::Double,
+        ("style", "ibu_max") => BaseType::Double,
+        ("style", "ibu_min") => BaseType::Double,
+        ("style", "ingredients") => BaseType::String,
+        ("style", "notes") => BaseType::String,
+        ("style", "og_max") => BaseType::Double,
+        ("style", "og_min") => BaseType::Double,
+        ("style", "style_guide") => BaseType::String,
+        ("style", "style_letter") => BaseType::String,
+        ("style", "stype") => BaseType::String,
+        ("style", "aroma") => BaseType::String,
+        ("style", "appearance") => BaseType::String,
+        ("style", "flavor") => BaseType::String,
+        ("style", "mouthfeel") => BaseType::String,
+        ("style", "overall_impression") => BaseType::String,
+        ("style", "name") => BaseType::String,
+        ("style", "deleted") => BaseType::Bool,
+        ("style", "contained_in_folder_id") => BaseType::Int,
+        ("water", "id") => BaseType::Int,
+        ("water", "notes") => BaseType::String,
+        ("water", "calcium") => BaseType::Double,
+        ("water", "bicarbonate") => BaseType::Double,
+        ("water", "sulfate") => BaseType::Double,
+        ("water", "sodium") => BaseType::Double,
+        ("water", "chloride") => BaseType::Double,
+        ("water", "magnesium") => BaseType::Double,
+        ("water", "ph") => BaseType::Double,
+        ("water", "alkalinity") => BaseType::Double,
+        ("water", "as_hco3") => BaseType::Bool,
+        ("water", "carbonate_ppm") => BaseType::Double,
+        ("water", "potassium_ppm") => BaseType::Double,
+        ("water", "iron_ppm") => BaseType::Double,
+        ("water", "nitrate_ppm") => BaseType::Double,
+        ("water", "nitrite_ppm") => BaseType::Double,
+        ("water", "fluoride_ppm") => BaseType::Double,
+        ("water", "name") => BaseType::String,
+        ("water", "deleted") => BaseType::Bool,
+        ("water", "contained_in_folder_id") => BaseType::Int,
+        ("yeast", "id") => BaseType::Int,
+        ("yeast", "max_temperature") => BaseType::Double,
+        ("yeast", "min_temperature") => BaseType::Double,
+        ("yeast", "flocculation") => BaseType::String,
+        ("yeast", "form") => BaseType::String,
+        ("yeast", "ytype") => BaseType::String,
+        ("yeast", "max_reuse") => BaseType::Int,
+        ("yeast", "best_for") => BaseType::String,
+        ("yeast", "laboratory") => BaseType::String,
+        ("yeast", "notes") => BaseType::String,
+        ("yeast", "product_id") => BaseType::String,
+        ("yeast", "alcohol_tolerance_pct") => BaseType::Double,
+        ("yeast", "attenuation_min_pct") => BaseType::Double,
+        ("yeast", "attenuation_max_pct") => BaseType::Double,
+        ("yeast", "phenolic_off_flavor_positive") => BaseType::Bool,
+        ("yeast", "glucoamylase_positive") => BaseType::Bool,
+        ("yeast", "killer_producing_k1_toxin") => BaseType::Bool,
+        ("yeast", "killer_producing_k2_toxin") => BaseType::Bool,
+        ("yeast", "killer_producing_k28_toxin") => BaseType::Bool,
+        ("yeast", "killer_producing_klus_toxin") => BaseType::Bool,
+        ("yeast", "killer_neutral") => BaseType::Bool,
+        ("yeast", "name") => BaseType::String,
+        ("yeast", "deleted") => BaseType::Bool,
+        ("yeast", "contained_in_folder_id") => BaseType::Int,
+        ("yeast_in_recipe", "id") => BaseType::Int,
+        ("yeast_in_recipe", "attenuation_pct") => BaseType::Double,
+        ("yeast_in_recipe", "times_cultured") => BaseType::Int,
+        ("yeast_in_recipe", "cell_count_billions") => BaseType::Double,
+        ("yeast_in_recipe", "name") => BaseType::String,
+        ("yeast_in_recipe", "deleted") => BaseType::Bool,
+        ("yeast_in_recipe", "quantity") => BaseType::Double,
+        ("yeast_in_recipe", "unit") => BaseType::String,
+        ("yeast_in_recipe", "stage") => BaseType::String,
+        ("yeast_in_recipe", "step") => BaseType::Int,
+        ("yeast_in_recipe", "add_at_time_mins") => BaseType::Double,
+        ("yeast_in_recipe", "add_at_gravity_sg") => BaseType::Double,
+        ("yeast_in_recipe", "add_at_acidity_ph") => BaseType::Double,
+        ("yeast_in_recipe", "duration_mins") => BaseType::Double,
+        ("yeast_in_recipe", "recipe_id") => BaseType::Int,
+        ("yeast_in_recipe", "yeast_id") => BaseType::Int,
+        ("yeast_stock_purchase", "id") => BaseType::Int,
+        ("yeast_stock_purchase", "name") => BaseType::String,
+        ("yeast_stock_purchase", "deleted") => BaseType::Bool,
+        ("yeast_stock_purchase", "quantity") => BaseType::Double,
+        ("yeast_stock_purchase", "unit") => BaseType::String,
+        ("yeast_stock_purchase", "quantity_ordered") => BaseType::Double,
+        ("yeast_stock_purchase", "date_received") => BaseType::Date,
+        ("yeast_stock_purchase", "date_ordered") => BaseType::Date,
+        ("yeast_stock_purchase", "date_best_before") => BaseType::Date,
+        ("yeast_stock_purchase", "supplier") => BaseType::String,
+        ("yeast_stock_purchase", "note") => BaseType::String,
+        ("yeast_stock_purchase", "purchase_price_currency") => BaseType::String,
+        ("yeast_stock_purchase", "purchase_price") => BaseType::Int,
+        ("yeast_stock_purchase", "purchase_tax_currency") => BaseType::String,
+        ("yeast_stock_purchase", "purchase_tax") => BaseType::Int,
+        ("yeast_stock_purchase", "shipping_cost_currency") => BaseType::String,
+        ("yeast_stock_purchase", "shipping_cost") => BaseType::Int,
+        ("yeast_stock_purchase", "yeast_id") => BaseType::Int,
+        ("yeast_stock_use", "id") => BaseType::Int,
+        ("yeast_stock_use", "name") => BaseType::String,
+        ("yeast_stock_use", "deleted") => BaseType::Bool,
+        ("yeast_stock_use", "sequence_number") => BaseType::Int,
+        ("yeast_stock_use", "date") => BaseType::Date,
+        ("yeast_stock_use", "reason") => BaseType::String,
+        ("yeast_stock_use", "comment") => BaseType::String,
+        ("yeast_stock_use", "quantity_used") => BaseType::Double,
+        ("yeast_stock_use", "yeast_purchase_id") => BaseType::Int,
+        ("yeast_stock_use", "brew_log_id") => BaseType::Int,
+        _ => return None,
+    };
+    Some(found)
+}
+
+/// The kinds of value a column may hold.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BaseType {
+    Bool,
+    Int,
+    Double,
+    String,
+    Date,
 }

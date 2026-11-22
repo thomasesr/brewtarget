@@ -15,7 +15,7 @@
 
 use bt_model::folder::{FolderError, FolderNode, FolderTree, join_paths, normalise, sub_path};
 
-fn node(id: i64, name: &str, parent_id: Option<i64>) -> FolderNode {
+fn node(id: i32, name: &str, parent_id: Option<i32>) -> FolderNode {
     FolderNode { id, name: name.to_owned(), parent_id, deleted: false }
 }
 
