@@ -246,9 +246,30 @@ three backends.
   IBU by method, SRM/EBC colour, calories, efficiency, boil-off, water needs).
 - Literal transcription first: same names, same constants, same order of operations.
 - Mirror `RecipeCalcTests.cpp`, `MashFermentabilityTests.cpp`,
-  `MashAutoAdjusterTests.cpp`, `WaterAutoAdjusterTests.cpp`.
+  `MashAutoAdjusterTests.cpp`.
 
-**Done when:** all mirrored calculation tests pass at the C++ tolerances. ✅
+**Done when:** all mirrored calculation tests pass at the C++ tolerances.
+
+Partly. The gravity, colour, bitterness and fermentability work is done and mirrored --
+`RecipeCalcTests.cpp` and `MashFermentabilityTests.cpp` both have passing Rust twins.
+
+**`MashAutoAdjusterTests.cpp` does not.** `src/MashAutoAdjuster.cpp` is 1,215 lines
+working out strike water, infusion volumes and temperatures, sparge and decoction, and
+its test file is another 1,554 across 17 cases. This phase was marked done in error.
+
+`bt-calc/src/mash_adjust.rs` has the heat model it is all built on -- what is in the tun,
+what temperature water has to be, how much of it, and whether a temperature is one water
+can be at -- checked against the figures `testStrikeWater` works out in its comments.
+That is enough for the strike water tool and for the first step of an infusion mash.
+
+Still to do, and each of them a branch of `calculate`: sparge (both methods), decoction,
+pinned amounts and temperatures, the balancing step that makes the water add up to the
+target, mash volume limits, and the warnings and errors that go with them. Scheduling, in
+other words -- the thermodynamics is done.
+
+`WaterAutoAdjusterTests.cpp` was listed here and does not exist in the C++ at all. The
+water chemistry in `src/model/Water.cpp` is still unported -- which is what the Water
+tab's "Actual" panel needs -- but there is no such test file to mirror.
 
 ### Phase 6 — `bt-format`
 

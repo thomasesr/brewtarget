@@ -27,6 +27,7 @@ pub mod color;
 pub mod data;
 pub mod ibu;
 pub mod mash;
+pub mod mash_adjust;
 pub mod recipe;
 pub mod recipe_ibu;
 pub mod smph;
